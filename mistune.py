@@ -285,7 +285,7 @@ class BlockLexer(object):
     def parse_def_links(self, m):
         key = m.group(1).lower()
         self.def_links[key] = {
-            'href': m.group(2),
+            'link': m.group(2),
             'title': m.group(3),
         }
 
@@ -475,16 +475,41 @@ class InlineLexer(object):
         return m.group(0)
 
     def output_footnote(self, m):
-        # TODO
-        return ''
+        key = m.group(1).lower()
+        if key not in self.footnotes:
+            return None
+        # index start with 1
+        index = self.footnotes.keys().index(key) + 1
+        return self.renderer.footnote_ref(key, index)
 
     def output_link(self, m):
-        # TODO
-        return ''
+        return self._process_link(m, m.group(2), m.group(3))
 
     def output_reflink(self, m):
-        # TODO
-        return ''
+        key = m.group(2).lower()
+        if key not in self.links:
+            return None
+        ret = self.links[key]
+        return self._process_link(m, ret['link'], ret['title'])
+
+    def output_nolink(self, m):
+        key = m.group(1).lower()
+        if key not in self.links:
+            return None
+        ret = self.links[key]
+        return self._process_link(m, ret['link'], ret['title'])
+
+    def _process_link(self, m, link, title=None):
+        line = m.group(0)
+
+        if title:
+            title = escape(title)
+
+        text = m.group(1)
+
+        if line[0] == '!':
+            return self.renderer.image(link, title, escape(text))
+        return self.renderer.link(link, title, self.output(text))
 
     def output_strong(self, m):
         text = m.group(2) or m.group(1)
@@ -552,8 +577,14 @@ class Renderer(object):
         return '<tr>\n%s</tr>\n' % text
 
     def table_cell(self, text, **flags):
-        #TODO
-        pass
+        if flags['header']:
+            tag = 'th'
+        else:
+            tag = 'td'
+        align = flags['align']
+        if not align:
+            return '<%s>%s</%s>\n' % (tag, text, tag)
+        return '<%s style="text-align:%s">%s</%s>\n' % (tag, align, text, tag)
 
     def strong(self, text):
         return '<strong>%s</strong>' % text
@@ -676,14 +707,32 @@ class Parser(object):
         )
 
     def parse_code(self):
-        print self.token['text']
         return self.renderer.block_code(
             self.token['text'], self.token['lang']
         )
 
     def parse_table(self):
-        # TODO
-        return ''
+        aligns = self.token['align']
+        cell = ''
+
+        # header part
+        header = ''
+        for i, value in enumerate(self.token['header']):
+            flags = {'header': True, 'align': aligns[i]}
+            cell += self.renderer.table_cell(self.inline(value), **flags)
+
+        header += self.renderer.table_row(cell)
+
+        # body part
+        body = ''
+        for i, row in enumerate(self.token['cells']):
+            cell = ''
+            for j, value in enumerate(row):
+                flags = {'header': False, 'align': aligns[j]}
+                cell += self.renderer.table_cell(self.inline(value), **flags)
+            body += self.renderer.table_row(cell)
+
+        return self.renderer.table(header, body)
 
     def parse_blockquote(self):
         body = ''

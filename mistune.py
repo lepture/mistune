@@ -36,7 +36,7 @@ class BlockGrammar(object):
     )
 
     newline = re.compile(r'^\n+')
-    code = re.compile(r'^( {4}[^\n]+\n*)+')
+    block_code = re.compile(r'^( {4}[^\n]+\n*)+')
     fences = re.compile(
         r'^ *(`{3,}|~{3,}) *(\S+)? *\n'  # ```lang
         r'([\s\S]+?)\s*'
@@ -106,7 +106,7 @@ class BlockGrammar(object):
 class BlockLexer(object):
     top_methods = [
         'newline',
-        'code',
+        'block_code',
         'fences',
         'heading',
         'nptable',
@@ -123,7 +123,7 @@ class BlockLexer(object):
     ]
     low_methods = [
         'newline',
-        'code',
+        'block_code',
         'fences',
         'lheading',
         'hr',
@@ -180,8 +180,8 @@ class BlockLexer(object):
             self.tokens.append({'type': 'space'})
         return src[length:]
 
-    def parse_code(self, src):
-        m = self.rules.code.match(src)
+    def parse_block_code(self, src):
+        m = self.rules.block_code.match(src)
         if not m:
             return src
         code = m.group(0)

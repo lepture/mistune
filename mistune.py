@@ -29,18 +29,18 @@ def preprocessing(text, tab=4):
 
 class BlockGrammar(object):
     _tag = (
-        '(?!(?:'
-        'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
-        'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-        'span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b'
+        r'(?!(?:'
+        r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
+        r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
+        r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
     )
 
     newline = re.compile(r'^\n+')
     code = re.compile(r'^( {4}[^\n]+\n*)+')
     fences = re.compile(
         r'^ *(`{3,}|~{3,}) *(\S+)? *\n'  # ```lang
-        '([\s\S]+?)\s*'
-        '\1*(?:\n+|$)'  # ```
+        r'([\s\S]+?)\s*'
+        r'\1 *(?:\n+|$)'  # ```
     )
     hr = re.compile(r'^(?: *[-*_]){3,} *(?:\n+|$)')
     heading = re.compile(r'^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
@@ -89,9 +89,9 @@ class BlockGrammar(object):
     )
     html = re.compile(
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
-            '<!--[\s\S]*?-->',
-            '<(' + _tag + ')[\s\S]+?<\/\1>',
-            '<' + _tag + '''(?:"[^"]*}|'[^']*'|[^'">])*?>''',
+            r'<!--[\s\S]*?-->',
+            r'<(%s)[\s\S]+?<\/\1>' % _tag,
+            r'''<%s(?:"[^"]*}|'[^']*'|[^'">])*?>''' % _tag,
         )
     )
     table = re.compile(
@@ -154,12 +154,19 @@ class BlockLexer(object):
 
         if methods:
             self._parse_methods = methods
-        while src:
+
+        def manipulate(src):
             for key in self._parse_methods:
                 alt = getattr(self, 'parse_%s' % key)(src)
                 if alt != src:
-                    src = alt
-                    continue
+                    return alt
+            return False
+
+        while src:
+            alt = manipulate(src)
+            if alt is not False:
+                src = alt
+                continue
             if src:
                 raise RuntimeError('Infinite loop at: %s' % src)
         return self.tokens
@@ -508,10 +515,7 @@ class InlineLexer(object):
         data = m.group(1)
         if m.group(2) == '@':
             is_email = True
-            if data[6] == ':':
-                link = self.mangle(data[7:])
-            else:
-                link = self.mangle(data)
+            link = escape(data)
         else:
             is_email = False
             link = escape(data)
@@ -726,7 +730,8 @@ class Parser(object):
         )
 
     def parse_code(self):
-        return self.renderer.code(
+        print self.token['text']
+        return self.renderer.block_code(
             self.token['text'], self.token['lang']
         )
 

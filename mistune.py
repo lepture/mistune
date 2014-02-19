@@ -4,6 +4,8 @@
     ~~~~~~~
 
     Yet another markdown parser, inspired by marked in JavaScript.
+
+    :copyright: (c) 2014 by Hsiaoming Yang.
 """
 
 import re
@@ -12,6 +14,11 @@ from collections import OrderedDict
 
 __version__ = '0.1.0'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
+__all__ = [
+    'BlockGrammar', 'BlockLexer',
+    'InlineGrammar', 'InlineLexer',
+    'Parser', 'markdown',
+]
 
 
 def _pure_pattern(regex):
@@ -652,6 +659,9 @@ class Parser(object):
 
         self.tokens = []
 
+    def __call__(self, src):
+        return self.parse(src)
+
     def parse(self, src):
         src = preprocessing(src)
 
@@ -774,3 +784,8 @@ class Parser(object):
 
     def parse_text(self):
         return self.renderer.paragraph(self.tok_text())
+
+
+def markdown(text):
+    parse = Parser()
+    return parse(text)

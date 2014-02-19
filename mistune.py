@@ -7,6 +7,7 @@
 """
 
 import re
+from cgi import escape
 from collections import OrderedDict
 
 __version__ = '0.1.0'
@@ -15,6 +16,15 @@ __author__ = 'Hsiaoming Yang <me@lepture.com>'
 
 def _pure_pattern(regex):
     return re.sub('(^|[^\[])\^', '\1', regex.pattern)
+
+
+def preprocessing(text, tab=4):
+    text = re.sub(r'\r\n|\r', '\n', text)
+    text = text.replace('\t', ' ' * tab)
+    text = text.replace('\u00a0', ' ')
+    text = text.replace('\u2424', '\n')
+    pattern = re.compile(r'^ +$', re.M)
+    return pattern.sub('', text)
 
 
 class BlockGrammar(object):
@@ -135,6 +145,9 @@ class BlockLexer(object):
 
         self.rules = rules
         self._parse_methods = self.top_methods
+
+    def __call__(self, src):
+        return self.parse(src)
 
     def parse(self, src, methods=None):
         src = src.rstrip('\n')
@@ -395,16 +408,369 @@ class BlockLexer(object):
         return src[len(text):]
 
 
-def preprocessing(text, tab=4):
-    text = re.sub(r'\r\n|\r', '\n', text)
-    text = text.replace('\t', ' ' * tab)
-    text = text.replace('\u00a0', ' ')
-    text = text.replace('\u2424', '\n')
-    pattern = re.compile(r'^ +$', re.M)
-    return pattern.sub('', text)
+class InlineGrammar(object):
+    escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')
+    tag = re.compile(
+        r'^<!--[\s\S]*?-->|'
+        r'^<\/?\w+(?:"[^"]*"|'
+        r'''[^']*'|[^'">])*?>'''
+    )
+    autolink = re.compile(r'^<([^ >]+(@|:\/)[^ >]+)>')
+    link = re.compile(
+        r'^!?\[('
+        r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
+        r')\]\('
+        r'''\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*'''
+        r'\)'
+    )
+    reflink = re.compile(
+        r'^!?\[('
+        r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
+        r')\]\s*\[([^^\]]*)\]'
+    )
+    nolink = re.compile(r'^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]')
+    url = re.compile(r'''^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
+    strong = re.compile(
+        r'^__([\s\S]+?)__(?!_)'  # __word__
+        r'|'
+        r'^\*\*([\s\S]+?)\*\*(?!\*)/'  # **word**
+    )
+    em = re.compile(
+        r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
+        r'|'
+        r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
+    )
+    code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')
+    br = re.compile(r'^ {2,}\n(?!\s*$)')
+    strike = re.compile(r'/^~~(?=\S)([\s\S]*?\S)~~/')
+    footnote = re.compile(r'^\[\^([^\]]+)\]')
+    text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
 
-def parse(text, tab=4):
-    text = preprocessing(text, tab)
-    lexer = BlockLexer()
-    print lexer.parse(text)
+class InlineLexer(object):
+    def __init__(self, renderer, rules=None, **kwargs):
+        self.options = kwargs
+
+        self.renderer = renderer
+        self.links = []
+        self.footnotes = []
+
+        if not rules:
+            rules = InlineGrammar()
+
+        self.rules = rules
+
+    def __call__(self, src):
+        return self.output(src)
+
+    def setup(self, links, footnotes):
+        self.links = links or []
+        self.footnotes = footnotes or []
+
+    def output(self, src):
+        src = src.rstrip('\n')
+
+        methods = [
+            'escape', 'autolink', 'url', 'tag',
+            'footnote', 'link', 'strong', 'em',
+            'code', 'br', 'strike', 'text',
+        ]
+
+        output = ''
+
+        def manipulate(src):
+            for key in methods:
+                pattern = getattr(self.rules, key)
+                m = pattern.match(src)
+                if not m:
+                    continue
+                out = getattr(self, 'output_%s' % key)(m)
+                if out is not None:
+                    return m, out
+            return False
+
+        while src:
+            ret = manipulate(src)
+            if ret is not False:
+                m, out = ret
+                output += out
+                src = src[len(m.group(0)):]
+                continue
+            if src:
+                raise RuntimeError('Infinite loop at: %s' % src)
+
+        return output
+
+    def output_escape(self, m):
+        return m.group(1)
+
+    def output_autolink(self, m):
+        data = m.group(1)
+        if m.group(2) == '@':
+            is_email = True
+            if data[6] == ':':
+                link = self.mangle(data[7:])
+            else:
+                link = self.mangle(data)
+        else:
+            is_email = False
+            link = escape(data)
+        return self.renderer.autolink(link, is_email)
+
+    def output_url(self, m):
+        link = escape(m.group(1))
+        return self.renderer.autolink(link, False)
+
+    def output_tag(self, m):
+        return m.group(0)
+
+    def output_footnote(self, m):
+        # TODO
+        return ''
+
+    def output_link(self, m):
+        # TODO
+        return ''
+
+    def output_reflink(self, m):
+        # TODO
+        return ''
+
+    def output_strong(self, m):
+        text = m.group(2) or m.group(1)
+        return self.renderer.strong(text)
+
+    def output_em(self, m):
+        text = m.group(2) or m.group(1)
+        return self.renderer.em(text)
+
+    def output_code(self, m):
+        return self.renderer.codespan(m.group(2))
+
+    def output_br(self):
+        return self.renderer.br()
+
+    def output_strike(self, m):
+        return self.renderer.strike(self.output(m.group(1)))
+
+    def output_text(self, m):
+        return escape(m.group(0))
+
+
+class Renderer(object):
+    def __init__(self, **kwargs):
+        self.options = kwargs
+
+    def block_code(self, code, lang=None):
+        if not lang:
+            return '<pre><code>%s\n</code></pre>\n' % escape(code)
+        return '<pre class="lang-%s"><code>%s\n</code>\n</pre>' % (
+            lang, escape(code)
+        )
+
+    def blockquote(self, text):
+        return '<blockquote>%s\n</blockquote>' % text
+
+    def html(self, html):
+        return html
+
+    def heading(self, text, level, raw=None):
+        return '<h%d>%s</h%d>\n' % (level, text, level)
+
+    def hr(self):
+        return '<hr>\n'
+
+    def list(self, body, ordered=True):
+        tag = 'ol'
+        if ordered:
+            tag = 'ul'
+        return '<%s>\n%s</%s>\n' % (tag, body, tag)
+
+    def list_item(self, text):
+        return '<li>%s</li>\n' % text
+
+    def paragraph(self, text):
+        return '<p>%s</p>\n' % text
+
+    def table(self, header, body):
+        return (
+            '<table>\n<thead>%s</thead>\n'
+            '<tbody>\n%s</tbody>\n</table>\n'
+        ) % (header, body)
+
+    def table_row(self, text):
+        return '<tr>\n%s</tr>\n' % text
+
+    def table_cell(self, text, **flags):
+        #TODO
+        pass
+
+    def strong(self, text):
+        return '<strong>%s</strong>' % text
+
+    def em(self, text):
+        return '<em>%s</em>' % text
+
+    def codespan(self, text):
+        return '<code>%s</code>' % escape(text)
+
+    def br(self):
+        return '<br>'
+
+    def strike(self, text):
+        return '<del>%s</del>' % text
+
+    def autolink(self, link, is_email=False):
+        if is_email:
+            href = 'mailto:%s' % link
+            text = link
+        else:
+            href = link
+            text = re.sub('^https?:\/\/', '', href)
+        return '<a href="%s">%s</a>' % (link, text)
+
+    def link(self, link, title, text):
+        if 'javascript:' in link:
+            # for safety
+            return ''
+        if not title:
+            return '<a href="%s">%s</a>' % (link, text)
+        return '<a href="%s" title="%s">%s</a>' % (link, title, text)
+
+    def image(self, link, title, text):
+        if not title:
+            return '<img src="%s" alt="%s">' % (link, text)
+        return '<img src="%s" alt="%s" title="%s">' % (link, text, title)
+
+    def footnote_ref(self, key, index):
+        ident = key.lower()
+        ident = re.sub(r'[^\w]+', '-', ident)
+        text = (
+            '<sup class="footnote-ref" id="fnref-%s">'
+            '<a href="#fn-%s">%d</a></sup>'
+        ) % (ident, escape(key), index)
+        return text
+
+    def footnote_item(self):
+        pass
+
+    def footnotes(self):
+        pass
+
+
+class Parser(object):
+    def __init__(self, inline=None, block=None, renderer=None, **kwargs):
+        self.options = kwargs
+        if not renderer:
+            renderer = Renderer()
+
+        self.renderer = renderer
+
+        self.inline = inline or InlineLexer(renderer, **kwargs)
+        self.block = block = BlockLexer(**kwargs)
+
+        self.tokens = []
+
+    def parse(self, src):
+        src = preprocessing(src)
+
+        self.tokens = self.block(src)
+        self.tokens.reverse()
+
+        self.inline.setup(self.block.def_links, self.block.def_footnotes)
+
+        out = ''
+        while self.next():
+            out += self.tok()
+
+        # TODO: footnotes
+        return out
+
+    def next(self):
+        if not self.tokens:
+            return None
+        self.token = self.tokens.pop()
+        return self.token
+
+    def peek(self):
+        if self.tokens:
+            return self.tokens[-1]
+        return None
+
+    def tok(self):
+        t = self.token['type']
+
+        # sepcial cases
+        if t.endswith('_start'):
+            t = t.rstrip('_start')
+
+        return getattr(self, 'parse_%s' % t)()
+
+    def tok_text(self):
+        text = self.token['text']
+        while self.peek()['type'] == 'text':
+            text += '\n' + self.next()['text']
+        return self.inline(text)
+
+    def parse_space(self):
+        return ''
+
+    def parse_hr(self):
+        return self.renderer.hr()
+
+    def parse_heading(self):
+        return self.renderer.heading(
+            self.inline(self.token['text']),
+            self.token['level'],
+            self.token['text'],
+        )
+
+    def parse_code(self):
+        return self.renderer.code(
+            self.token['text'], self.token['lang']
+        )
+
+    def parse_table(self):
+        # TODO
+        return ''
+
+    def parse_blockquote(self):
+        body = ''
+        while self.next()['type'] != 'blockquote_end':
+            body += self.tok()
+        return self.renderer.blockquote(body)
+
+    def parse_list(self):
+        ordered = self.token['ordered']
+        body = ''
+        while self.next()['type'] != 'list_end':
+            body += self.tok()
+        return self.renderer.list(body, ordered)
+
+    def parse_list_item(self):
+        body = ''
+        while self.next()['type'] != 'list_item_end':
+            if self.token['type'] == 'text':
+                body += self.tok_text()
+            else:
+                body += self.tok()
+
+        return self.renderer.list_item(body)
+
+    def parse_loose_item(self):
+        body = ''
+        while self.next()['type'] != 'list_item_end':
+            body += self.tok()
+        return self.renderer.list_item(body)
+
+    def parse_html(self):
+        text = self.token['text']
+        if 'pre' not in self.token or not self.token['pre']:
+            text = self.inline(text)
+        return self.renderer.html(text)
+
+    def parse_paragraph(self):
+        return self.renderer.paragraph(self.inline(self.token['text']))
+
+    def parse_text(self):
+        return self.renderer.paragraph(self.tok_text())

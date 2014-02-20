@@ -17,7 +17,7 @@ __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
     'InlineGrammar', 'InlineLexer',
-    'Parser', 'markdown',
+    'Markdown', 'markdown',
 ]
 
 
@@ -375,7 +375,7 @@ class InlineGrammar(object):
     double_emphasis = re.compile(
         r'^__([\s\S]+?)__(?!_)'  # __word__
         r'|'
-        r'^\*\*([\s\S]+?)\*\*(?!\*)/'  # **word**
+        r'^\*\*([\s\S]+?)\*\*(?!\*)'  # **word**
     )
     emphasis = re.compile(
         r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
@@ -637,8 +637,8 @@ class Renderer(object):
         return '<div class="footnotes">\n<ol>%s</ol>\n</div>\n' % text
 
 
-class Parser(object):
-    def __init__(self, inline=None, block=None, renderer=None, **kwargs):
+class Markdown(object):
+    def __init__(self, renderer=None, inline=None, block=None, **kwargs):
         self.options = kwargs
         if not renderer:
             renderer = Renderer()
@@ -651,6 +651,9 @@ class Parser(object):
         self.tokens = []
 
     def __call__(self, src):
+        return self.parse(src)
+
+    def render(self, src):
         return self.parse(src)
 
     def parse(self, src):
@@ -823,5 +826,5 @@ class Parser(object):
 
 
 def markdown(text):
-    parse = Parser()
-    return parse(text)
+    m = Markdown()
+    return m.parse(text)

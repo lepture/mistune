@@ -47,6 +47,3 @@ def test_normal():
     folder, names = listdir('cases')
     for key in names:
         yield render, folder, key
-
-
-render(os.path.join(root, 'cases'), 'headers')

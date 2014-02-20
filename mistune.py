@@ -416,8 +416,8 @@ class InlineLexer(object):
 
         methods = [
             'escape', 'autolink', 'url', 'tag',
-            'footnote', 'link', 'strong', 'em',
-            'code', 'br', 'strike', 'text',
+            'footnote', 'link', 'reflink', 'nolink',
+            'strong', 'em', 'code', 'br', 'strike', 'text',
         ]
 
         output = ''
@@ -480,7 +480,8 @@ class InlineLexer(object):
         return self._process_link(m, m.group(2), m.group(3))
 
     def output_reflink(self, m):
-        key = m.group(2).lower()
+        key = m.group(2) or m.group(1)
+        key = key.lower()
         if key not in self.links:
             return None
         ret = self.links[key]

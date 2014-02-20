@@ -22,7 +22,10 @@ __all__ = [
 
 
 def _pure_pattern(regex):
-    return re.sub('(^|[^\[])\^', '\1', regex.pattern)
+    pattern = regex.pattern
+    if pattern.startswith('^'):
+        pattern = pattern[1:]
+    return pattern
 
 
 def preprocessing(text, tab=4):
@@ -86,8 +89,8 @@ class BlockGrammar(object):
         r'^((?:[^\n]+\n?(?!'
         r'%s|%s|%s|%s|%s|%s|%s|%s|%s'
         r'))+)\n*' % (
-            _pure_pattern(fences).replace('\\1', '\\2'),
-            _pure_pattern(list_block).replace('\\1', '\\3'),
+            _pure_pattern(fences).replace(r'\1', r'\2'),
+            _pure_pattern(list_block).replace(r'\1', r'\3'),
             _pure_pattern(hrule),
             _pure_pattern(heading),
             _pure_pattern(lheading),
@@ -333,7 +336,7 @@ class BlockLexer(object):
         if 'sanitize' in self.options and self.options['sanitize']:
             t = 'paragraph'
         else:
-            t = 'html'
+            t = 'block_html'
         text = m.group(0)
         self.tokens.append({
             'type': t,
@@ -342,6 +345,9 @@ class BlockLexer(object):
         })
 
     def parse_paragraph(self, m):
+        data = m.group(0)
+        if '===' in data:
+            s = self.rules.paragraph.match(data)
         text = m.group(1).rstrip('\n')
         self.tokens.append({'type': 'paragraph', 'text': text})
 
@@ -373,9 +379,9 @@ class InlineGrammar(object):
     nolink = re.compile(r'^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]')
     url = re.compile(r'''^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
     double_emphasis = re.compile(
-        r'^__([\s\S]+?)__(?!_)'  # __word__
+        r'^_{2}([\s\S]+?)_{2}(?!_)'  # __word__
         r'|'
-        r'^\*\*([\s\S]+?)\*\*(?!\*)'  # **word**
+        r'^\*{2}([\s\S]+?)\*{2}(?!\*)'  # **word**
     )
     emphasis = re.compile(
         r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
@@ -552,7 +558,7 @@ class Renderer(object):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
     def hrule(self):
-        return '<hr>\n'
+        return '<hr />\n'
 
     def list(self, body, ordered=True):
         tag = 'ul'

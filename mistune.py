@@ -9,7 +9,6 @@
 """
 
 import re
-from cgi import escape
 from collections import OrderedDict
 
 __version__ = '0.1.0'
@@ -26,6 +25,19 @@ def _pure_pattern(regex):
     if pattern.startswith('^'):
         pattern = pattern[1:]
     return pattern
+
+
+_escape_pattern = re.compile(r'&(?!#?\w+;)')
+
+
+def escape(text, quote=None):
+    text = _escape_pattern.sub('&amp;', text)
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
+    if quote:
+        text = text.replace('"', '&quot;')
+        text = text.replace("'", '&39;')
+    return text
 
 
 def preprocessing(text, tab=4):
@@ -607,11 +619,9 @@ class Renderer(object):
         return '<del>%s</del>' % text
 
     def autolink(self, link, is_email=False):
+        text = link
         if is_email:
-            text = link
             link = 'mailto:%s' % link
-        else:
-            text = re.sub('^https?:\/\/', '', link)
         return '<a href="%s">%s</a>' % (link, text)
 
     def link(self, link, title, text):

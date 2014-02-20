@@ -203,7 +203,7 @@ class BlockLexer(object):
         bull = m.group(2)
         self.tokens.append({
             'type': 'list_start',
-            'ordered': len(bull) > 1,
+            'ordered': '.' in bull,
         })
         cap = m.group(0)
         self._process_list_item(cap, bull)
@@ -550,9 +550,9 @@ class Renderer(object):
         return '<hr>\n'
 
     def list(self, body, ordered=True):
-        tag = 'ol'
+        tag = 'ul'
         if ordered:
-            tag = 'ul'
+            tag = 'ol'
         return '<%s>\n%s</%s>\n' % (tag, body, tag)
 
     def list_item(self, text):

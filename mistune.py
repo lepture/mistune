@@ -275,7 +275,10 @@ class BlockLexer(object):
 
     def parse_def_footnotes(self, m):
         key = m.group(1).lower()
-        self.def_footnotes[key] = m.group(2)
+        self.def_footnotes[key] = {
+            'index': 0,
+            'text': m.group(2),
+        }
 
     def parse_table(self, m):
         item = self._process_table(m)
@@ -391,6 +394,7 @@ class InlineLexer(object):
         self.renderer = renderer
         self.links = []
         self.footnotes = []
+        self.footnote_index = 0
 
         if not rules:
             rules = InlineGrammar()
@@ -401,6 +405,7 @@ class InlineLexer(object):
         return self.output(src)
 
     def setup(self, links, footnotes):
+        self.footnote_index = 0
         self.links = links or []
         self.footnotes = footnotes or []
 
@@ -462,9 +467,12 @@ class InlineLexer(object):
         key = m.group(1).lower()
         if key not in self.footnotes:
             return None
-        # index start with 1
-        index = self.footnotes.keys().index(key) + 1
-        return self.renderer.footnote_ref(key, index)
+        index = self.footnotes[key]['index']
+        if index:
+            return None
+        self.footnote_index += 1
+        self.footnotes[key]['index'] = self.footnote_index
+        return self.renderer.footnote_ref(key, self.footnote_index)
 
     def output_link(self, m):
         return self._process_link(m, m.group(2), m.group(3))
@@ -608,19 +616,22 @@ class Renderer(object):
         return '<img src="%s" alt="%s" title="%s">' % (link, text, title)
 
     def footnote_ref(self, key, index):
-        ident = key.lower()
-        ident = re.sub(r'[^\w]+', '-', ident)
-        text = (
+        html = (
             '<sup class="footnote-ref" id="fnref-%s">'
             '<a href="#fn-%s">%d</a></sup>'
-        ) % (ident, escape(key), index)
-        return text
+        ) % (escape(key), escape(key), index)
+        return html
 
-    def footnote_item(self):
-        pass
+    def footnote_item(self, key, text):
+        back = (
+            '<a href="#fnref-%s" class="footnote-back">&#8617;</a>'
+        ) % escape(key)
+        text = re.sub(r'<\/(\w+)>$', r'%s</\1>' % back, text)
+        html = '<li id="fn-%s">%s''</li>\n' % (escape(key), text)
+        return html
 
-    def footnotes(self):
-        pass
+    def footnotes(self, text):
+        return '<div class="footnotes">\n<ol>%s</ol>\n</div>\n' % text
 
 
 class Parser(object):
@@ -643,21 +654,52 @@ class Parser(object):
         out = self.output(src)
 
         body = ''
-        footnotes = self.block.def_footnotes.copy()
-        for key, text in footnotes.items():
+        footnotes = self.block.def_footnotes.copy().items()
+        footnotes = filter(lambda o: o[1]['index'], footnotes)
+        footnotes = sorted(footnotes, key=lambda o: o[1]['index'])
+
+        links = self.block.def_links.copy()
+
+        methods = [
+            'newline',  'hr', 'blockquote', 'list_block',
+            'html', 'paragraph', 'text'
+        ]
+
+        def clean(text):
+            lines = text.split('\n')
+            whitespace = None
+            for line in lines[1:]:
+                space = len(line) - len(line.lstrip())
+                if space and (space < whitespace or not whitespace):
+                    whitespace = space
+
+            newlines = [lines[0]]
+            for line in lines[1:]:
+                newlines.append(line[whitespace:])
+            return '\n'.join(newlines)
+
+        for key, value in footnotes:
+            text = value['text']
             if '\n' in text:
-                pass
+                item = self.output(clean(text), links, methods=methods)
             else:
-                body += self.inline(text)
+                item = '<p>%s</p>' % self.inline(text)
+            body += self.renderer.footnote_item(key, item)
+
+        out += self.renderer.footnotes(body)
         return out
 
-    def output(self, src, methods=None):
+    def output(self, src, links=None, footnotes=None, methods=None):
         src = preprocessing(src)
 
         self.tokens = self.block(src, methods)
         self.tokens.reverse()
 
-        self.inline.setup(self.block.def_links, self.block.def_footnotes)
+        if not links:
+            links = self.block.def_links
+            footnotes = self.block.def_footnotes
+
+        self.inline.setup(links, footnotes)
 
         out = ''
         while self.next():

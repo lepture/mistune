@@ -23,9 +23,8 @@ def render(folder, name):
     for i, s in enumerate(html):
         if s != result[i]:
             begin = max(i - 30, 0)
-            msg = '\n\n%s\n------Not Equal------\n%s' % (
-                html[begin:i+30],
-                result[begin:i+30]
+            msg = '\n\n%s\n------Not Equal(%d)------\n%s' % (
+                html[begin:i+30], i, result[begin:i+30]
             )
             raise ValueError(msg)
 
@@ -42,3 +41,12 @@ def test_extra():
     folder, names = listdir('extra')
     for key in names:
         yield render, folder, key
+
+
+def test_normal():
+    folder, names = listdir('cases')
+    for key in names:
+        yield render, folder, key
+
+
+render(os.path.join(root, 'cases'), 'headers')

@@ -30,8 +30,11 @@ def _pure_pattern(regex):
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 
 
-def escape(text, quote=None):
-    text = _escape_pattern.sub('&amp;', text)
+def escape(text, quote=None, force_amp=False):
+    if force_amp:
+        text = text.replace('&', '&amp;')
+    else:
+        text = _escape_pattern.sub('&amp;', text)
     text = text.replace('<', '&lt;')
     text = text.replace('>', '&gt;')
     if quote:
@@ -517,12 +520,13 @@ class InlineLexer(object):
         line = m.group(0)
 
         if title:
-            title = escape(title)
+            title = escape(title, quote=True)
 
         text = m.group(1)
 
         if line[0] == '!':
-            return self.renderer.image(link, title, escape(text))
+            text = escape(text, quote=True)
+            return self.renderer.image(link, title, text)
         return self.renderer.link(link, title, self.output(text))
 
     def output_double_emphasis(self, m):
@@ -536,7 +540,8 @@ class InlineLexer(object):
         return self.renderer.emphasis(text)
 
     def output_code(self, m):
-        return self.renderer.codespan(m.group(2))
+        text = escape(m.group(2), force_amp=True)
+        return self.renderer.codespan(text)
 
     def output_linebreak(self):
         return self.renderer.linebreak()
@@ -554,11 +559,10 @@ class Renderer(object):
         self.options = kwargs
 
     def block_code(self, code, lang=None):
+        code = escape(code, force_amp=True)
         if not lang:
-            return '<pre><code>%s\n</code></pre>\n' % escape(code)
-        return '<pre class="lang-%s"><code>%s\n</code>\n</pre>' % (
-            lang, escape(code)
-        )
+            return '<pre><code>%s\n</code></pre>\n' % code
+        return '<pre class="lang-%s"><code>%s\n</code>\n</pre>' % (lang, code)
 
     def block_quote(self, text):
         return '<blockquote>%s\n</blockquote>' % text
@@ -610,7 +614,7 @@ class Renderer(object):
         return '<em>%s</em>' % text
 
     def codespan(self, text):
-        return '<code>%s</code>' % escape(text)
+        return '<code>%s</code>' % text
 
     def linebreak(self):
         return '<br>'

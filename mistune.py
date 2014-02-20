@@ -126,14 +126,14 @@ class BlockLexer(object):
 
         self.rules = rules
 
-    def __call__(self, src, methods=None):
-        return self.parse(src, methods)
+    def __call__(self, src, features=None):
+        return self.parse(src, features)
 
-    def parse(self, src, methods=None):
+    def parse(self, src, features=None):
         src = src.rstrip('\n')
 
-        if not methods:
-            methods = [
+        if not features:
+            features = [
                 'newline', 'block_code', 'fences', 'heading',
                 'nptable', 'lheading', 'hrule', 'block_quote',
                 'list_block', 'block_html', 'def_links', 'def_footnotes',
@@ -141,7 +141,7 @@ class BlockLexer(object):
             ]
 
         def manipulate(src):
-            for key in methods:
+            for key in features:
                 rule = getattr(self.rules, key)
                 m = rule.match(src)
                 if not m:
@@ -210,7 +210,7 @@ class BlockLexer(object):
         self.tokens.append({'type': 'list_end'})
 
     def _process_list_item(self, cap, bull):
-        methods = [
+        features = [
             'newline', 'block_code', 'fences', 'lheading', 'hrule',
             'block_quote', 'list_block', 'block_html', 'text',
         ]
@@ -258,7 +258,7 @@ class BlockLexer(object):
 
             self.tokens.append({'type': t})
             # recurse
-            self.parse(item, methods)
+            self.parse(item, features)
             self.tokens.append({'type': 'list_item_end'})
 
     def parse_block_quote(self, m):
@@ -414,7 +414,7 @@ class InlineLexer(object):
     def output(self, src):
         src = src.rstrip('\n')
 
-        methods = [
+        features = [
             'escape', 'autolink', 'url', 'tag',
             'footnote', 'link', 'reflink', 'nolink',
             'double_emphasis', 'emphasis', 'code', 'linebreak',
@@ -424,7 +424,7 @@ class InlineLexer(object):
         output = ''
 
         def manipulate(src):
-            for key in methods:
+            for key in features:
                 pattern = getattr(self.rules, key)
                 m = pattern.match(src)
                 if not m:
@@ -638,15 +638,18 @@ class Renderer(object):
 
 
 class Markdown(object):
-    def __init__(self, renderer=None, inline=None, block=None, **kwargs):
-        self.options = kwargs
+    def __init__(self, renderer=None, **kwargs):
+        inline = kwargs.pop('inline', None)
+        block = kwargs.pop('block', None)
+
         if not renderer:
             renderer = Renderer()
 
         self.renderer = renderer
+        self.options = kwargs
 
         self.inline = inline or InlineLexer(renderer, **kwargs)
-        self.block = block = BlockLexer(**kwargs)
+        self.block = block or BlockLexer(**kwargs)
 
         self.tokens = []
 
@@ -668,7 +671,7 @@ class Markdown(object):
 
         links = self.block.def_links.copy()
 
-        methods = [
+        features = [
             'newline', 'block_code', 'fences', 'heading',
             'nptable', 'lheading', 'hrule', 'block_quote',
             'list_block', 'block_html', 'table', 'paragraph', 'text'
@@ -690,7 +693,7 @@ class Markdown(object):
         for key, value in footnotes:
             text = value['text']
             if '\n' in text:
-                item = self.output(clean(text), links, methods=methods)
+                item = self.output(clean(text), links, features=features)
             else:
                 item = '<p>%s</p>' % self.inline(text)
             body += self.renderer.footnote_item(key, item)
@@ -698,10 +701,10 @@ class Markdown(object):
         out += self.renderer.footnotes(body)
         return out
 
-    def output(self, src, links=None, footnotes=None, methods=None):
+    def output(self, src, links=None, footnotes=None, features=None):
         src = preprocessing(src)
 
-        self.tokens = self.block(src, methods)
+        self.tokens = self.block(src, features)
         self.tokens.reverse()
 
         if not links:

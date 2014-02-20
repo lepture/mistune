@@ -77,8 +77,10 @@ class BlockGrammar(object):
         r'(?: +["(]([^\n]+)[")])? *(?:\n+|$)'
     )
     def_footnotes = re.compile(
-        r'^\[\^([^\]]+)\]: *'  # [^key]:
-        r'([^\n]*(?:\n [^\n]*)*)'
+        r'^\[\^([^\]]+)\]: *('
+        r'[^\n]*(?:\n+|$)'  # [^key]:
+        r'(?: {1,}[^\n]*(?:\n+|$))*'
+        r')'
     )
     paragraph = re.compile(
         r'^((?:[^\n]+\n?(?!'
@@ -260,7 +262,7 @@ class BlockLexer(object):
             self.tokens.append({'type': 'list_item_end'})
 
     def parse_blockquote(self, m):
-        self.token.append({'type': 'blockquote_start'})
+        self.tokens.append({'type': 'blockquote_start'})
         cap = m.group(0)
         cap = re.sub(r'^ *> ?', '', cap, flags=re.M)
         self.parse(cap)

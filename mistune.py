@@ -65,8 +65,9 @@ class BlockGrammar(object):
         r'\s*$)'
     )
     list_item = re.compile(
-        r'^( *)([*+-]|\d+\.) [^\n]*'
-        r'(?:\n(?!\1(?:[*+-]|\d+\.) )[^\n]*)*'
+        r'^(( *)(?:[*+-]|\d+\.) [^\n]*'
+        r'(?:\n(?!\2(?:[*+-]|\d+\.) )[^\n]*)*)',
+        flags=re.M
     )
     list_pure_bullet = re.compile(r'(?:[*+-]|\d\.)')
     list_bullet = re.compile(r'^ *(?:[*+-]|\d+\.) +')
@@ -111,35 +112,6 @@ class BlockGrammar(object):
 
 
 class BlockLexer(object):
-    top_methods = [
-        'newline',
-        'block_code',
-        'fences',
-        'heading',
-        'nptable',
-        'lheading',
-        'hr',
-        'blockquote',
-        # 'list_block',
-        'html',
-        'def_links',
-        'def_footnotes',
-        'table',
-        'paragraph',
-        'text',
-    ]
-    low_methods = [
-        'newline',
-        'block_code',
-        'fences',
-        'lheading',
-        'hr',
-        'blockquote',
-        # 'list_block',
-        'html',
-        'text',
-    ]
-
     def __init__(self, rules=None, **kwargs):
         self.options = kwargs
 
@@ -151,19 +123,23 @@ class BlockLexer(object):
             rules = BlockGrammar()
 
         self.rules = rules
-        self._parse_methods = self.top_methods
 
-    def __call__(self, src):
-        return self.parse(src)
+    def __call__(self, src, methods=None):
+        return self.parse(src, methods)
 
     def parse(self, src, methods=None):
         src = src.rstrip('\n')
 
-        if methods:
-            self._parse_methods = methods
+        if not methods:
+            methods = [
+                'newline', 'block_code', 'fences', 'heading',
+                'nptable', 'lheading', 'hr', 'blockquote',
+                'list_block', 'html', 'def_links', 'def_footnotes',
+                'table', 'paragraph', 'text'
+            ]
 
         def manipulate(src):
-            for key in self._parse_methods:
+            for key in methods:
                 rule = getattr(self.rules, key)
                 m = rule.match(src)
                 if not m:
@@ -221,27 +197,29 @@ class BlockLexer(object):
     def parse_hr(self, m):
         self.tokens.append({'type': 'hr'})
 
-    def parse_list_block(self, src):
-        m = self.rules.list_block.match(src)
-        if not m:
-            return src
+    def parse_list_block(self, m):
         bull = m.group(2)
-        self.tokens.push({
+        self.tokens.append({
             'type': 'list_start',
             'ordered': len(bull) > 1,
         })
         cap = m.group(0)
-        src = self._process_list_item(cap, bull, src[len(cap):])
+        self._process_list_item(cap, bull)
         self.tokens.append({'type': 'list_end'})
-        return src
 
-    def _process_list_item(self, cap, bull, src):
-        m = self.rules.list_item.match(cap)
+    def _process_list_item(self, cap, bull):
+        methods = [
+            'newline', 'block_code', 'fences', 'lheading', 'hr',
+            'blockquote', 'list_block', 'html', 'text',
+        ]
+
+        cap = self.rules.list_item.findall(cap)
+
         _next = False
-        length = len(m.groups())
+        l = len(cap)
 
-        for i in range(length + 1):
-            item = m.group(i)
+        for i in range(l):
+            item = cap[i][0]
 
             # remove the bullet
             space = len(item)
@@ -249,12 +227,12 @@ class BlockLexer(object):
 
             # outdent
             if '\n ' in item:
-                space -= len(item)
+                space = space - len(item)
                 item = re.sub(r'^ {1,%d}' % space, '', item, re.M)
 
             # determine if the next list item belongs here
-            if i != length:
-                b = self.rules.list_pure_bullet.match(m.group(i + 1))
+            if self.options.get('smart_lists') and i + 1 < length:
+                b = self.rules.list_pure_bullet.match(cap[i + 1][0])
                 b = b.group(0)
                 # bullet type changed
                 if bull != b and not (len(bull) > 1 and len(b) > 1):
@@ -266,7 +244,7 @@ class BlockLexer(object):
             loose = _next
             if not loose and re.search(r'\n\n(?!\s*$)', item):
                 loose = True
-            if i != length:
+            if i != l:
                 _next = item[len(item)-1] == '\n'
                 if not loose:
                     loose = _next
@@ -278,9 +256,8 @@ class BlockLexer(object):
 
             self.tokens.append({'type': t})
             # recurse
-            self.parse(item, self.low_methods)
+            self.parse(item, methods)
             self.tokens.append({'type': 'list_item_end'})
-        return src
 
     def parse_blockquote(self, m):
         self.token.append({'type': 'blockquote_start'})
@@ -663,9 +640,21 @@ class Parser(object):
         return self.parse(src)
 
     def parse(self, src):
+        out = self.output(src)
+
+        body = ''
+        footnotes = self.block.def_footnotes.copy()
+        for key, text in footnotes.items():
+            if '\n' in text:
+                pass
+            else:
+                body += self.inline(text)
+        return out
+
+    def output(self, src, methods=None):
         src = preprocessing(src)
 
-        self.tokens = self.block(src)
+        self.tokens = self.block(src, methods)
         self.tokens.reverse()
 
         self.inline.setup(self.block.def_links, self.block.def_footnotes)
@@ -674,7 +663,6 @@ class Parser(object):
         while self.next():
             out += self.tok()
 
-        # TODO: footnotes
         return out
 
     def next(self):
@@ -693,7 +681,7 @@ class Parser(object):
 
         # sepcial cases
         if t.endswith('_start'):
-            t = t.rstrip('_start')
+            t = t[:-6]
 
         return getattr(self, 'parse_%s' % t)()
 

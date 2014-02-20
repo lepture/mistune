@@ -167,7 +167,7 @@ class BlockLexer(object):
     def parse_block_code(self, m):
         code = m.group(0)
         pattern = re.compile(r'^ {4}', re.M)
-        code = pattern.sub(code, '')
+        code = pattern.sub('', code)
         self.tokens.append({
             'type': 'code',
             'lang': None,
@@ -654,6 +654,8 @@ class Parser(object):
 
     def parse(self, src):
         out = self.output(src)
+        if not self.block.def_footnotes:
+            return out
 
         body = ''
         footnotes = self.block.def_footnotes.copy().items()
@@ -663,8 +665,9 @@ class Parser(object):
         links = self.block.def_links.copy()
 
         methods = [
-            'newline',  'hr', 'blockquote', 'list_block',
-            'html', 'paragraph', 'text'
+            'newline', 'block_code', 'fences', 'heading',
+            'nptable', 'lheading', 'hr', 'blockquote',
+            'list_block', 'html', 'table', 'paragraph', 'text'
         ]
 
         def clean(text):

@@ -49,10 +49,10 @@ class BlockGrammar(object):
         r'([\s\S]+?)\s*'
         r'\1 *(?:\n+|$)'  # ```
     )
-    hr = re.compile(r'^(?: *[-*_]){3,} *(?:\n+|$)')
+    hrule = re.compile(r'^(?: *[-*_]){3,} *(?:\n+|$)')
     heading = re.compile(r'^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
     lheading = re.compile(r'^([^\n]+)\n *(=|-){2,} *(?:\n+|$)')
-    blockquote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
+    block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
     list_block = re.compile(
         r'^( *)([*+-]|\d+\.) [\s\S]+?'
         r'(?:'
@@ -88,16 +88,16 @@ class BlockGrammar(object):
         r'))+)\n*' % (
             _pure_pattern(fences).replace('\\1', '\\2'),
             _pure_pattern(list_block).replace('\\1', '\\3'),
-            _pure_pattern(hr),
+            _pure_pattern(hrule),
             _pure_pattern(heading),
             _pure_pattern(lheading),
-            _pure_pattern(blockquote),
+            _pure_pattern(block_quote),
             _pure_pattern(def_links),
             _pure_pattern(def_footnotes),
             '<' + _tag,
         )
     )
-    html = re.compile(
+    block_html = re.compile(
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
             r'<(%s)[\s\S]+?<\/\1>' % _tag,
@@ -135,8 +135,8 @@ class BlockLexer(object):
         if not methods:
             methods = [
                 'newline', 'block_code', 'fences', 'heading',
-                'nptable', 'lheading', 'hr', 'blockquote',
-                'list_block', 'html', 'def_links', 'def_footnotes',
+                'nptable', 'lheading', 'hrule', 'block_quote',
+                'list_block', 'block_html', 'def_links', 'def_footnotes',
                 'table', 'paragraph', 'text'
             ]
 
@@ -196,8 +196,8 @@ class BlockLexer(object):
             'text': m.group(1),
         })
 
-    def parse_hr(self, m):
-        self.tokens.append({'type': 'hr'})
+    def parse_hrule(self, m):
+        self.tokens.append({'type': 'hrule'})
 
     def parse_list_block(self, m):
         bull = m.group(2)
@@ -211,8 +211,8 @@ class BlockLexer(object):
 
     def _process_list_item(self, cap, bull):
         methods = [
-            'newline', 'block_code', 'fences', 'lheading', 'hr',
-            'blockquote', 'list_block', 'html', 'text',
+            'newline', 'block_code', 'fences', 'lheading', 'hrule',
+            'block_quote', 'list_block', 'block_html', 'text',
         ]
 
         cap = self.rules.list_item.findall(cap)
@@ -261,12 +261,12 @@ class BlockLexer(object):
             self.parse(item, methods)
             self.tokens.append({'type': 'list_item_end'})
 
-    def parse_blockquote(self, m):
-        self.tokens.append({'type': 'blockquote_start'})
+    def parse_block_quote(self, m):
+        self.tokens.append({'type': 'block_quote_start'})
         cap = m.group(0)
         cap = re.sub(r'^ *> ?', '', cap, flags=re.M)
         self.parse(cap)
-        self.tokens.append({'type': 'blockquote_end'})
+        self.tokens.append({'type': 'block_quote_end'})
 
     def parse_def_links(self, m):
         key = m.group(1).lower()
@@ -328,7 +328,7 @@ class BlockLexer(object):
         }
         return item
 
-    def parse_html(self, m):
+    def parse_block_html(self, m):
         pre = m.group(1) in ['pre', 'script', 'style']
         if 'sanitize' in self.options and self.options['sanitize']:
             t = 'paragraph'
@@ -372,19 +372,19 @@ class InlineGrammar(object):
     )
     nolink = re.compile(r'^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]')
     url = re.compile(r'''^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
-    strong = re.compile(
+    double_emphasis = re.compile(
         r'^__([\s\S]+?)__(?!_)'  # __word__
         r'|'
         r'^\*\*([\s\S]+?)\*\*(?!\*)/'  # **word**
     )
-    em = re.compile(
+    emphasis = re.compile(
         r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
         r'|'
         r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
     )
     code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')
-    br = re.compile(r'^ {2,}\n(?!\s*$)')
-    strike = re.compile(r'/^~~(?=\S)([\s\S]*?\S)~~/')
+    linebreak = re.compile(r'^ {2,}\n(?!\s*$)')
+    strikethrough = re.compile(r'/^~~(?=\S)([\s\S]*?\S)~~/')
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
@@ -417,7 +417,8 @@ class InlineLexer(object):
         methods = [
             'escape', 'autolink', 'url', 'tag',
             'footnote', 'link', 'reflink', 'nolink',
-            'strong', 'em', 'code', 'br', 'strike', 'text',
+            'double_emphasis', 'emphasis', 'code', 'linebreak',
+            'strikethrough', 'text',
         ]
 
         output = ''
@@ -506,22 +507,22 @@ class InlineLexer(object):
             return self.renderer.image(link, title, escape(text))
         return self.renderer.link(link, title, self.output(text))
 
-    def output_strong(self, m):
+    def output_double_emphasis(self, m):
         text = m.group(2) or m.group(1)
-        return self.renderer.strong(text)
+        return self.renderer.double_emphasis(text)
 
-    def output_em(self, m):
+    def output_emphasis(self, m):
         text = m.group(2) or m.group(1)
-        return self.renderer.em(text)
+        return self.renderer.emphasis(text)
 
     def output_code(self, m):
         return self.renderer.codespan(m.group(2))
 
-    def output_br(self):
-        return self.renderer.br()
+    def output_linebreak(self):
+        return self.renderer.linebreak()
 
-    def output_strike(self, m):
-        return self.renderer.strike(self.output(m.group(1)))
+    def output_strikethrough(self, m):
+        return self.renderer.strikethrough(self.output(m.group(1)))
 
     def output_text(self, m):
         return escape(m.group(0))
@@ -538,16 +539,16 @@ class Renderer(object):
             lang, escape(code)
         )
 
-    def blockquote(self, text):
+    def block_quote(self, text):
         return '<blockquote>%s\n</blockquote>' % text
 
-    def html(self, html):
+    def block_html(self, html):
         return html
 
     def heading(self, text, level, raw=None):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
-    def hr(self):
+    def hrule(self):
         return '<hr>\n'
 
     def list(self, body, ordered=True):
@@ -581,28 +582,27 @@ class Renderer(object):
             return '<%s>%s</%s>\n' % (tag, text, tag)
         return '<%s style="text-align:%s">%s</%s>\n' % (tag, align, text, tag)
 
-    def strong(self, text):
+    def double_emphasis(self, text):
         return '<strong>%s</strong>' % text
 
-    def em(self, text):
+    def emphasis(self, text):
         return '<em>%s</em>' % text
 
     def codespan(self, text):
         return '<code>%s</code>' % escape(text)
 
-    def br(self):
+    def linebreak(self):
         return '<br>'
 
-    def strike(self, text):
+    def strikethrough(self, text):
         return '<del>%s</del>' % text
 
     def autolink(self, link, is_email=False):
         if is_email:
-            href = 'mailto:%s' % link
             text = link
+            link = 'mailto:%s' % link
         else:
-            href = link
-            text = re.sub('^https?:\/\/', '', href)
+            text = re.sub('^https?:\/\/', '', link)
         return '<a href="%s">%s</a>' % (link, text)
 
     def link(self, link, title, text):
@@ -667,8 +667,8 @@ class Parser(object):
 
         methods = [
             'newline', 'block_code', 'fences', 'heading',
-            'nptable', 'lheading', 'hr', 'blockquote',
-            'list_block', 'html', 'table', 'paragraph', 'text'
+            'nptable', 'lheading', 'hrule', 'block_quote',
+            'list_block', 'block_html', 'table', 'paragraph', 'text'
         ]
 
         def clean(text):
@@ -742,8 +742,8 @@ class Parser(object):
     def parse_space(self):
         return ''
 
-    def parse_hr(self):
-        return self.renderer.hr()
+    def parse_hrule(self):
+        return self.renderer.hrule()
 
     def parse_heading(self):
         return self.renderer.heading(
@@ -780,11 +780,11 @@ class Parser(object):
 
         return self.renderer.table(header, body)
 
-    def parse_blockquote(self):
+    def parse_block_quote(self):
         body = ''
-        while self.next()['type'] != 'blockquote_end':
+        while self.next()['type'] != 'block_quote_end':
             body += self.tok()
-        return self.renderer.blockquote(body)
+        return self.renderer.block_quote(body)
 
     def parse_list(self):
         ordered = self.token['ordered']
@@ -809,11 +809,11 @@ class Parser(object):
             body += self.tok()
         return self.renderer.list_item(body)
 
-    def parse_html(self):
+    def parse_block_html(self):
         text = self.token['text']
         if 'pre' not in self.token or not self.token['pre']:
             text = self.inline(text)
-        return self.renderer.html(text)
+        return self.renderer.block_html(text)
 
     def parse_paragraph(self):
         return self.renderer.paragraph(self.inline(self.token['text']))

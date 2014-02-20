@@ -509,10 +509,12 @@ class InlineLexer(object):
 
     def output_double_emphasis(self, m):
         text = m.group(2) or m.group(1)
+        text = self.output(text)
         return self.renderer.double_emphasis(text)
 
     def output_emphasis(self, m):
         text = m.group(2) or m.group(1)
+        text = self.output(text)
         return self.renderer.emphasis(text)
 
     def output_code(self, m):
@@ -522,7 +524,8 @@ class InlineLexer(object):
         return self.renderer.linebreak()
 
     def output_strikethrough(self, m):
-        return self.renderer.strikethrough(self.output(m.group(1)))
+        text = self.output(m.group(1))
+        return self.renderer.strikethrough(text)
 
     def output_text(self, m):
         return escape(m.group(0))

@@ -624,15 +624,19 @@ class Renderer(object):
     def footnote_ref(self, key, index):
         html = (
             '<sup class="footnote-ref" id="fnref-%s">'
-            '<a href="#fn-%s">%d</a></sup>'
+            '<a href="#fn-%s" rel="footnote">%d</a></sup>'
         ) % (escape(key), escape(key), index)
         return html
 
     def footnote_item(self, key, text):
         back = (
-            '<a href="#fnref-%s" class="footnote-back">&#8617;</a>'
+            '<a href="#fnref-%s" rev="footnote">&#8617;</a>'
         ) % escape(key)
-        text = re.sub(r'<\/(\w+)>$', r'%s</\1>' % back, text)
+        text = text.rstrip()
+        if text.endswith('</p>'):
+            text = re.sub(r'<\/p>$', r'%s</p>' % back, text)
+        else:
+            text = '%s<p>%s</p>' % (text, back)
         html = '<li id="fn-%s">%s''</li>\n' % (escape(key), text)
         return html
 
@@ -815,7 +819,10 @@ class Markdown(object):
     def parse_loose_item(self):
         body = ''
         while self.next()['type'] != 'list_item_end':
-            body += self.tok()
+            if self.token['type'] == 'text':
+                body += self.tok_text()
+            else:
+                body += self.tok()
         return self.renderer.list_item(body)
 
     def parse_block_html(self):

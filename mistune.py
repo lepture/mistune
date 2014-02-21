@@ -251,7 +251,7 @@ class BlockLexer(object):
                 item = re.sub(r'^ {1,%d}' % space, '', item, re.M)
 
             # determine if the next list item belongs here
-            if self.options.get('smart_lists') and i + 1 < length:
+            if self.options.get('smart_lists') and i + 1 < l:
                 b = self.rules.list_pure_bullet.match(cap[i + 1][0])
                 b = b.group(0)
                 # bullet type changed

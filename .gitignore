@@ -14,3 +14,5 @@ docs/_build
 cover/
 .tox
 *.bak
+*.c
+*.so

@@ -8,8 +8,17 @@ try:
 except ImportError:
     pass
 
+import sys
 import mistune
-from setuptools import setup
+from setuptools import setup, Extension
+
+try:
+    from Cython.Distutils import build_ext
+    cmdclass = {'build_ext': build_ext}
+    ext_modules = [Extension('mistune', ['mistune.py'])]
+except ImportError:
+    cmdclass = {}
+    ext_modules = []
 
 
 def fread(filepath):
@@ -26,6 +35,8 @@ setup(
     long_description=fread('README.rst'),
     license='BSD',
     py_modules=['mistune'],
+    cmdclass=cmdclass,
+    ext_modules=ext_modules,
     zip_safe=False,
     platforms='any',
     tests_require=['nose'],

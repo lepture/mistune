@@ -39,7 +39,7 @@ def escape(text, quote=None, force_amp=False):
     text = text.replace('>', '&gt;')
     if quote:
         text = text.replace('"', '&quot;')
-        text = text.replace("'", '&39;')
+        text = text.replace("'", '&#39;')
     return text
 
 
@@ -503,7 +503,7 @@ class InlineLexer(object):
 
     def output_reflink(self, m):
         key = m.group(2) or m.group(1)
-        key = key.lower()
+        key = re.sub(r'\s+', ' ', key.lower())
         if key not in self.links:
             return None
         ret = self.links[key]
@@ -511,6 +511,7 @@ class InlineLexer(object):
 
     def output_nolink(self, m):
         key = m.group(1).lower()
+        key = re.sub(r'\s+', ' ', key)
         if key not in self.links:
             return None
         ret = self.links[key]
@@ -559,10 +560,11 @@ class Renderer(object):
         self.options = kwargs
 
     def block_code(self, code, lang=None):
-        code = escape(code, force_amp=True)
         if not lang:
+            code = escape(code, force_amp=True)
             return '<pre><code>%s\n</code></pre>\n' % code
-        return '<pre class="lang-%s"><code>%s\n</code>\n</pre>' % (lang, code)
+        code = escape(code, quote=True, force_amp=True)
+        return '<pre><code class="lang-%s">%s\n</code>\n</pre>' % (lang, code)
 
     def block_quote(self, text):
         return '<blockquote>%s\n</blockquote>' % text
@@ -574,7 +576,7 @@ class Renderer(object):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
     def hrule(self):
-        return '<hr />\n'
+        return '<hr>\n'
 
     def list(self, body, ordered=True):
         tag = 'ul'

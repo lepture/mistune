@@ -342,7 +342,7 @@ class BlockLexer(object):
 
     def parse_block_html(self, m):
         pre = m.group(1) in ['pre', 'script', 'style']
-        if self.options.get('sanitize'):
+        if self.options.get('skip_html'):
             t = 'paragraph'
         else:
             t = 'block_html'
@@ -577,6 +577,9 @@ class Renderer(object):
         return '<blockquote>%s\n</blockquote>' % text
 
     def block_html(self, html):
+        if self.options.get('skip_style'):
+            if html.lower().startswith('<style'):
+                return ''
         return html
 
     def heading(self, text, level, raw=None):
@@ -657,6 +660,11 @@ class Renderer(object):
         if self.options.get('use_xhtml'):
             return '%s />' % html
         return '%s>' % html
+
+    def raw_html(html):
+        if self.options.get('skip_html'):
+            return escape(html)
+        return html
 
     def footnote_ref(self, key, index):
         html = (

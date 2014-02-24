@@ -6,13 +6,19 @@ root = os.path.dirname(__file__)
 
 known = []
 
+features = [
+    'table', 'fenced_code', 'footnotes',
+    'autolink', 'strikethrough',
+]
+m = mistune.Markdown(features=features)
+
 
 def render(folder, name):
     filepath = os.path.join(folder, name + '.text')
     with open(filepath) as f:
         content = f.read()
 
-    html = mistune.markdown(content)
+    html = m.parse(content)
 
     filepath = os.path.join(folder, name + '.html')
     with open(filepath) as f:

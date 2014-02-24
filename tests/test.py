@@ -53,3 +53,16 @@ def test_normal():
     folder, names = listdir('cases')
     for key in names:
         yield render, folder, key
+
+
+def test_no_table():
+    filepath = os.path.join(root, 'extra', 'gfm_tables.text')
+    with open(filepath) as f:
+        content = f.read()
+
+    assert '</table>' not in mistune.markdown(content)
+
+
+def test_escape():
+    ret = mistune.markdown('<div>**foo**</div>', escape=True)
+    assert '&gt;' in ret

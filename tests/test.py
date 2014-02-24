@@ -33,6 +33,7 @@ def render(folder, name):
                 html[begin:i+30], i, result[begin:i+30]
             )
             raise ValueError(msg)
+    assert html == result
 
 
 def listdir(folder):

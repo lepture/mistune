@@ -355,11 +355,12 @@ class BlockLexer(object):
 
     def parse_block_html(self, m):
         pre = m.group(1) in ['pre', 'script', 'style']
-        if self.options.get('skip_html'):
+        text = m.group(0)
+        if self.options.get('escape'):
+            text = escape(text)
             t = 'paragraph'
         else:
             t = 'block_html'
-        text = m.group(0)
         self.tokens.append({
             'type': t,
             'pre': pre,
@@ -367,9 +368,6 @@ class BlockLexer(object):
         })
 
     def parse_paragraph(self, m):
-        data = m.group(0)
-        if '===' in data:
-            s = self.rules.paragraph.match(data)
         text = m.group(1).rstrip('\n')
         self.tokens.append({'type': 'paragraph', 'text': text})
 

@@ -1,6 +1,4 @@
 language: python
-install:
-    - pip install coveralls
 
 python:
     - "2.6"
@@ -12,6 +10,7 @@ script:
     - python setup.py -q nosetests
 
 after_success:
+    - pip install coveralls
     - coverage run --source=mistune setup.py -q nosetests
     - coveralls
 

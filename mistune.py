@@ -26,6 +26,13 @@ def _pure_pattern(regex):
     return pattern
 
 
+_key_pattern = re.compile(r'\s+')
+
+
+def _keyify(key):
+    return _key_pattern.sub(' ', key.lower())
+
+
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 
 
@@ -295,14 +302,14 @@ class BlockLexer(object):
         self.tokens.append({'type': 'block_quote_end'})
 
     def parse_def_links(self, m):
-        key = m.group(1).lower()
+        key = _keyify(m.group(1))
         self.def_links[key] = {
             'link': m.group(2),
             'title': m.group(3),
         }
 
     def parse_def_footnotes(self, m):
-        key = m.group(1).lower()
+        key = _keyify(m.group(1))
         if key in self.def_footnotes:
             raise RuntimeError('Footnote `%s` is already defined' % key)
 
@@ -552,7 +559,7 @@ class InlineLexer(object):
         return text
 
     def output_footnote(self, m):
-        key = m.group(1).lower()
+        key = _keyify(m.group(1))
         if key not in self.footnotes:
             return None
         if self.footnotes[key]:
@@ -565,16 +572,14 @@ class InlineLexer(object):
         return self._process_link(m, m.group(2), m.group(3))
 
     def output_reflink(self, m):
-        key = m.group(2) or m.group(1)
-        key = re.sub(r'\s+', ' ', key.lower())
+        key = _keyify(m.group(2) or m.group(1))
         if key not in self.links:
             return None
         ret = self.links[key]
         return self._process_link(m, ret['link'], ret['title'])
 
     def output_nolink(self, m):
-        key = m.group(1).lower()
-        key = re.sub(r'\s+', ' ', key)
+        key = _keyify(m.group(1))
         if key not in self.links:
             return None
         ret = self.links[key]
@@ -721,7 +726,7 @@ class Renderer(object):
             return '%s />' % html
         return '%s>' % html
 
-    def raw_html(html):
+    def raw_html(self, html):
         if self.options.get('skip_html'):
             return escape(html)
         return html

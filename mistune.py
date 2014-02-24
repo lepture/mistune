@@ -9,7 +9,6 @@
 """
 
 import re
-from collections import OrderedDict
 
 __version__ = '0.1.0'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -86,8 +85,8 @@ class BlockGrammar(object):
         r'^( *)([*+-]|\d+\.) [\s\S]+?'
         r'(?:'
         r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
-        r'|\n+(?=%s)' # def links
-        r'|\n+(?=%s)' # def footnotes
+        r'|\n+(?=%s)'  # def links
+        r'|\n+(?=%s)'  # def footnotes
         r'|\n{2,}'
         r'(?! )'
         r'(?!\1(?:[*+-]|\d+\.) )\n*'
@@ -140,7 +139,7 @@ class BlockLexer(object):
         self.options = kwargs
 
         self.tokens = []
-        self.def_links = OrderedDict()
+        self.def_links = {}
         self.def_footnotes = {}
 
         if not rules:
@@ -319,7 +318,7 @@ class BlockLexer(object):
             whitespace = None
             for line in lines[1:]:
                 space = len(line) - len(line.lstrip())
-                if space and (space < whitespace or not whitespace):
+                if space and (not whitespace or space < whitespace):
                     whitespace = space
             newlines = [lines[0]]
             for line in lines[1:]:

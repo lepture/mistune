@@ -342,7 +342,7 @@ class BlockLexer(object):
 
     def parse_block_html(self, m):
         pre = m.group(1) in ['pre', 'script', 'style']
-        if 'sanitize' in self.options and self.options['sanitize']:
+        if self.options.get('sanitize'):
             t = 'paragraph'
         else:
             t = 'block_html'
@@ -583,6 +583,8 @@ class Renderer(object):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
     def hrule(self):
+        if self.options.get('use_xhtml'):
+            return '<hr />\n'
         return '<hr>\n'
 
     def list(self, body, ordered=True):
@@ -626,6 +628,8 @@ class Renderer(object):
         return '<code>%s</code>' % text
 
     def linebreak(self):
+        if self.options.get('use_xhtml'):
+            return '<br />'
         return '<br>'
 
     def strikethrough(self, text):
@@ -647,8 +651,12 @@ class Renderer(object):
 
     def image(self, link, title, text):
         if not title:
-            return '<img src="%s" alt="%s">' % (link, text)
-        return '<img src="%s" alt="%s" title="%s">' % (link, text, title)
+            html = '<img src="%s" alt="%s"' % (link, text)
+        else:
+            html = '<img src="%s" alt="%s" title="%s"' % (link, text, title)
+        if self.options.get('use_xhtml'):
+            return '%s />' % html
+        return '%s>' % html
 
     def footnote_ref(self, key, index):
         html = (

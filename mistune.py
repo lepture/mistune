@@ -417,6 +417,7 @@ class InlineLexer(object):
             rules = InlineGrammar()
 
         self.rules = rules
+        self._in_link = False
 
     def __call__(self, src):
         return self.output(src)
@@ -476,10 +477,18 @@ class InlineLexer(object):
 
     def output_url(self, m):
         link = escape(m.group(1))
+        if self._in_link:
+            return link
         return self.renderer.autolink(link, False)
 
     def output_tag(self, m):
-        return m.group(0)
+        text = m.group(0)
+        lower_text = text.lower()
+        if lower_text.startswith('<a '):
+            self._in_link = True
+        if lower_text.startswith('</a>'):
+            self._in_link = False
+        return text
 
     def output_footnote(self, m):
         key = m.group(1).lower()
@@ -522,7 +531,11 @@ class InlineLexer(object):
         if line[0] == '!':
             text = escape(text, quote=True)
             return self.renderer.image(link, title, text)
-        return self.renderer.link(link, title, self.output(text))
+
+        self._in_link = True
+        text = self.output(text)
+        self._in_link = False
+        return self.renderer.link(link, title, text)
 
     def output_double_emphasis(self, m):
         text = m.group(2) or m.group(1)

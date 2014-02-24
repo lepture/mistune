@@ -141,7 +141,7 @@ class BlockLexer(object):
 
         self.tokens = []
         self.def_links = OrderedDict()
-        self.def_footnotes = OrderedDict()
+        self.def_footnotes = {}
 
         if not rules:
             rules = BlockGrammar()
@@ -302,10 +302,42 @@ class BlockLexer(object):
 
     def parse_def_footnotes(self, m):
         key = m.group(1).lower()
-        self.def_footnotes[key] = {
-            'index': 0,
-            'text': m.group(2),
-        }
+        if key in self.def_footnotes:
+            raise RuntimeError('Footnote `%s` is already defined' % key)
+
+        self.def_footnotes[key] = 0
+
+        self.tokens.append({
+            'type': 'footnote_start',
+            'key': key,
+        })
+
+        text = m.group(2)
+
+        if '\n' in text:
+            lines = text.split('\n')
+            whitespace = None
+            for line in lines[1:]:
+                space = len(line) - len(line.lstrip())
+                if space and (space < whitespace or not whitespace):
+                    whitespace = space
+            newlines = [lines[0]]
+            for line in lines[1:]:
+                newlines.append(line[whitespace:])
+            text = '\n'.join(newlines)
+
+        features = [
+            'newline', 'block_code', 'fences', 'heading',
+            'nptable', 'lheading', 'hrule', 'block_quote',
+            'list_block', 'block_html', 'table', 'paragraph', 'text'
+        ]
+
+        self.parse(text, features)
+
+        self.tokens.append({
+            'type': 'footnote_end',
+            'key': key,
+        })
 
     def parse_table(self, m):
         item = self._process_table(m)
@@ -429,7 +461,9 @@ class InlineLexer(object):
 
         self.rules = rules
         self.features = kwargs.get('features', [])
+
         self._in_link = False
+        self._in_footnote = False
 
     def __call__(self, src):
         return self.output(src)
@@ -439,15 +473,19 @@ class InlineLexer(object):
         self.links = links or []
         self.footnotes = footnotes or []
 
-    def output(self, src):
+    def output(self, src, features=None):
         src = src.rstrip('\n')
 
-        features = [
-            'escape', 'autolink', 'url', 'tag',
-            'footnote', 'link', 'reflink', 'nolink',
-            'double_emphasis', 'emphasis', 'code', 'linebreak',
-            'strikethrough', 'text',
-        ]
+        if not features:
+            features = [
+                'escape', 'autolink', 'url', 'tag',
+                'footnote', 'link', 'reflink', 'nolink',
+                'double_emphasis', 'emphasis', 'code',
+                'linebreak', 'strikethrough', 'text',
+            ]
+
+        if self._in_footnote and 'footnote' in features:
+            features.remove('footnote')
 
         if 'footnotes' not in self.features and 'footnote' in features:
             features.remove('footnote')
@@ -516,11 +554,10 @@ class InlineLexer(object):
         key = m.group(1).lower()
         if key not in self.footnotes:
             return None
-        index = self.footnotes[key]['index']
-        if index:
+        if self.footnotes[key]:
             return None
         self.footnote_index += 1
-        self.footnotes[key]['index'] = self.footnote_index
+        self.footnotes[key] = self.footnote_index
         return self.renderer.footnote_ref(key, self.footnote_index)
 
     def output_link(self, m):
@@ -725,15 +762,8 @@ class Markdown(object):
         self.inline = inline or InlineLexer(renderer, **kwargs)
         self.block = block or BlockLexer(**kwargs)
 
+        self.footnotes = []
         self.tokens = []
-
-    def _footnote(self, src, links):
-        features = [
-            'newline', 'block_code', 'fences', 'heading',
-            'nptable', 'lheading', 'hrule', 'block_quote',
-            'list_block', 'block_html', 'table', 'paragraph', 'text'
-        ]
-        return self.output(src, links=links, features=features)
 
     def __call__(self, src):
         return self.parse(src)
@@ -743,41 +773,24 @@ class Markdown(object):
 
     def parse(self, src):
         out = self.output(src)
-        if not self.block.def_footnotes:
+
+        keys = self.block.def_footnotes
+        # reset def_footnotes
+        self.block.def_footnotes = {}
+
+        if not self.footnotes:
             return out
 
+        footnotes = self.footnotes
+        footnotes = filter(lambda o: keys.get(o['key']), footnotes)
+        footnotes = sorted(footnotes, key=lambda o: keys.get(o['key']))
+        self.footnotes = []
+
         body = ''
-
-        footnotes = []
-
-        while self.block.def_footnotes:
-            note = self.block.def_footnotes.popitem()
-            if note[1]['index']:
-                footnotes.append(note)
-
-        footnotes = sorted(footnotes, key=lambda o: o[1]['index'])
-        links = self.block.def_links
-
-        def clean(text):
-            lines = text.split('\n')
-            whitespace = None
-            for line in lines[1:]:
-                space = len(line) - len(line.lstrip())
-                if space and (space < whitespace or not whitespace):
-                    whitespace = space
-
-            newlines = [lines[0]]
-            for line in lines[1:]:
-                newlines.append(line[whitespace:])
-            return '\n'.join(newlines)
-
-        for key, value in footnotes:
-            text = value['text']
-            if '\n' in text:
-                item = self._footnote(clean(text), links)
-            else:
-                item = '<p>%s</p>' % self.inline(text)
-            body += self.renderer.footnote_item(key, item)
+        for note in footnotes:
+            body += self.renderer.footnote_item(
+                note['key'], note['text']
+            )
 
         out += self.renderer.footnotes(body)
         return out
@@ -895,6 +908,16 @@ class Markdown(object):
         while self.pop()['type'] != 'list_item_end':
             body += self.tok()
         return self.renderer.list_item(body)
+
+    def parse_footnote(self):
+        self.inline._in_footnote = True
+        body = ''
+        key = self.token['key']
+        while self.pop()['type'] != 'footnote_end':
+            body += self.tok()
+        self.footnotes.append({'key': key, 'text': body})
+        self.inline._in_footnote = False
+        return ''
 
     def parse_block_html(self):
         text = self.token['text']

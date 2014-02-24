@@ -59,6 +59,17 @@ class BlockGrammar(object):
         r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
         r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
     )
+    def_links = re.compile(
+        r'^ *\[([^^\]]+)\]: *'  # [key]:
+        r'<?([^\s>]+)>?'  # <link> or link
+        r'(?: +["(]([^\n]+)[")])? *(?:\n+|$)'
+    )
+    def_footnotes = re.compile(
+        r'^\[\^([^\]]+)\]: *('
+        r'[^\n]*(?:\n+|$)'  # [^key]:
+        r'(?: {1,}[^\n]*(?:\n+|$))*'
+        r')'
+    )
 
     newline = re.compile(r'^\n+')
     block_code = re.compile(r'^( {4}[^\n]+\n*)+')
@@ -74,13 +85,17 @@ class BlockGrammar(object):
     list_block = re.compile(
         r'^( *)([*+-]|\d+\.) [\s\S]+?'
         r'(?:'
-        r'\n+(?=(?: *[-*_]){3,} *(?:\n+|$))' # hr
-        r'|'
-        r'\n{2,}'
+        r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
+        r'|\n+(?=%s)' # def links
+        r'|\n+(?=%s)' # def footnotes
+        r'|\n{2,}'
         r'(?! )'
         r'(?!\1(?:[*+-]|\d+\.) )\n*'
         r'|'
-        r'\s*$)'
+        r'\s*$)' % (
+            _pure_pattern(def_links),
+            _pure_pattern(def_footnotes),
+        )
     )
     list_item = re.compile(
         r'^(( *)(?:[*+-]|\d+\.) [^\n]*'
@@ -89,17 +104,6 @@ class BlockGrammar(object):
     )
     list_pure_bullet = re.compile(r'(?:[*+-]|\d\.)')
     list_bullet = re.compile(r'^ *(?:[*+-]|\d+\.) +')
-    def_links = re.compile(
-        r'^ *\[([^^\]]+)\]: *'  # [key]:
-        r'<?([^\s>]+)>?'  # <link> or link
-        r'(?: +["(]([^\n]+)[")])? *(?:\n+|$)'
-    )
-    def_footnotes = re.compile(
-        r'^\[\^([^\]]+)\]: *('
-        r'[^\n]*(?:\n+|$)'  # [^key]:
-        r'(?: {1,}[^\n]*(?:\n+|$))*'
-        r')'
-    )
     paragraph = re.compile(
         r'^((?:[^\n]+\n?(?!'
         r'%s|%s|%s|%s|%s|%s|%s|%s|%s'

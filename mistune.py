@@ -748,13 +748,15 @@ class Markdown(object):
 
         body = ''
 
-        footnotes = self.block.def_footnotes.items()
-        self.block.def_footnotes = OrderedDict()
+        footnotes = []
 
-        footnotes = filter(lambda o: o[1]['index'], footnotes)
+        while self.block.def_footnotes:
+            note = self.block.def_footnotes.popitem()
+            if note[1]['index']:
+                footnotes.append(note)
+
         footnotes = sorted(footnotes, key=lambda o: o[1]['index'])
-
-        links = self.block.def_links.copy()
+        links = self.block.def_links
 
         def clean(text):
             lines = text.split('\n')
@@ -793,12 +795,12 @@ class Markdown(object):
         self.inline.setup(links, footnotes)
 
         out = ''
-        while self.next():
+        while self.pop():
             out += self.tok()
 
         return out
 
-    def next(self):
+    def pop(self):
         if not self.tokens:
             return None
         self.token = self.tokens.pop()
@@ -821,7 +823,7 @@ class Markdown(object):
     def tok_text(self):
         text = self.token['text']
         while self.peek()['type'] == 'text':
-            text += '\n' + self.next()['text']
+            text += '\n' + self.pop()['text']
         return self.inline(text)
 
     def parse_space(self):
@@ -867,20 +869,20 @@ class Markdown(object):
 
     def parse_block_quote(self):
         body = ''
-        while self.next()['type'] != 'block_quote_end':
+        while self.pop()['type'] != 'block_quote_end':
             body += self.tok()
         return self.renderer.block_quote(body)
 
     def parse_list(self):
         ordered = self.token['ordered']
         body = ''
-        while self.next()['type'] != 'list_end':
+        while self.pop()['type'] != 'list_end':
             body += self.tok()
         return self.renderer.list(body, ordered)
 
     def parse_list_item(self):
         body = ''
-        while self.next()['type'] != 'list_item_end':
+        while self.pop()['type'] != 'list_item_end':
             if self.token['type'] == 'text':
                 body += self.tok_text()
             else:
@@ -890,7 +892,7 @@ class Markdown(object):
 
     def parse_loose_item(self):
         body = ''
-        while self.next()['type'] != 'list_item_end':
+        while self.pop()['type'] != 'list_item_end':
             body += self.tok()
         return self.renderer.list_item(body)
 

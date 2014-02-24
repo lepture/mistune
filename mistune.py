@@ -451,8 +451,8 @@ class InlineLexer(object):
         self.options = kwargs
 
         self.renderer = renderer
-        self.links = []
-        self.footnotes = []
+        self.links = {}
+        self.footnotes = {}
         self.footnote_index = 0
 
         if not rules:
@@ -469,8 +469,8 @@ class InlineLexer(object):
 
     def setup(self, links, footnotes):
         self.footnote_index = 0
-        self.links = links or []
-        self.footnotes = footnotes or []
+        self.links = links or {}
+        self.footnotes = footnotes or {}
 
     def output(self, src, features=None):
         src = src.rstrip('\n')
@@ -772,10 +772,13 @@ class Markdown(object):
 
     def parse(self, src):
         out = self.output(src)
-
         keys = self.block.def_footnotes
-        # reset def_footnotes
+
+        # reset block
         self.block.def_footnotes = {}
+        # reset inline
+        self.inline.links = {}
+        self.inline.footnotes = {}
 
         if not self.footnotes:
             return out

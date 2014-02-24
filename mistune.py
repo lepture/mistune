@@ -264,7 +264,8 @@ class BlockLexer(object):
             # outdent
             if '\n ' in item:
                 space = space - len(item)
-                item = re.sub(r'^ {1,%d}' % space, '', item, flags=re.M)
+                pattern = re.compile(r'^ {1,%d}' % space, flags=re.M)
+                item = pattern.sub('', item)
 
             # determin whether item is loose or not
             loose = _next
@@ -288,7 +289,8 @@ class BlockLexer(object):
     def parse_block_quote(self, m):
         self.tokens.append({'type': 'block_quote_start'})
         cap = m.group(0)
-        cap = re.sub(r'^ *> ?', '', cap, flags=re.M)
+        pattern = re.compile(r'^ *> ?', flags=re.M)
+        cap = pattern.sub('', cap)
         self.parse(cap)
         self.tokens.append({'type': 'block_quote_end'})
 

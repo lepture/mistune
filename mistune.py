@@ -236,9 +236,9 @@ class BlockLexer(object):
         cap = self.rules.list_item.findall(cap)
 
         _next = False
-        l = len(cap)
+        length = len(cap)
 
-        for i in range(l):
+        for i in range(length):
             item = cap[i][0]
 
             # remove the bullet
@@ -248,23 +248,13 @@ class BlockLexer(object):
             # outdent
             if '\n ' in item:
                 space = space - len(item)
-                item = re.sub(r'^ {1,%d}' % space, '', item, re.M)
-
-            # determine if the next list item belongs here
-            if self.options.get('smart_lists') and i + 1 < l:
-                b = self.rules.list_pure_bullet.match(cap[i + 1][0])
-                b = b.group(0)
-                # bullet type changed
-                if bull != b and not (len(bull) > 1 and len(b) > 1):
-                    # TODO
-                    #src = '\n'.join(m.group([i+1:]))
-                    pass
+                item = re.sub(r'^ {1,%d}' % space, '', item, flags=re.M)
 
             # determin whether item is loose or not
             loose = _next
             if not loose and re.search(r'\n\n(?!\s*$)', item):
                 loose = True
-            if i != l:
+            if i != length - 1:
                 _next = item[len(item)-1] == '\n'
                 if not loose:
                     loose = _next
@@ -841,10 +831,7 @@ class Markdown(object):
     def parse_loose_item(self):
         body = ''
         while self.next()['type'] != 'list_item_end':
-            if self.token['type'] == 'text':
-                body += self.tok_text()
-            else:
-                body += self.tok()
+            body += self.tok()
         return self.renderer.list_item(body)
 
     def parse_block_html(self):

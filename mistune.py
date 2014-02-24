@@ -159,8 +159,8 @@ class BlockLexer(object):
             features = [
                 'newline', 'block_code', 'fences', 'heading',
                 'nptable', 'lheading', 'hrule', 'block_quote',
-                'list_block', 'block_html', 'def_links', 'def_footnotes',
-                'table', 'paragraph', 'text'
+                'list_block', 'block_html', 'def_links',
+                'def_footnotes', 'table', 'paragraph', 'text'
             ]
 
         if 'table' not in self.features:
@@ -729,6 +729,14 @@ class Markdown(object):
 
         self.tokens = []
 
+    def _footnote(self, src, links):
+        features = [
+            'newline', 'block_code', 'fences', 'heading',
+            'nptable', 'lheading', 'hrule', 'block_quote',
+            'list_block', 'block_html', 'table', 'paragraph', 'text'
+        ]
+        return self.output(src, links=links, features=features)
+
     def __call__(self, src):
         return self.parse(src)
 
@@ -741,17 +749,14 @@ class Markdown(object):
             return out
 
         body = ''
-        footnotes = self.block.def_footnotes.copy().items()
+
+        footnotes = self.block.def_footnotes.items()
+        self.block.def_footnotes = OrderedDict()
+
         footnotes = filter(lambda o: o[1]['index'], footnotes)
         footnotes = sorted(footnotes, key=lambda o: o[1]['index'])
 
         links = self.block.def_links.copy()
-
-        features = [
-            'newline', 'block_code', 'fences', 'heading',
-            'nptable', 'lheading', 'hrule', 'block_quote',
-            'list_block', 'block_html', 'table', 'paragraph', 'text'
-        ]
 
         def clean(text):
             lines = text.split('\n')
@@ -769,7 +774,7 @@ class Markdown(object):
         for key, value in footnotes:
             text = value['text']
             if '\n' in text:
-                item = self.output(clean(text), links, features=features)
+                item = self._footnote(clean(text), links)
             else:
                 item = '<p>%s</p>' % self.inline(text)
             body += self.renderer.footnote_item(key, item)

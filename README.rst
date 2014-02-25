@@ -84,17 +84,17 @@ Block Level
 
 Here is a list of block level renderer API::
 
-    block_code(text, language=None)
+    block_code(code, language=None)
     block_quote(text)
-    block_html(text)
+    block_html(html)
     header(text, level, raw=None)
     hrule()
-    list(text, ordered=True)
+    list(body, ordered=True)
     list_item(text)
     paragraph(text)
     table(header, body)
-    table_row(text)
-    table_cell(text, **flags)
+    table_row(content)
+    table_cell(content, **flags)
 
 The `flags` tells you whether it is header with `flags['header']`. And it
 also tells you the align with `flags['align']`.
@@ -109,7 +109,7 @@ Here is a list of span level renderer API::
     codespan(text)
     double_emphasis(text)
     emphasis(text)
-    image(link, title, alt_text)
+    image(src, title, alt_text)
     linebreak()
     link(link, title, content)
     raw_html(raw_html)

@@ -298,7 +298,8 @@ class BlockLexer(object):
     def parse_def_footnotes(self, m):
         key = _keyify(m.group(1))
         if key in self.def_footnotes:
-            raise RuntimeError('Footnote `%s` is already defined' % key)
+            # footnote is already defined
+            return
 
         self.def_footnotes[key] = 0
 

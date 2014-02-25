@@ -1,59 +1,85 @@
 
 import os
-import re
 import time
 
-root = os.path.dirname(__file__)
+class benchmark(object):
+    def __init__(self, name):
+        self._name = name
 
-known = []
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            start = time.clock()
+            func(*args, **kwargs)
+            end = time.clock()
+            return end - start
+        wrapper.__name__ = func.__name__
+        return wrapper
 
 
-def listdir(folder):
-    folder = os.path.join(root, folder)
-    files = os.listdir(folder)
-    files = filter(lambda o: o.endswith('.text'), files)
-    return files
-
-
-def mistune_runner(content):
+@benchmark('mistune')
+def benchmark_mistune(text):
     import mistune
-    return mistune.markdown(content)
+    mistune.markdown(text)
 
 
-def misaka_runner(content):
+@benchmark('misaka')
+def benchmark_misaka(text):
     import misaka
-    extensions = (
-        misaka.EXT_NO_INTRA_EMPHASIS | misaka.EXT_TABLES |
-        misaka.EXT_FENCED_CODE | misaka.EXT_AUTOLINK |
-        misaka.EXT_STRIKETHROUGH
+    misaka.html(text)
+
+
+@benchmark('markdown2')
+def benchmark_markdown2(text):
+    import markdown2
+    markdown2.markdown(text)
+
+
+@benchmark('markdown')
+def benchmark_markdown(text):
+    import markdown
+    markdown.markdown(text)
+
+
+@benchmark('cMarkdown')
+def benchmark_cMarkdown(text):
+    import cMarkdown
+    cMarkdown.markdown(text)
+
+
+@benchmark('discount')
+def benchmark_discount(text):
+    import discount
+    discount.Markdown(text).get_html_content()
+
+
+if __name__ == '__main__':
+    root = os.path.dirname(__file__)
+    filepath = os.path.join(
+        root, 'cases', 'markdown_documentation_syntax.text'
     )
-    md = misaka.Markdown(misaka.HtmlRenderer(), extensions=extensions)
-    return md.render(content)
+    with open(filepath, 'r') as f:
+        text = f.read()
 
+    loops = 1000
 
-def bench(runner=None):
-    cases = []
+    totals = []
+    methods = [
+        ('Mistune', benchmark_mistune),
+        ('Misaka', benchmark_misaka),
+        ('Markdown', benchmark_markdown),
+        ('Markdown2', benchmark_markdown2),
+        ('cMarkdown', benchmark_cMarkdown),
+        ('Discount', benchmark_discount),
+    ]
 
-    for name in listdir('cases'):
-        with open(os.path.join(root, 'cases', name), 'r') as f:
-            cases.append(f.read())
-
-    for name in listdir('extra'):
-        with open(os.path.join(root, 'extra', name), 'r') as f:
-            cases.append(f.read())
-
-    if runner is None:
-        runner = mistune_runner
-
-    begin = time.time()
-    count = 100
-    while count:
-        count -= 1
-        for text in cases:
-            runner(text)
-
-    end = time.time()
-    return end - begin
-
-print('misaka', bench(misaka_runner))
-print('mistune', bench())
+    print('Parsing the Markdown Syntax document %d times...' % loops)
+    for i, method in enumerate(methods):
+        name = method[0]
+        fn = method[1]
+        try:
+            total = 0
+            for nth in range(0, loops):
+                total += fn(text)
+            print('%s: %gs' % (name, total))
+        except ImportError:
+            print('%s is not available' % name)

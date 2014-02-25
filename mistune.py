@@ -616,7 +616,7 @@ class InlineLexer(object):
         text = escape(m.group(2), force_amp=True)
         return self.renderer.codespan(text)
 
-    def output_linebreak(self):
+    def output_linebreak(self, m):
         return self.renderer.linebreak()
 
     def output_strikethrough(self, m):

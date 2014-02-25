@@ -792,8 +792,10 @@ class Markdown(object):
         if not self.footnotes:
             return out
 
-        self.footnotes = filter(lambda o: keys.get(o['key']), self.footnotes)
-        self.footnotes.sort(key=lambda o: keys.get(o['key']), reverse=True)
+        footnotes = filter(lambda o: keys.get(o['key']), self.footnotes)
+        self.footnotes = sorted(
+            footnotes, key=lambda o: keys.get(o['key']), reverse=True
+        )
 
         body = ''
         while self.footnotes:

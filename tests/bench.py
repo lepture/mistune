@@ -24,20 +24,27 @@ def benchmark_mistune(text):
 
 @benchmark('misaka')
 def benchmark_misaka(text):
-    import misaka
-    misaka.html(text)
+    import misaka as m
+    # mistune has all these features
+    extensions = (
+        m.EXT_NO_INTRA_EMPHASIS | m.EXT_FENCED_CODE | m.EXT_AUTOLINK |
+        m.EXT_TABLES | m.EXT_STRIKETHROUGH
+    )
+    md = m.Markdown(m.HtmlRenderer(), extensions=extensions)
+    md.render(text)
 
 
 @benchmark('markdown2')
 def benchmark_markdown2(text):
     import markdown2
-    markdown2.markdown(text)
+    extras = ['code-friendly', 'fenced-code-blocks', 'footnotes']
+    markdown2.markdown(text, extras=extras)
 
 
 @benchmark('markdown')
 def benchmark_markdown(text):
     import markdown
-    markdown.markdown(text)
+    markdown.markdown(text, ['extra'])
 
 
 @benchmark('cMarkdown')

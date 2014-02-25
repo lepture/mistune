@@ -153,7 +153,6 @@ class BlockLexer(object):
             rules = BlockGrammar()
 
         self.rules = rules
-        self.features = kwargs.get('features', [])
 
     def __call__(self, src, features=None):
         return self.parse(src, features)
@@ -168,18 +167,6 @@ class BlockLexer(object):
                 'list_block', 'block_html', 'def_links',
                 'def_footnotes', 'table', 'paragraph', 'text'
             ]
-
-        if 'table' not in self.features:
-            if 'nptable' in features:
-                features.remove('nptable')
-            if 'table' in features:
-                features.remove('table')
-
-        if 'footnotes' not in self.features and 'def_footnotes' in features:
-            features.remove('def_footnotes')
-
-        if 'fenced_code' not in self.features and 'fences' in features:
-            features.remove('fences')
 
         def manipulate(src):
             for key in features:
@@ -468,7 +455,6 @@ class InlineLexer(object):
             rules = InlineGrammar()
 
         self.rules = rules
-        self.features = kwargs.get('features', [])
 
         self._in_link = False
         self._in_footnote = False
@@ -494,16 +480,6 @@ class InlineLexer(object):
 
         if self._in_footnote and 'footnote' in features:
             features.remove('footnote')
-
-        if 'footnotes' not in self.features and 'footnote' in features:
-            features.remove('footnote')
-
-        if 'autolink' not in self.features and 'autolink' in features:
-            features.remove('autolink')
-
-        if 'strikethrough' not in self.features:
-            if 'strikethrough' in features:
-                features.remove('strikethrough')
 
         output = ''
 

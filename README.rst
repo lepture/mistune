@@ -15,9 +15,9 @@ Yet another markdown parser, inspired by marked_ in JavaScript.
 Features
 --------
 
-* Pure Python. Tested in Python 2.6+, Python 3.3+ and PyPy.
-* Very fast. It is the top one in all other **pure Python** markdown parsers.
-* Advanced features. Table, footnotes, autolink, fenced code etc.
+* **Pure Python**. Tested in Python 2.6+, Python 3.3+ and PyPy.
+* **Very Fast**. It is the fastest in all **pure Python** markdown parsers.
+* **More Features**. Table, footnotes, autolink, fenced code etc.
 
 View the `benchmark results <https://github.com/lepture/mistune/issues/1>`_.
 
@@ -40,7 +40,7 @@ Mistune can be faster, if you compile with cython::
     $ pip install cython mistune
 
 
-Quick Start
+Basic Usage
 -----------
 
 A simple API that render a markdown formatted text::
@@ -50,12 +50,81 @@ A simple API that render a markdown formatted text::
     mistune.markdown('I am using **markdown**')
     # output: <p>I am using <strong>markdown</strong></p>
 
+Mistune has all features by default. You don't have to configure anything.
 
-Mistune doesn't enable all features by default. You can enable them::
+Renderer
+--------
 
-    features = [
-        'table', 'fenced_code', 'footnotes',
-        'autolink', 'strikethrough',
-    ]
+Like misaka/sundown, you can influence the rendering by custom renderers.
+All you need to do is subclassing a `Renderer` class.
 
-    mistune.markdown(text, features=features)
+Here is an example of code highlighting::
+
+    import mistune
+    from pygments import highlight
+    from pygments.lexers import get_lexer_by_name
+    from pygments.formatters import HtmlFormatter
+
+    class MyRenderer(mistune.Renderer):
+        def block_code(code, lang):
+            if not lang:
+                return '\n<pre><code>%s</code></pre>\n' % \
+                    mistune.escape(code)
+            lexer = get_lexer_by_name(lang, stripall=True)
+            formatter = HtmlFormatter()
+            return highlight(text, lexer, formatter)
+
+    renderer = MyRenderer()
+    md = mistune.Markdown(renderer=renderer)
+    print(md.render('Some Markdown text.'))
+
+
+Block Level
+~~~~~~~~~~~
+
+Here is a list of block level renderer API::
+
+    block_code(text, language=None)
+    block_quote(text)
+    block_html(text)
+    header(text, level, raw=None)
+    hrule()
+    list(text, ordered=True)
+    list_item(text)
+    paragraph(text)
+    table(header, body)
+    table_row(text)
+    table_cell(text, **flags)
+
+The `flags` tells you whether it is header with `flags['header']`. And it
+also tells you the align with `flags['align']`.
+
+
+Span Level
+~~~~~~~~~~
+
+Here is a list of span level renderer API::
+
+    autolink(link, is_email=False)
+    codespan(text)
+    double_emphasis(text)
+    emphasis(text)
+    image(link, title, alt_text)
+    linebreak()
+    link(link, title, content)
+    raw_html(raw_html)
+    strikethrough(text)
+
+
+Options
+-------
+
+Here is a list of all options that will affect the rendering results::
+
+    mistune.markdown(text, escape=True)
+
+    md = mistune.Markdown(escape=True)
+    md.render(text)
+
+* **escape**: if set to `True`, will raw html tags will be escaped.
+* **use_xhtml**: if set to `True`, all tags will be in xhtml, for example: `<hr />`.

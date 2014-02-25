@@ -624,7 +624,7 @@ class Renderer(object):
                 return ''
         return html
 
-    def heading(self, text, level, raw=None):
+    def header(self, text, level, raw=None):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
     def hrule(self):
@@ -831,7 +831,7 @@ class Markdown(object):
         return self.renderer.hrule()
 
     def parse_heading(self):
-        return self.renderer.heading(
+        return self.renderer.header(
             self.inline(self.token['text']),
             self.token['level'],
             self.token['text'],

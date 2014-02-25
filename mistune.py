@@ -782,7 +782,9 @@ class Markdown(object):
         keys = self.block.def_footnotes
 
         # reset block
+        self.block.def_links = {}
         self.block.def_footnotes = {}
+
         # reset inline
         self.inline.links = {}
         self.inline.footnotes = {}
@@ -790,13 +792,12 @@ class Markdown(object):
         if not self.footnotes:
             return out
 
-        footnotes = self.footnotes
-        footnotes = filter(lambda o: keys.get(o['key']), footnotes)
-        footnotes = sorted(footnotes, key=lambda o: keys.get(o['key']))
-        self.footnotes = []
+        self.footnotes = filter(lambda o: keys.get(o['key']), self.footnotes)
+        self.footnotes.sort(key=lambda o: keys.get(o['key']), reverse=True)
 
         body = ''
-        for note in footnotes:
+        while self.footnotes:
+            note = self.footnotes.pop()
             body += self.renderer.footnote_item(
                 note['key'], note['text']
             )
@@ -804,17 +805,13 @@ class Markdown(object):
         out += self.renderer.footnotes(body)
         return out
 
-    def output(self, src, links=None, footnotes=None, features=None):
+    def output(self, src, features=None):
         src = preprocessing(src)
 
         self.tokens = self.block(src, features)
         self.tokens.reverse()
 
-        if not links:
-            links = self.block.def_links
-            footnotes = self.block.def_footnotes
-
-        self.inline.setup(links, footnotes)
+        self.inline.setup(self.block.def_links, self.block.def_footnotes)
 
         out = ''
         while self.pop():

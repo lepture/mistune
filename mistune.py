@@ -629,7 +629,7 @@ class Renderer(object):
         self.options = kwargs
 
     def block_code(self, code, lang=None):
-        """Rendering block level code. pre > code.
+        """Rendering block level code. ``pre > code``.
 
         :param code: text content of the code block.
         :param lang: language of the given code.
@@ -658,7 +658,7 @@ class Renderer(object):
         return html
 
     def header(self, text, level, raw=None):
-        """Rendering header/heading tags like <h1> <h2>.
+        """Rendering header/heading tags like ``<h1>`` ``<h2>``.
 
         :param text: rendered text content for the header.
         :param level: a number for the header level, for example: 1.
@@ -667,13 +667,13 @@ class Renderer(object):
         return '<h%d>%s</h%d>\n' % (level, text, level)
 
     def hrule(self):
-        """Rendering method for <hr> tag."""
+        """Rendering method for ``<hr>`` tag."""
         if self.options.get('use_xhtml'):
             return '<hr />\n'
         return '<hr>\n'
 
     def list(self, body, ordered=True):
-        """Rendering list tags like <ul> and <ol>.
+        """Rendering list tags like ``<ul>`` and ``<ol>``.
 
         :param body: body contents of the list.
         :param ordered: whether this list is ordered or not.
@@ -684,11 +684,11 @@ class Renderer(object):
         return '<%s>\n%s</%s>\n' % (tag, body, tag)
 
     def list_item(self, text):
-        """Rendering list item snippet. Like <li>."""
+        """Rendering list item snippet. Like ``<li>``."""
         return '<li>%s</li>\n' % text
 
     def paragraph(self, text):
-        """Rendering paragraph tags. Like <p>."""
+        """Rendering paragraph tags. Like ``<p>``."""
         return '<p>%s</p>\n' % text
 
     def table(self, header, body):
@@ -703,14 +703,14 @@ class Renderer(object):
         ) % (header, body)
 
     def table_row(self, content):
-        """Rendering a table row. Like <tr>.
+        """Rendering a table row. Like ``<tr>``.
 
         :param content: content of current table row.
         """
         return '<tr>\n%s</tr>\n' % content
 
     def table_cell(self, content, **flags):
-        """Rendering a table cell. Like <th> <td>.
+        """Rendering a table cell. Like ``<th>`` ``<td>``.
 
         :param content: content of current table cell.
         :param header: whether this is header or not.
@@ -749,7 +749,7 @@ class Renderer(object):
         return '<code>%s</code>' % text
 
     def linebreak(self):
-        """Rendering line break like <br>."""
+        """Rendering line break like ``<br>``."""
         if self.options.get('use_xhtml'):
             return '<br />'
         return '<br>'
@@ -775,7 +775,7 @@ class Renderer(object):
     def link(self, link, title, text):
         """Rendering a given link with content and title.
 
-        :param link: href link for <a> tag.
+        :param link: href link for ``<a>`` tag.
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """

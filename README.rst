@@ -96,8 +96,8 @@ Here is a list of block level renderer API::
     table_row(content)
     table_cell(content, **flags)
 
-The `flags` tells you whether it is header with `flags['header']`. And it
-also tells you the align with `flags['align']`.
+The *flags* tells you whether it is header with ``flags['header']``. And it
+also tells you the align with ``flags['align']``.
 
 
 Span Level
@@ -126,5 +126,5 @@ Here is a list of all options that will affect the rendering results::
     md = mistune.Markdown(escape=True)
     md.render(text)
 
-* **escape**: if set to `True`, will raw html tags will be escaped.
-* **use_xhtml**: if set to `True`, all tags will be in xhtml, for example: `<hr />`.
+* **escape**: if set to *True*, all raw html tags will be escaped.
+* **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.

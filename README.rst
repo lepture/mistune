@@ -1,5 +1,5 @@
-Mistune (WIP)
-=============
+Mistune
+=======
 
 Yet another markdown parser, inspired by marked_ in JavaScript.
 

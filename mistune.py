@@ -848,6 +848,11 @@ class Renderer(object):
 
 
 class Markdown(object):
+    """The Markdown parser.
+
+    :param renderer: An instance of ``Renderer``.
+    """
+
     def __init__(self, renderer=None, **kwargs):
         inline = kwargs.pop('inline', None)
         block = kwargs.pop('block', None)
@@ -864,11 +869,15 @@ class Markdown(object):
         self.footnotes = []
         self.tokens = []
 
-    def __call__(self, src):
-        return self.parse(src)
+    def __call__(self, text):
+        return self.parse(text)
 
-    def render(self, src):
-        return self.parse(src)
+    def render(self, text):
+        """Render the Markdown text.
+
+        :param text: markdown formatted text content.
+        """
+        return self.parse(text)
 
     def parse(self, src):
         out = self.output(src)
@@ -1034,5 +1043,11 @@ class Markdown(object):
 
 
 def markdown(text, **kwargs):
+    """Render markdown formatted text to html.
+
+    :param text: markdown formatted text content.
+    :param escape: if set to True, all html tags will be escaped.
+    :param use_xhtml: output with xhtml tags.
+    """
     m = Markdown(**kwargs)
     return m.parse(text)

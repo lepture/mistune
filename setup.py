@@ -8,7 +8,6 @@ try:
 except ImportError:
     pass
 
-import sys
 import mistune
 from setuptools import setup, Extension
 

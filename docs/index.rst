@@ -10,6 +10,11 @@ Here is the API reference for mistune.
 .. autoclass:: Renderer
    :members:
 
+.. autoclass:: Markdown
+   :members:
+
+.. autofunction:: markdown
+.. autofunction:: escape
 
 Changelog
 ----------

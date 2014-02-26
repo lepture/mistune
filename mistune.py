@@ -634,6 +634,7 @@ class Renderer(object):
         :param code: text content of the code block.
         :param lang: language of the given code.
         """
+        code = code.rstrip()
         if not lang:
             code = escape(code, smart_amp=False)
             return '<pre><code>%s\n</code></pre>\n' % code

@@ -1,4 +1,3 @@
-
 import os
 import time
 
@@ -80,13 +79,11 @@ if __name__ == '__main__':
     ]
 
     print('Parsing the Markdown Syntax document %d times...' % loops)
-    for i, method in enumerate(methods):
-        name = method[0]
-        fn = method[1]
+    for name, fn in methods:
         try:
             total = 0
-            for nth in range(0, loops):
+            for i in range(loops):
                 total += fn(text)
-            print('%s: %gs' % (name, total))
+            print('{0}: {1}'.format(name, total))
         except ImportError:
-            print('%s is not available' % name)
+            print('{0} is not available'.format(name))

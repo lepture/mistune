@@ -30,7 +30,7 @@ setup(
     url='https://github.com/lepture/mistune',
     author='Hsiaoming Yang',
     author_email='me@lepture.com',
-    description='Yet another markdown parser, inspired by marked.',
+    description='The fastest markdown parser in pure Python',
     long_description=fread('README.rst'),
     license='BSD',
     py_modules=['mistune'],

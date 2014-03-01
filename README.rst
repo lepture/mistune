@@ -1,7 +1,7 @@
 Mistune
 =======
 
-Yet another markdown parser, inspired by marked_ in JavaScript.
+The fastest markdown parser in pure Python, inspired by marked_.
 
 .. image:: https://travis-ci.org/lepture/mistune.png?branch=master
    :target: https://travis-ci.org/lepture/mistune

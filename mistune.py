@@ -507,13 +507,16 @@ class InlineLexer(object):
                 m = pattern.match(src)
                 if not m:
                     continue
+                self.has_more_items = m.end() != m.endpos
                 out = getattr(self, 'output_%s' % key)(m)
                 if out is not None:
                     return m, out
             return False
 
+        self.first_item = True
         while src:
             ret = manipulate(src)
+            self.first_item = False
             if ret is not False:
                 m, out = ret
                 output += out

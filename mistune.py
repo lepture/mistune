@@ -592,7 +592,7 @@ class InlineLexer(object):
 
         if line[0] == '!':
             text = escape(text, quote=True)
-            return self.renderer.image(self, link, title, text)
+            return self.renderer.image(link, title, text)
 
         self._in_link = True
         text = self.output(text)
@@ -790,7 +790,7 @@ class Renderer(object):
             return '<a href="%s">%s</a>' % (link, text)
         return '<a href="%s" title="%s">%s</a>' % (link, title, text)
 
-    def image(self, inline_lexer, src, title, text):
+    def image(self, src, title, text):
         """Rendering a image with title and text.
 
         :param src: source link of the image.

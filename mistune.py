@@ -507,13 +507,16 @@ class InlineLexer(object):
                 m = pattern.match(src)
                 if not m:
                     continue
+                self.has_more_items = m.end() != m.endpos
                 out = getattr(self, 'output_%s' % key)(m)
                 if out is not None:
                     return m, out
             return False
 
+        self.first_item = True
         while src:
             ret = manipulate(src)
+            self.first_item = False
             if ret is not False:
                 m, out = ret
                 output += out
@@ -589,7 +592,7 @@ class InlineLexer(object):
 
         if line[0] == '!':
             text = escape(text, quote=True)
-            return self.renderer.image(link, title, text)
+            return self.renderer.image(self, link, title, text)
 
         self._in_link = True
         text = self.output(text)
@@ -787,7 +790,7 @@ class Renderer(object):
             return '<a href="%s">%s</a>' % (link, text)
         return '<a href="%s" title="%s">%s</a>' % (link, title, text)
 
-    def image(self, src, title, text):
+    def image(self, inline_lexer, src, title, text):
         """Rendering a image with title and text.
 
         :param src: source link of the image.

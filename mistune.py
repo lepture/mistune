@@ -187,6 +187,7 @@ class BlockLexer(object):
                 m = rule.match(src)
                 if not m:
                     continue
+                self._match = m
                 getattr(self, 'parse_%s' % key)(m)
                 return m
             return False
@@ -507,6 +508,7 @@ class InlineLexer(object):
                 m = pattern.match(src)
                 if not m:
                     continue
+                self._match = m
                 out = getattr(self, 'output_%s' % key)(m)
                 if out is not None:
                     return m, out

@@ -174,12 +174,12 @@ class BlockLexer(object):
         src = src.rstrip('\n')
 
         if not features:
-            features = [
+            features = (
                 'newline', 'block_code', 'fences', 'heading',
                 'nptable', 'lheading', 'hrule', 'block_quote',
                 'list_block', 'block_html', 'def_links',
                 'def_footnotes', 'table', 'paragraph', 'text'
-            ]
+            )
 
         def manipulate(src):
             for key in features:
@@ -252,10 +252,10 @@ class BlockLexer(object):
         self.tokens.append({'type': 'list_end'})
 
     def _process_list_item(self, cap, bull):
-        features = [
+        features = (
             'newline', 'block_code', 'fences', 'lheading', 'hrule',
             'block_quote', 'list_block', 'block_html', 'text',
-        ]
+        )
 
         cap = self.rules.list_item.findall(cap)
 
@@ -336,11 +336,11 @@ class BlockLexer(object):
                 newlines.append(line[whitespace:])
             text = '\n'.join(newlines)
 
-        features = [
+        features = (
             'newline', 'block_code', 'fences', 'heading',
             'nptable', 'lheading', 'hrule', 'block_quote',
             'list_block', 'block_html', 'table', 'paragraph', 'text'
-        ]
+        )
 
         self.parse(text, features)
 

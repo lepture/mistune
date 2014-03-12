@@ -3,14 +3,14 @@
     mistune
     ~~~~~~~
 
-    Yet another markdown parser, inspired by marked in JavaScript.
+    The fastest markdown parser in pure Python, inspired by marked.
 
     :copyright: (c) 2014 by Hsiaoming Yang.
 """
 
 import re
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -513,10 +513,10 @@ class InlineLexer(object):
                     return m, out
             return False
 
-        self.line_start = True
+        self.line_started = False
         while src:
             ret = manipulate(src)
-            self.line_start = False
+            self.line_started = True
             if ret is not False:
                 m, out = ret
                 output += out

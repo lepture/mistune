@@ -840,7 +840,7 @@ class Renderer(object):
             text = re.sub(r'<\/p>$', r'%s</p>' % back, text)
         else:
             text = '%s<p>%s</p>' % (text, back)
-        html = '<li id="fn-%s">%s''</li>\n' % (escape(key), text)
+        html = '<li id="fn-%s">%s</li>\n' % (escape(key), text)
         return html
 
     def footnotes(self, text):

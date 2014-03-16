@@ -848,7 +848,8 @@ class Renderer(object):
 
         :param text: contents of all footnotes.
         """
-        return '<div class="footnotes">\n<ol>%s</ol>\n</div>\n' % text
+        html = '<div class="footnotes">\n%s<ol>%s</ol>\n</div>\n'
+        return html % (self.hrule(), text)
 
 
 class Markdown(object):

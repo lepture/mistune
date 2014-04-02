@@ -487,6 +487,8 @@ class InlineLexer(object):
 
     def output(self, src, features=None):
         src = src.rstrip('\n')
+        if self.options.get('escape'):
+            src = escape(src)
 
         if not features:
             features = [

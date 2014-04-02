@@ -59,3 +59,6 @@ def test_normal():
 def test_escape():
     ret = mistune.markdown('<div>**foo**</div>', escape=True)
     assert '&gt;' in ret
+
+    ret = mistune.markdown('this **foo** is <b>bold</b>', escape=True)
+    assert '&gt;' in ret

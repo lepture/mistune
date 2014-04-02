@@ -729,7 +729,7 @@ class Renderer(object):
         align = flags['align']
         if not align:
             return '<%s>%s</%s>\n' % (tag, content, tag)
-        return '<%s style="text-align:%s">%s</%s>\n' % (
+        return '<%s align="%s">%s</%s>\n' % (
             tag, align, content, tag
         )
 

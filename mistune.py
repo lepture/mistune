@@ -473,7 +473,11 @@ class InlineLexer(object):
             rules = InlineGrammar()
 
         if self.options.get('hard_wrap'):
+            # {2,} -> *
             rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
+            rules.text = re.compile(
+                r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
+            )
 
         self.rules = rules
 

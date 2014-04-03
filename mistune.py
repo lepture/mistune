@@ -471,13 +471,12 @@ class InlineLexer(object):
 
         if not rules:
             rules = InlineGrammar()
-
-        if self.options.get('hard_wrap'):
-            # {2,} -> *
-            rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
-            rules.text = re.compile(
-                r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
-            )
+            if self.options.get('hard_wrap'):
+                # {2,} -> *
+                rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
+                rules.text = re.compile(
+                    r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
+                )
 
         self.rules = rules
 

@@ -472,6 +472,9 @@ class InlineLexer(object):
         if not rules:
             rules = InlineGrammar()
 
+        if self.options.get('hard_wrap'):
+            rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
+
         self.rules = rules
 
         self._in_link = False

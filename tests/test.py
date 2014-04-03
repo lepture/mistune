@@ -62,3 +62,11 @@ def test_escape():
 
     ret = mistune.markdown('this **foo** is <b>bold</b>', escape=True)
     assert '&gt;' in ret
+
+
+def test_linebreak():
+    ret = mistune.markdown('this **foo** \nis me')
+    assert '<br>' not in ret
+
+    ret = mistune.markdown('this **foo** \nis me', hard_wrap=True)
+    assert '<br>' in ret

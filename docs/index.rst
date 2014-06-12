@@ -21,6 +21,15 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.3.0
+~~~~~~~~~~~~~
+
+Release date to be decided.
+
+* Add ``<hr>`` in footnotes renderer
+* Add hard_wrap configuration for GFM linebreaks.
+* Add text renderer.
+
 Version 0.2.0
 ~~~~~~~~~~~~~
 

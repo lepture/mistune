@@ -114,6 +114,7 @@ Here is a list of span level renderer API::
     link(link, title, content)
     raw_html(raw_html)
     strikethrough(text)
+    text(text)
 
 
 Options

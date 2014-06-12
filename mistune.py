@@ -629,7 +629,8 @@ class InlineLexer(object):
         return self.renderer.strikethrough(text)
 
     def output_text(self, m):
-        return escape(m.group(0))
+        text = m.group(0)
+        return self.renderer.text(text)
 
 
 class Renderer(object):
@@ -772,6 +773,13 @@ class Renderer(object):
         :param text: text content for strikethrough.
         """
         return '<del>%s</del>' % text
+
+    def text(self, text):
+        """Rendering unformatted text.
+
+        :param text: text content.
+        """
+        return escape(text)
 
     def autolink(self, link, is_email=False):
         """Rendering a given link or email address.

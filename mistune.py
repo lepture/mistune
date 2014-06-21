@@ -155,6 +155,13 @@ class BlockGrammar(object):
 class BlockLexer(object):
     """Block level lexer for block grammars."""
 
+    default_features = [
+                'newline', 'block_code', 'fences', 'heading',
+                'nptable', 'lheading', 'hrule', 'block_quote',
+                'list_block', 'block_html', 'def_links',
+                'def_footnotes', 'table', 'paragraph', 'text'
+               ]
+
     def __init__(self, rules=None, **kwargs):
         self.options = kwargs
 
@@ -174,12 +181,7 @@ class BlockLexer(object):
         src = src.rstrip('\n')
 
         if not features:
-            features = (
-                'newline', 'block_code', 'fences', 'heading',
-                'nptable', 'lheading', 'hrule', 'block_quote',
-                'list_block', 'block_html', 'def_links',
-                'def_footnotes', 'table', 'paragraph', 'text'
-            )
+            features = self.default_features
 
         def manipulate(src):
             for key in features:
@@ -461,6 +463,13 @@ class InlineGrammar(object):
 class InlineLexer(object):
     """Inline level lexer for inline grammars."""
 
+    default_features = [
+                'escape', 'autolink', 'url', 'tag',
+                'footnote', 'link', 'reflink', 'nolink',
+                'double_emphasis', 'emphasis', 'code',
+                'linebreak', 'strikethrough', 'text',
+               ]
+
     def __init__(self, renderer, rules=None, **kwargs):
         self.options = kwargs
 
@@ -497,12 +506,7 @@ class InlineLexer(object):
             src = escape(src)
 
         if not features:
-            features = [
-                'escape', 'autolink', 'url', 'tag',
-                'footnote', 'link', 'reflink', 'nolink',
-                'double_emphasis', 'emphasis', 'code',
-                'linebreak', 'strikethrough', 'text',
-            ]
+            features = list(self.default_features)
 
         if self._in_footnote and 'footnote' in features:
             features.remove('footnote')

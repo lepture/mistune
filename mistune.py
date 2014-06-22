@@ -156,11 +156,11 @@ class BlockLexer(object):
     """Block level lexer for block grammars."""
 
     default_features = [
-                'newline', 'block_code', 'fences', 'heading',
-                'nptable', 'lheading', 'hrule', 'block_quote',
-                'list_block', 'block_html', 'def_links',
-                'def_footnotes', 'table', 'paragraph', 'text'
-               ]
+        'newline', 'block_code', 'fences', 'heading',
+        'nptable', 'lheading', 'hrule', 'block_quote',
+        'list_block', 'block_html', 'def_links',
+        'def_footnotes', 'table', 'paragraph', 'text'
+    ]
 
     def __init__(self, rules=None, **kwargs):
         self.options = kwargs
@@ -464,11 +464,11 @@ class InlineLexer(object):
     """Inline level lexer for inline grammars."""
 
     default_features = [
-                'escape', 'autolink', 'url', 'tag',
-                'footnote', 'link', 'reflink', 'nolink',
-                'double_emphasis', 'emphasis', 'code',
-                'linebreak', 'strikethrough', 'text',
-               ]
+        'escape', 'autolink', 'url', 'tag',
+        'footnote', 'link', 'reflink', 'nolink',
+        'double_emphasis', 'emphasis', 'code',
+        'linebreak', 'strikethrough', 'text',
+    ]
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.options = kwargs

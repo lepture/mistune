@@ -58,6 +58,18 @@ def benchmark_discount(text):
     discount.Markdown(text).get_html_content()
 
 
+@benchmark('hoep')
+def benchmark_hoep(text):
+    import hoep as m
+    # mistune has all these features
+    extensions = (
+        m.EXT_NO_INTRA_EMPHASIS | m.EXT_FENCED_CODE | m.EXT_AUTOLINK |
+        m.EXT_TABLES | m.EXT_STRIKETHROUGH | m.EXT_FOOTNOTES
+    )
+    md = m.Hoep(extensions=extensions)
+    md.render(text.decode('utf-8'))
+
+
 if __name__ == '__main__':
     root = os.path.dirname(__file__)
     filepath = os.path.join(
@@ -76,6 +88,7 @@ if __name__ == '__main__':
         ('Markdown2', benchmark_markdown2),
         ('cMarkdown', benchmark_cMarkdown),
         ('Discount', benchmark_discount),
+        ('Hoep', benchmark_hoep),
     ]
 
     print('Parsing the Markdown Syntax document %d times...' % loops)

@@ -162,6 +162,17 @@ class BlockLexer(object):
         'def_footnotes', 'table', 'paragraph', 'text'
     ]
 
+    list_features = (
+        'newline', 'block_code', 'fences', 'lheading', 'hrule',
+        'block_quote', 'list_block', 'block_html', 'text',
+    )
+
+    footnote_features = (
+        'newline', 'block_code', 'fences', 'heading',
+        'nptable', 'lheading', 'hrule', 'block_quote',
+        'list_block', 'block_html', 'table', 'paragraph', 'text'
+    )
+
     def __init__(self, rules=None, **kwargs):
         self.options = kwargs
 
@@ -253,11 +264,6 @@ class BlockLexer(object):
         self.tokens.append({'type': 'list_end'})
 
     def _process_list_item(self, cap, bull):
-        features = (
-            'newline', 'block_code', 'fences', 'lheading', 'hrule',
-            'block_quote', 'list_block', 'block_html', 'text',
-        )
-
         cap = self.rules.list_item.findall(cap)
 
         _next = False
@@ -292,7 +298,7 @@ class BlockLexer(object):
 
             self.tokens.append({'type': t})
             # recurse
-            self.parse(item, features)
+            self.parse(item, self.list_features)
             self.tokens.append({'type': 'list_item_end'})
 
     def parse_block_quote(self, m):
@@ -337,13 +343,7 @@ class BlockLexer(object):
                 newlines.append(line[whitespace:])
             text = '\n'.join(newlines)
 
-        features = (
-            'newline', 'block_code', 'fences', 'heading',
-            'nptable', 'lheading', 'hrule', 'block_quote',
-            'list_block', 'block_html', 'table', 'paragraph', 'text'
-        )
-
-        self.parse(text, features)
+        self.parse(text, self.footnote_features)
 
         self.tokens.append({
             'type': 'footnote_end',

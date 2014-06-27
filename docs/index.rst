@@ -24,11 +24,15 @@ Here is the full history of mistune.
 Version 0.3.0
 ~~~~~~~~~~~~~
 
-Release date to be decided.
+Released on Jun. 27, 2014
 
 * Add ``<hr>`` in footnotes renderer
 * Add hard_wrap configuration for GFM linebreaks.
-* Add text renderer.
+* Add text renderer, via `#9`_.
+* Define features for lexers available via `#11`_.
+
+.. _`#9`: https://github.com/lepture/mistune/pull/9
+.. _`#11`: https://github.com/lepture/mistune/pull/11
 
 Version 0.2.0
 ~~~~~~~~~~~~~

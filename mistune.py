@@ -650,12 +650,11 @@ class Renderer(object):
         :param code: text content of the code block.
         :param lang: language of the given code.
         """
-        code = code.rstrip()
         if not lang:
             code = escape(code, smart_amp=False)
-            return '<pre><code>%s\n</code></pre>\n' % code
+            return '<pre><code>%s</code></pre>\n' % code
         code = escape(code, quote=True, smart_amp=False)
-        return '<pre><code class="lang-%s">%s\n</code>\n</pre>' % (lang, code)
+        return '<pre><code class="lang-%s">%s</code></pre>\n' % (lang, code)
 
     def block_quote(self, text):
         """Rendering <blockquote> with the given text.

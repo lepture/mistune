@@ -150,7 +150,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
         wiki_link = re.compile(
             r'\[\['                   # [[
             r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
-            r'\]\]'(?!\])'            # ]]
+            r'\]\](?!\])'             # ]]
         )
 
 
@@ -164,7 +164,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
         def __init__(self, renderer, rules=None, **kwargs):
             if rules is None:
                 # use the inline grammar
-                rules = MyInlineLexer()
+                rules = MyInlineGrammar()
 
             super(MyInlineLexer, self).__init__(renderer, rules, **kwargs)
 
@@ -177,7 +177,8 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 
 You should pass the inline lexer to ``Markdown`` parser::
 
-    markdown = Markdown(inline=MyInlineLexer())
+    inline=MyInlineLexer(renderer)
+    markdown = Markdown(renderer, inline=inline)
     markdown('[[Link Text|Wiki Link]]')
 
 It is the same with block level lexer. It would take a while to understand

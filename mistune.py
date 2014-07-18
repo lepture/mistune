@@ -893,6 +893,13 @@ class Markdown(object):
         self.renderer = renderer
         self.options = kwargs
 
+        if inline and callable(inline):
+            # assume it is a class
+            inline = inline(renderer, **kwargs)
+        if block and callable(block):
+            # assume it is a class
+            block = block(**kwargs)
+
         self.inline = inline or InlineLexer(renderer, **kwargs)
         self.block = block or BlockLexer(**kwargs)
 

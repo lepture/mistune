@@ -97,7 +97,6 @@ def test_custom_lexer():
             alt, link = text.split('|')
             return '<a href="%s">%s</a>' % (link, alt)
 
-    inline = MyInlineLexer(renderer=mistune.Renderer())
-    markdown = mistune.Markdown(inline=inline)
+    markdown = mistune.Markdown(inline=MyInlineLexer)
     ret = markdown('[[Link Text|Wiki Link]]')
     assert '<a href' in ret

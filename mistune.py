@@ -459,6 +459,15 @@ class InlineGrammar(object):
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
+    def hard_wrap(self):
+        """Grammar for hard wrap linebreak. You don't need to add two
+        spaces at the end of a line.
+        """
+        self.linebreak = re.compile(r'^ *\n(?!\s*$)')
+        self.text = re.compile(
+            r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
+        )
+
 
 class InlineLexer(object):
     """Inline level lexer for inline grammars."""
@@ -480,12 +489,9 @@ class InlineLexer(object):
 
         if not rules:
             rules = InlineGrammar()
-            if self.options.get('hard_wrap'):
-                # {2,} -> *
-                rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
-                rules.text = re.compile(
-                    r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
-                )
+
+        if self.options.get('hard_wrap'):
+            rules.hard_wrap()
 
         self.rules = rules
 

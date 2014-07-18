@@ -70,3 +70,34 @@ def test_linebreak():
 
     ret = mistune.markdown('this **foo** \nis me', hard_wrap=True)
     assert '<br>' in ret
+
+
+def test_custom_lexer():
+    import copy
+
+    class MyInlineGrammar(mistune.InlineGrammar):
+        # it would take a while for creating the right regex
+        wiki_link = re.compile(
+            r'\[\['                   # [[
+            r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
+            r'\]\](?!\])'             # ]]
+        )
+
+    class MyInlineLexer(mistune.InlineLexer):
+        default_features = copy.copy(mistune.InlineLexer.default_features)
+        default_features.insert(3, 'wiki_link')
+
+        def __init__(self, renderer, rules=None, **kwargs):
+            if rules is None:
+                rules = MyInlineGrammar()
+
+            super(MyInlineLexer, self).__init__(renderer, rules, **kwargs)
+        def output_wiki_link(self, m):
+            text = m.group(1)
+            alt, link = text.split('|')
+            return '<a href="%s">%s</a>' % (link, alt)
+
+    inline = MyInlineLexer(renderer=mistune.Renderer())
+    markdown = mistune.Markdown(inline=inline)
+    ret = markdown('[[Link Text|Wiki Link]]')
+    assert '<a href' in ret

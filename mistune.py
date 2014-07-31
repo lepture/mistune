@@ -628,7 +628,8 @@ class InlineLexer(object):
         return self.renderer.emphasis(text)
 
     def output_code(self, m):
-        text = escape(m.group(2), smart_amp=False)
+        text = m.group(2)
+        text = escape(text.rstrip(), smart_amp=False)
         return self.renderer.codespan(text)
 
     def output_linebreak(self, m):

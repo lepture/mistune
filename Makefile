@@ -3,6 +3,9 @@
 test:
 	@nosetests -s
 
+bench:
+	@python tests/bench.py
+
 coverage:
 	@rm -f .coverage
 	@nosetests --with-coverage --cover-package=mistune --cover-html

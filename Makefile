@@ -30,3 +30,6 @@ clean-docs:
 
 docs:
 	@$(MAKE) -C docs html
+
+rtd:
+	curl -X POST http://readthedocs.org/build/mistune

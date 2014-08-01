@@ -9,6 +9,7 @@
 """
 
 import re
+import inspect
 
 __version__ = '0.3.1'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -894,11 +895,9 @@ class Markdown(object):
         self.renderer = renderer
         self.options = kwargs
 
-        if inline and callable(inline):
-            # assume it is a class
+        if inline and inspect.isclass(inline):
             inline = inline(renderer, **kwargs)
-        if block and callable(block):
-            # assume it is a class
+        if block and inspect.isclass(block):
             block = block(**kwargs)
 
         self.inline = inline or InlineLexer(renderer, **kwargs)

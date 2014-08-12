@@ -3,6 +3,9 @@
 test:
 	@nosetests -s
 
+bench:
+	@python tests/bench.py
+
 coverage:
 	@rm -f .coverage
 	@nosetests --with-coverage --cover-package=mistune --cover-html
@@ -27,3 +30,6 @@ clean-docs:
 
 docs:
 	@$(MAKE) -C docs html
+
+rtd:
+	curl -X POST http://readthedocs.org/build/mistune

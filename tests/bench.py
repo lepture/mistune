@@ -1,17 +1,28 @@
+# coding: utf-8
+
 import os
 import time
+import functools
+
 
 class benchmark(object):
-    def __init__(self, name):
+    suites = {}
+
+    def __init__(self, name, loops=1000):
         self._name = name
+        self._loops = loops
 
     def __call__(self, func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             start = time.clock()
-            func(*args, **kwargs)
+            while self._loops:
+                func(*args, **kwargs)
+                self._loops -= 1
             end = time.clock()
             return end - start
-        wrapper.__name__ = func.__name__
+        # register
+        benchmark.suites = {self._name: wrapper}
         return wrapper
 
 
@@ -58,6 +69,18 @@ def benchmark_discount(text):
     discount.Markdown(text).get_html_content()
 
 
+@benchmark('hoep')
+def benchmark_hoep(text):
+    import hoep as m
+    # mistune has all these features
+    extensions = (
+        m.EXT_NO_INTRA_EMPHASIS | m.EXT_FENCED_CODE | m.EXT_AUTOLINK |
+        m.EXT_TABLES | m.EXT_STRIKETHROUGH | m.EXT_FOOTNOTES
+    )
+    md = m.Hoep(extensions=extensions)
+    md.render(text.decode('utf-8'))
+
+
 if __name__ == '__main__':
     root = os.path.dirname(__file__)
     filepath = os.path.join(
@@ -66,9 +89,6 @@ if __name__ == '__main__':
     with open(filepath, 'r') as f:
         text = f.read()
 
-    loops = 1000
-
-    totals = []
     methods = [
         ('Mistune', benchmark_mistune),
         ('Misaka', benchmark_misaka),
@@ -76,14 +96,13 @@ if __name__ == '__main__':
         ('Markdown2', benchmark_markdown2),
         ('cMarkdown', benchmark_cMarkdown),
         ('Discount', benchmark_discount),
+        ('Hoep', benchmark_hoep),
     ]
 
-    print('Parsing the Markdown Syntax document %d times...' % loops)
+    print('Parsing the Markdown Syntax document 1000 times...')
     for name, fn in methods:
         try:
-            total = 0
-            for i in range(loops):
-                total += fn(text)
+            total = fn(text)
             print('{0}: {1}'.format(name, total))
         except ImportError:
             print('{0} is not available'.format(name))

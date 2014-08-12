@@ -130,3 +130,56 @@ Here is a list of all options that will affect the rendering results::
 * **escape**: if set to *True*, all raw html tags will be escaped.
 * **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
+
+
+Lexers
+------
+
+Sometimes you want to add your own rules to Markdown, such as GitHub Wiki
+links. You can't archive this goal with renderers. You will need to deal
+with the lexers, it would be a little difficult for the first time.
+
+We will take an example for GitHub Wiki links: ``[[Page 2|Page 2]]``.
+It is an inline grammar, which requires custom ``InlineGrammar`` and
+``InlineLexer``::
+
+    import copy
+
+    class MyInlineGrammar(InlineGrammar):
+        # it would take a while for creating the right regex
+        wiki_link = re.compile(
+            r'\[\['                   # [[
+            r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
+            r'\]\](?!\])'             # ]]
+        )
+
+
+    class MyInlineLexer(InlineLexer):
+        default_features = copy.copy(InlineLexer.default_features)
+
+        # Add wiki_link parser to default features
+        # you can insert it any place you like
+        default_features.insert(3, 'wiki_link')
+
+        def __init__(self, renderer, rules=None, **kwargs):
+            if rules is None:
+                # use the inline grammar
+                rules = MyInlineGrammar()
+
+            super(MyInlineLexer, self).__init__(renderer, rules, **kwargs)
+
+        def output_wiki_link(self, m):
+            text = m.group(1)
+            alt, link = text.split('|')
+            # you can create an custom render
+            # you can also return the html if you like
+            return self.renderer.wiki_link(alt, link)
+
+You should pass the inline lexer to ``Markdown`` parser::
+
+    inline=MyInlineLexer(renderer)
+    markdown = Markdown(renderer, inline=inline)
+    markdown('[[Link Text|Wiki Link]]')
+
+It is the same with block level lexer. It would take a while to understand
+the whole mechanism. But you won't do the trick a lot.

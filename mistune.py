@@ -9,8 +9,9 @@
 """
 
 import re
+import inspect
 
-__version__ = '0.2.0'
+__version__ = '0.3.1'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -155,6 +156,24 @@ class BlockGrammar(object):
 class BlockLexer(object):
     """Block level lexer for block grammars."""
 
+    default_features = [
+        'newline', 'block_code', 'fences', 'heading',
+        'nptable', 'lheading', 'hrule', 'block_quote',
+        'list_block', 'block_html', 'def_links',
+        'def_footnotes', 'table', 'paragraph', 'text'
+    ]
+
+    list_features = (
+        'newline', 'block_code', 'fences', 'lheading', 'hrule',
+        'block_quote', 'list_block', 'block_html', 'text',
+    )
+
+    footnote_features = (
+        'newline', 'block_code', 'fences', 'heading',
+        'nptable', 'lheading', 'hrule', 'block_quote',
+        'list_block', 'block_html', 'table', 'paragraph', 'text'
+    )
+
     def __init__(self, rules=None, **kwargs):
         self.options = kwargs
 
@@ -174,12 +193,7 @@ class BlockLexer(object):
         src = src.rstrip('\n')
 
         if not features:
-            features = (
-                'newline', 'block_code', 'fences', 'heading',
-                'nptable', 'lheading', 'hrule', 'block_quote',
-                'list_block', 'block_html', 'def_links',
-                'def_footnotes', 'table', 'paragraph', 'text'
-            )
+            features = self.default_features
 
         def manipulate(src):
             for key in features:
@@ -251,11 +265,6 @@ class BlockLexer(object):
         self.tokens.append({'type': 'list_end'})
 
     def _process_list_item(self, cap, bull):
-        features = (
-            'newline', 'block_code', 'fences', 'lheading', 'hrule',
-            'block_quote', 'list_block', 'block_html', 'text',
-        )
-
         cap = self.rules.list_item.findall(cap)
 
         _next = False
@@ -290,7 +299,7 @@ class BlockLexer(object):
 
             self.tokens.append({'type': t})
             # recurse
-            self.parse(item, features)
+            self.parse(item, self.list_features)
             self.tokens.append({'type': 'list_item_end'})
 
     def parse_block_quote(self, m):
@@ -335,13 +344,7 @@ class BlockLexer(object):
                 newlines.append(line[whitespace:])
             text = '\n'.join(newlines)
 
-        features = (
-            'newline', 'block_code', 'fences', 'heading',
-            'nptable', 'lheading', 'hrule', 'block_quote',
-            'list_block', 'block_html', 'table', 'paragraph', 'text'
-        )
-
-        self.parse(text, features)
+        self.parse(text, self.footnote_features)
 
         self.tokens.append({
             'type': 'footnote_end',
@@ -457,9 +460,25 @@ class InlineGrammar(object):
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
+    def hard_wrap(self):
+        """Grammar for hard wrap linebreak. You don't need to add two
+        spaces at the end of a line.
+        """
+        self.linebreak = re.compile(r'^ *\n(?!\s*$)')
+        self.text = re.compile(
+            r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
+        )
+
 
 class InlineLexer(object):
     """Inline level lexer for inline grammars."""
+
+    default_features = [
+        'escape', 'autolink', 'url', 'tag',
+        'footnote', 'link', 'reflink', 'nolink',
+        'double_emphasis', 'emphasis', 'code',
+        'linebreak', 'strikethrough', 'text',
+    ]
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.options = kwargs
@@ -471,12 +490,9 @@ class InlineLexer(object):
 
         if not rules:
             rules = InlineGrammar()
-            if self.options.get('hard_wrap'):
-                # {2,} -> *
-                rules.linebreak = re.compile(r'^ *\n(?!\s*$)')
-                rules.text = re.compile(
-                    r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
-                )
+
+        if self.options.get('hard_wrap'):
+            rules.hard_wrap()
 
         self.rules = rules
 
@@ -497,12 +513,7 @@ class InlineLexer(object):
             src = escape(src)
 
         if not features:
-            features = [
-                'escape', 'autolink', 'url', 'tag',
-                'footnote', 'link', 'reflink', 'nolink',
-                'double_emphasis', 'emphasis', 'code',
-                'linebreak', 'strikethrough', 'text',
-            ]
+            features = list(self.default_features)
 
         if self._in_footnote and 'footnote' in features:
             features.remove('footnote')
@@ -618,7 +629,8 @@ class InlineLexer(object):
         return self.renderer.emphasis(text)
 
     def output_code(self, m):
-        text = escape(m.group(2), smart_amp=False)
+        text = m.group(2)
+        text = escape(text.rstrip(), smart_amp=False)
         return self.renderer.codespan(text)
 
     def output_linebreak(self, m):
@@ -646,12 +658,11 @@ class Renderer(object):
         :param code: text content of the code block.
         :param lang: language of the given code.
         """
-        code = code.rstrip()
         if not lang:
             code = escape(code, smart_amp=False)
-            return '<pre><code>%s\n</code></pre>\n' % code
+            return '<pre><code>%s</code></pre>\n' % code
         code = escape(code, quote=True, smart_amp=False)
-        return '<pre><code class="lang-%s">%s\n</code>\n</pre>' % (lang, code)
+        return '<pre><code class="lang-%s">%s</code></pre>\n' % (lang, code)
 
     def block_quote(self, text):
         """Rendering <blockquote> with the given text.
@@ -883,6 +894,11 @@ class Markdown(object):
 
         self.renderer = renderer
         self.options = kwargs
+
+        if inline and inspect.isclass(inline):
+            inline = inline(renderer, **kwargs)
+        if block and inspect.isclass(block):
+            block = block(**kwargs)
 
         self.inline = inline or InlineLexer(renderer, **kwargs)
         self.block = block or BlockLexer(**kwargs)

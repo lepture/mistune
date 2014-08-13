@@ -5,6 +5,8 @@ The fastest markdown parser in pure Python, inspired by marked_.
 
 .. image:: https://travis-ci.org/lepture/mistune.png?branch=master
    :target: https://travis-ci.org/lepture/mistune
+.. image:: https://ci.appveyor.com/api/projects/status/8ai8tfwp75oela17
+   :target: https://ci.appveyor.com/project/lepture/mistune
 .. image:: https://coveralls.io/repos/lepture/mistune/badge.png?branch=master
    :target: https://coveralls.io/r/lepture/mistune
 

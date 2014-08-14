@@ -644,7 +644,7 @@ class Renderer(object):
 
         :param text: text content of the blockquote.
         """
-        return '<blockquote>%s\n</blockquote>' % text
+        return '<blockquote>%s</blockquote>\n' % text
 
     def block_html(self, html):
         """Rendering block level pure html content.
@@ -788,7 +788,7 @@ class Renderer(object):
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """
-        if 'javascript:' in link:
+        if link.startswith('javascript:'):
             # for safety
             return ''
         if not title:
@@ -803,6 +803,8 @@ class Renderer(object):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
+        if src.startswith('javascript:'):
+            src = ''
         text = escape(text, quote=True)
         if title:
             title = escape(title, quote=True)

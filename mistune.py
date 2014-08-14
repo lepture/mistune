@@ -789,8 +789,7 @@ class Renderer(object):
         :param text: text content for description.
         """
         if link.startswith('javascript:'):
-            # for safety
-            return ''
+            link = ''
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
         title = escape(title, quote=True)

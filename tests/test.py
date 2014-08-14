@@ -72,6 +72,35 @@ def test_linebreak():
     assert '<br>' in ret
 
 
+def test_safe_links():
+    ret = mistune.markdown('javascript ![foo](<javascript:alert>) alert')
+    assert 'src=""' in ret
+    ret = mistune.markdown('javascript [foo](<javascript:alert>) alert')
+    assert 'href=""' in ret
+
+
+def test_skip_style():
+    ret = mistune.markdown(
+        'foo\n<style>body{color:red}</style>', skip_style=True
+    )
+    assert ret == '<p>foo</p>\n'
+
+
+def test_use_xhtml():
+    ret = mistune.markdown('foo\n\n----\n\nbar')
+    assert '<hr>' in ret
+    ret = mistune.markdown('foo\n\n----\n\nbar', use_xhtml=True)
+    assert '<hr />' in ret
+
+    ret = mistune.markdown('![foo](bar "title")', use_xhtml=True)
+    assert '<img src="bar" alt="foo" title="title" />' in ret
+
+
+def test_skip_html():
+    ret = mistune.markdown('foo <b>bar</b>', skip_html=True)
+    assert ret == '<p>foo bar</p>\n'
+
+
 def test_custom_lexer():
     import copy
 
@@ -92,6 +121,7 @@ def test_custom_lexer():
                 rules = MyInlineGrammar()
 
             super(MyInlineLexer, self).__init__(renderer, rules, **kwargs)
+
         def output_wiki_link(self, m):
             text = m.group(1)
             alt, link = text.split('|')

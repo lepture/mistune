@@ -120,7 +120,6 @@ class BlockGrammar(object):
         r'(?:\n(?!\2(?:[*+-]|\d+\.) )[^\n]*)*)',
         flags=re.M
     )
-    list_pure_bullet = re.compile(r'(?:[*+-]|\d\.)')
     list_bullet = re.compile(r'^ *(?:[*+-]|\d+\.) +')
     paragraph = re.compile(
         r'^((?:[^\n]+\n?(?!'
@@ -416,7 +415,7 @@ class BlockLexer(object):
 class InlineGrammar(object):
     """Grammars for inline level tokens."""
 
-    escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')
+    escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
     tag = re.compile(
         r'^<!--[\s\S]*?-->|'
         r'^<\/?\w+(?:"[^"]*"|'
@@ -447,9 +446,9 @@ class InlineGrammar(object):
         r'|'
         r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
     )
-    code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')
+    code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')  # `code`
     linebreak = re.compile(r'^ {2,}\n(?!\s*$)')
-    strikethrough = re.compile(r'^~~(?=\S)([\s\S]*?\S)~~')
+    strikethrough = re.compile(r'^~~(?=\S)([\s\S]*?\S)~~')  # ~~word~~
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
@@ -903,6 +902,7 @@ class Markdown(object):
         return self.parse(text)
 
     def parse(self, src):
+        src = preprocessing(src)
         out = self.output(src)
         keys = self.block.def_footnotes
 
@@ -933,8 +933,6 @@ class Markdown(object):
         return out
 
     def output(self, src, features=None):
-        src = preprocessing(src)
-
         self.tokens = self.block(src, features)
         self.tokens.reverse()
 

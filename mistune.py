@@ -870,8 +870,6 @@ class Markdown(object):
     """
 
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
-        self.options = kwargs
-
         if not renderer:
             renderer = Renderer(**kwargs)
 
@@ -886,7 +884,7 @@ class Markdown(object):
             self.inline = inline
         else:
             rules = InlineGrammar()
-            if self.options.get('hard_wrap'):
+            if kwargs.get('hard_wrap'):
                 rules.hard_wrap()
             self.inline = InlineLexer(renderer, rules=rules)
 

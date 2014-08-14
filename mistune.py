@@ -183,32 +183,32 @@ class BlockLexer(object):
 
         self.rules = rules
 
-    def __call__(self, src, features=None):
-        return self.parse(src, features)
+    def __call__(self, text, features=None):
+        return self.parse(text, features)
 
-    def parse(self, src, features=None):
-        src = src.rstrip('\n')
+    def parse(self, text, features=None):
+        text = text.rstrip('\n')
 
         if not features:
             features = self.default_features
 
-        def manipulate(src):
+        def manipulate(text):
             for key in features:
                 rule = getattr(self.rules, key)
-                m = rule.match(src)
+                m = rule.match(text)
                 if not m:
                     continue
                 getattr(self, 'parse_%s' % key)(m)
                 return m
             return False
 
-        while src:
-            m = manipulate(src)
+        while text:
+            m = manipulate(text)
             if m is not False:
-                src = src[len(m.group(0)):]
+                text = text[len(m.group(0)):]
                 continue
-            if src:
-                raise RuntimeError('Infinite loop at: %s' % src)
+            if text:
+                raise RuntimeError('Infinite loop at: %s' % text)
         return self.tokens
 
     def parse_newline(self, m):
@@ -486,16 +486,16 @@ class InlineLexer(object):
         self._in_link = False
         self._in_footnote = False
 
-    def __call__(self, src):
-        return self.output(src)
+    def __call__(self, text):
+        return self.output(text)
 
     def setup(self, links, footnotes):
         self.footnote_index = 0
         self.links = links or {}
         self.footnotes = footnotes or {}
 
-    def output(self, src, features=None):
-        src = src.rstrip('\n')
+    def output(self, text, features=None):
+        text = text.rstrip('\n')
         if not features:
             features = list(self.default_features)
 
@@ -504,10 +504,10 @@ class InlineLexer(object):
 
         output = ''
 
-        def manipulate(src):
+        def manipulate(text):
             for key in features:
                 pattern = getattr(self.rules, key)
-                m = pattern.match(src)
+                m = pattern.match(text)
                 if not m:
                     continue
                 self.line_match = m
@@ -517,16 +517,16 @@ class InlineLexer(object):
             return False
 
         self.line_started = False
-        while src:
-            ret = manipulate(src)
+        while text:
+            ret = manipulate(text)
             self.line_started = True
             if ret is not False:
                 m, out = ret
                 output += out
-                src = src[len(m.group(0)):]
+                text = text[len(m.group(0)):]
                 continue
-            if src:
-                raise RuntimeError('Infinite loop at: %s' % src)
+            if text:
+                raise RuntimeError('Infinite loop at: %s' % text)
 
         return output
 
@@ -903,9 +903,8 @@ class Markdown(object):
         """
         return self.parse(text)
 
-    def parse(self, src):
-        src = preprocessing(src)
-        out = self.output(src)
+    def parse(self, text):
+        out = self.output(preprocessing(text))
         keys = self.block.def_footnotes
 
         # reset block
@@ -934,8 +933,8 @@ class Markdown(object):
         out += self.renderer.footnotes(body)
         return out
 
-    def output(self, src, features=None):
-        self.tokens = self.block(src, features)
+    def output(self, text, features=None):
+        self.tokens = self.block(text, features)
         self.tokens.reverse()
 
         self.inline.setup(self.block.def_links, self.block.def_footnotes)

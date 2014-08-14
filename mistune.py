@@ -175,8 +175,6 @@ class BlockLexer(object):
     )
 
     def __init__(self, rules=None, **kwargs):
-        self.options = kwargs
-
         self.tokens = []
         self.def_links = {}
         self.def_footnotes = {}
@@ -476,8 +474,6 @@ class InlineLexer(object):
     ]
 
     def __init__(self, renderer, rules=None, **kwargs):
-        self.options = kwargs
-
         self.renderer = renderer
         self.links = {}
         self.footnotes = {}
@@ -485,9 +481,6 @@ class InlineLexer(object):
 
         if not rules:
             rules = InlineGrammar()
-
-        if self.options.get('hard_wrap'):
-            rules.hard_wrap()
 
         self.rules = rules
 
@@ -876,10 +869,7 @@ class Markdown(object):
     :param renderer: An instance of ``Renderer``.
     """
 
-    def __init__(self, renderer=None, **kwargs):
-        inline = kwargs.pop('inline', None)
-        block = kwargs.pop('block', None)
-
+    def __init__(self, renderer=None, inline=None, block=None, **kwargs):
         self.options = kwargs
 
         if not renderer:
@@ -892,9 +882,15 @@ class Markdown(object):
         if block and inspect.isclass(block):
             block = block(**kwargs)
 
-        self.inline = inline or InlineLexer(renderer, **kwargs)
-        self.block = block or BlockLexer(**kwargs)
+        if inline:
+            self.inline = inline
+        else:
+            rules = InlineGrammar()
+            if self.options.get('hard_wrap'):
+                rules.hard_wrap()
+            self.inline = InlineLexer(renderer, rules=rules)
 
+        self.block = block or BlockLexer(BlockGrammar())
         self.footnotes = []
         self.tokens = []
 

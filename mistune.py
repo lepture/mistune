@@ -400,13 +400,8 @@ class BlockLexer(object):
     def parse_block_html(self, m):
         pre = m.group(1) in ['pre', 'script', 'style']
         text = m.group(0)
-        if self.options.get('escape'):
-            text = escape(text)
-            t = 'paragraph'
-        else:
-            t = 'block_html'
         self.tokens.append({
-            'type': t,
+            'type': 'block_html',
             'pre': pre,
             'text': text
         })
@@ -509,9 +504,6 @@ class InlineLexer(object):
 
     def output(self, src, features=None):
         src = src.rstrip('\n')
-        if self.options.get('escape'):
-            src = escape(src)
-
         if not features:
             features = list(self.default_features)
 
@@ -550,19 +542,17 @@ class InlineLexer(object):
         return m.group(1)
 
     def output_autolink(self, m):
-        data = m.group(1)
+        link = m.group(1)
         if m.group(2) == '@':
             is_email = True
-            link = escape(data)
         else:
             is_email = False
-            link = escape(data)
         return self.renderer.autolink(link, is_email)
 
     def output_url(self, m):
-        link = escape(m.group(1))
+        link = m.group(1)
         if self._in_link:
-            return link
+            return self.renderer.text(link)
         return self.renderer.autolink(link, False)
 
     def output_tag(self, m):
@@ -572,7 +562,7 @@ class InlineLexer(object):
             self._in_link = True
         if lower_text.startswith('</a>'):
             self._in_link = False
-        return text
+        return self.renderer.raw_html(text)
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))
@@ -603,14 +593,8 @@ class InlineLexer(object):
 
     def _process_link(self, m, link, title=None):
         line = m.group(0)
-
-        if title:
-            title = escape(title, quote=True)
-
         text = m.group(1)
-
         if line[0] == '!':
-            text = escape(text, quote=True)
             return self.renderer.image(link, title, text)
 
         self._in_link = True
@@ -630,7 +614,6 @@ class InlineLexer(object):
 
     def output_code(self, m):
         text = m.group(2)
-        text = escape(text.rstrip(), smart_amp=False)
         return self.renderer.codespan(text)
 
     def output_linebreak(self, m):
@@ -676,9 +659,11 @@ class Renderer(object):
 
         :param html: text content of the html snippet.
         """
-        if self.options.get('skip_style'):
-            if html.lower().startswith('<style'):
-                return ''
+        if self.options.get('skip_style') and \
+           html.lower().startswith('<style'):
+            return ''
+        if self.options.get('escape'):
+            return escape(html)
         return html
 
     def header(self, text, level, raw=None):
@@ -770,6 +755,7 @@ class Renderer(object):
 
         :param text: text content for inline code.
         """
+        text = escape(text.rstrip(), smart_amp=False)
         return '<code>%s</code>' % text
 
     def linebreak(self):
@@ -798,7 +784,7 @@ class Renderer(object):
         :param link: link content or email address.
         :param is_email: whether this is an email or not.
         """
-        text = link
+        text = link = escape(link)
         if is_email:
             link = 'mailto:%s' % link
         return '<a href="%s">%s</a>' % (link, text)
@@ -815,6 +801,7 @@ class Renderer(object):
             return ''
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
+        title = escape(title, quote=True)
         return '<a href="%s" title="%s">%s</a>' % (link, title, text)
 
     def image(self, src, title, text):
@@ -824,10 +811,12 @@ class Renderer(object):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
-        if not title:
-            html = '<img src="%s" alt="%s"' % (src, text)
-        else:
+        text = escape(text, quote=True)
+        if title:
+            title = escape(title, quote=True)
             html = '<img src="%s" alt="%s" title="%s"' % (src, text, title)
+        else:
+            html = '<img src="%s" alt="%s"' % (src, text)
         if self.options.get('use_xhtml'):
             return '%s />' % html
         return '%s>' % html
@@ -838,6 +827,8 @@ class Renderer(object):
         :param html: html snippet.
         """
         if self.options.get('skip_html'):
+            return ''
+        if self.options.get('escape'):
             return escape(html)
         return html
 
@@ -889,11 +880,12 @@ class Markdown(object):
         inline = kwargs.pop('inline', None)
         block = kwargs.pop('block', None)
 
+        self.options = kwargs
+
         if not renderer:
-            renderer = Renderer()
+            renderer = Renderer(**kwargs)
 
         self.renderer = renderer
-        self.options = kwargs
 
         if inline and inspect.isclass(inline):
             inline = inline(renderer, **kwargs)
@@ -1068,8 +1060,6 @@ class Markdown(object):
 
     def parse_block_html(self):
         text = self.token['text']
-        if 'pre' not in self.token or not self.token['pre']:
-            text = self.inline(text)
         return self.renderer.block_html(text)
 
     def parse_paragraph(self):

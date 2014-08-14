@@ -555,7 +555,7 @@ class InlineLexer(object):
             self._in_link = True
         if lower_text.startswith('</a>'):
             self._in_link = False
-        return self.renderer.raw_html(text)
+        return self.renderer.tag(text)
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))
@@ -814,10 +814,10 @@ class Renderer(object):
             return '%s />' % html
         return '%s>' % html
 
-    def raw_html(self, html):
-        """Rendering span level html snippet.
+    def tag(self, html):
+        """Rendering span level html tag.
 
-        :param html: html snippet.
+        :param html: html tag snippet.
         """
         if self.options.get('skip_html'):
             return ''

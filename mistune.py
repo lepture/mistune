@@ -3,7 +3,7 @@
     mistune
     ~~~~~~~
 
-    The fastest markdown parser in pure Python, inspired by marked.
+    The fastest markdown parser in pure Python with renderer feature.
 
     :copyright: (c) 2014 by Hsiaoming Yang.
 """
@@ -11,7 +11,7 @@
 import re
 import inspect
 
-__version__ = '0.3.1'
+__version__ = '0.4'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',

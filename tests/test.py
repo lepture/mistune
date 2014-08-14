@@ -92,6 +92,9 @@ def test_use_xhtml():
     ret = mistune.markdown('foo\n\n----\n\nbar', use_xhtml=True)
     assert '<hr />' in ret
 
+    ret = mistune.markdown('foo  \nbar', use_xhtml=True)
+    assert '<br />' in ret
+
     ret = mistune.markdown('![foo](bar "title")', use_xhtml=True)
     assert '<img src="bar" alt="foo" title="title" />' in ret
 
@@ -99,6 +102,16 @@ def test_use_xhtml():
 def test_skip_html():
     ret = mistune.markdown('foo <b>bar</b>', skip_html=True)
     assert ret == '<p>foo bar</p>\n'
+
+
+def test_trigger_more_cases():
+    markdown = mistune.Markdown(
+        inline=mistune.InlineLexer,
+        block=mistune.BlockLexer,
+        skip_html=True
+    )
+    ret = markdown.render('foo[^foo]\n\n[^foo]: foo\n\n[^foo]: bar\n')
+    assert 'bar' not in ret
 
 
 def test_custom_lexer():

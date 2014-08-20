@@ -417,9 +417,9 @@ class InlineGrammar(object):
 
     escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
     tag = re.compile(
-        r'^<!--[\s\S]*?-->|'
-        r'^<\/?\w+(?:"[^"]*"|'
-        r'''[^']*'|[^'">])*?>'''
+        r'^<!--[\s\S]*?-->|'  # comment
+        r'^<\/\w+>|'  # close tag
+        r'^<\w+[^>]*?>'  # open tag
     )
     autolink = re.compile(r'^<([^ >]+(@|:\/)[^ >]+)>')
     link = re.compile(

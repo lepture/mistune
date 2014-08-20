@@ -889,6 +889,7 @@ class Markdown(object):
             self.inline = InlineLexer(renderer, rules=rules)
 
         self.block = block or BlockLexer(BlockGrammar())
+        self.options = kwargs
         self.footnotes = []
         self.tokens = []
 
@@ -1052,6 +1053,8 @@ class Markdown(object):
 
     def parse_block_html(self):
         text = self.token['text']
+        if self.options.get('parse_html') and not self.token.get('pre'):
+            text = self.inline(text)
         return self.renderer.block_html(text)
 
     def parse_paragraph(self):

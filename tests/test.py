@@ -104,6 +104,13 @@ def test_skip_html():
     assert ret == '<p>foo bar</p>\n'
 
 
+def test_block_html():
+    ret = mistune.markdown('<div>**foo**</div>')
+    assert '<strong>' not in ret
+    ret = mistune.markdown('<div>**foo**</div>', parse_html=True)
+    assert '<strong>' in ret
+
+
 def test_trigger_more_cases():
     markdown = mistune.Markdown(
         inline=mistune.InlineLexer,

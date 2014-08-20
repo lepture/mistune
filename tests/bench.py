@@ -1,31 +1,38 @@
 # coding: utf-8
 
 import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import time
 import functools
 
 
 class benchmark(object):
-    suites = {}
+    suites = []
 
-    def __init__(self, name, loops=1000):
+    def __init__(self, name):
         self._name = name
-        self._loops = loops
 
     def __call__(self, func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(text, loops=1000):
             start = time.clock()
-            while self._loops:
-                func(*args, **kwargs)
-                self._loops -= 1
+            while loops:
+                func(text)
+                loops -= 1
             end = time.clock()
             return end - start
         # register
-        benchmark.suites = {self._name: wrapper}
+        benchmark.suites.append((self._name, wrapper))
         return wrapper
+
+    @classmethod
+    def bench(cls, text, loops=1000):
+        print('Parsing the Markdown Syntax document %d times...' % loops)
+        for name, func in cls.suites:
+            try:
+                total = func(text, loops=loops)
+                print('{0}: {1}'.format(name, total))
+            except ImportError:
+                print('{0} is not available'.format(name))
 
 
 @benchmark('mistune')
@@ -91,20 +98,4 @@ if __name__ == '__main__':
     with open(filepath, 'r') as f:
         text = f.read()
 
-    methods = [
-        ('Mistune', benchmark_mistune),
-        ('Misaka', benchmark_misaka),
-        ('Markdown', benchmark_markdown),
-        ('Markdown2', benchmark_markdown2),
-        ('cMarkdown', benchmark_cMarkdown),
-        ('Discount', benchmark_discount),
-        ('Hoep', benchmark_hoep),
-    ]
-
-    print('Parsing the Markdown Syntax document 1000 times...')
-    for name, fn in methods:
-        try:
-            total = fn(text)
-            print('{0}: {1}'.format(name, total))
-        except ImportError:
-            print('{0} is not available'.format(name))
+    benchmark.bench(text)

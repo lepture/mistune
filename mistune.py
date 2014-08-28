@@ -630,9 +630,9 @@ class Renderer(object):
     def default_output(self):
         """Returns the default, empty output value for the renderer.
 
-        All subsequent values with use the '+=' operator to append to this
-        value. Default is a string so rendering HTML can build up a result
-        string with the rendered Markdown.
+        All renderer methods use the '+=' operator to append to this value.
+        Default is a string so rendering HTML can build up a result string with
+        the rendered Markdown.
 
         Can be overridden by Renderer subclasses to be types like an empty list,
         allowing the renderer to create a tree-like structure to represent the

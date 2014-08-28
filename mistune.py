@@ -628,7 +628,17 @@ class Renderer(object):
         self.options = kwargs
 
     def default_output(self):
-        """TODO"""
+        """Returns the default, empty output value for the renderer.
+
+        All subsequent values with use the '+=' operator to append to this
+        value. Default is a string so rendering HTML can build up a result
+        string with the rendered Markdown.
+
+        Can be overridden by Renderer subclasses to be types like an empty list,
+        allowing the renderer to create a tree-like structure to represent the
+        document (which can then be reprocessed later into a separate format
+        like docx or pdf).
+        """
         return ''
 
     def block_code(self, code, lang=None):

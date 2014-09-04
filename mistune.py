@@ -98,7 +98,7 @@ class BlockGrammar(object):
     )
     hrule = re.compile(r'^(?: *[-*_]){3,} *(?:\n+|$)')
     heading = re.compile(r'^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
-    lheading = re.compile(r'^([^\n]+)\n *(=|-){2,} *(?:\n+|$)')
+    lheading = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
     block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
     list_block = re.compile(
         r'^( *)([*+-]|\d+\.) [\s\S]+?'

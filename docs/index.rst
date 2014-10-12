@@ -21,6 +21,15 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.4.1
+~~~~~~~~~~~~~
+
+Released on Oct. 12, 2014
+
+* Add option for parse markdown in block level html.
+* Fix on lheading, any number of underline = or - will work.
+* Patch for setup if Cython is available but no C compiler.
+
 Version 0.4
 ~~~~~~~~~~~
 

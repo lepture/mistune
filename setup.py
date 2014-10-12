@@ -23,8 +23,8 @@ else:
 
     # Failsafe compilation originally from simplejson. Author: Bob Ippolito
     # Copied here from markupsafe
-    from distutils.errors import (CCompilerError, DistutilsExecError,
-                                    DistutilsPlatformError)
+    from distutils.errors import CCompilerError, DistutilsExecError
+    from distutils.errors import DistutilsPlatformError
 
     is_jython = 'java' in sys.platform
     is_pypy = hasattr(sys, 'pypy_version_info')
@@ -80,6 +80,7 @@ def fread(filepath):
     with open(filepath, 'r') as f:
         return f.read()
 
+
 def run_setup(with_binary):
     ext_modules = [Extension('mistune', ['mistune.py'])] if with_binary else []
     setup(
@@ -115,6 +116,7 @@ def run_setup(with_binary):
             'Topic :: Software Development :: Libraries :: Python Modules'
         ]
     )
+
 
 def try_building_extension():
     try:

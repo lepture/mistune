@@ -154,6 +154,7 @@ class BlockGrammar(object):
 
 class BlockLexer(object):
     """Block level lexer for block grammars."""
+    grammar_class = BlockGrammar
 
     default_features = [
         'newline', 'block_code', 'fences', 'heading',
@@ -179,7 +180,7 @@ class BlockLexer(object):
         self.def_footnotes = {}
 
         if not rules:
-            rules = BlockGrammar()
+            rules = self.grammar_class()
 
         self.rules = rules
 
@@ -464,6 +465,7 @@ class InlineGrammar(object):
 
 class InlineLexer(object):
     """Inline level lexer for inline grammars."""
+    grammar_class = InlineGrammar
 
     default_features = [
         'escape', 'autolink', 'url', 'tag',
@@ -479,7 +481,7 @@ class InlineLexer(object):
         self.footnote_index = 0
 
         if not rules:
-            rules = InlineGrammar()
+            rules = self.grammar_class()
 
         self.rules = rules
 

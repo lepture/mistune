@@ -6,11 +6,11 @@ root = os.path.dirname(__file__)
 
 known = []
 
-features = [
+rules = [
     'table', 'fenced_code', 'footnotes',
     'autolink', 'strikethrough',
 ]
-m = mistune.Markdown(features=features)
+m = mistune.Markdown(rules=rules)
 
 
 def render(folder, name):
@@ -133,8 +133,8 @@ def test_custom_lexer():
         )
 
     class MyInlineLexer(mistune.InlineLexer):
-        default_features = copy.copy(mistune.InlineLexer.default_features)
-        default_features.insert(3, 'wiki_link')
+        default_rules = copy.copy(mistune.InlineLexer.default_rules)
+        default_rules.insert(3, 'wiki_link')
 
         def __init__(self, renderer, rules=None, **kwargs):
             if rules is None:

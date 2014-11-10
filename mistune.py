@@ -36,6 +36,12 @@ def _keyify(key):
 
 
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
+_tag = (
+    r'(?!(?:'
+    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
+    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
+    r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
+)
 
 
 def escape(text, quote=False, smart_amp=True):
@@ -71,12 +77,6 @@ def preprocessing(text, tab=4):
 class BlockGrammar(object):
     """Grammars for block level tokens."""
 
-    _tag = (
-        r'(?!(?:'
-        r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
-        r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-        r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
-    )
     def_links = re.compile(
         r'^ *\[([^^\]]+)\]: *'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
@@ -156,19 +156,19 @@ class BlockLexer(object):
     """Block level lexer for block grammars."""
     grammar_class = BlockGrammar
 
-    default_features = [
+    default_rules = [
         'newline', 'block_code', 'fences', 'heading',
         'nptable', 'lheading', 'hrule', 'block_quote',
         'list_block', 'block_html', 'def_links',
         'def_footnotes', 'table', 'paragraph', 'text'
     ]
 
-    list_features = (
+    list_rules = (
         'newline', 'block_code', 'fences', 'lheading', 'hrule',
         'block_quote', 'list_block', 'block_html', 'text',
     )
 
-    footnote_features = (
+    footnote_rules = (
         'newline', 'block_code', 'fences', 'heading',
         'nptable', 'lheading', 'hrule', 'block_quote',
         'list_block', 'block_html', 'table', 'paragraph', 'text'
@@ -184,17 +184,17 @@ class BlockLexer(object):
 
         self.rules = rules
 
-    def __call__(self, text, features=None):
-        return self.parse(text, features)
+    def __call__(self, text, rules=None):
+        return self.parse(text, rules)
 
-    def parse(self, text, features=None):
+    def parse(self, text, rules=None):
         text = text.rstrip('\n')
 
-        if not features:
-            features = self.default_features
+        if not rules:
+            rules = self.default_rules
 
         def manipulate(text):
-            for key in features:
+            for key in rules:
                 rule = getattr(self.rules, key)
                 m = rule.match(text)
                 if not m:
@@ -297,7 +297,7 @@ class BlockLexer(object):
 
             self.tokens.append({'type': t})
             # recurse
-            self.parse(item, self.list_features)
+            self.parse(item, self.list_rules)
             self.tokens.append({'type': 'list_item_end'})
 
     def parse_block_quote(self, m):
@@ -342,7 +342,7 @@ class BlockLexer(object):
                 newlines.append(line[whitespace:])
             text = '\n'.join(newlines)
 
-        self.parse(text, self.footnote_features)
+        self.parse(text, self.footnote_rules)
 
         self.tokens.append({
             'type': 'footnote_end',
@@ -467,7 +467,7 @@ class InlineLexer(object):
     """Inline level lexer for inline grammars."""
     grammar_class = InlineGrammar
 
-    default_features = [
+    default_rules = [
         'escape', 'autolink', 'url', 'tag',
         'footnote', 'link', 'reflink', 'nolink',
         'double_emphasis', 'emphasis', 'code',
@@ -496,18 +496,18 @@ class InlineLexer(object):
         self.links = links or {}
         self.footnotes = footnotes or {}
 
-    def output(self, text, features=None):
+    def output(self, text, rules=None):
         text = text.rstrip('\n')
-        if not features:
-            features = list(self.default_features)
+        if not rules:
+            rules = list(self.default_rules)
 
-        if self._in_footnote and 'footnote' in features:
-            features.remove('footnote')
+        if self._in_footnote and 'footnote' in rules:
+            rules.remove('footnote')
 
         output = ''
 
         def manipulate(text):
-            for key in features:
+            for key in rules:
                 pattern = getattr(self.rules, key)
                 m = pattern.match(text)
                 if not m:
@@ -935,8 +935,8 @@ class Markdown(object):
         out += self.renderer.footnotes(body)
         return out
 
-    def output(self, text, features=None):
-        self.tokens = self.block(text, features)
+    def output(self, text, rules=None):
+        self.tokens = self.block(text, rules)
         self.tokens.reverse()
 
         self.inline.setup(self.block.def_links, self.block.def_footnotes)

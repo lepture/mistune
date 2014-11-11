@@ -150,3 +150,56 @@ def test_custom_lexer():
     markdown = mistune.Markdown(inline=MyInlineLexer)
     ret = markdown('[[Link Text|Wiki Link]]')
     assert '<a href' in ret
+
+
+def test_custom_default_output():
+    """Tests a Renderer that returns a list from the default_output method."""
+
+    class CustomRenderer(mistune.Renderer):
+        def default_output(self):
+            return []
+
+        def __getattribute__(self, name):
+            """Saves the arguments to each Markdown handling method."""
+            found = CustomRenderer.__dict__.get(name)
+            if found:
+                return object.__getattribute__(self, name)
+            def fake_method(*args, **kwargs):
+                return [(name, args, kwargs)]
+            return fake_method
+
+    markdown_data = """
+## Title here
+
+Some text.
+
+In two paragraphs. And then a list.
+
+- foo
+- bar
+    1. meep
+    1. stuff
+"""
+    expected = [
+        ('header', ([('text', ('Title here',), {})], 2, 'Title here'), {}),
+        ('paragraph', ([('text', ('Some text.',), {})],), {}),
+        ('paragraph',
+         ([('text', ('In two paragraphs. And then a list.',), {})],),
+         {}),
+        ('list',
+         ([('list_item', ([('text', ('foo',), {})],), {}),
+             ('list_item',
+              ([('text', ('bar',), {}),
+                  ('list',
+                   ([('list_item', ([('text', ('meep',), {})],), {}),
+                       ('list_item', ([('text', ('stuff',), {})],), {})],
+                    True),
+                   {})],),
+              {})],
+          False),
+         {})
+    ]
+
+    processor = mistune.Markdown(renderer=CustomRenderer())
+    found = processor.render(markdown_data)
+    assert expected == found, "Expected:\n%r\n\nFound:\n%r" % (expected, found)

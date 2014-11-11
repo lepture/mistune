@@ -113,6 +113,7 @@ Here is a list of span level renderer API::
     emphasis(text)
     image(src, title, alt_text)
     linebreak()
+    newline()
     link(link, title, content)
     tag(html)
     strikethrough(text)
@@ -186,3 +187,14 @@ You should pass the inline lexer to ``Markdown`` parser::
 
 It is the same with block level lexer. It would take a while to understand
 the whole mechanism. But you won't do the trick a lot.
+
+
+Contribution
+------------
+
+Mistune itself doesn't accept any extension. It will always be a simple one
+file script.
+
+If you want to add features, you can head over to `mistune-contrib`_.
+
+.. _`mistune-contrib`: https://github.com/lepture/mistune-contrib

@@ -152,7 +152,7 @@ def test_custom_lexer():
     assert '<a href' in ret
 
 
-def test_custom_default_output():
+def test_token_tree():
     """Tests a Renderer that returns a list from the default_output method."""
 
     class CustomRenderer(mistune.Renderer):
@@ -164,22 +164,14 @@ def test_custom_default_output():
             found = CustomRenderer.__dict__.get(name)
             if found:
                 return object.__getattribute__(self, name)
+
             def fake_method(*args, **kwargs):
                 return [(name, args, kwargs)]
             return fake_method
 
-    markdown_data = """
-## Title here
+    with open(os.path.join(root, 'data', 'tree.md')) as f:
+        content = f.read()
 
-Some text.
-
-In two paragraphs. And then a list.
-
-- foo
-- bar
-    1. meep
-    1. stuff
-"""
     expected = [
         ('header', ([('text', ('Title here',), {})], 2, 'Title here'), {}),
         ('paragraph', ([('text', ('Some text.',), {})],), {}),
@@ -201,5 +193,5 @@ In two paragraphs. And then a list.
     ]
 
     processor = mistune.Markdown(renderer=CustomRenderer())
-    found = processor.render(markdown_data)
+    found = processor.render(content)
     assert expected == found, "Expected:\n%r\n\nFound:\n%r" % (expected, found)

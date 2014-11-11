@@ -926,14 +926,7 @@ class Markdown(object):
         return self.parse(text)
 
     def parse(self, text):
-        self.tokens = self.block(preprocessing(text))
-        self.tokens.reverse()
-
-        self.inline.setup(self.block.def_links, self.block.def_footnotes)
-
-        out = self.renderer.placeholder()
-        while self.pop():
-            out += self.tok()
+        out = self.output(preprocessing(text))
 
         keys = self.block.def_footnotes
 
@@ -973,6 +966,17 @@ class Markdown(object):
         if self.tokens:
             return self.tokens[-1]
         return None
+
+    def output(self, text, rules=None):
+        self.tokens = self.block(text, rules)
+        self.tokens.reverse()
+
+        self.inline.setup(self.block.def_links, self.block.def_footnotes)
+
+        out = self.renderer.placeholder()
+        while self.pop():
+            out += self.tok()
+        return out
 
     def tok(self):
         t = self.token['type']
@@ -1089,5 +1093,4 @@ def markdown(text, **kwargs):
     :param escape: if set to True, all html tags will be escaped.
     :param use_xhtml: output with xhtml tags.
     """
-    m = Markdown(**kwargs)
-    return m.parse(text)
+    return Markdown(**kwargs)(text)

@@ -36,12 +36,6 @@ def _keyify(key):
 
 
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
-_tag = (
-    r'(?!(?:'
-    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
-    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-    r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
-)
 
 
 def escape(text, quote=False, smart_amp=True):
@@ -72,6 +66,14 @@ def preprocessing(text, tab=4):
     text = text.replace('\u2424', '\n')
     pattern = re.compile(r'^ +$', re.M)
     return pattern.sub('', text)
+
+
+_tag = (
+    r'(?!(?:'
+    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
+    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
+    r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
+)
 
 
 class BlockGrammar(object):

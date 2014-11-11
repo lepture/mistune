@@ -217,7 +217,7 @@ class BlockLexer(object):
     def parse_newline(self, m):
         length = len(m.group(0))
         if length > 1:
-            self.tokens.append({'type': 'space'})
+            self.tokens.append({'type': 'newline'})
 
     def parse_block_code(self, m):
         code = m.group(0)
@@ -843,6 +843,10 @@ class Renderer(object):
             return escape(html)
         return html
 
+    def newline(self):
+        """Rendering newline element."""
+        return ''
+
     def footnote_ref(self, key, index):
         """Rendering the ref anchor of a footnote.
 
@@ -922,7 +926,15 @@ class Markdown(object):
         return self.parse(text)
 
     def parse(self, text):
-        out = self.output(preprocessing(text))
+        self.tokens = self.block(preprocessing(text))
+        self.tokens.reverse()
+
+        self.inline.setup(self.block.def_links, self.block.def_footnotes)
+
+        out = self.renderer.placeholder()
+        while self.pop():
+            out += self.tok()
+
         keys = self.block.def_footnotes
 
         # reset block
@@ -951,18 +963,6 @@ class Markdown(object):
         out += self.renderer.footnotes(body)
         return out
 
-    def output(self, text, rules=None):
-        self.tokens = self.block(text, rules)
-        self.tokens.reverse()
-
-        self.inline.setup(self.block.def_links, self.block.def_footnotes)
-
-        out = self.renderer.placeholder()
-        while self.pop():
-            out += self.tok()
-
-        return out
-
     def pop(self):
         if not self.tokens:
             return None
@@ -981,7 +981,7 @@ class Markdown(object):
         if t.endswith('_start'):
             t = t[:-6]
 
-        return getattr(self, 'parse_%s' % t)()
+        return getattr(self, 'output_%s' % t)()
 
     def tok_text(self):
         text = self.token['text']
@@ -989,25 +989,25 @@ class Markdown(object):
             text += '\n' + self.pop()['text']
         return self.inline(text)
 
-    def parse_space(self):
-        return self.renderer.placeholder()
+    def output_newline(self):
+        return self.renderer.newline()
 
-    def parse_hrule(self):
+    def output_hrule(self):
         return self.renderer.hrule()
 
-    def parse_heading(self):
+    def output_heading(self):
         return self.renderer.header(
             self.inline(self.token['text']),
             self.token['level'],
             self.token['text'],
         )
 
-    def parse_code(self):
+    def output_code(self):
         return self.renderer.block_code(
             self.token['text'], self.token['lang']
         )
 
-    def parse_table(self):
+    def output_table(self):
         aligns = self.token['align']
         cell = self.renderer.placeholder()
 
@@ -1030,20 +1030,20 @@ class Markdown(object):
 
         return self.renderer.table(header, body)
 
-    def parse_block_quote(self):
+    def output_block_quote(self):
         body = self.renderer.placeholder()
         while self.pop()['type'] != 'block_quote_end':
             body += self.tok()
         return self.renderer.block_quote(body)
 
-    def parse_list(self):
+    def output_list(self):
         ordered = self.token['ordered']
         body = self.renderer.placeholder()
         while self.pop()['type'] != 'list_end':
             body += self.tok()
         return self.renderer.list(body, ordered)
 
-    def parse_list_item(self):
+    def output_list_item(self):
         body = self.renderer.placeholder()
         while self.pop()['type'] != 'list_item_end':
             if self.token['type'] == 'text':
@@ -1053,13 +1053,13 @@ class Markdown(object):
 
         return self.renderer.list_item(body)
 
-    def parse_loose_item(self):
+    def output_loose_item(self):
         body = self.renderer.placeholder()
         while self.pop()['type'] != 'list_item_end':
             body += self.tok()
         return self.renderer.list_item(body)
 
-    def parse_footnote(self):
+    def output_footnote(self):
         self.inline._in_footnote = True
         body = self.renderer.placeholder()
         key = self.token['key']
@@ -1069,16 +1069,16 @@ class Markdown(object):
         self.inline._in_footnote = False
         return self.renderer.placeholder()
 
-    def parse_block_html(self):
+    def output_block_html(self):
         text = self.token['text']
         if self.options.get('parse_html') and not self.token.get('pre'):
             text = self.inline(text)
         return self.renderer.block_html(text)
 
-    def parse_paragraph(self):
+    def output_paragraph(self):
         return self.renderer.paragraph(self.inline(self.token['text']))
 
-    def parse_text(self):
+    def output_text(self):
         return self.renderer.paragraph(self.tok_text())
 
 

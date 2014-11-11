@@ -153,10 +153,10 @@ def test_custom_lexer():
 
 
 def test_token_tree():
-    """Tests a Renderer that returns a list from the default_output method."""
+    """Tests a Renderer that returns a list from the placeholder method."""
 
     class CustomRenderer(mistune.Renderer):
-        def default_output(self):
+        def placeholder(self):
             return []
 
         def __getattribute__(self, name):

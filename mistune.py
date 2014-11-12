@@ -98,7 +98,7 @@ class BlockGrammar(object):
         r'([\s\S]+?)\s*'
         r'\1 *(?:\n+|$)'  # ```
     )
-    hrule = re.compile(r'^(?: *[-*_]){3,} *(?:\n+|$)')
+    hrule = re.compile(r'^ {0,3}[-*_](?: *[-*_]){2,} *(?:\n+|$)')
     heading = re.compile(r'^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
     lheading = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
     block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
@@ -159,8 +159,8 @@ class BlockLexer(object):
     grammar_class = BlockGrammar
 
     default_rules = [
-        'newline', 'block_code', 'fences', 'heading',
-        'nptable', 'lheading', 'hrule', 'block_quote',
+        'newline', 'hrule', 'block_code', 'fences', 'heading',
+        'nptable', 'lheading', 'block_quote',
         'list_block', 'block_html', 'def_links',
         'def_footnotes', 'table', 'paragraph', 'text'
     ]
@@ -651,18 +651,19 @@ class Renderer(object):
         :param code: text content of the code block.
         :param lang: language of the given code.
         """
+        code = code.rstrip('\n')
         if not lang:
             code = escape(code, smart_amp=False)
-            return '<pre><code>%s</code></pre>\n' % code
+            return '<pre><code>%s\n</code></pre>\n' % code
         code = escape(code, quote=True, smart_amp=False)
-        return '<pre><code class="lang-%s">%s</code></pre>\n' % (lang, code)
+        return '<pre><code class="lang-%s">%s\n</code></pre>\n' % (lang, code)
 
     def block_quote(self, text):
         """Rendering <blockquote> with the given text.
 
         :param text: text content of the blockquote.
         """
-        return '<blockquote>%s</blockquote>\n' % text
+        return '<blockquote>%s\n</blockquote>\n' % text.rstrip('\n')
 
     def block_html(self, html):
         """Rendering block level pure html content.
@@ -708,7 +709,7 @@ class Renderer(object):
 
     def paragraph(self, text):
         """Rendering paragraph tags. Like ``<p>``."""
-        return '<p>%s</p>\n' % text
+        return '<p>%s</p>\n' % text.strip(' ')
 
     def table(self, header, body):
         """Rendering table element. Wrap header and body in it.
@@ -771,8 +772,8 @@ class Renderer(object):
     def linebreak(self):
         """Rendering line break like ``<br>``."""
         if self.options.get('use_xhtml'):
-            return '<br />'
-        return '<br>'
+            return '<br />\n'
+        return '<br>\n'
 
     def strikethrough(self, text):
         """Rendering ~~strikethrough~~ text.

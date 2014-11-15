@@ -148,7 +148,13 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 ``InlineLexer``::
 
     import copy
+    from mistune import Renderer, InlineGrammar, InlineLexer
 
+    class MyRenderer(Renderer):
+        def wiki_link(self, alt, link):
+            return '<a href="%s">%s</a>' % (link, alt)
+
+    
     class MyInlineGrammar(InlineGrammar):
         # it would take a while for creating the right regex
         wiki_link = re.compile(
@@ -181,7 +187,8 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 
 You should pass the inline lexer to ``Markdown`` parser::
 
-    inline=MyInlineLexer(renderer)
+    renderer = MyRenderer()
+    inline = MyInlineLexer(renderer)
     markdown = Markdown(renderer, inline=inline)
     markdown('[[Link Text|Wiki Link]]')
 

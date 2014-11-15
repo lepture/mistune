@@ -186,6 +186,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
             return self.renderer.wiki_link(alt, link)
 
 You should pass the inline lexer to ``Markdown`` parser::
+
     renderer = MyRenderer()
     minline = MyInlineLexer(renderer)
     markdown = Markdown(renderer, inline=inline)

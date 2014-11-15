@@ -188,7 +188,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 You should pass the inline lexer to ``Markdown`` parser::
 
     renderer = MyRenderer()
-    minline = MyInlineLexer(renderer)
+    inline = MyInlineLexer(renderer)
     markdown = Markdown(renderer, inline=inline)
     markdown('[[Link Text|Wiki Link]]')
 

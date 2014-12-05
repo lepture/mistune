@@ -21,6 +21,18 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.5
+~~~~~~~~~~~
+
+Released on Dec. 5, 2014. This release will break things.
+
+* For custom lexers, **features** is replaced with **rules**.
+* Refactor on function names and codes.
+* Add a way to output the render tree via `#20`_.
+* Fix emphasis and strikethrough regular expressions.
+
+.. _`#20`: https://github.com/lepture/mistune/pull/20
+
 Version 0.4.1
 ~~~~~~~~~~~~~
 

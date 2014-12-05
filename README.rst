@@ -165,11 +165,11 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 
 
     class MyInlineLexer(InlineLexer):
-        default_features = copy.copy(InlineLexer.default_features)
+        default_rules = copy.copy(InlineLexer.default_rules)
 
-        # Add wiki_link parser to default features
+        # Add wiki_link parser to default rules
         # you can insert it any place you like
-        default_features.insert(3, 'wiki_link')
+        default_rules.insert(3, 'wiki_link')
 
         def __init__(self, renderer, rules=None, **kwargs):
             if rules is None:

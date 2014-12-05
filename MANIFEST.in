@@ -1,3 +1,4 @@
 include README.rst
+include CHANGES.rst
 include LICENSE
 graft tests

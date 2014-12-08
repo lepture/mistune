@@ -1,4 +1,5 @@
 import re
+import sys
 import unittest
 
 import mistune
@@ -71,6 +72,12 @@ class CustomRenderer(mistune.Renderer):
         return '$%s$' % text
 
 class MarkdownMathTestCase(unittest.TestCase):
+    if sys.version_info < (2,7):
+        def assertIn(self, member, container, msg=None):
+            if msg is None:
+                msg = "%r not in %r" % (member, container)
+            assert member in container, msg
+
     def test_markdown2html_math(self):
         # Mathematical expressions should be passed through unaltered
         cases = [("\\begin{equation*}\n"

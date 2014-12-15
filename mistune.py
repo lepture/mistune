@@ -10,6 +10,7 @@
 
 import re
 import inspect
+import warnings
 
 __version__ = '0.5'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -19,6 +20,37 @@ __all__ = [
     'Renderer', 'Markdown',
     'markdown', 'escape',
 ]
+
+class ClassPropertyDescriptor(object):
+    """utils for deprecation of class properties
+    """
+
+    def __init__(self, fget, fset=None):
+        self.fget = fget
+        self.fset = fset
+
+    def __get__(self, obj, klass=None):
+        if klass is None:
+            klass = type(obj)
+        return self.fget.__get__(obj, klass)()
+
+    def __set__(self, obj, value):
+        if not self.fset:
+            raise AttributeError("can't set attribute")
+        type_ = type(obj)
+        return self.fset.__get__(obj, type_)(value)
+
+    def setter(self, func):
+        if not isinstance(func, (classmethod, staticmethod)):
+            func = classmethod(func)
+        self.fset = func
+        return self   
+
+def classproperty(func):
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return ClassPropertyDescriptor(func)
 
 
 def _pure_pattern(regex):
@@ -175,6 +207,38 @@ class BlockLexer(object):
         'nptable', 'lheading', 'hrule', 'block_quote',
         'list_block', 'block_html', 'table', 'paragraph', 'text'
     )
+
+    ## deprecation shim 0.4 -> 0.5
+    @classproperty
+    def default_features(cls):
+        warings.warn("'default_features' has be deprecated in favor of 'defaults_rules'")
+        return cls.default_rules
+
+    @default_feature.setter
+    def bar(cls, value):
+        warings.warn("'default_features' has be deprecated in favor of 'defaults_rules'")
+        cls.default_rules = value
+
+    @classproperty
+    def list_features(cls):
+        warings.warn("'list_features' has be deprecated in favor of 'lists_rules'")
+        return cls.list_rules
+
+    @list_feature.setter
+    def bar2(cls, value):
+        warings.warn("'list_features' has be deprecated in favor of 'lists_rules'")
+        cls.list_rules = value
+
+    @classproperty
+    def footnote_features(cls):
+        warings.warn("'footnote_features' has be deprecated in favor of 'footnotes_rules'")
+        return cls.footnote_rules
+
+    @footnote_feature.setter
+    def bar3(cls, value):
+        warings.warn("'footnote_features' has be deprecated in favor of 'footnotes_rules'")
+        cls.footnote_rules = value
+    ## end deprecation shim 0.4 -> 0.5
 
     def __init__(self, rules=None, **kwargs):
         self.tokens = []
@@ -475,6 +539,19 @@ class InlineLexer(object):
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
     ]
+    
+    ## deprecation shim 0.4 -> 0.5
+    @classproperty
+    def default_features(cls):
+        warings.warn("'default_features' has be deprecated in favor of 'defaults_rules'")
+        return cls.default_rules
+
+    @default_feature.setter
+    def bar(cls, value):
+        warings.warn("'default_features' has be deprecated in favor of 'defaults_rules'")
+        cls.default_rules = value
+
+    ## end deprecation shim 0.4 -> 0.5
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.renderer = renderer
@@ -986,7 +1063,13 @@ class Markdown(object):
         if t.endswith('_start'):
             t = t[:-6]
 
-        return getattr(self, 'output_%s' % t)()
+        try :
+            meth = getattr(self, 'parse_%s' % t)
+            warnings.warn("'parse_%s' has been deprecated in favor of 'output_%s' " % (t,t))
+        except AttributeError:
+            meth = getattr(self, 'output_%s' % t)
+
+        return meth()
 
     def tok_text(self):
         text = self.token['text']

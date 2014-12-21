@@ -897,6 +897,7 @@ class Markdown(object):
             renderer = Renderer(**kwargs)
 
         self.renderer = renderer
+        self.renderer.options.update(kwargs)
 
         if inline and inspect.isclass(inline):
             inline = inline(renderer, **kwargs)

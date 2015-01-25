@@ -1014,12 +1014,13 @@ class Markdown(object):
 
     def output_table(self):
         aligns = self.token['align']
+        aligns_length = len(aligns)
         cell = self.renderer.placeholder()
 
         # header part
         header = self.renderer.placeholder()
         for i, value in enumerate(self.token['header']):
-            align = aligns[i] if i < len(aligns) else None
+            align = aligns[i] if i < aligns_length else None
             flags = {'header': True, 'align': align}
             cell += self.renderer.table_cell(self.inline(value), **flags)
 
@@ -1030,7 +1031,7 @@ class Markdown(object):
         for i, row in enumerate(self.token['cells']):
             cell = self.renderer.placeholder()
             for j, value in enumerate(row):
-                align = aligns[j] if j < len(aligns) else None
+                align = aligns[j] if j < aligns_length else None
                 flags = {'header': False, 'align': align}
                 cell += self.renderer.table_cell(self.inline(value), **flags)
             body += self.renderer.table_row(cell)

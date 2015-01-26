@@ -5,7 +5,7 @@
 
     The fastest markdown parser in pure Python with renderer feature.
 
-    :copyright: (c) 2014 by Hsiaoming Yang.
+    :copyright: (c) 2014 - 2015 by Hsiaoming Yang.
 """
 
 import re

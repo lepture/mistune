@@ -3,13 +3,21 @@ Mistune
 
 The fastest markdown parser in pure Python, inspired by marked_.
 
-.. image:: https://travis-ci.org/lepture/mistune.png?branch=master
+.. image:: https://pypip.in/wheel/mistune/badge.svg?style=flat
+   :target: https://pypi.python.org/pypi/mistune/
+   :alt: Wheel Status
+.. image:: https://pypip.in/version/mistune/badge.svg?style=flat
+   :target: https://pypi.python.org/pypi/mistune/
+   :alt: Latest Version
+.. image:: https://travis-ci.org/lepture/mistune.svg?branch=master
    :target: https://travis-ci.org/lepture/mistune
+   :alt: Travis CI Status
+.. image:: https://coveralls.io/repos/lepture/mistune/badge.svg?branch=master
+   :target: https://coveralls.io/r/lepture/mistune
+   :alt: Coverage Status
 .. image:: https://ci.appveyor.com/api/projects/status/8ai8tfwp75oela17
    :target: https://ci.appveyor.com/project/lepture/mistune
-.. image:: https://coveralls.io/repos/lepture/mistune/badge.png?branch=master
-   :target: https://coveralls.io/r/lepture/mistune
-
+   :alt: App Veyor CI Status
 
 .. _marked: https://github.com/chjj/marked
 

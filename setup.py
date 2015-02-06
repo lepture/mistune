@@ -62,13 +62,18 @@ else:
 # patch bdist_wheel
 try:
     from wheel.bdist_wheel import bdist_wheel
+    REPLACE_TAG = (
+        'macosx_10_6_intel.'
+        'macosx_10_9_intel.'
+        'macosx_10_9_x86_64.'
+        'macosx_10_10_x86_64.whl'
+    )
 
     class _bdist_wheel(bdist_wheel):
         def get_tag(self):
             tag = bdist_wheel.get_tag(self)
-            repl = 'macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64'
             if tag[2] == 'macosx_10_6_intel':
-                tag = (tag[0], tag[1], repl)
+                tag = (tag[0], tag[1], REPLACE_TAG)
             return tag
 
     cmdclass['bdist_wheel'] = _bdist_wheel

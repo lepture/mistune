@@ -287,8 +287,10 @@ class BlockLexer(object):
             loose = _next
             if not loose and re.search(r'\n\n(?!\s*$)', item):
                 loose = True
-            if i != length - 1:
-                _next = item[len(item)-1] == '\n'
+
+            rest = len(item)
+            if i != length - 1 and rest:
+                _next = item[rest-1] == '\n'
                 if not loose:
                     loose = _next
 

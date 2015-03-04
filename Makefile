@@ -45,3 +45,5 @@ build:
 
 publish:
 	@twine upload dist/*
+
+.PHONY: build

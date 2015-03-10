@@ -36,14 +36,8 @@ docs:
 rtd:
 	curl -X POST http://readthedocs.org/build/mistune
 
-build:
-	@.tox/cy26/bin/python setup.py bdist_wheel
-	@.tox/cy27/bin/python setup.py bdist_wheel
-	@.tox/cy33/bin/python setup.py bdist_wheel
-	@.tox/cy34/bin/python setup.py bdist_wheel
-	@python setup.py sdist bdist_wheel --universal
-
 publish:
-	@twine upload dist/*
+	@twine upload dist/*.tar.gz
+	@twine upload dist/*.whl
 
 .PHONY: build

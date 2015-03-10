@@ -3,6 +3,17 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.5.1
+~~~~~~~~~~~~~
+
+Released on Mar. 10, 2015
+
+* Fix a bug when list item is blank via `ipython#7929`_.
+* Use python-wheels to build wheels for Mac.
+
+.. _`ipython#7929`: https://github.com/ipython/ipython/issues/7929
+
+
 Version 0.5
 ~~~~~~~~~~~
 

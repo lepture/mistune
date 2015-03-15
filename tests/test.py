@@ -156,13 +156,14 @@ def test_token_tree():
     """Tests a Renderer that returns a list from the placeholder method."""
 
     class CustomRenderer(mistune.Renderer):
+        NO_FAKES = ('options', 'placeholder')
+
         def placeholder(self):
             return []
 
         def __getattribute__(self, name):
             """Saves the arguments to each Markdown handling method."""
-            found = CustomRenderer.__dict__.get(name)
-            if found:
+            if name in CustomRenderer.NO_FAKES:
                 return object.__getattribute__(self, name)
 
             def fake_method(*args, **kwargs):

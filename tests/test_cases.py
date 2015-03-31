@@ -37,7 +37,7 @@ def render(folder, name):
 
 
 def listdir(folder):
-    folder = os.path.join(root, folder)
+    folder = os.path.join(root, 'fixtures', folder)
     files = os.listdir(folder)
     files = filter(lambda o: o.endswith('.text'), files)
     names = map(lambda o: o[:-5], files)
@@ -51,7 +51,7 @@ def test_extra():
 
 
 def test_normal():
-    folder, names = listdir('cases')
+    folder, names = listdir('normal')
     for key in names:
         yield render, folder, key
 
@@ -169,7 +169,7 @@ def test_token_tree():
                 return [(name, args, kwargs)]
             return fake_method
 
-    with open(os.path.join(root, 'data', 'tree.md')) as f:
+    with open(os.path.join(root, 'fixtures', 'data', 'tree.md')) as f:
         content = f.read()
 
     expected = [

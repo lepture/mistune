@@ -2,9 +2,9 @@
 
 import os
 import re
+import mistune
 
 root = os.path.dirname(__file__)
-import mistune
 
 
 class MathBlockGrammar(mistune.BlockGrammar):
@@ -86,7 +86,7 @@ class CustomRenderer(mistune.Renderer):
 
 def assert_data(filename):
     if filename.endswith('.md'):
-        filename = os.path.join(root, 'data', filename)
+        filename = os.path.join(root, 'fixtures', 'data', filename)
         with open(filename) as f:
             text = f.read().strip()
     else:

@@ -133,15 +133,21 @@ Options
 
 Here is a list of all options that will affect the rendering results::
 
-    mistune.markdown(text, escape=True)
-
-    md = mistune.Markdown(escape=True)
+    renderer = mistune.Renderer(escape=True)
+    md = mistune.Markdown(renderer=renderer)
     md.render(text)
 
 * **escape**: if set to *True*, all raw html tags will be escaped.
 * **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
 * **parse_html**: parse text in block level html.
+
+When using the default renderer, you can use one of the following shorthands::
+
+    mistune.markdown(text, escape=True)
+
+    md = mistune.Markdown(escape=True)
+    md.render(text)
 
 
 Lexers

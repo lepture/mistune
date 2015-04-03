@@ -154,7 +154,7 @@ Lexers
 ------
 
 Sometimes you want to add your own rules to Markdown, such as GitHub Wiki
-links. You can't archive this goal with renderers. You will need to deal
+links. You can't achieve this goal with renderers. You will need to deal
 with the lexers, it would be a little difficult for the first time.
 
 We will take an example for GitHub Wiki links: ``[[Page 2|Page 2]]``.
@@ -168,7 +168,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
         def wiki_link(self, alt, link):
             return '<a href="%s">%s</a>' % (link, alt)
 
-    
+
     class MyInlineGrammar(InlineGrammar):
         # it would take a while for creating the right regex
         wiki_link = re.compile(

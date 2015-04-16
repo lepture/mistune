@@ -53,7 +53,9 @@ Mistune can be faster, if you compile with cython::
 Basic Usage
 -----------
 
-A simple API that render a markdown formatted text::
+A simple API that render a markdown formatted text:
+
+.. code:: python
 
     import mistune
 
@@ -68,7 +70,9 @@ Renderer
 Like misaka/sundown, you can influence the rendering by custom renderers.
 All you need to do is subclassing a `Renderer` class.
 
-Here is an example of code highlighting::
+Here is an example of code highlighting:
+
+.. code:: python
 
     import mistune
     from pygments import highlight
@@ -131,7 +135,9 @@ Here is a list of span level renderer API::
 Options
 -------
 
-Here is a list of all options that will affect the rendering results::
+Here is a list of all options that will affect the rendering results:
+
+.. code:: python
 
     renderer = mistune.Renderer(escape=True)
     md = mistune.Markdown(renderer=renderer)
@@ -159,7 +165,9 @@ with the lexers, it would be a little difficult for the first time.
 
 We will take an example for GitHub Wiki links: ``[[Page 2|Page 2]]``.
 It is an inline grammar, which requires custom ``InlineGrammar`` and
-``InlineLexer``::
+``InlineLexer``:
+
+.. code:: python
 
     import copy
     from mistune import Renderer, InlineGrammar, InlineLexer
@@ -199,7 +207,9 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
             # you can also return the html if you like
             return self.renderer.wiki_link(alt, link)
 
-You should pass the inline lexer to ``Markdown`` parser::
+You should pass the inline lexer to ``Markdown`` parser:
+
+.. code:: python
 
     renderer = MyRenderer()
     inline = MyInlineLexer(renderer)

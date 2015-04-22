@@ -93,7 +93,7 @@ def benchmark_hoep(text):
 if __name__ == '__main__':
     root = os.path.dirname(__file__)
     filepath = os.path.join(
-        root, 'cases', 'markdown_documentation_syntax.text'
+        root, 'fixtures/normal', 'markdown_documentation_syntax.text'
     )
     with open(filepath, 'r') as f:
         text = f.read()

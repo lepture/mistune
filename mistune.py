@@ -59,8 +59,11 @@ def escape(text, quote=False, smart_amp=True):
     return text
 
 
+_newline_pattern = re.compile(r'\r\n|\r')
+
+
 def preprocessing(text, tab=4):
-    text = re.sub(r'\r\n|\r', '\n', text)
+    text = _newline_pattern.sub('\n', text)
     text = text.replace('\t', ' ' * tab)
     text = text.replace('\u00a0', ' ')
     text = text.replace('\u2424', '\n')

@@ -99,11 +99,6 @@ def test_use_xhtml():
     assert '<img src="bar" alt="foo" title="title" />' in ret
 
 
-def test_skip_html():
-    ret = mistune.markdown('foo <b>bar</b>', skip_html=True)
-    assert ret == '<p>foo bar</p>\n'
-
-
 def test_block_html():
     ret = mistune.markdown('<div>**foo**</div>')
     assert '<strong>' not in ret

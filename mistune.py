@@ -71,12 +71,12 @@ def preprocessing(text, tab=4):
     return pattern.sub('', text)
 
 
-_tag = (
-    r'(?!(?:'
+_inline_tag = (
     r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
     r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-    r'span|br|wbr|ins|del|img)\b)\w+(?!:/|[^\w\s@]*@)\b'
+    r'span|br|wbr|ins|del|img'
 )
+_block_tag = r'(?!(?:%s)\b)\w+(?!:/|[^\w\s@]*@)\b' % _inline_tag
 
 
 class BlockGrammar(object):
@@ -138,14 +138,14 @@ class BlockGrammar(object):
             _pure_pattern(block_quote),
             _pure_pattern(def_links),
             _pure_pattern(def_footnotes),
-            '<' + _tag,
+            '<' + _block_tag,
         )
     )
     block_html = re.compile(
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
-            r'<(%s)[\s\S]+?<\/\1>' % _tag,
-            r'''<%s(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _tag,
+            r'<(%s)[\s\S]+?<\/\1>' % _block_tag,
+            r'''<%s(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _block_tag,
         )
     )
     table = re.compile(
@@ -424,10 +424,12 @@ class InlineGrammar(object):
     """Grammars for inline level tokens."""
 
     escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
-    tag = re.compile(
-        r'^<!--[\s\S]*?-->|'  # comment
-        r'^<\/\w+>|'  # close tag
-        r'^<\w+[^>]*?>'  # open tag
+    inline_html = re.compile(
+        r'^(?:%s|%s|%s)' % (
+            r'<!--[\s\S]*?-->',
+            r'<(%s)[\s\S]+?<\/\1>' % _inline_tag,
+            r'''<(?:%s)(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _inline_tag,
+        )
     )
     autolink = re.compile(r'^<([^ >]+(@|:\/)[^ >]+)>')
     link = re.compile(
@@ -475,7 +477,7 @@ class InlineLexer(object):
     grammar_class = InlineGrammar
 
     default_rules = [
-        'escape', 'autolink', 'url', 'tag',
+        'escape', 'inline_html', 'autolink', 'url',
         'footnote', 'link', 'reflink', 'nolink',
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
@@ -556,14 +558,8 @@ class InlineLexer(object):
             return self.renderer.text(link)
         return self.renderer.autolink(link, False)
 
-    def output_tag(self, m):
-        text = m.group(0)
-        lower_text = text.lower()
-        if lower_text.startswith('<a '):
-            self._in_link = True
-        if lower_text.startswith('</a>'):
-            self._in_link = False
-        return self.renderer.tag(text)
+    def output_inline_html(self, m):
+        return self.renderer.inline_html(m.group(0))
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))
@@ -838,13 +834,11 @@ class Renderer(object):
             return '%s />' % html
         return '%s>' % html
 
-    def tag(self, html):
-        """Rendering span level html tag.
+    def inline_html(self, html):
+        """Rendering span level pure html content.
 
-        :param html: html tag snippet.
+        :param html: text content of the html snippet.
         """
-        if self.options.get('skip_html'):
-            return ''
         if self.options.get('escape'):
             return escape(html)
         return html

@@ -11,7 +11,7 @@
 import re
 import inspect
 
-__version__ = '0.5.1'
+__version__ = '0.6dev'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -21,6 +21,17 @@ __all__ = [
 ]
 
 
+_key_pattern = re.compile(r'\s+')
+_escape_pattern = re.compile(r'&(?!#?\w+;)')
+_newline_pattern = re.compile(r'\r\n|\r')
+_inline_tag = (
+    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
+    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
+    r'span|br|wbr|ins|del|img'
+)
+_block_tag = r'(?!(?:%s)\b)\w+(?!:/|[^\w\s@]*@)\b' % _inline_tag
+
+
 def _pure_pattern(regex):
     pattern = regex.pattern
     if pattern.startswith('^'):
@@ -28,14 +39,8 @@ def _pure_pattern(regex):
     return pattern
 
 
-_key_pattern = re.compile(r'\s+')
-
-
 def _keyify(key):
     return _key_pattern.sub(' ', key.lower())
-
-
-_escape_pattern = re.compile(r'&(?!#?\w+;)')
 
 
 def escape(text, quote=False, smart_amp=True):
@@ -59,9 +64,6 @@ def escape(text, quote=False, smart_amp=True):
     return text
 
 
-_newline_pattern = re.compile(r'\r\n|\r')
-
-
 def preprocessing(text, tab=4):
     text = _newline_pattern.sub('\n', text)
     text = text.replace('\t', ' ' * tab)
@@ -69,14 +71,6 @@ def preprocessing(text, tab=4):
     text = text.replace('\u2424', '\n')
     pattern = re.compile(r'^ +$', re.M)
     return pattern.sub('', text)
-
-
-_inline_tag = (
-    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
-    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-    r'span|br|wbr|ins|del|img'
-)
-_block_tag = r'(?!(?:%s)\b)\w+(?!:/|[^\w\s@]*@)\b' % _inline_tag
 
 
 class BlockGrammar(object):

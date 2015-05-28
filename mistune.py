@@ -441,18 +441,18 @@ class InlineGrammar(object):
     nolink = re.compile(r'^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]')
     url = re.compile(r'''^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
     double_emphasis = re.compile(
-        r'^_{2}(.+?)_{2}(?!_)'  # __word__
+        r'^_{2}([\s\S]+?)_{2}(?!_)'  # __word__
         r'|'
-        r'^\*{2}(.+?)\*{2}(?!\*)'  # **word**
+        r'^\*{2}([\s\S]+?)\*{2}(?!\*)'  # **word**
     )
     emphasis = re.compile(
-        r'^\b_((?:__|.)+?)_\b'  # _word_
+        r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
         r'|'
-        r'^\*((?:\*\*|.)+?)\*(?!\*)'  # *word*
+        r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
     )
-    code = re.compile(r'^(`+)\s*(.*?[^`])\s*\1(?!`)')  # `code`
+    code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')  # `code`
     linebreak = re.compile(r'^ {2,}\n(?!\s*$)')
-    strikethrough = re.compile(r'^~~(?=\S)(.*?\S)~~')  # ~~word~~
+    strikethrough = re.compile(r'^~~(?=\S)([\s\S]+?\S)~~')  # ~~word~~
     footnote = re.compile(r'^\[\^([^\]]+)\]')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 

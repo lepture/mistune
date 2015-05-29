@@ -200,14 +200,14 @@ class BlockLexer(object):
                     continue
                 getattr(self, 'parse_%s' % key)(m)
                 return m
-            return False
+            return False  # pragma: no cover
 
         while text:
             m = manipulate(text)
             if m is not False:
                 text = text[len(m.group(0)):]
                 continue
-            if text:
+            if text:  # pragma: no cover
                 raise RuntimeError('Infinite loop at: %s' % text)
         return self.tokens
 
@@ -519,7 +519,7 @@ class InlineLexer(object):
                 out = getattr(self, 'output_%s' % key)(m)
                 if out is not None:
                     return m, out
-            return False
+            return False  # pragma: no cover
 
         self.line_started = False
         while text:
@@ -530,7 +530,7 @@ class InlineLexer(object):
                 output += out
                 text = text[len(m.group(0)):]
                 continue
-            if text:
+            if text:  # pragma: no cover
                 raise RuntimeError('Infinite loop at: %s' % text)
 
         return output
@@ -959,7 +959,7 @@ class Markdown(object):
     def peek(self):
         if self.tokens:
             return self.tokens[-1]
-        return None
+        return None  # pragma: no cover
 
     def output(self, text, rules=None):
         self.tokens = self.block(text, rules)

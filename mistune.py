@@ -430,7 +430,7 @@ class InlineGrammar(object):
         r'^!?\[('
         r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
         r')\]\('
-        r'''\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*'''
+        r'''\s*(<)?([\s\S]*?)(?(2)>)(?:\s+['"]([\s\S]*?)['"])?\s*'''
         r'\)'
     )
     reflink = re.compile(
@@ -566,7 +566,7 @@ class InlineLexer(object):
         return self.renderer.footnote_ref(key, self.footnote_index)
 
     def output_link(self, m):
-        return self._process_link(m, m.group(2), m.group(3))
+        return self._process_link(m, m.group(3), m.group(4))
 
     def output_reflink(self, m):
         key = _keyify(m.group(2) or m.group(1))

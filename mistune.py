@@ -425,7 +425,7 @@ class InlineGrammar(object):
             r'''<(?:%s)(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _inline_tag,
         )
     )
-    autolink = re.compile(r'^<([^ >]+(@|:\/)[^ >]+)>')
+    autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')
     link = re.compile(
         r'^!?\[('
         r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'

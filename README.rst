@@ -3,10 +3,7 @@ Mistune
 
 The fastest markdown parser in pure Python, inspired by marked_.
 
-.. image:: https://pypip.in/wheel/mistune/badge.svg?style=flat
-   :target: https://pypi.python.org/pypi/mistune/
-   :alt: Wheel Status
-.. image:: https://pypip.in/version/mistune/badge.svg?style=flat
+.. image:: https://img.shields.io/pypi/v/mistune.svg
    :target: https://pypi.python.org/pypi/mistune/
    :alt: Latest Version
 .. image:: https://travis-ci.org/lepture/mistune.svg?branch=master

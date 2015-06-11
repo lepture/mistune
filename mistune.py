@@ -27,7 +27,7 @@ _newline_pattern = re.compile(r'\r\n|\r')
 _inline_tag = (
     r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
     r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-    r'span|br|wbr|ins|del|img'
+    r'span|br|wbr|ins|del|img|font'
 )
 _block_tag = r'(?!(?:%s)\b)\w+(?!:/|[^\w\s@]*@)\b' % _inline_tag
 

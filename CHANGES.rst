@@ -3,6 +3,25 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.6
+~~~~~~~~~~~
+
+Released on Jun. 17, 2015
+
+* Breaking change on inline HTML, text in inline HTML will not be parsed per `#38`_.
+* Replace **tag** renderer with **inline_html** for breaking change on inline HTML
+* Double emphasis, emphasis, code, and strikethrough can contain one linebreak per `#48`_.
+* Match autolinks that do not have / in their URI via `#53`_.
+* A work around on link that contains ``)`` per `#46`_.
+* Add ``<font>`` tag for inline tags per `#55`_.
+
+.. _`#38`: https://github.com/lepture/mistune/issues/38
+.. _`#46`: https://github.com/lepture/mistune/issues/46
+.. _`#48`: https://github.com/lepture/mistune/issues/48
+.. _`#53`: https://github.com/lepture/mistune/pull/53
+.. _`#55`: https://github.com/lepture/mistune/issues/55
+
+
 Version 0.5.1
 ~~~~~~~~~~~~~
 

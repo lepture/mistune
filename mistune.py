@@ -496,6 +496,10 @@ class InlineLexer(object):
         self._in_link = False
         self._in_footnote = False
 
+        options = renderer.options
+        rv = options.get('parse_html') or options.get('parse_inline_html')
+        self._parse_inline_html = rv
+
     def __call__(self, text):
         return self.output(text)
 
@@ -559,11 +563,11 @@ class InlineLexer(object):
 
     def output_inline_html(self, m):
         text = m.group(0)
-        if self.renderer.options.get('parse_html'):
+        if self._parse_inline_html:
             if m.group(1) == 'a':
                 self._in_link = True
                 text = self.output(text, rules=self.inline_html_rules)
-                self._in_link = True
+                self._in_link = False
             else:
                 text = self.output(text, rules=self.inline_html_rules)
         return self.renderer.inline_html(text)
@@ -922,6 +926,10 @@ class Markdown(object):
         self.footnotes = []
         self.tokens = []
 
+        # detect if it should parse text in block html
+        _to_parse = kwargs.get('parse_html') or kwargs.get('parse_block_html')
+        self._parse_block_html = _to_parse
+
     def __call__(self, text):
         return self.parse(text)
 
@@ -1085,7 +1093,7 @@ class Markdown(object):
 
     def output_block_html(self):
         text = self.token['text']
-        if self.options.get('parse_html') and not self.token.get('pre'):
+        if self._parse_block_html and not self.token.get('pre'):
             text = self.inline(text)
         return self.renderer.block_html(text)
 

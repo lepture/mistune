@@ -146,7 +146,9 @@ Here is a list of all options that will affect the rendering results:
 * **escape**: if set to *True*, all raw html tags will be escaped.
 * **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
-* **parse_html**: parse text in block level html.
+* **parse_html**: parse text in block and inline level html.
+* **parse_block_html**: parse text only in block level html.
+* **parse_inline_html**: parse text only in inline level html.
 
 When using the default renderer, you can use one of the following shorthands::
 

@@ -116,6 +116,20 @@ def test_parse_html():
     assert 'href' not in ret
 
 
+def test_parse_inline_html():
+    ret = mistune.markdown('<div>**foo**</div>', parse_inline_html=True)
+    assert '<strong>' not in ret
+    ret = mistune.markdown('<span>**foo**</span>', parse_inline_html=True)
+    assert '<strong>' in ret
+
+
+def test_parse_block_html():
+    ret = mistune.markdown('<div>**foo**</div>', parse_block_html=True)
+    assert '<strong>' in ret
+    ret = mistune.markdown('<span>**foo**</span>', parse_block_html=True)
+    assert '<strong>' not in ret
+
+
 def test_trigger_more_cases():
     markdown = mistune.Markdown(
         inline=mistune.InlineLexer,
@@ -161,13 +175,15 @@ def test_token_tree():
     """Tests a Renderer that returns a list from the placeholder method."""
 
     class CustomRenderer(mistune.Renderer):
+        options = {}
+
         def placeholder(self):
             return []
 
         def __getattribute__(self, name):
             """Saves the arguments to each Markdown handling method."""
             found = CustomRenderer.__dict__.get(name)
-            if found:
+            if found is not None:
                 return object.__getattribute__(self, name)
 
             def fake_method(*args, **kwargs):

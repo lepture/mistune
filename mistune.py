@@ -553,7 +553,10 @@ class InlineLexer(object):
         return self.renderer.autolink(link, False)
 
     def output_inline_html(self, m):
-        return self.renderer.inline_html(m.group(0))
+        text = m.group(0)
+        if self.renderer.options.get('parse_html'):
+            text = self.output(text)
+        return self.renderer.inline_html(text)
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))

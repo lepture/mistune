@@ -2,6 +2,7 @@
 
 import os
 import re
+import copy
 import mistune
 
 root = os.path.dirname(__file__)
@@ -73,7 +74,7 @@ class MarkdownWithMath(mistune.Markdown):
         )
 
 
-class CustomRenderer(mistune.Renderer):
+class MathRenderer(mistune.Renderer):
     def block_math(self, text):
         return '$$%s$$' % text
 
@@ -92,7 +93,7 @@ def assert_data(filename):
     else:
         text = filename
 
-    rv = MarkdownWithMath(renderer=CustomRenderer()).render(text)
+    rv = MarkdownWithMath(renderer=MathRenderer()).render(text)
     assert text in rv
 
 
@@ -109,3 +110,82 @@ def test_markdown2html_math():
 def test_math_paragraph():
     # https://github.com/ipython/ipython/issues/6724
     assert_data('math-paragraph.md')
+
+
+class WikiInlineGrammar(mistune.InlineGrammar):
+    # it would take a while for creating the right regex
+    wiki_link = re.compile(
+        r'\[\['                   # [[
+        r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
+        r'\]\](?!\])'             # ]]
+    )
+
+
+class WikiInlineLexer(mistune.InlineLexer):
+    default_rules = copy.copy(mistune.InlineLexer.default_rules)
+    default_rules.insert(3, 'wiki_link')
+
+    def __init__(self, renderer, rules=None, **kwargs):
+        if rules is None:
+            rules = WikiInlineGrammar()
+
+        super(WikiInlineLexer, self).__init__(renderer, rules, **kwargs)
+
+    def output_wiki_link(self, m):
+        text = m.group(1)
+        alt, link = text.split('|')
+        return '<a href="%s">%s</a>' % (link, alt)
+
+
+def test_custom_lexer():
+    markdown = mistune.Markdown(inline=WikiInlineLexer)
+    ret = markdown('[[Link Text|Wiki Link]]')
+    assert '<a href' in ret
+
+
+class TokenTreeRenderer(mistune.Renderer):
+    # options is required
+    options = {}
+
+    def placeholder(self):
+        return []
+
+    def __getattribute__(self, name):
+        """Saves the arguments to each Markdown handling method."""
+        found = TokenTreeRenderer.__dict__.get(name)
+        if found is not None:
+            return object.__getattribute__(self, name)
+
+        def fake_method(*args, **kwargs):
+            return [(name, args, kwargs)]
+        return fake_method
+
+
+def test_token_tree():
+    """Tests a Renderer that returns a list from the placeholder method."""
+    with open(os.path.join(root, 'fixtures', 'data', 'tree.md')) as f:
+        content = f.read()
+
+    expected = [
+        ('header', ([('text', ('Title here',), {})], 2, 'Title here'), {}),
+        ('paragraph', ([('text', ('Some text.',), {})],), {}),
+        ('paragraph',
+         ([('text', ('In two paragraphs. And then a list.',), {})],),
+         {}),
+        ('list',
+         ([('list_item', ([('text', ('foo',), {})],), {}),
+             ('list_item',
+              ([('text', ('bar',), {}),
+                  ('list',
+                   ([('list_item', ([('text', ('meep',), {})],), {}),
+                       ('list_item', ([('text', ('stuff',), {})],), {})],
+                    True),
+                   {})],),
+              {})],
+          False),
+         {})
+    ]
+
+    processor = mistune.Markdown(renderer=TokenTreeRenderer())
+    found = processor.render(content)
+    assert expected == found, "Expected:\n%r\n\nFound:\n%r" % (expected, found)

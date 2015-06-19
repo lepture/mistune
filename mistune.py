@@ -476,6 +476,11 @@ class InlineLexer(object):
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
     ]
+    inline_html_rules = [
+        'escape', 'autolink', 'url', 'link', 'reflink',
+        'nolink', 'double_emphasis', 'emphasis', 'code',
+        'linebreak', 'strikethrough', 'text',
+    ]
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.renderer = renderer
@@ -555,7 +560,12 @@ class InlineLexer(object):
     def output_inline_html(self, m):
         text = m.group(0)
         if self.renderer.options.get('parse_html'):
-            text = self.output(text)
+            if m.group(1) == 'a':
+                self._in_link = True
+                text = self.output(text, rules=self.inline_html_rules)
+                self._in_link = True
+            else:
+                text = self.output(text, rules=self.inline_html_rules)
         return self.renderer.inline_html(text)
 
     def output_footnote(self, m):

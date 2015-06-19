@@ -99,11 +99,21 @@ def test_use_xhtml():
     assert '<img src="bar" alt="foo" title="title" />' in ret
 
 
-def test_block_html():
+def test_parse_html():
     ret = mistune.markdown('<div>**foo**</div>')
     assert '<strong>' not in ret
     ret = mistune.markdown('<div>**foo**</div>', parse_html=True)
     assert '<strong>' in ret
+
+    ret = mistune.markdown('<span>**foo**</span>')
+    assert '<strong>' not in ret
+    ret = mistune.markdown('<span>**foo**</span>', parse_html=True)
+    assert '<strong>' in ret
+
+    ret = mistune.markdown('<span>http://example.com</span>', parse_html=True)
+    assert 'href' in ret
+    ret = mistune.markdown('<a>http://example.com</a>', parse_html=True)
+    assert 'href' not in ret
 
 
 def test_trigger_more_cases():

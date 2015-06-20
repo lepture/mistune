@@ -496,9 +496,9 @@ class InlineLexer(object):
         self._in_link = False
         self._in_footnote = False
 
-        options = renderer.options
-        rv = options.get('parse_html') or options.get('parse_inline_html')
-        self._parse_inline_html = rv
+        kwargs.update(self.renderer.options)
+        _to_parse = kwargs.get('parse_html') or kwargs.get('parse_inline_html')
+        self._parse_inline_html = _to_parse
 
     def __call__(self, text):
         return self.output(text)

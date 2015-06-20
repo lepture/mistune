@@ -38,12 +38,6 @@ Installing mistune with pip::
 
     $ pip install mistune
 
-If pip is not available, try easy_install::
-
-    $ easy_install mistune
-
-Cython Feature
-~~~~~~~~~~~~~~
 
 Mistune can be faster, if you compile with cython::
 
@@ -59,10 +53,49 @@ A simple API that render a markdown formatted text:
 
     import mistune
 
-    mistune.markdown('I am using **markdown**')
-    # output: <p>I am using <strong>markdown</strong></p>
+    mistune.markdown('I am using **mistune markdown parser**')
+    # output: <p>I am using <strong>mistune markdown parser</strong></p>
 
-Mistune has all features by default. You don't have to configure anything.
+If you care about performance, it is better to re-use the Markdown instance:
+
+.. code:: python
+
+    import mistune
+
+    markdown = mistune.Markdown()
+    markdown('I am using **mistune markdown parser**')
+
+Mistune has enabled all features by default. You don't have to configure
+anything. But there are options for you to change the parser behaviors.
+
+
+Options
+-------
+
+Here is a list of all options that will affect the rendering results,
+configure them with ``mistune.Renderer``:
+
+.. code:: python
+
+    renderer = mistune.Renderer(escape=True, hard_wrap=True)
+    # use this renderer instance
+    markdown = mistune.Markdown(renderer=renderer)
+    markdown(text)
+
+* **escape**: if set to *True*, all raw html tags will be escaped.
+* **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
+* **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
+* **parse_html**: parse text in block and inline level html.
+* **parse_block_html**: parse text only in block level html.
+* **parse_inline_html**: parse text only in inline level html.
+
+When using the default renderer, you can use one of the following shortcuts::
+
+    mistune.markdown(text, escape=True, hard_wrap=True)
+
+    markdown = mistune.Markdown(escape=True, hard_wrap=True)
+    markdown(text)
+
 
 Renderer
 --------
@@ -79,7 +112,7 @@ Here is an example of code highlighting:
     from pygments.lexers import get_lexer_by_name
     from pygments.formatters import HtmlFormatter
 
-    class MyRenderer(mistune.Renderer):
+    class HighlightRenderer(mistune.Renderer):
         def block_code(self, code, lang):
             if not lang:
                 return '\n<pre><code>%s</code></pre>\n' % \
@@ -88,9 +121,9 @@ Here is an example of code highlighting:
             formatter = HtmlFormatter()
             return highlight(code, lexer, formatter)
 
-    renderer = MyRenderer()
-    md = mistune.Markdown(renderer=renderer)
-    print(md.render('Some Markdown text.'))
+    renderer = HighlightRenderer()
+    markdown = mistune.Markdown(renderer=renderer)
+    print(markdown('Some code text.'))
 
 
 Block Level
@@ -127,36 +160,18 @@ Here is a list of span level renderer API::
     linebreak()
     newline()
     link(link, title, content)
-    tag(html)
     strikethrough(text)
     text(text)
+    inline_html(text)
 
+Footnotes
+~~~~~~~~~
 
-Options
--------
+Here is a list of renderers related to footnotes::
 
-Here is a list of all options that will affect the rendering results:
-
-.. code:: python
-
-    renderer = mistune.Renderer(escape=True)
-    md = mistune.Markdown(renderer=renderer)
-    md.render(text)
-
-* **escape**: if set to *True*, all raw html tags will be escaped.
-* **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
-* **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
-* **parse_html**: parse text in block and inline level html.
-* **parse_block_html**: parse text only in block level html.
-* **parse_inline_html**: parse text only in inline level html.
-
-When using the default renderer, you can use one of the following shorthands::
-
-    mistune.markdown(text, escape=True)
-
-    md = mistune.Markdown(escape=True)
-    md.render(text)
-
+    footnote_ref(key, index)
+    footnote_item(key, text)
+    footnotes(text)
 
 Lexers
 ------
@@ -174,33 +189,23 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
     import copy
     from mistune import Renderer, InlineGrammar, InlineLexer
 
-    class MyRenderer(Renderer):
+    class WikiLinkRenderer(Renderer):
         def wiki_link(self, alt, link):
             return '<a href="%s">%s</a>' % (link, alt)
 
+    class WikiLinkInlineLexer(InlineLexer):
+        def enable_wiki_link(self):
+            # add wiki_link rules
+            self.rules.wiki_link = re.compile(
+                r'\[\['                   # [[
+                r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
+                r'\]\](?!\])'             # ]]
+            )
 
-    class MyInlineGrammar(InlineGrammar):
-        # it would take a while for creating the right regex
-        wiki_link = re.compile(
-            r'\[\['                   # [[
-            r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
-            r'\]\](?!\])'             # ]]
-        )
-
-
-    class MyInlineLexer(InlineLexer):
-        default_rules = copy.copy(InlineLexer.default_rules)
-
-        # Add wiki_link parser to default rules
-        # you can insert it any place you like
-        default_rules.insert(3, 'wiki_link')
-
-        def __init__(self, renderer, rules=None, **kwargs):
-            if rules is None:
-                # use the inline grammar
-                rules = MyInlineGrammar()
-
-            super(MyInlineLexer, self).__init__(renderer, rules, **kwargs)
+            # Add wiki_link parser to default rules
+            # you can insert it some place you like
+            # but place matters, maybe 3 is not good
+            self.default_rules.insert(3, 'wiki_link')
 
         def output_wiki_link(self, m):
             text = m.group(1)
@@ -213,8 +218,10 @@ You should pass the inline lexer to ``Markdown`` parser:
 
 .. code:: python
 
-    renderer = MyRenderer()
-    inline = MyInlineLexer(renderer)
+    renderer = WikiLinkRenderer()
+    inline = WikiLinkInlineLexer(renderer)
+    # enable the feature
+    inline.enable_wiki_link()
     markdown = Markdown(renderer, inline=inline)
     markdown('[[Link Text|Wiki Link]]')
 
@@ -222,12 +229,21 @@ It is the same with block level lexer. It would take a while to understand
 the whole mechanism. But you won't do the trick a lot.
 
 
-Contribution
-------------
+Contribution & Extensions
+-------------------------
 
 Mistune itself doesn't accept any extension. It will always be a simple one
 file script.
 
 If you want to add features, you can head over to `mistune-contrib`_.
+
+Here are some extensions already in `mistune-contrib`_:
+
+* Math/MathJax features
+* Highlight Code Renderer
+* TOC table of content features
+* MultiMarkdown Metadata parser
+
+Get inspired with the contrib repository.
 
 .. _`mistune-contrib`: https://github.com/lepture/mistune-contrib

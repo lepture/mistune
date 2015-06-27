@@ -1104,11 +1104,15 @@ class Markdown(object):
         return self.renderer.paragraph(self.tok_text())
 
 
-def markdown(text, **kwargs):
+def markdown(text, escape=True, **kwargs):
     """Render markdown formatted text to html.
 
     :param text: markdown formatted text content.
-    :param escape: if set to True, all html tags will be escaped.
+    :param escape: if set to False, all html tags will not be escaped.
     :param use_xhtml: output with xhtml tags.
+    :param hard_wrap: if set to True, it will has GFM line breaks feature.
+    :param parse_html: parse text in block and inline level html.
+    :param parse_block_html: parse text only in block level html.
+    :param parse_inline_html: parse text only in inline level html.
     """
-    return Markdown(**kwargs)(text)
+    return Markdown(escape=escape, **kwargs)(text)

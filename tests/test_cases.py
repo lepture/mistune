@@ -100,33 +100,49 @@ def test_use_xhtml():
 
 
 def test_parse_html():
-    ret = mistune.markdown('<div>**foo**</div>')
+    ret = mistune.markdown('<div>**foo**</div>', escape=False)
     assert '<strong>' not in ret
-    ret = mistune.markdown('<div>**foo**</div>', parse_html=True)
+    ret = mistune.markdown(
+        '<div>**foo**</div>', parse_html=True, escape=False
+    )
     assert '<strong>' in ret
 
-    ret = mistune.markdown('<span>**foo**</span>')
+    ret = mistune.markdown('<span>**foo**</span>', escape=False)
     assert '<strong>' not in ret
-    ret = mistune.markdown('<span>**foo**</span>', parse_html=True)
+    ret = mistune.markdown(
+        '<span>**foo**</span>', parse_html=True, escape=False
+    )
     assert '<strong>' in ret
 
-    ret = mistune.markdown('<span>http://example.com</span>', parse_html=True)
+    ret = mistune.markdown(
+        '<span>http://example.com</span>', parse_html=True, escape=False
+    )
     assert 'href' in ret
-    ret = mistune.markdown('<a>http://example.com</a>', parse_html=True)
+    ret = mistune.markdown(
+        '<a>http://example.com</a>', parse_html=True, escape=False
+    )
     assert 'href' not in ret
 
 
 def test_parse_inline_html():
-    ret = mistune.markdown('<div>**foo**</div>', parse_inline_html=True)
+    ret = mistune.markdown(
+        '<div>**foo**</div>', parse_inline_html=True, escape=False
+    )
     assert '<strong>' not in ret
-    ret = mistune.markdown('<span>**foo**</span>', parse_inline_html=True)
+    ret = mistune.markdown(
+        '<span>**foo**</span>', parse_inline_html=True, escape=False
+    )
     assert '<strong>' in ret
 
 
 def test_parse_block_html():
-    ret = mistune.markdown('<div>**foo**</div>', parse_block_html=True)
+    ret = mistune.markdown(
+        '<div>**foo**</div>', parse_block_html=True, escape=False
+    )
     assert '<strong>' in ret
-    ret = mistune.markdown('<span>**foo**</span>', parse_block_html=True)
+    ret = mistune.markdown(
+        '<span>**foo**</span>', parse_block_html=True, escape=False
+    )
     assert '<strong>' not in ret
 
 

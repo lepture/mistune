@@ -82,7 +82,7 @@ configure them with ``mistune.Renderer``:
     markdown = mistune.Markdown(renderer=renderer)
     markdown(text)
 
-* **escape**: if set to *True*, all raw html tags will be escaped.
+* **escape**: if set to *False*, all raw html tags will not be escaped.
 * **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
 * **parse_html**: parse text in block and inline level html.

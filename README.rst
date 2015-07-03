@@ -123,7 +123,7 @@ Here is an example of code highlighting:
 
     renderer = HighlightRenderer()
     markdown = mistune.Markdown(renderer=renderer)
-    print(markdown('Some code text.'))
+    print(markdown('```python\nassert 1 == 1\n```'))
 
 
 Block Level

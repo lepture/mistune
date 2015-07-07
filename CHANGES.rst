@@ -9,7 +9,7 @@ Version 0.7
 Release date not decided.
 
 * Fix the breaking change in version 0.6 with options: **parse_inline_html** and **parse_block_html**
-* Change option **escape** default value to ``False`` for security reason
+* Change option **escape** default value to ``True`` for security reason
 
 
 Version 0.6

@@ -566,9 +566,6 @@ class InlineLexer(object):
     def output_inline_html(self, m):
         text = m.group(0)
         tag = m.group(1)
-        if not tag:
-            return self.renderer.inline_html(text)
-
         if self._parse_inline_html and tag in _inline_tags:
             if tag == 'a':
                 self._in_link = True

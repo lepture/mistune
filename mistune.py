@@ -24,12 +24,14 @@ __all__ = [
 _key_pattern = re.compile(r'\s+')
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 _newline_pattern = re.compile(r'\r\n|\r')
-_inline_tag = (
-    r'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|'
-    r'var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|'
-    r'span|br|wbr|ins|del|img|font'
-)
-_block_tag = r'(?!(?:%s)\b)\w+(?!:/|[^\w\s@]*@)\b' % _inline_tag
+_inline_tags = [
+    'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
+    'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark',
+    'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del',
+    'img', 'font',
+]
+_valid_end = r'(?!:/|[^\w\s@]*@)\b'
+_block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
 
 
 def _pure_pattern(regex):
@@ -421,8 +423,8 @@ class InlineGrammar(object):
     inline_html = re.compile(
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(%s)[\s\S]+?<\/\1>' % _inline_tag,
-            r'''<(?:%s)(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _inline_tag,
+            r'<(\w+%s)[\s\S]+?<\/\1>' % _valid_end,
+            r'''<\w+%s(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _valid_end,
         )
     )
     autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')
@@ -500,8 +502,8 @@ class InlineLexer(object):
         _to_parse = kwargs.get('parse_html') or kwargs.get('parse_inline_html')
         self._parse_inline_html = _to_parse
 
-    def __call__(self, text):
-        return self.output(text)
+    def __call__(self, text, rules=None):
+        return self.output(text, rules)
 
     def setup(self, links, footnotes):
         self.footnote_index = 0
@@ -563,8 +565,12 @@ class InlineLexer(object):
 
     def output_inline_html(self, m):
         text = m.group(0)
-        if self._parse_inline_html:
-            if m.group(1) == 'a':
+        tag = m.group(1)
+        if not tag:
+            return self.renderer.inline_html(text)
+
+        if self._parse_inline_html and tag in _inline_tags:
+            if tag == 'a':
                 self._in_link = True
                 text = self.output(text, rules=self.inline_html_rules)
                 self._in_link = False
@@ -1094,7 +1100,7 @@ class Markdown(object):
     def output_block_html(self):
         text = self.token['text']
         if self._parse_block_html and not self.token.get('pre'):
-            text = self.inline(text)
+            text = self.inline(text, rules=self.inline.inline_html_rules)
         return self.renderer.block_html(text)
 
     def output_paragraph(self):

@@ -77,14 +77,14 @@ def test_parse_inline_html():
     ret = mistune.markdown(
         '<span>**foo**</span>', parse_inline_html=True, escape=False
     )
-    assert '<strong>' in ret
+    assert '<span><strong>' in ret
 
 
 def test_parse_block_html():
     ret = mistune.markdown(
         '<div>**foo**</div>', parse_block_html=True, escape=False
     )
-    assert '<strong>' in ret
+    assert '<div><strong>' in ret
     ret = mistune.markdown(
         '<span>**foo**</span>', parse_block_html=True, escape=False
     )

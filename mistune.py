@@ -30,7 +30,9 @@ _inline_tags = [
     'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del',
     'img', 'font',
 ]
+_pre_tags = ['pre', 'script', 'style']
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
+_valid_attr = r'''"[^"]*"|'[^']*'|[^'">]'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
 
 
@@ -140,8 +142,8 @@ class BlockGrammar(object):
     block_html = re.compile(
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
-            r'<(%s)[\s\S]+?<\/\1>' % _block_tag,
-            r'''<%s(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _block_tag,
+            r'<(%s)((?:%s)*?)>([\s\S]+?)<\/\1>' % (_block_tag, _valid_attr),
+            r'<%s(?:%s)*?>' % (_block_tag, _valid_attr),
         )
     )
     table = re.compile(
@@ -399,13 +401,22 @@ class BlockLexer(object):
         return item
 
     def parse_block_html(self, m):
-        pre = m.group(1) in ['pre', 'script', 'style']
-        text = m.group(0)
-        self.tokens.append({
-            'type': 'block_html',
-            'pre': pre,
-            'text': text
-        })
+        tag = m.group(1)
+        if not tag:
+            text = m.group(0)
+            self.tokens.append({
+                'type': 'close_html',
+                'text': text
+            })
+        else:
+            attr = m.group(2)
+            text = m.group(3)
+            self.tokens.append({
+                'type': 'open_html',
+                'tag': tag,
+                'extra': attr,
+                'text': text
+            })
 
     def parse_paragraph(self, m):
         text = m.group(1).rstrip('\n')
@@ -1094,11 +1105,18 @@ class Markdown(object):
         self.inline._in_footnote = False
         return self.renderer.placeholder()
 
-    def output_block_html(self):
+    def output_close_html(self):
         text = self.token['text']
-        if self._parse_block_html and not self.token.get('pre'):
-            text = self.inline(text, rules=self.inline.inline_html_rules)
         return self.renderer.block_html(text)
+
+    def output_open_html(self):
+        text = self.token['text']
+        tag = self.token['tag']
+        if self._parse_block_html and tag not in _pre_tags:
+            text = self.inline(text, rules=self.inline.inline_html_rules)
+        extra = self.token.get('extra') or ''
+        html = '<%s%s>%s</%s>' % (tag, extra, text, tag)
+        return self.renderer.block_html(html)
 
     def output_paragraph(self):
         return self.renderer.paragraph(self.inline(self.token['text']))

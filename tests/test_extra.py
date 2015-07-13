@@ -44,31 +44,6 @@ def test_use_xhtml():
     assert '<img src="bar" alt="foo" title="title" />' in ret
 
 
-def test_parse_html():
-    ret = mistune.markdown('<div>**foo**</div>', escape=False)
-    assert '<strong>' not in ret
-    ret = mistune.markdown(
-        '<div>**foo**</div>', parse_html=True, escape=False
-    )
-    assert '<strong>' in ret
-
-    ret = mistune.markdown('<span>**foo**</span>', escape=False)
-    assert '<strong>' not in ret
-    ret = mistune.markdown(
-        '<span>**foo**</span>', parse_html=True, escape=False
-    )
-    assert '<strong>' in ret
-
-    ret = mistune.markdown(
-        '<span>http://example.com</span>', parse_html=True, escape=False
-    )
-    assert 'href' in ret
-    ret = mistune.markdown(
-        '<a>http://example.com</a>', parse_html=True, escape=False
-    )
-    assert 'href' not in ret
-
-
 def test_parse_inline_html():
     ret = mistune.markdown(
         '<div>**foo**</div>', parse_inline_html=True, escape=False

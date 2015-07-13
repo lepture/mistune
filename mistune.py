@@ -510,8 +510,7 @@ class InlineLexer(object):
         self._in_footnote = False
 
         kwargs.update(self.renderer.options)
-        _to_parse = kwargs.get('parse_html') or kwargs.get('parse_inline_html')
-        self._parse_inline_html = _to_parse
+        self._parse_inline_html = kwargs.get('parse_inline_html')
 
     def __call__(self, text, rules=None):
         return self.output(text, rules)
@@ -945,8 +944,7 @@ class Markdown(object):
         self.tokens = []
 
         # detect if it should parse text in block html
-        _to_parse = kwargs.get('parse_html') or kwargs.get('parse_block_html')
-        self._parse_block_html = _to_parse
+        self._parse_block_html = kwargs.get('parse_block_html')
 
     def __call__(self, text):
         return self.parse(text)
@@ -1136,7 +1134,6 @@ def markdown(text, escape=True, **kwargs):
     :param escape: if set to False, all html tags will not be escaped.
     :param use_xhtml: output with xhtml tags.
     :param hard_wrap: if set to True, it will has GFM line breaks feature.
-    :param parse_html: parse text in block and inline level html.
     :param parse_block_html: parse text only in block level html.
     :param parse_inline_html: parse text only in inline level html.
     """

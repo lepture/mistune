@@ -434,8 +434,8 @@ class InlineGrammar(object):
     inline_html = re.compile(
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(\w+%s)[\s\S]+?<\/\1>' % _valid_end,
-            r'''<\w+%s(?:"[^"]*"|'[^']*'|[^'">])*?>''' % _valid_end,
+            r'<(\w+%s)((?:%s)*?)>([\s\S]+?)<\/\1>' % (_valid_end, _valid_attr),
+            r'<\w+%s(?:%s)*?>' % (_valid_end, _valid_attr),
         )
     )
     autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')
@@ -575,16 +575,20 @@ class InlineLexer(object):
         return self.renderer.autolink(link, False)
 
     def output_inline_html(self, m):
-        text = m.group(0)
         tag = m.group(1)
         if self._parse_inline_html and tag in _inline_tags:
+            text = m.group(3)
             if tag == 'a':
                 self._in_link = True
                 text = self.output(text, rules=self.inline_html_rules)
                 self._in_link = False
             else:
                 text = self.output(text, rules=self.inline_html_rules)
-        return self.renderer.inline_html(text)
+            extra = m.group(2) or ''
+            html = '<%s%s>%s</%s>' % (tag, extra, text, tag)
+        else:
+            html = m.group(0)
+        return self.renderer.inline_html(html)
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))

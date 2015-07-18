@@ -1,7 +1,8 @@
 Mistune
 =======
 
-The fastest markdown parser in pure Python, inspired by marked_.
+The fastest markdown parser in pure Python with renderer features,
+inspired by marked_.
 
 .. image:: https://img.shields.io/pypi/wheel/mistune.svg?style=flat
    :target: https://pypi.python.org/pypi/mistune/
@@ -124,6 +125,7 @@ Here is an example of code highlighting:
     markdown = mistune.Markdown(renderer=renderer)
     print(markdown('```python\nassert 1 == 1\n```'))
 
+Find more renderers in `mistune-contrib`_.
 
 Block Level
 ~~~~~~~~~~~

@@ -6,7 +6,7 @@ Here is the full history of mistune.
 Version 0.7
 ~~~~~~~~~~~
 
-Release date not decided.
+Released on Jul. 18, 2015
 
 * Fix the breaking change in version 0.6 with options: **parse_inline_html** and **parse_block_html**
 * Breaking change: remove **parse_html** option for explicit

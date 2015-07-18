@@ -11,7 +11,7 @@
 import re
 import inspect
 
-__version__ = '0.6'
+__version__ = '0.7'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -917,8 +917,9 @@ class Markdown(object):
     """The Markdown parser.
 
     :param renderer: An instance of ``Renderer``.
+    :param inline: An inline lexer class or instance.
+    :param block: A block lexer class or instance.
     """
-
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
         if not renderer:
             renderer = Renderer(**kwargs)

@@ -16,7 +16,7 @@ inspired by marked_.
 .. image:: https://coveralls.io/repos/lepture/mistune/badge.svg?branch=master
    :target: https://coveralls.io/r/lepture/mistune
    :alt: Coverage Status
-.. image:: https://ci.appveyor.com/api/projects/status/8ai8tfwp75oela17
+.. image:: https://ci.appveyor.com/api/projects/status/8ai8tfwp75oela17?svg=true
    :target: https://ci.appveyor.com/project/lepture/mistune
    :alt: App Veyor CI Status
 

@@ -54,6 +54,11 @@ def test_parse_inline_html():
     )
     assert '<span><strong>' in ret
 
+    ret = mistune.markdown(
+        '<a>http://lepture.com</a>', parse_inline_html=True, escape=False
+    )
+    assert 'href' not in ret
+
 
 def test_parse_block_html():
     ret = mistune.markdown(

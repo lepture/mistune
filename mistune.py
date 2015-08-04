@@ -24,6 +24,8 @@ __all__ = [
 _key_pattern = re.compile(r'\s+')
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 _newline_pattern = re.compile(r'\r\n|\r')
+_block_quote_leading_pattern = re.compile(r'^ *> ?', flags=re.M)
+_block_code_leadning_pattern = re.compile(r'^ {4}', re.M)
 _inline_tags = [
     'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
     'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark',
@@ -221,9 +223,8 @@ class BlockLexer(object):
             self.tokens.append({'type': 'newline'})
 
     def parse_block_code(self, m):
-        code = m.group(0)
-        pattern = re.compile(r'^ {4}', re.M)
-        code = pattern.sub('', code)
+        # clean leading whitespace
+        code = _block_code_leadning_pattern.sub('', m.group(0))
         self.tokens.append({
             'type': 'code',
             'lang': None,
@@ -307,9 +308,8 @@ class BlockLexer(object):
 
     def parse_block_quote(self, m):
         self.tokens.append({'type': 'block_quote_start'})
-        cap = m.group(0)
-        pattern = re.compile(r'^ *> ?', flags=re.M)
-        cap = pattern.sub('', cap)
+        # clean leading >
+        cap = _block_quote_leading_pattern.sub('', m.group(0))
         self.parse(cap)
         self.tokens.append({'type': 'block_quote_end'})
 

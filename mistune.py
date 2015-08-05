@@ -434,7 +434,7 @@ class InlineGrammar(object):
     inline_html = re.compile(
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(\w+%s)((?:%s)*?)>([\s\S]+?)<\/\1>' % (_valid_end, _valid_attr),
+            r'<(\w+%s)((?:%s)*?)>([\s\S]*?)<\/\1>' % (_valid_end, _valid_attr),
             r'<\w+%s(?:%s)*?>' % (_valid_end, _valid_attr),
         )
     )

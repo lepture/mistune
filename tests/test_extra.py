@@ -84,3 +84,8 @@ def test_trigger_more_cases():
 def test_not_escape_block_tags():
     text = '<h1>heading</h1> text'
     assert text in mistune.markdown(text, escape=False)
+
+
+def test_not_escape_inline_tags():
+    text = '<a name="top"></a>'
+    assert text in mistune.markdown(text, escape=False)

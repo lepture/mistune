@@ -85,6 +85,7 @@ configure them with ``mistune.Renderer``:
 
 * **escape**: if set to *False*, all raw html tags will not be escaped.
 * **hard_wrap**: if set to *True*, it will has GFM line breaks feature.
+  All new lines will be replaced with ``<br>`` tag
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
 * **parse_block_html**: parse text only in block level html.
 * **parse_inline_html**: parse text only in inline level html.

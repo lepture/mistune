@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.7.1
+~~~~~~~~~~~~~
+
+Released on Aug. 22, 2015
+
+* Fix inline html when there is no content per `#71`_.
+
+.. _`#71`: https://github.com/lepture/mistune/issues/71
+
+
 Version 0.7
 ~~~~~~~~~~~
 

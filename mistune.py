@@ -11,7 +11,7 @@
 import re
 import inspect
 
-__version__ = '0.7'
+__version__ = '0.7.1'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',

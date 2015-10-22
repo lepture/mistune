@@ -285,7 +285,7 @@ class BlockLexer(object):
                 pattern = re.compile(r'^ {1,%d}' % space, flags=re.M)
                 item = pattern.sub('', item)
 
-            # determin whether item is loose or not
+            # determine whether item is loose or not
             loose = _next
             if not loose and re.search(r'\n\n(?!\s*$)', item):
                 loose = True

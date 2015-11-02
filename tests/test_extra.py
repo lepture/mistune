@@ -89,3 +89,10 @@ def test_not_escape_block_tags():
 def test_not_escape_inline_tags():
     text = '<a name="top"></a>'
     assert text in mistune.markdown(text, escape=False)
+
+
+def test_hard_wrap_renderer():
+    text = 'foo\nnewline'
+    renderer = mistune.Renderer(hard_wrap=True)
+    func = mistune.Markdown(renderer=renderer)
+    assert '<br>' in func(text)

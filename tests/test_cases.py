@@ -5,12 +5,7 @@ import mistune
 root = os.path.dirname(__file__)
 
 known = []
-
-rules = [
-    'table', 'fenced_code', 'footnotes',
-    'autolink', 'strikethrough',
-]
-m = mistune.Markdown(rules=rules)
+m = mistune.Markdown()
 
 
 def render(folder, name):

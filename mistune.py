@@ -504,12 +504,14 @@ class InlineLexer(object):
         if not rules:
             rules = self.grammar_class()
 
+        kwargs.update(self.renderer.options)
+        if kwargs.get('hard_wrap'):
+            rules.hard_wrap()
+
         self.rules = rules
 
         self._in_link = False
         self._in_footnote = False
-
-        kwargs.update(self.renderer.options)
         self._parse_inline_html = kwargs.get('parse_inline_html')
 
     def __call__(self, text, rules=None):
@@ -923,6 +925,8 @@ class Markdown(object):
     def __init__(self, renderer=None, inline=None, block=None, **kwargs):
         if not renderer:
             renderer = Renderer(**kwargs)
+        else:
+            kwargs.update(renderer.options)
 
         self.renderer = renderer
 
@@ -934,13 +938,9 @@ class Markdown(object):
         if inline:
             self.inline = inline
         else:
-            rules = InlineGrammar()
-            if kwargs.get('hard_wrap'):
-                rules.hard_wrap()
-            self.inline = InlineLexer(renderer, rules=rules)
+            self.inline = InlineLexer(renderer, **kwargs)
 
         self.block = block or BlockLexer(BlockGrammar())
-        self.options = kwargs
         self.footnotes = []
         self.tokens = []
 

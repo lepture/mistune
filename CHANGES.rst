@@ -3,6 +3,12 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.7.2
+~~~~~~~~~~~~~
+
+* Fix `hard_wrap` options on renderer.
+
+
 Version 0.7.1
 ~~~~~~~~~~~~~
 

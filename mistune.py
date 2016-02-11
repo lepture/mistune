@@ -459,9 +459,9 @@ class InlineGrammar(object):
         r'^\*{2}([\s\S]+?)\*{2}(?!\*)'  # **word**
     )
     emphasis = re.compile(
-        r'^_((?:__|[\s\S])+?)_(?!_)'  # _word_
+        r'^\b_((?:__|[^_])+?)_\b'  # _word_
         r'|'
-        r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
+        r'^\*((?:\*\*|[^\*])+?)\*(?!\*)'  # *word*
     )
     code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')  # `code`
     linebreak = re.compile(r'^ {2,}\n(?!\s*$)')

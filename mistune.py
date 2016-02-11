@@ -459,7 +459,7 @@ class InlineGrammar(object):
         r'^\*{2}([\s\S]+?)\*{2}(?!\*)'  # **word**
     )
     emphasis = re.compile(
-        r'^\b_((?:__|[\s\S])+?)_\b'  # _word_
+        r'^_((?:__|[\s\S])+?)_(?!_)'  # _word_
         r'|'
         r'^\*((?:\*\*|[\s\S])+?)\*(?!\*)'  # *word*
     )

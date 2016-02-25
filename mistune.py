@@ -78,7 +78,7 @@ def escape_link(url, **kwargs):
         scheme, _ = url.split(':', 1)
         scheme = _nonalpha_pattern.sub('', scheme)
         # whitelist would be better but mistune's use case is too general
-        if scheme in _scheme_blacklist:
+        if scheme.lower() in _scheme_blacklist:
             return ''
     # escape &entities; to &amp;entities;
     kwargs['smart_amp'] = False

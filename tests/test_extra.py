@@ -18,10 +18,25 @@ def test_linebreak():
 
 
 def test_safe_links():
-    ret = mistune.markdown('javascript ![foo](<javascript:alert>) alert')
-    assert 'src=""' in ret
-    ret = mistune.markdown('javascript [foo](<javascript:alert>) alert')
-    assert 'href=""' in ret
+    attack_vectors = (
+        # "standard" javascript pseudo protocol
+        ('javascript:alert`1`', ''),
+        # javascript pseudo protocol with entities
+        ('javascript&colon;alert`1`', 'javascript&amp;colon;alert`1`'),
+        # javascript pseudo protocol with prefix (dangerous in Chrome)
+        ('\x1Ajavascript:alert`1`', ''),
+        # data-URI (dangerous in Firefox)
+        ('data:text/html,<script>alert`1`</script>', ''),
+        # vbscript-URI (dangerous in Internet Explorer)
+        ('vbscript:msgbox', ''),
+        # breaking out of the attribute
+        ('"<>', '&quot;&lt;&gt;'),
+    )
+    for vector, expected in attack_vectors:
+        # image
+        assert 'src="%s"' % expected in mistune.markdown('![atk](%s)' % vector)
+        # link
+        assert 'href="%s"' % expected in mistune.markdown('[atk](%s)' % vector)
 
 
 def test_skip_style():

@@ -22,6 +22,7 @@ __all__ = [
 
 
 _key_pattern = re.compile(r'\s+')
+_nonalpha_pattern = re.compile(r'\W')
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 _newline_pattern = re.compile(r'\r\n|\r')
 _block_quote_leading_pattern = re.compile(r'^ *> ?', flags=re.M)
@@ -36,6 +37,7 @@ _pre_tags = ['pre', 'script', 'style']
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''"[^"]*"|'[^']*'|[^'">]'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
+_scheme_blacklist = ('javascript', 'data', 'vbscript')
 
 
 def _pure_pattern(regex):
@@ -68,6 +70,19 @@ def escape(text, quote=False, smart_amp=True):
         text = text.replace('"', '&quot;')
         text = text.replace("'", '&#39;')
     return text
+
+
+def escape_link(url, **kwargs):
+    """Remove dangerous URL schemes like javascript: and escape afterwards."""
+    if ':' in url:
+        scheme, _ = url.split(':', 1)
+        scheme = _nonalpha_pattern.sub('', scheme)
+        # whitelist would be better but mistune's use case is too general
+        if scheme in _scheme_blacklist:
+            return ''
+    # escape &entities; to &amp;entities;
+    kwargs['smart_amp'] = False
+    return escape(url, **kwargs)
 
 
 def preprocessing(text, tab=4):
@@ -838,8 +853,7 @@ class Renderer(object):
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """
-        if link.startswith('javascript:'):
-            link = ''
+        link = escape_link(link, quote=True)
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
         title = escape(title, quote=True)
@@ -852,8 +866,7 @@ class Renderer(object):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
-        if src.startswith('javascript:'):
-            src = ''
+        src = escape_link(src, quote=True)
         text = escape(text, quote=True)
         if title:
             title = escape(title, quote=True)

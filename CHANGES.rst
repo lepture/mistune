@@ -7,6 +7,12 @@ Version 0.7.2
 ~~~~~~~~~~~~~
 
 * Fix `hard_wrap` options on renderer.
+* Fix emphasis regex pattern
+* Fix base64 image link `#80`_.
+* Fix link security per `#87`_.
+
+.. _`#80`: https://github.com/lepture/mistune/issues/80
+.. _`#87`: https://github.com/lepture/mistune/issues/87
 
 
 Version 0.7.1

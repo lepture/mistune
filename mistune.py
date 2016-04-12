@@ -574,7 +574,8 @@ class InlineLexer(object):
         return output
 
     def output_escape(self, m):
-        return m.group(1)
+        text = m.group(1)
+        return self.renderer.text(text)
 
     def output_autolink(self, m):
         link = m.group(1)

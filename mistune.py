@@ -499,7 +499,7 @@ class InlineLexer(object):
     grammar_class = InlineGrammar
 
     default_rules = [
-        'escape', 'inline_html', 'autolink', 'url',
+        'escape', 'autolink', 'inline_html', 'url',
         'footnote', 'link', 'reflink', 'nolink',
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',

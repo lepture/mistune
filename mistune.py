@@ -160,7 +160,7 @@ class BlockGrammar(object):
         r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
             r'<(%s)((?:%s)*?)>([\s\S]+?)<\/\1>' % (_block_tag, _valid_attr),
-            r'<%s(?:%s)*?>' % (_block_tag, _valid_attr),
+            r'<%s(?:%s)*?\s*\/?>' % (_block_tag, _valid_attr),
         )
     )
     table = re.compile(
@@ -450,7 +450,7 @@ class InlineGrammar(object):
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
             r'<(\w+%s)((?:%s)*?)>([\s\S]*?)<\/\1>' % (_valid_end, _valid_attr),
-            r'<\w+%s(?:%s)*?>' % (_valid_end, _valid_attr),
+            r'<\w+%s(?:%s)*?\s*\/?>' % (_valid_end, _valid_attr),
         )
     )
     autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')

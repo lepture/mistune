@@ -574,7 +574,8 @@ class InlineLexer(object):
         return output
 
     def output_escape(self, m):
-        return m.group(1)
+        text = m.group(1)
+        return self.renderer.escape(text)
 
     def output_autolink(self, m):
         link = m.group(1)
@@ -830,6 +831,13 @@ class Renderer(object):
 
     def text(self, text):
         """Rendering unformatted text.
+
+        :param text: text content.
+        """
+        return escape(text)
+
+    def escape(self, text):
+        """Rendering escape sequence.
 
         :param text: text content.
         """

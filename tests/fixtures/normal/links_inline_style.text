@@ -12,4 +12,10 @@ Just a [URL](/url/).
 
 [URL and title]( /url/has space/ "url has space and title").
 
+[URL with parens](/url(has-parens)).
+
+[Title with parens](/url "title (has parens)").
+
+[URL and title with parens](/url(has-parens) "title (has parens)").
+
 [Empty]().

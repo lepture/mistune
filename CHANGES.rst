@@ -3,8 +3,19 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.7.3
+~~~~~~~~~~~~~
+
+Released on Jun. 28, 2016
+
+* Fix strikethrough regex
+* Fix HTML attribute regex
+* Fix close tag regex
+
 Version 0.7.2
 ~~~~~~~~~~~~~
+
+Released on Feb. 26, 2016
 
 * Fix `hard_wrap` options on renderer.
 * Fix emphasis regex pattern

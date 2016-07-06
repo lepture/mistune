@@ -37,7 +37,7 @@ _pre_tags = ['pre', 'script', 'style']
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'))*'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
-_scheme_blacklist = ('javascript', 'data', 'vbscript')
+_scheme_blacklist = ('javascript:', 'data:text/html', 'vbscript:')
 
 
 def _pure_pattern(regex):
@@ -74,11 +74,9 @@ def escape(text, quote=False, smart_amp=True):
 
 def escape_link(url, **kwargs):
     """Remove dangerous URL schemes like javascript: and escape afterwards."""
-    if ':' in url:
-        scheme, _ = url.split(':', 1)
-        scheme = _nonalpha_pattern.sub('', scheme)
-        # whitelist would be better but mistune's use case is too general
-        if scheme.lower() in _scheme_blacklist:
+    lower_url = url.lower()
+    for scheme in _scheme_blacklist:
+        if lower_url.startswith(scheme):
             return ''
     # escape &entities; to &amp;entities;
     kwargs['smart_amp'] = False

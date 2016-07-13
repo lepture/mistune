@@ -77,6 +77,12 @@ def test_parse_inline_html():
     assert 'href' not in ret
 
 
+def test_block_html():
+    ret = mistune.markdown(
+        '<div ></div>', escape=False
+    )
+    assert '<div ></div>' in ret
+
 def test_parse_block_html():
     ret = mistune.markdown(
         '<div>**foo**</div>', parse_block_html=True, escape=False

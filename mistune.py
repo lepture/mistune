@@ -72,15 +72,13 @@ def escape(text, quote=False, smart_amp=True):
     return text
 
 
-def escape_link(url, **kwargs):
+def escape_link(url):
     """Remove dangerous URL schemes like javascript: and escape afterwards."""
     lower_url = url.lower().strip('\x00\x1a \n\r\t')
     for scheme in _scheme_blacklist:
         if lower_url.startswith(scheme):
             return ''
-    # escape &entities; to &amp;entities;
-    kwargs['smart_amp'] = False
-    return escape(url, **kwargs)
+    return escape(url, quote=True, smart_amp=False)
 
 
 def preprocessing(text, tab=4):
@@ -859,7 +857,7 @@ class Renderer(object):
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """
-        link = escape_link(link, quote=True)
+        link = escape_link(link)
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
         title = escape(title, quote=True)
@@ -872,7 +870,7 @@ class Renderer(object):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
-        src = escape_link(src, quote=True)
+        src = escape_link(src)
         text = escape(text, quote=True)
         if title:
             title = escape(title, quote=True)

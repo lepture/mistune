@@ -859,8 +859,7 @@ class Renderer(object):
         :param title: title content for `title` attribute.
         :param text: text content for description.
         """
-        if self.options.get('escape'):
-            link = escape_link(link, quote=True)
+        link = escape_link(link, quote=True)
         if not title:
             return '<a href="%s">%s</a>' % (link, text)
         title = escape(title, quote=True)

@@ -83,7 +83,7 @@ def escape_link(url):
 
 def preprocessing(text, tab=4):
     text = _newline_pattern.sub('\n', text)
-    text = text.replace('\t', ' ' * tab)
+    text = text.expandtabs(tab)
     text = text.replace('\u00a0', ' ')
     text = text.replace('\u2424', '\n')
     pattern = re.compile(r'^ +$', re.M)

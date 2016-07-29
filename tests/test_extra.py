@@ -27,8 +27,6 @@ def test_safe_links():
         ('javascript&colon;alert`1`', 'javascript&amp;colon;alert`1`'),
         # javascript pseudo protocol with prefix (dangerous in Chrome)
         ('\x1Ajavascript:alert`1`', ''),
-        # data-URI (dangerous in Firefox)
-        ('data:text/html,<script>alert`1`</script>', ''),
         # vbscript-URI (dangerous in Internet Explorer)
         ('vbscript:msgbox', ''),
         # breaking out of the attribute

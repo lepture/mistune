@@ -10,6 +10,9 @@ inspired by marked_.
 .. image:: https://img.shields.io/pypi/wheel/mistune.svg?style=flat
    :target: https://pypi.python.org/pypi/mistune/
    :alt: Wheel Status
+.. image:: https://anaconda.org/conda-forge/mistune/badges/version.svg
+   :target: https://anaconda.org/conda-forge/mistune
+   :alt: Conda Version
 .. image:: https://img.shields.io/pypi/v/mistune.svg
    :target: https://pypi.python.org/pypi/mistune/
    :alt: Latest Version

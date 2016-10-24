@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.7.4
+~~~~~~~~~~~~~
+
+Release date not decided.
+
+* Fix escape_link method by Marcos Ojeda
+* Handle block HTML with no content by David Baumgold
+* Use expandtabs for tab
+* Fix escape option for text renderer
+
 Version 0.7.3
 ~~~~~~~~~~~~~
 

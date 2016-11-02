@@ -830,9 +830,9 @@ class Renderer(object):
 
         :param text: text content.
         """
-        if self.options.get('escape'):
-            return escape(text)
-        return text
+        if self.options.get('parse_block_html'):
+            return text
+        return escape(text)
 
     def escape(self, text):
         """Rendering escape sequence.

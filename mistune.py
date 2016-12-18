@@ -555,10 +555,8 @@ class InlineLexer(object):
                     return m, out
             return False  # pragma: no cover
 
-        self.line_started = False
         while text:
             ret = manipulate(text)
-            self.line_started = True
             if ret is not False:
                 m, out = ret
                 output += out

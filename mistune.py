@@ -10,6 +10,7 @@
 
 import re
 import inspect
+import sys
 
 __version__ = '0.7.3'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -1156,3 +1157,31 @@ def markdown(text, escape=True, **kwargs):
     :param parse_inline_html: parse text only in inline level html.
     """
     return Markdown(escape=escape, **kwargs)(text)
+
+
+def usage():
+    message = (
+        'When run as a script, mistune reads markdown from stdin and writes'
+        ' html to stdout.'
+        '\n'
+        'Example usage:\n'
+        '\n'
+        '  python -m mistune < in.md > out.html\n'
+    )
+
+    sys.stderr.write(message)
+
+    raise SystemExit(1)
+
+
+def main(argv):
+    if '--help' in argv:
+        usage()
+
+    src_text = sys.stdin.read()
+    dest_text = markdown(src_text)
+    sys.stdout.write(dest_text)
+
+
+if __name__ == '__main__':
+    main(sys.argv)

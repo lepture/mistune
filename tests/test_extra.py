@@ -70,6 +70,16 @@ def test_parse_inline_html():
     assert '<span><strong>' in ret
 
     ret = mistune.markdown(
+        '<span id="foo">**foo**</span>', parse_inline_html=True, escape=False
+    )
+    assert '<span id="foo"><strong>' in ret
+
+    ret = mistune.markdown(
+        '<span id=foo>**foo**</span>', parse_inline_html=True, escape=False
+    )
+    assert '<span id=foo><strong>' in ret
+
+    ret = mistune.markdown(
         '<a>http://lepture.com</a>', parse_inline_html=True, escape=False
     )
     assert 'href' not in ret
@@ -81,11 +91,23 @@ def test_block_html():
     )
     assert '<div ></div>' in ret
 
+
 def test_parse_block_html():
     ret = mistune.markdown(
         '<div>**foo**</div>', parse_block_html=True, escape=False
     )
     assert '<div><strong>' in ret
+
+    ret = mistune.markdown(
+        '<div id="foo">**foo**</div>', parse_block_html=True, escape=False
+    )
+    assert '<div id="foo"><strong>' in ret
+
+    ret = mistune.markdown(
+        '<div id=foo>**foo**</div>', parse_block_html=True, escape=False
+    )
+    assert '<div id=foo><strong>' in ret
+
     ret = mistune.markdown(
         '<span>**foo**</span>', parse_block_html=True, escape=False
     )

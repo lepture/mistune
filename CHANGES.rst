@@ -6,12 +6,13 @@ Here is the full history of mistune.
 Version 0.7.4
 ~~~~~~~~~~~~~
 
-Release date not decided.
+Released on Mar. 14, 2017
 
 * Fix escape_link method by Marcos Ojeda
 * Handle block HTML with no content by David Baumgold
 * Use expandtabs for tab
 * Fix escape option for text renderer
+* Fix HTML attribute regex pattern
 
 Version 0.7.3
 ~~~~~~~~~~~~~

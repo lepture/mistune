@@ -349,7 +349,7 @@ class BlockLexer(object):
             lines = text.split('\n')
             whitespace = None
             for line in lines[1:]:
-                space = len(line) - len(line.lstrip())
+                space = line.count(' ')
                 if space and (not whitespace or space < whitespace):
                     whitespace = space
             newlines = [lines[0]]

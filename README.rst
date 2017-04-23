@@ -194,7 +194,7 @@ It is an inline grammar, which requires custom ``InlineGrammar`` and
 
 .. code:: python
 
-    import copy
+    import copy,re
     from mistune import Renderer, InlineGrammar, InlineLexer
 
     class WikiLinkRenderer(Renderer):

@@ -50,7 +50,7 @@ def benchmark_misaka(text):
         m.EXT_TABLES | m.EXT_STRIKETHROUGH
     )
     md = m.Markdown(m.HtmlRenderer(), extensions=extensions)
-    md.render(text)
+    md(text)
 
 
 @benchmark('markdown2')

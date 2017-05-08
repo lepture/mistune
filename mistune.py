@@ -901,7 +901,7 @@ class Renderer(object):
         """
         html = (
             '<sup class="footnote-ref" id="fnref-%s">'
-            '<a href="#fn-%s" rel="footnote">%d</a></sup>'
+            '<a href="#fn-%s">%d</a></sup>'
         ) % (escape(key), escape(key), index)
         return html
 
@@ -912,7 +912,7 @@ class Renderer(object):
         :param text: text content of the footnote.
         """
         back = (
-            '<a href="#fnref-%s" rev="footnote">&#8617;</a>'
+            '<a href="#fnref-%s" class="footnote">&#8617;</a>'
         ) % escape(key)
         text = text.rstrip()
         if text.endswith('</p>'):

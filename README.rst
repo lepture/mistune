@@ -237,6 +237,14 @@ It is the same with block level lexer. It would take a while to understand
 the whole mechanism. But you won't do the trick a lot.
 
 
+Command Line Support
+--------------------
+
+Mistune can be called as a script to transform Markdown to HTML. Example usage::
+
+    python -m mistune < in.md > out.html
+
+
 Contribution & Extensions
 -------------------------
 

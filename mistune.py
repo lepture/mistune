@@ -367,7 +367,10 @@ class BlockLexer(object):
     def parse_table(self, m):
         item = self._process_table(m)
 
-        cells = re.sub(r'(?: *\| *)?\n$', '', m.group(3))
+        #cells = re.sub(r'(?: *\| *)?\n$', '', m.group(3))
+        cells = re.sub(r' *\n$', '', m.group(3))
+ 
+        
         cells = cells.split('\n')
         for i, v in enumerate(cells):
             v = re.sub(r'^ *\| *| *\| *$', '', v)

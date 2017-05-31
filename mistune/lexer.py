@@ -43,27 +43,30 @@ class BlockLexer(object):
 
     def parse(self, text, rules=None):
         text = text.rstrip('\n')
+        total = len(text)
+        start = 0
 
         if not rules:
             rules = self.default_rules
 
-        def manipulate(text):
+        def find_match_group():
             for key in rules:
                 rule = getattr(self.rules, key)
-                m = rule.match(text)
+                m = rule.match(text, start)
                 if not m:
                     continue
                 getattr(self, 'parse_%s' % key)(m)
                 return m
-            return False  # pragma: no cover
+            return None  # pragma: no cover
 
-        while text:
-            m = manipulate(text)
-            if m is not False:
-                text = text[len(m.group(0)):]
+        while 1:
+            m = find_match_group()
+            if m is not None:
+                start = m.end()
                 continue
-            if text:  # pragma: no cover
-                raise RuntimeError('Infinite loop at: %s' % text)
+            if start >= total:
+                break
+            raise RuntimeError('Infinite loop at: %s' % start)  # pragma: no cover
         return self.tokens
 
     def parse_newline(self, m):

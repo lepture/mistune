@@ -22,30 +22,30 @@ class BlockGrammar(object):
     """Grammars for block level tokens."""
 
     def_links = re.compile(
-        r'^ *\[([^^\]]+)\]: *'  # [key]:
+        r' *\[([^^\]]+)\]: *'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *(?:\n+|$)'
     )
     def_footnotes = re.compile(
-        r'^\[\^([^\]]+)\]: *('
+        r'\[\^([^\]]+)\]: *('
         r'[^\n]*(?:\n+|$)'  # [^key]:
         r'(?: {1,}[^\n]*(?:\n+|$))*'
         r')'
     )
 
-    newline = re.compile(r'^\n+')
-    block_code = re.compile(r'^( {4}[^\n]+\n*)+')
+    newline = re.compile(r'\n+')
+    block_code = re.compile(r'( {4}[^\n]+\n*)+')
     fences = re.compile(
-        r'^ *(`{3,}|~{3,}) *(\S+)? *\n'  # ```lang
+        r' *(`{3,}|~{3,}) *(\S+)? *\n'  # ```lang
         r'([\s\S]+?)\s*'
         r'\1 *(?:\n+|$)'  # ```
     )
-    hrule = re.compile(r'^ {0,3}[-*_](?: *[-*_]){2,} *(?:\n+|$)')
-    heading = re.compile(r'^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
-    lheading = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
-    block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
+    hrule = re.compile(r' {0,3}[-*_](?: *[-*_]){2,} *(?:\n+|$)')
+    heading = re.compile(r' *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
+    lheading = re.compile(r'([^\n]+)\n *(=|-)+ *(?:\n+|$)')
+    block_quote = re.compile(r'( *>[^\n]+(\n[^\n]+)*\n*)+')
     list_block = re.compile(
-        r'^( *)([*+-]|\d+\.) [\s\S]+?'
+        r'( *)([*+-]|\d+\.) [\s\S]+?'
         r'(?:'
         r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
         r'|\n+(?=%s)'  # def links
@@ -66,7 +66,7 @@ class BlockGrammar(object):
     )
     list_bullet = re.compile(r'^ *(?:[*+-]|\d+\.) +')
     paragraph = re.compile(
-        r'^((?:[^\n]+\n?(?!'
+        r'((?:[^\n]+\n?(?!'
         r'%s|%s|%s|%s|%s|%s|%s|%s|%s'
         r'))+)\n*' % (
             _pure_pattern(fences).replace(r'\1', r'\2'),
@@ -81,19 +81,19 @@ class BlockGrammar(object):
         )
     )
     block_html = re.compile(
-        r'^ *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
+        r' *(?:%s|%s|%s) *(?:\n{2,}|\s*$)' % (
             r'<!--[\s\S]*?-->',
             r'<(%s)((?:%s)*?)>([\s\S]*?)<\/\1>' % (_block_tag, _tag_attr),
             r'<%s(?:%s)*?\s*\/?>' % (_block_tag, _tag_attr),
         )
     )
     table = re.compile(
-        r'^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*'
+        r' *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*'
     )
     nptable = re.compile(
-        r'^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*'
+        r' *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*'
     )
-    text = re.compile(r'^[^\n]+')
+    text = re.compile(r'[^\n]+')
 
 
 class InlineGrammar(object):

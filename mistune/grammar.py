@@ -99,50 +99,51 @@ class BlockGrammar(object):
 class InlineGrammar(object):
     """Grammars for inline level tokens."""
 
-    escape = re.compile(r'^\\([\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
+    escape = re.compile(r'\\(?P<escape1>[\\`*{}\[\]()#+\-.!_>~|])')  # \* \+ \! ....
     inline_html = re.compile(
-        r'^(?:%s|%s|%s)' % (
+        r'(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(\w+%s)((?:%s)*?)\s*>([\s\S]*?)<\/\1>' % (_tag_end, _tag_attr),
+            r'<(?P<inline_html1>\w+%s)(?P<inline_html2>(?:%s)*?)\s*>(?P<inline_html3>[\s\S]*?)<\/(?P=inline_html1)>' %
+                (_tag_end, _tag_attr),
             r'<\w+%s(?:%s)*?\s*\/?>' % (_tag_end, _tag_attr),
         )
     )
-    autolink = re.compile(r'^<([^ >]+(@|:)[^ >]+)>')
+    autolink = re.compile(r'^<(?P<autolink1>[^ >]+(?P<autolink2>@|:)[^ >]+)>')
     link = re.compile(
-        r'^!?\[('
+        r'!?\[(?P<link1>'
         r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
         r')\]\('
-        r'''\s*(<)?([\s\S]*?)(?(2)>)(?:\s+['"]([\s\S]*?)['"])?\s*'''
+        r'''\s*(?P<link2><)?(?P<link3>[\s\S]*?)(?(link2)>)(?:\s+['"](?P<link4>[\s\S]*?)['"])?\s*'''
         r'\)'
     )
     reflink = re.compile(
-        r'^!?\[('
+        r'!?\[(?P<reflink1>'
         r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
-        r')\]\s*\[([^^\]]*)\]'
+        r')\]\s*\[(?P<reflink2>[^^\]]*)\]'
     )
-    nolink = re.compile(r'^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]')
-    url = re.compile(r'''^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
+    nolink = re.compile(r'!?\[(?P<nolink1>(?:\[[^\]]*\]|[^\[\]])*)\]')
+    url = re.compile(r'''(?P<url1>https?:\/\/[^\s<]+[^<.,:;"')\]\s])''')
     double_emphasis = re.compile(
-        r'^_{2}([\s\S]+?)_{2}(?!_)'  # __word__
+        r'_{2}(?P<double_emphasis1>[\s\S]+?)_{2}(?!_)'  # __word__
         r'|'
-        r'^\*{2}([\s\S]+?)\*{2}(?!\*)'  # **word**
+        r'\*{2}(?P<double_emphasis2>[\s\S]+?)\*{2}(?!\*)'  # **word**
     )
     emphasis = re.compile(
-        r'^\b_((?:__|[^_])+?)_\b'  # _word_
+        r'\b_(?P<emphasis1>(?:__|[^_])+?)_\b'  # _word_
         r'|'
-        r'^\*((?:\*\*|[^\*])+?)\*(?!\*)'  # *word*
+        r'\*(?P<emphasis2>(?:\*\*|[^\*])+?)\*(?!\*)'  # *word*
     )
-    code = re.compile(r'^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)')  # `code`
-    linebreak = re.compile(r'^ {2,}\n(?!\s*$)')
-    strikethrough = re.compile(r'^~~(?=\S)([\s\S]*?\S)~~')  # ~~word~~
-    footnote = re.compile(r'^\[\^([^\]]+)\]')
-    text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
+    code = re.compile(r'(?P<code1>`+)\s*(?P<code2>[\s\S]*?[^`])\s*(?P=code1)(?!`)')  # `code`
+    linebreak = re.compile(r' {2,}\n(?!\s*$)')
+    strikethrough = re.compile(r'~~(?=\S)(?P<strikethrough1>[\s\S]*?\S)~~')  # ~~word~~
+    footnote = re.compile(r'\[\^(?P<footnote1>[^\]]+)\]')
+    text = re.compile(r'[\s\S]+?(?=[\\<!\[_*`~]|https?://| {2,}\n|$)')
 
     def hard_wrap(self):
         """Grammar for hard wrap linebreak. You don't need to add two
         spaces at the end of a line.
         """
-        self.linebreak = re.compile(r'^ *\n(?!\s*$)')
+        self.linebreak = re.compile(r' *\n(?!\s*$)')
         self.text = re.compile(
-            r'^[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
+            r'[\s\S]+?(?=[\\<!\[_*`~]|https?://| *\n|$)'
         )

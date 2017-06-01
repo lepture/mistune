@@ -314,6 +314,8 @@ class InlineLexer(object):
         self._in_footnote = False
         self._parse_inline_html = kwargs.get('parse_inline_html')
 
+        self._cached_regexes = {}
+
     def __call__(self, text, rules=None):
         return self.output(text, rules)
 
@@ -321,6 +323,18 @@ class InlineLexer(object):
         self.footnote_index = 0
         self.links = links or {}
         self.footnotes = footnotes or {}
+
+    def _get_regex(self, rules):
+        tup = tuple(rules)
+        if tup not in self._cached_regexes:
+            def get_pattern(key):
+                return getattr(self.rules, key).pattern
+
+            self._cached_regexes[tup] = re.compile(
+                '|'.join('(?P<%s>(?:%s))' %
+                (key, get_pattern(key)) for key in tup))
+        return self._cached_regexes[tup]
+
 
     def output(self, text, rules=None):
         text = text.rstrip('\n')
@@ -332,94 +346,80 @@ class InlineLexer(object):
 
         output = self.renderer.placeholder()
 
-        def manipulate(text):
-            for key in rules:
-                pattern = getattr(self.rules, key)
-                m = pattern.match(text)
-                if not m:
-                    continue
-                self.line_match = m
-                out = getattr(self, 'output_%s' % key)(m)
-                if out is not None:
-                    return m, out
-            return False  # pragma: no cover
-
-        while text:
-            ret = manipulate(text)
-            if ret is not False:
-                m, out = ret
+        # TODO: Correctly handle ambiguous matches (e.g. undefined footnote vs. text).
+        for match in self._get_regex(rules).finditer(text):
+            key = match.lastgroup
+            out = getattr(self, 'output_%s' % key)(match)
+            #print "key:", key, "value:", match.group(key), "out:", out
+            if out is not None:
                 output += out
-                text = text[len(m.group(0)):]
-                continue
-            if text:  # pragma: no cover
-                raise RuntimeError('Infinite loop at: %s' % text)
-
         return output
 
     def output_escape(self, m):
-        text = m.group(1)
+        text = m.group('escape1')
         return self.renderer.escape(text)
 
     def output_autolink(self, m):
-        link = m.group(1)
-        if m.group(2) == '@':
+        link = m.group('autolink1')
+        if m.group('autolink2') == '@':
             is_email = True
         else:
             is_email = False
         return self.renderer.autolink(link, is_email)
 
     def output_url(self, m):
-        link = m.group(1)
+        link = m.group('url1')
         if self._in_link:
             return self.renderer.text(link)
         return self.renderer.autolink(link, False)
 
     def output_inline_html(self, m):
-        tag = m.group(1)
+        tag = m.group('inline_html1')
         if self._parse_inline_html and tag in inline_tags:
-            text = m.group(3)
+            text = m.group('inline_html3')
             if tag == 'a':
                 self._in_link = True
                 text = self.output(text, rules=self.inline_html_rules)
                 self._in_link = False
             else:
                 text = self.output(text, rules=self.inline_html_rules)
-            extra = m.group(2) or ''
+            extra = m.group('inline_html2') or ''
             html = '<%s%s>%s</%s>' % (tag, extra, text, tag)
         else:
-            html = m.group(0)
+            html = m.group('inline_html')
         return self.renderer.inline_html(html)
 
     def output_footnote(self, m):
-        key = keyify(m.group(1))
+        key = keyify(m.group('footnote1'))
         if key not in self.footnotes:
-            return None
+            return self.renderer.text(m.group('footnote'))
         if self.footnotes[key]:
-            return None
+            return self.renderer.text(m.group('footnote'))
         self.footnote_index += 1
         self.footnotes[key] = self.footnote_index
         return self.renderer.footnote_ref(key, self.footnote_index)
 
     def output_link(self, m):
-        return self._process_link(m, m.group(3), m.group(4))
+        return self._process_link(
+            m.group('link'), m.group('link1'), m.group('link3'), m.group('link4'))
 
     def output_reflink(self, m):
-        key = keyify(m.group(2) or m.group(1))
+        key = keyify(m.group('reflink2') or m.group('reflink1'))
         if key not in self.links:
             return None
         ret = self.links[key]
-        return self._process_link(m, ret['link'], ret['title'])
+        return self._process_link(
+            m.group('reflink'), m.group('reflink1'), ret['link'], ret['title'])
 
     def output_nolink(self, m):
-        key = keyify(m.group(1))
+        key = keyify(m.group('nolink1'))
         if key not in self.links:
-            return None
+            return self.renderer.text(m.group('nolink'))
         ret = self.links[key]
-        return self._process_link(m, ret['link'], ret['title'])
+        return self._process_link(
+            m.group('nolink'), m.group('nolink1'), ret['link'], ret['title'])
 
-    def _process_link(self, m, link, title=None):
-        line = m.group(0)
-        text = m.group(1)
+    def _process_link(self, line, text, link, title=None):
         if line[0] == '!':
             return self.renderer.image(link, title, text)
 
@@ -429,26 +429,26 @@ class InlineLexer(object):
         return self.renderer.link(link, title, text)
 
     def output_double_emphasis(self, m):
-        text = m.group(2) or m.group(1)
+        text = m.group('double_emphasis2') or m.group('double_emphasis1')
         text = self.output(text)
         return self.renderer.double_emphasis(text)
 
     def output_emphasis(self, m):
-        text = m.group(2) or m.group(1)
+        text = m.group('emphasis2') or m.group('emphasis1')
         text = self.output(text)
         return self.renderer.emphasis(text)
 
     def output_code(self, m):
-        text = m.group(2)
+        text = m.group('code2')
         return self.renderer.codespan(text)
 
     def output_linebreak(self, m):
         return self.renderer.linebreak()
 
     def output_strikethrough(self, m):
-        text = self.output(m.group(1))
+        text = self.output(m.group('strikethrough1'))
         return self.renderer.strikethrough(text)
 
     def output_text(self, m):
-        text = m.group(0)
+        text = m.group('text')
         return self.renderer.text(text)

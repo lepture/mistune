@@ -115,9 +115,9 @@ def test_math_paragraph():
 class WikiInlineGrammar(mistune.InlineGrammar):
     # it would take a while for creating the right regex
     wiki_link = re.compile(
-        r'\[\['                   # [[
-        r'([\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
-        r'\]\](?!\])'             # ]]
+        r'\[\['                                 # [[
+        r'(?P<wiki_link1>[\s\S]+?\|[\s\S]+?)'   # Page 2|Page 2
+        r'\]\](?!\])'                           # ]]
     )
 
 
@@ -132,7 +132,7 @@ class WikiInlineLexer(mistune.InlineLexer):
         super(WikiInlineLexer, self).__init__(renderer, rules, **kwargs)
 
     def output_wiki_link(self, m):
-        text = m.group(1)
+        text = m.group('wiki_link1')
         alt, link = text.split('|')
         return '<a href="%s">%s</a>' % (link, alt)
 

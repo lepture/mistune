@@ -410,9 +410,11 @@ class InlineLexer(object):
             m.group('reflink'), m.group('reflink1'), ret['link'], ret['title'])
 
     def output_nolink(self, m):
+        nolink = m.group('nolink')
         key = keyify(m.group('nolink1'))
         if key not in self.links:
-            return self.renderer.text(m.group('nolink'))
+            prefix = '![' if nolink.startswith('!') else '['
+            return prefix + self.output(m.group('nolink1').rstrip(r'\\')) + ']'
         ret = self.links[key]
         return self._process_link(
             m.group('nolink'), m.group('nolink1'), ret['link'], ret['title'])

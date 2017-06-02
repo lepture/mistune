@@ -350,9 +350,7 @@ class InlineLexer(object):
         for match in self._get_regex(rules).finditer(text):
             key = match.lastgroup
             out = getattr(self, 'output_%s' % key)(match)
-            #print "key:", key, "value:", match.group(key), "out:", out
-            if out is not None:
-                output += out
+            output += out
         return output
 
     def output_escape(self, m):

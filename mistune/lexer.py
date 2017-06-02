@@ -406,7 +406,7 @@ class InlineLexer(object):
     def output_reflink(self, m):
         key = keyify(m.group('reflink2') or m.group('reflink1'))
         if key not in self.links:
-            return None
+            return self.renderer.text(m.group('reflink'))
         ret = self.links[key]
         return self._process_link(
             m.group('reflink'), m.group('reflink1'), ret['link'], ret['title'])

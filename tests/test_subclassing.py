@@ -41,8 +41,7 @@ class MathBlockLexer(mistune.BlockLexer):
 
 
 class MathInlineGrammar(mistune.InlineGrammar):
-    math = re.compile("^\$(.+?)\$")
-    text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~$]|https?://| {2,}\n|$)')
+    math = re.compile("^\$(?P<math1>.+?)\$")
 
 
 class MathInlineLexer(mistune.InlineLexer):
@@ -54,7 +53,7 @@ class MathInlineLexer(mistune.InlineLexer):
         super(MathInlineLexer, self).__init__(renderer, rules, **kwargs)
 
     def output_math(self, m):
-        return self.renderer.inline_math(m.group(1))
+        return self.renderer.inline_math(m.group('math1'))
 
 
 class MarkdownWithMath(mistune.Markdown):

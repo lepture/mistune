@@ -33,7 +33,7 @@ _inline_tags = [
     'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del',
     'img', 'font',
 ]
-_pre_tags = ('pre', 'script', 'style')
+_pre_tags = ['pre', 'script', 'style']
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'|[^\s'">]+))?'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
@@ -484,17 +484,17 @@ class InlineLexer(object):
     """Inline level lexer for inline grammars."""
     grammar_class = InlineGrammar
 
-    default_rules = (
+    default_rules = [
         'escape', 'inline_html', 'autolink', 'url',
         'footnote', 'link', 'reflink', 'nolink',
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
-    )
-    inline_html_rules = (
+    ]
+    inline_html_rules = [
         'escape', 'autolink', 'url', 'link', 'reflink',
         'nolink', 'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
-    )
+    ]
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.renderer = renderer

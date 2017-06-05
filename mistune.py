@@ -27,12 +27,12 @@ _escape_pattern = re.compile(r'&(?!#?\w+;)')
 _newline_pattern = re.compile(r'\r\n|\r')
 _block_quote_leading_pattern = re.compile(r'^ *> ?', flags=re.M)
 _block_code_leading_pattern = re.compile(r'^ {4}', flags=re.M)
-_inline_tags = (
+_inline_tags = [
     'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
     'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark',
     'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del',
     'img', 'font',
-)
+]
 _pre_tags = ('pre', 'script', 'style')
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'|[^\s'">]+))?'''

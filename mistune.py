@@ -26,14 +26,14 @@ _nonalpha_pattern = re.compile(r'\W')
 _escape_pattern = re.compile(r'&(?!#?\w+;)')
 _newline_pattern = re.compile(r'\r\n|\r')
 _block_quote_leading_pattern = re.compile(r'^ *> ?', flags=re.M)
-_block_code_leading_pattern = re.compile(r'^ {4}', re.M)
-_inline_tags = [
+_block_code_leading_pattern = re.compile(r'^ {4}', flags=re.M)
+_inline_tags = (
     'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
     'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark',
     'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr', 'ins', 'del',
     'img', 'font',
-]
-_pre_tags = ['pre', 'script', 'style']
+)
+_pre_tags = ('pre', 'script', 'style')
 _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'|[^\s'">]+))?'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
@@ -42,7 +42,7 @@ _scheme_blacklist = ('javascript:', 'vbscript:')
 
 def _pure_pattern(regex):
     pattern = regex.pattern
-    if pattern.startswith('^'):
+    if pattern[0] == '^':
         pattern = pattern[1:]
     return pattern
 
@@ -171,12 +171,12 @@ class BlockLexer(object):
     """Block level lexer for block grammars."""
     grammar_class = BlockGrammar
 
-    default_rules = [
+    default_rules = (
         'newline', 'hrule', 'block_code', 'fences', 'heading',
         'nptable', 'lheading', 'block_quote',
         'list_block', 'block_html', 'def_links',
         'def_footnotes', 'table', 'paragraph', 'text'
-    ]
+    )
 
     list_rules = (
         'newline', 'block_code', 'fences', 'lheading', 'hrule',
@@ -193,20 +193,14 @@ class BlockLexer(object):
         self.tokens = []
         self.def_links = {}
         self.def_footnotes = {}
-
-        if not rules:
-            rules = self.grammar_class()
-
-        self.rules = rules
+        self.rules = rules or self.grammar_class()
 
     def __call__(self, text, rules=None):
         return self.parse(text, rules)
 
     def parse(self, text, rules=None):
         text = text.rstrip('\n')
-
-        if not rules:
-            rules = self.default_rules
+        rules = rules or self.default_rules
 
         def manipulate(text):
             for key in rules:
@@ -306,10 +300,7 @@ class BlockLexer(object):
                 if not loose:
                     loose = _next
 
-            if loose:
-                t = 'loose_item_start'
-            else:
-                t = 'list_item_start'
+            t = 'loose_item_start' if loose else 'list_item_start'
 
             self.tokens.append({'type': t})
             # recurse
@@ -493,32 +484,28 @@ class InlineLexer(object):
     """Inline level lexer for inline grammars."""
     grammar_class = InlineGrammar
 
-    default_rules = [
+    default_rules = (
         'escape', 'inline_html', 'autolink', 'url',
         'footnote', 'link', 'reflink', 'nolink',
         'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
-    ]
-    inline_html_rules = [
+    )
+    inline_html_rules = (
         'escape', 'autolink', 'url', 'link', 'reflink',
         'nolink', 'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
-    ]
+    )
 
     def __init__(self, renderer, rules=None, **kwargs):
         self.renderer = renderer
         self.links = {}
         self.footnotes = {}
         self.footnote_index = 0
-
-        if not rules:
-            rules = self.grammar_class()
+        self.rules = rules or self.grammar_class()
 
         kwargs.update(self.renderer.options)
         if kwargs.get('hard_wrap'):
             rules.hard_wrap()
-
-        self.rules = rules
 
         self._in_link = False
         self._in_footnote = False
@@ -534,8 +521,7 @@ class InlineLexer(object):
 
     def output(self, text, rules=None):
         text = text.rstrip('\n')
-        if not rules:
-            rules = list(self.default_rules)
+        rules = rules or list(self.default_rules)
 
         if self._in_footnote and 'footnote' in rules:
             rules.remove('footnote')
@@ -572,10 +558,7 @@ class InlineLexer(object):
 
     def output_autolink(self, m):
         link = m.group(1)
-        if m.group(2) == '@':
-            is_email = True
-        else:
-            is_email = False
+        is_email = m.group(2) == '@'
         return self.renderer.autolink(link, is_email)
 
     def output_url(self, m):
@@ -602,9 +585,7 @@ class InlineLexer(object):
 
     def output_footnote(self, m):
         key = _keyify(m.group(1))
-        if key not in self.footnotes:
-            return None
-        if self.footnotes[key]:
+        if key not in self.footnotes or self.footnotes[key]:
             return None
         self.footnote_index += 1
         self.footnotes[key] = self.footnote_index
@@ -711,7 +692,7 @@ class Renderer(object):
         :param html: text content of the html snippet.
         """
         if self.options.get('skip_style') and \
-           html.lower().startswith('<style'):
+           html.lower()[:6] == '<style':
             return ''
         if self.options.get('escape'):
             return escape(html)
@@ -776,10 +757,7 @@ class Renderer(object):
         :param header: whether this is header or not.
         :param align: align of current table cell.
         """
-        if flags['header']:
-            tag = 'th'
-        else:
-            tag = 'td'
+        tag = 'th' if flags['header'] else 'td'
         align = flags['align']
         if not align:
             return '<%s>%s</%s>\n' % (tag, content, tag)
@@ -811,9 +789,7 @@ class Renderer(object):
 
     def linebreak(self):
         """Rendering line break like ``<br>``."""
-        if self.options.get('use_xhtml'):
-            return '<br />\n'
-        return '<br>\n'
+        return '<br />\n' if self.options.get('use_xhtml') else '<br>\n'
 
     def strikethrough(self, text):
         """Rendering ~~strikethrough~~ text.
@@ -827,9 +803,7 @@ class Renderer(object):
 
         :param text: text content.
         """
-        if self.options.get('parse_block_html'):
-            return text
-        return escape(text)
+        return text if self.options.get('parse_block_html') else escape(text)
 
     def escape(self, text):
         """Rendering escape sequence.
@@ -885,9 +859,7 @@ class Renderer(object):
 
         :param html: text content of the html snippet.
         """
-        if self.options.get('escape'):
-            return escape(html)
-        return html
+        return escape(html) if self.options.get('escape') else html
 
     def newline(self):
         """Rendering newline element."""
@@ -915,7 +887,7 @@ class Renderer(object):
             '<a href="#fnref-%s" class="footnote">&#8617;</a>'
         ) % escape(key)
         text = text.rstrip()
-        if text.endswith('</p>'):
+        if text[-4:] == '</p>':
             text = re.sub(r'<\/p>$', r'%s</p>' % back, text)
         else:
             text = '%s<p>%s</p>' % (text, back)
@@ -951,11 +923,7 @@ class Markdown(object):
         if block and inspect.isclass(block):
             block = block(**kwargs)
 
-        if inline:
-            self.inline = inline
-        else:
-            self.inline = InlineLexer(renderer, **kwargs)
-
+        self.inline = inline or InlineLexer(renderer, **kwargs)
         self.block = block or BlockLexer(BlockGrammar())
         self.footnotes = []
         self.tokens = []
@@ -1011,9 +979,7 @@ class Markdown(object):
         return self.token
 
     def peek(self):
-        if self.tokens:
-            return self.tokens[-1]
-        return None  # pragma: no cover
+        return self.tokens[-1] if self.tokens else None  # pragma: no cover
 
     def output(self, text, rules=None):
         self.tokens = self.block(text, rules)
@@ -1030,7 +996,7 @@ class Markdown(object):
         t = self.token['type']
 
         # sepcial cases
-        if t.endswith('_start'):
+        if t[-6:] == '_start':
             t = t[:-6]
 
         return getattr(self, 'output_%s' % t)()

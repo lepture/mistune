@@ -171,12 +171,12 @@ class BlockLexer(object):
     """Block level lexer for block grammars."""
     grammar_class = BlockGrammar
 
-    default_rules = (
+    default_rules = [
         'newline', 'hrule', 'block_code', 'fences', 'heading',
         'nptable', 'lheading', 'block_quote',
         'list_block', 'block_html', 'def_links',
         'def_footnotes', 'table', 'paragraph', 'text'
-    )
+    ]
 
     list_rules = (
         'newline', 'block_code', 'fences', 'lheading', 'hrule',
@@ -505,7 +505,7 @@ class InlineLexer(object):
 
         kwargs.update(self.renderer.options)
         if kwargs.get('hard_wrap'):
-            rules.hard_wrap()
+            self.rules.hard_wrap()
 
         self._in_link = False
         self._in_footnote = False

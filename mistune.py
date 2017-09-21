@@ -10,6 +10,7 @@
 
 import re
 import inspect
+import base64
 
 __version__ = '0.7.4'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -664,6 +665,85 @@ class InlineLexer(object):
         return self.renderer.text(text)
 
 
+class _ImageEmbedder(object):
+    def _try_http3(self):
+        def read_http(url):
+            r = urllib.request.urlopen(url)
+            content = r.read()
+            content_type = r.headers['Content-Type']
+
+            return content, content_type
+
+        try:
+            import urllib.request
+        except ImportError:
+            self.__http_requestor = None
+        else:
+            self.__http_requestor = read_http
+            self.__string_normalize = lambda x: x.decode('utf-8')
+
+    def _try_http2(self):
+        import urllib2
+
+        def read_http(url):
+            r = urllib2.urlopen(url)
+            content = r.read()
+            content_type = r.headers['Content-Type']
+
+            return content, content_type
+
+        self.__http_requestor = read_http
+        self.__string_normalize = lambda x: x
+
+    def _http(self, url):
+        try:
+            requestor = self.__http_requestor
+        except AttributeError:
+            requestor = None
+
+        if requestor is None:
+            # Python 3
+            self._try_http3()
+
+            # Python 2
+
+            if self.__http_requestor is None:
+                self._try_http2()
+
+            requestor = self.__http_requestor
+
+        return requestor(url)
+
+    def _get_base64_with_image_url(self, url):
+        raw_image, content_type = self._http(url)
+        encoded_image = base64.b64encode(raw_image)
+        encoded_image = self.__string_normalize(encoded_image)
+
+        return encoded_image, content_type
+
+    def get_embedded_image_with_url(self, url, attributes={}, use_xhtml=False):
+        if use_xhtml:
+            tag_tail = ' />'
+        else:
+            tag_tail = '>'
+
+        encoded_image, content_type = self._get_base64_with_image_url(url)
+
+        suffix = ''
+        for key, value in attributes.items():
+            suffix += ' {key}="{value}"'.format(key=key, value=value)
+
+        template = "<img src=\"data:{content_type};base64,{payload}\"{suffix}{tag_tail}"
+        embedded = \
+            template.format(
+                content_type=content_type,
+                payload=encoded_image,
+                suffix=suffix,
+                tag_tail=tag_tail)
+
+        return embedded
+
+
 class Renderer(object):
     """The default HTML renderer for rendering Markdown.
     """
@@ -869,16 +949,39 @@ class Renderer(object):
         :param title: title text of the image.
         :param text: alt text of the image.
         """
-        src = escape_link(src)
-        text = escape(text, quote=True)
+
+        use_xhtml = self.options.get('use_xhtml')
+
         if title:
             title = escape(title, quote=True)
-            html = '<img src="%s" alt="%s" title="%s"' % (src, text, title)
+
+        if self.options.get('embed_images', False) is True:
+            ie = _ImageEmbedder()
+
+            attributes = {
+                'alt': text,
+            }
+
+            if title:
+                attributes['title'] = title
+
+            html = ie.get_embedded_image_with_url(
+                    src,
+                    use_xhtml=use_xhtml,
+                    attributes=attributes)
+
+            return html
         else:
-            html = '<img src="%s" alt="%s"' % (src, text)
-        if self.options.get('use_xhtml'):
-            return '%s />' % html
-        return '%s>' % html
+            src = escape_link(src)
+            text = escape(text, quote=True)
+
+            if title:
+                html = '<img src="%s" alt="%s" title="%s"' % (src, text, title)
+            else:
+                html = '<img src="%s" alt="%s"' % (src, text)
+            if use_xhtml:
+                return '%s />' % html
+            return '%s>' % html
 
     def inline_html(self, html):
         """Rendering span level pure html content.

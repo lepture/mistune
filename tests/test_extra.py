@@ -59,6 +59,21 @@ def test_use_xhtml():
     assert '<img src="bar" alt="foo" title="title" />' in ret
 
 
+def test_embed_images():
+    def return_image(self, url):
+        return 'png_data', 'image/png'
+
+    mistune._ImageEmbedder._get_base64_with_image_url = return_image
+
+    renderer = mistune.Renderer(embed_images=True)
+    func = mistune.Markdown(renderer=renderer)
+
+    markdown = """\
+![alt text](https://some.domain/some_image.png)"""
+
+    ret = func.render(markdown)
+    assert '<p><img src="data:image/png;base64,png_data" alt="alt text"></p>\n' == ret
+
 def test_parse_inline_html():
     ret = mistune.markdown(
         '<div>**foo**</div>', parse_inline_html=True, escape=False

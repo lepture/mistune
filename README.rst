@@ -96,6 +96,7 @@ configure them with ``mistune.Renderer``:
 * **parse_block_html**: parse text only in block level html.
 * **parse_inline_html**: parse text only in inline level html.
 * **embed_images**: embed images in the html.
+* **embed_local_images**: embed images in the HTML that resolve to local files.
 
 When using the default renderer, you can use one of the following shortcuts::
 

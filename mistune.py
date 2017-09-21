@@ -11,6 +11,8 @@
 import re
 import inspect
 import base64
+import os
+import imghdr
 
 __version__ = '0.7.4'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
@@ -39,6 +41,25 @@ _valid_end = r'(?!:/|[^\w\s@]*@)\b'
 _valid_attr = r'''\s*[a-zA-Z\-](?:\=(?:"[^"]*"|'[^']*'|[^\s'">]+))?'''
 _block_tag = r'(?!(?:%s)\b)\w+%s' % ('|'.join(_inline_tags), _valid_end)
 _scheme_blacklist = ('javascript:', 'vbscript:')
+
+try:
+    unicode
+except NameError:
+    _is_python3 = True
+else:
+    _is_python3 = False
+
+_image_mime_map = {
+    'gif': 'image/gif',
+    'pbm': 'image/x-portable-bitmap',
+    'pgm': 'image/x-portable-graymap',
+    'ppm': 'image/x-portable-pixmap',
+    'tiff': 'image/tiff',
+    'xbm': 'image/x-xbitmap',
+    'jpeg': 'image/jpeg',
+    'bmp': 'image/x-ms-bmp',
+    'png': 'image/png',
+}
 
 
 def _pure_pattern(regex):
@@ -666,7 +687,15 @@ class InlineLexer(object):
 
 
 class _ImageEmbedder(object):
-    def _try_http3(self):
+    def __init__(self):
+        if _is_python3 is True:
+            self.__string_normalize = lambda s: s.decode('utf-8')
+        else:
+            self.__string_normalize = lambda s: s
+
+    def _get_http3(self):
+        import urllib.request
+
         def read_http(url):
             r = urllib.request.urlopen(url)
             content = r.read()
@@ -674,15 +703,9 @@ class _ImageEmbedder(object):
 
             return content, content_type
 
-        try:
-            import urllib.request
-        except ImportError:
-            self.__http_requestor = None
-        else:
-            self.__http_requestor = read_http
-            self.__string_normalize = lambda x: x.decode('utf-8')
+        return read_http
 
-    def _try_http2(self):
+    def _get_http2(self):
         import urllib2
 
         def read_http(url):
@@ -692,42 +715,54 @@ class _ImageEmbedder(object):
 
             return content, content_type
 
-        self.__http_requestor = read_http
-        self.__string_normalize = lambda x: x
+        return read_http
 
     def _http(self, url):
         try:
-            requestor = self.__http_requestor
+            requestor = self._http_requestor
         except AttributeError:
             requestor = None
 
         if requestor is None:
-            # Python 3
-            self._try_http3()
+            if _is_python3 is True:
+                self._http_requestor = self._get_http3()
+            else:
+                self._http_requestor = self._get_http2()
 
-            # Python 2
-
-            if self.__http_requestor is None:
-                self._try_http2()
-
-            requestor = self.__http_requestor
+            requestor = self._http_requestor
 
         return requestor(url)
 
     def _get_base64_with_image_url(self, url):
         raw_image, content_type = self._http(url)
+
         encoded_image = base64.b64encode(raw_image)
         encoded_image = self.__string_normalize(encoded_image)
 
         return encoded_image, content_type
 
-    def get_embedded_image_with_url(self, url, attributes={}, use_xhtml=False):
+    def _get_base64_with_image_filepath(self, filepath):
+        with open(filepath, 'rb') as f:
+            raw_image = f.read()
+
+        image_type = imghdr.what('', h=raw_image)
+        mimetype = _image_mime_map[image_type]
+
+        encoded_image = base64.b64encode(raw_image)
+        encoded_image = self.__string_normalize(encoded_image)
+
+        return encoded_image, mimetype
+
+    def get_embedded_image(self, url, attributes={}, use_xhtml=False, allow_local=False):
         if use_xhtml:
             tag_tail = ' />'
         else:
             tag_tail = '>'
 
-        encoded_image, content_type = self._get_base64_with_image_url(url)
+        if allow_local is True and os.path.exists(url) is True:
+            encoded_image, content_type = self._get_base64_with_image_filepath(url)
+        else:
+            encoded_image, content_type = self._get_base64_with_image_url(url)
 
         suffix = ''
         for key, value in attributes.items():
@@ -955,7 +990,9 @@ class Renderer(object):
         if title:
             title = escape(title, quote=True)
 
-        if self.options.get('embed_images', False) is True:
+        allow_http_embed = self.options.get('embed_images', False)
+        allow_local_embed = self.options.get('embed_local_images', False)
+        if allow_http_embed is True or allow_local_embed is True:
             ie = _ImageEmbedder()
 
             attributes = {
@@ -965,10 +1002,11 @@ class Renderer(object):
             if title:
                 attributes['title'] = title
 
-            html = ie.get_embedded_image_with_url(
+            html = ie.get_embedded_image(
                     src,
                     use_xhtml=use_xhtml,
-                    attributes=attributes)
+                    attributes=attributes,
+                    allow_local=allow_local_embed)
 
             return html
         else:

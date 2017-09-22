@@ -34,7 +34,7 @@ Features
 
 * **Pure Python**. Tested in Python 2.6+, Python 3.3+ and PyPy.
 * **Very Fast**. It is the fastest in all **pure Python** markdown parsers.
-* **More Features**. Table, footnotes, autolink, fenced code etc.
+* **More Features**. Table, footnotes, autolink, fenced code, image embedding etc.
 
 View the `benchmark results <https://github.com/lepture/mistune/issues/1>`_.
 
@@ -95,6 +95,8 @@ configure them with ``mistune.Renderer``:
 * **use_xhtml**: if set to *True*, all tags will be in xhtml, for example: ``<hr />``.
 * **parse_block_html**: parse text only in block level html.
 * **parse_inline_html**: parse text only in inline level html.
+* **embed_images**: embed images in the html.
+* **embed_local_images**: embed images in the HTML that resolve to local files.
 
 When using the default renderer, you can use one of the following shortcuts::
 

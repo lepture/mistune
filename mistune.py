@@ -75,8 +75,9 @@ def escape(text, quote=False, smart_amp=True):
 def escape_link(url):
     """Remove dangerous URL schemes like javascript: and escape afterwards."""
     lower_url = url.lower().strip('\x00\x1a \n\r\t')
+
     for scheme in _scheme_blacklist:
-        if lower_url.startswith(scheme):
+        if re.sub(r'[^A-Za-z0-9\/:]+', '', lower_url).startswith(scheme):
             return ''
     return escape(url, quote=True, smart_amp=False)
 
@@ -844,7 +845,7 @@ class Renderer(object):
         :param link: link content or email address.
         :param is_email: whether this is an email or not.
         """
-        text = link = escape(link)
+        text = link = escape_link(link)
         if is_email:
             link = 'mailto:%s' % link
         return '<a href="%s">%s</a>' % (link, text)

@@ -23,6 +23,8 @@ def test_safe_links():
         ('javascript:alert`1`', ''),
         # bypass attempt
         ('jAvAsCrIpT:alert`1`', ''),
+        # bypass with newline 
+        ('javasc\nript:alert`1`', ''),
         # javascript pseudo protocol with entities
         ('javascript&colon;alert`1`', 'javascript&amp;colon;alert`1`'),
         # javascript pseudo protocol with prefix (dangerous in Chrome)

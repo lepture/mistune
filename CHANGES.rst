@@ -3,6 +3,18 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.8
+~~~~~~~~~~~
+
+Released on Oct. 26, 2017
+
+* Remove non breaking spaces preprocessing
+* Remove rev and rel attribute for footnotes
+* Fix bypassing XSS vulnerability by junorouse
+
+This version is strongly recommended, since it fixed
+a security issue.
+
 Version 0.7.4
 ~~~~~~~~~~~~~
 

@@ -2,17 +2,18 @@ build: false
 
 environment:
   matrix:
-    - PYTHON: "C:/Python27"
-    - PYTHON: "C:/Python33"
-    - PYTHON: "C:/Python34"
+    - PYTHON: "C:\\Python27-x64"
+      TOX_ENV: "py27-crypto"
+
+    - PYTHON: "C:\\Python35-x64"
+      TOX_ENV: "py35-crypto"
 
 init:
-  - "ECHO %PYTHON%"
+  - SET PATH=%PYTHON%;%PATH%
+  - python -c "import sys;sys.stdout.write(sys.version)"
 
 install:
-  - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:/get-pip.py')
-  - "%PYTHON%/python.exe C:/get-pip.py"
-  - "%PYTHON%/Scripts/pip.exe install nose"
+  - python -m pip install nose
 
 test_script:
-  - "%PYTHON%/Scripts/nosetests.exe -s"
+  - python -m nose -s

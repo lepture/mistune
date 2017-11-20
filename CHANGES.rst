@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.8.1
+~~~~~~~~~~~~~
+
+Released on Nov. 07, 2017
+
+* Security fix CVE-2017-16876, thanks Dawid Czarnecki
+
 Version 0.8
 ~~~~~~~~~~~
 

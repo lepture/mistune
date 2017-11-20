@@ -11,7 +11,7 @@
 import re
 import inspect
 
-__version__ = '0.8'
+__version__ = '0.8.1'
 __author__ = 'Hsiaoming Yang <me@lepture.com>'
 __all__ = [
     'BlockGrammar', 'BlockLexer',
@@ -48,7 +48,8 @@ def _pure_pattern(regex):
 
 
 def _keyify(key):
-    return _key_pattern.sub(' ', key.lower())
+    key = escape(key.lower(), quote=True)
+    return _key_pattern.sub(' ', key)
 
 
 def escape(text, quote=False, smart_amp=True):
@@ -445,7 +446,8 @@ class InlineGrammar(object):
     inline_html = re.compile(
         r'^(?:%s|%s|%s)' % (
             r'<!--[\s\S]*?-->',
-            r'<(\w+%s)((?:%s)*?)\s*>([\s\S]*?)<\/\1>' % (_valid_end, _valid_attr),
+            r'<(\w+%s)((?:%s)*?)\s*>([\s\S]*?)<\/\1>' % (
+                _valid_end, _valid_attr),
             r'<\w+%s(?:%s)*?\s*\/?>' % (_valid_end, _valid_attr),
         )
     )

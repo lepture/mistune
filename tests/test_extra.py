@@ -116,6 +116,21 @@ def test_parse_block_html():
     assert '<strong>' not in ret
 
 
+def test_parse_nested_html():
+    ret = mistune.markdown(
+        '<div><a href="http://example.org">**foo**</a></div>',
+        parse_block_html=True, escape=False
+    )
+    assert '<div><a href="http://example.org">' in ret
+    assert '<strong>' not in ret
+
+    ret = mistune.markdown(
+        '<div><a href="http://example.org">**foo**</a></div>',
+        parse_block_html=True, parse_inline_html=True, escape=False
+    )
+    assert '<div><a href="http://example.org"><strong>' in ret
+
+
 def test_trigger_more_cases():
     markdown = mistune.Markdown(
         inline=mistune.InlineLexer,

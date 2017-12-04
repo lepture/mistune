@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.8.2
+~~~~~~~~~~~~~
+
+Relased on Dec. 04, 2017
+
+* Fix ``_keyify`` with lower case.
+
+
 Version 0.8.1
 ~~~~~~~~~~~~~
 

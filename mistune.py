@@ -503,7 +503,7 @@ class InlineLexer(object):
         'linebreak', 'strikethrough', 'text',
     ]
     inline_html_rules = [
-        'escape', 'autolink', 'url', 'link', 'reflink',
+        'escape', 'inline_html', 'autolink', 'url', 'link', 'reflink',
         'nolink', 'double_emphasis', 'emphasis', 'code',
         'linebreak', 'strikethrough', 'text',
     ]

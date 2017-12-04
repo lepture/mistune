@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.8.3
+~~~~~~~~~~~~~
+
+Relased on Dec. 04, 2017
+
+* Fix nested html issue. `#137`_
+
+.. _`#137`: https://github.com/lepture/mistune/pull/137
+
+
 Version 0.8.2
 ~~~~~~~~~~~~~
 

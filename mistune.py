@@ -373,9 +373,9 @@ class BlockLexer(object):
         cells = cells.split('\n')
         for i, v in enumerate(cells):
             v = re.sub(r'^ *\| *| *\| *$', '', v)
-            cells[i] = re.split(r' *\| *', v)
+            cells[i] = re.split(r' *(?<!\\)\| *', v)
 
-        item['cells'] = cells
+        item['cells'] = self._process_cells(cells)
         self.tokens.append(item)
 
     def parse_nptable(self, m):
@@ -384,9 +384,9 @@ class BlockLexer(object):
         cells = re.sub(r'\n$', '', m.group(3))
         cells = cells.split('\n')
         for i, v in enumerate(cells):
-            cells[i] = re.split(r' *\| *', v)
+            cells[i] = re.split(r' *(?<!\\)\| *', v)
 
-        item['cells'] = cells
+        item['cells'] = self._process_cells(cells)
         self.tokens.append(item)
 
     def _process_table(self, m):
@@ -411,6 +411,14 @@ class BlockLexer(object):
             'align': align,
         }
         return item
+
+    def _process_cells(self, cells):
+        for i, line in enumerate(cells):
+            for c, cell in enumerate(line):
+                # de-escape any pipe inside the cell here
+                cells[i][c] = re.sub('\\\\\|', '|', cell)
+
+        return cells
 
     def parse_block_html(self, m):
         tag = m.group(1)

@@ -1,4 +1,6 @@
-* unordered 1
-
-* unordered 2
-1. ordered 1
+1. foo
+- bar
+    1. one
+    2. two
+    * three
+- foobar

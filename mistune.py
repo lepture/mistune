@@ -123,7 +123,7 @@ class BlockGrammar(object):
         r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
         r'|\n+(?=%s)'  # def links
         r'|\n+(?=%s)'  # def footnotes\
-        r'|\n+(?=(?(3)\d+\.|[*+-]) )'   # heterogeneous bullet
+        r'|\n+(?=\1(?(3)\d+\.|[*+-]) )'   # heterogeneous bullet
         r'|\n{2,}'
         r'(?! )'
         r'(?!\1(?:[*+-]|\d+\.) )\n*'

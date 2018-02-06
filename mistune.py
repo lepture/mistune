@@ -118,11 +118,12 @@ class BlockGrammar(object):
     lheading = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
     block_quote = re.compile(r'^( *>[^\n]+(\n[^\n]+)*\n*)+')
     list_block = re.compile(
-        r'^( *)([*+-]|\d+\.) [\s\S]+?'
+        r'^( *)(?=[*+-]|\d+\.)(([*+-])?(?:\d+\.)?) [\s\S]+?'
         r'(?:'
         r'\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))'  # hrule
         r'|\n+(?=%s)'  # def links
-        r'|\n+(?=%s)'  # def footnotes
+        r'|\n+(?=%s)'  # def footnotes\
+        r'|\n+(?=\1(?(3)\d+\.|[*+-]) )'   # heterogeneous bullet
         r'|\n{2,}'
         r'(?! )'
         r'(?!\1(?:[*+-]|\d+\.) )\n*'

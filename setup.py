@@ -30,8 +30,8 @@ else:
     is_pypy = hasattr(sys, 'pypy_version_info')
 
     ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
-    if sys.platform == 'win32' and sys.version_info > (2, 6):
-        # 2.6's distutils.msvc9compiler can raise an IOError when failing to
+    if sys.platform == 'win32':
+        # distutils.msvc9compiler can raise an IOError when failing to
         # find the compiler
         ext_errors += (IOError,)
 

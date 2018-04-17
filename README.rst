@@ -56,6 +56,10 @@ Basic Usage
 
 A simple API that render a markdown formatted text:
 
+.. code:: shell
+
+    ~ echo 'I am using **mistune markdown parser**' | mistune -
+
 .. code:: python
 
     import mistune

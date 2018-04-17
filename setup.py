@@ -103,6 +103,7 @@ def run_setup(with_binary):
         cmdclass=cmdclass,
         ext_modules=ext_modules,
         zip_safe=False,
+        scripts=['bin/mistune'],
         platforms='any',
         tests_require=['nose'],
         test_suite='nose.collector',

@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+
+import argparse
+import sys
+
+import mistune
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', type=argparse.FileType('r'), default=sys.stdin)
+    args = parser.parse_args()
+    print(mistune.markdown(args.file.read()))

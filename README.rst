@@ -32,7 +32,7 @@ inspired by marked_.
 Features
 --------
 
-* **Pure Python**. Tested in Python 2.6+, Python 3.3+ and PyPy.
+* **Pure Python**. Tested in Python 2.7, Python 3.5+ and PyPy.
 * **Very Fast**. It is the fastest in all **pure Python** markdown parsers.
 * **More Features**. Table, footnotes, autolink, fenced code etc.
 

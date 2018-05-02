@@ -30,8 +30,8 @@ else:
     is_pypy = hasattr(sys, 'pypy_version_info')
 
     ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
-    if sys.platform == 'win32' and sys.version_info > (2, 6):
-        # 2.6's distutils.msvc9compiler can raise an IOError when failing to
+    if sys.platform == 'win32':
+        # distutils.msvc9compiler can raise an IOError when failing to
         # find the compiler
         ext_errors += (IOError,)
 
@@ -113,10 +113,11 @@ def run_setup(with_binary):
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2.6',
+            'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3.3',
-            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             'Topic :: Text Processing :: Markup',

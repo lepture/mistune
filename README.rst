@@ -72,6 +72,12 @@ If you care about performance, it is better to re-use the Markdown instance:
     markdown = mistune.Markdown()
     markdown('I am using **mistune markdown parser**')
 
+If you want to use mistune on the command-line:
+
+.. code:: shell
+
+    python -c "import sys,mistune; print mistune.markdown(open(sys.argv[1]).read())" foo.md
+    
 Mistune has enabled all features by default. You don't have to configure
 anything. But there are options for you to change the parser behaviors.
 

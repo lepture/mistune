@@ -243,15 +243,17 @@ Contribution & Extensions
 Mistune itself doesn't accept any extension. It will always be a simple one
 file script.
 
-If you want to add features, you can head over to `mistune-contrib`_.
+If you want to add features, you can head over to ``mistune-contrib`` (https://github.com/lepture/mistune-contrib).
 
-Here are some extensions already in `mistune-contrib`_:
+Here are some extensions already in ``mistune-contrib``:
 
 * Math/MathJax features
 * Highlight Code Renderer
 * TOC table of content features
 * MultiMarkdown Metadata parser
 
-Get inspired with the contrib repository.
+To install ``mistune-contrib``:
 
-.. _`mistune-contrib`: https://github.com/lepture/mistune-contrib
+.. code:: shell
+
+    pip install mistune-contrib

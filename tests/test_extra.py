@@ -156,3 +156,9 @@ def test_hard_wrap_renderer():
     renderer = mistune.Renderer(hard_wrap=True)
     func = mistune.Markdown(renderer=renderer)
     assert '<br>' in func(text)
+
+
+def test_use_fn_prefix():
+    ret = mistune.markdown('paragraph [^1]\n[^1]: footnote', fn_prefix='footnote')
+    assert '<sup class="footnote-ref" id="footnoteref-1"><a href="#footnote-1">' in ret
+    assert '<li id="footnote-1"><p>footnote<a href="#footnoteref-1" class="footnote">' in ret

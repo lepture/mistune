@@ -911,10 +911,11 @@ class Renderer(object):
         :param key: identity key for the footnote.
         :param index: the index count of current footnote.
         """
+        prefix = self.options.get('fn_prefix', 'fn')
         html = (
-            '<sup class="footnote-ref" id="fnref-%s">'
-            '<a href="#fn-%s">%d</a></sup>'
-        ) % (escape(key), escape(key), index)
+            '<sup class="footnote-ref" id="%sref-%s">'
+            '<a href="#%s-%s">%d</a></sup>'
+        ) % (prefix, escape(key), prefix, escape(key), index)
         return html
 
     def footnote_item(self, key, text):
@@ -923,15 +924,16 @@ class Renderer(object):
         :param key: identity key for the footnote.
         :param text: text content of the footnote.
         """
+        prefix = self.options.get('fn_prefix', 'fn')
         back = (
-            '<a href="#fnref-%s" class="footnote">&#8617;</a>'
-        ) % escape(key)
+            '<a href="#%sref-%s" class="footnote">&#8617;</a>'
+        ) % (prefix, escape(key))
         text = text.rstrip()
         if text.endswith('</p>'):
             text = re.sub(r'<\/p>$', r'%s</p>' % back, text)
         else:
             text = '%s<p>%s</p>' % (text, back)
-        html = '<li id="fn-%s">%s</li>\n' % (escape(key), text)
+        html = '<li id="%s-%s">%s</li>\n' % (prefix, escape(key), text)
         return html
 
     def footnotes(self, text):

@@ -9,7 +9,7 @@ root = os.path.dirname(__file__)
 
 
 class MathBlockGrammar(mistune.BlockGrammar):
-    block_math = re.compile("^\$\$(.*?)\$\$", re.DOTALL)
+    block_math = re.compile(r'^\$\$(.*?)\$\$', re.DOTALL)
     latex_environment = re.compile(
         r"^\\begin\{([a-z]*\*?)\}(.*?)\\end\{\1\}",
         re.DOTALL
@@ -41,7 +41,7 @@ class MathBlockLexer(mistune.BlockLexer):
 
 
 class MathInlineGrammar(mistune.InlineGrammar):
-    math = re.compile("^\$(.+?)\$")
+    math = re.compile(r'^\$(.+?)\$')
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~$]|https?://| {2,}\n|$)')
 
 

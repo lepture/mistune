@@ -109,7 +109,7 @@ class BlockGrammar(object):
     newline = re.compile(r'^\n+')
     block_code = re.compile(r'^( {4}[^\n]+\n*)+')
     fences = re.compile(
-        r'^ *(`{3,}|~{3,}) *(\S+)? *\n'  # ```lang
+        r'^ *(`{3,}|~{3,}) *([^`\s]+)? *\n'  # ```lang
         r'([\s\S]+?)\s*'
         r'\1 *(?:\n+|$)'  # ```
     )

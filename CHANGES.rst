@@ -12,6 +12,7 @@ Not released.
 * Fix ordered and unordered list. `#152`_
 * Fix spaces between = in HTML tags
 * Add max_recursive_depth for list and blockquote.
+* Fix fences code block.
 
 .. _`#150`: https://github.com/lepture/mistune/pull/150
 .. _`#152`: https://github.com/lepture/mistune/pull/152

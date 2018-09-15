@@ -149,6 +149,9 @@ def test_not_escape_block_tags():
 def test_not_escape_inline_tags():
     text = '<a name="top"></a>'
     assert text in mistune.markdown(text, escape=False)
+    # space between =
+    text = '<span style = "color:red;">test</span>'
+    assert text in mistune.markdown(text, escape=False)
 
 
 def test_hard_wrap_renderer():

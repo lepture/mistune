@@ -201,6 +201,9 @@ class BlockLexer(object):
             rules = self.grammar_class()
 
         self.rules = rules
+        self._max_recursive_depth = kwargs.get('max_recursive_depth', 6)
+        self._list_depth = 0
+        self._blockquote_depth = 0
 
     def __call__(self, text, rules=None):
         return self.parse(text, rules)
@@ -275,9 +278,14 @@ class BlockLexer(object):
             'type': 'list_start',
             'ordered': '.' in bull,
         })
-        cap = m.group(0)
-        self._process_list_item(cap, bull)
+        self._list_depth += 1
+        if self._list_depth > self._max_recursive_depth:
+            self.parse_text(m)
+        else:
+            cap = m.group(0)
+            self._process_list_item(cap, bull)
         self.tokens.append({'type': 'list_end'})
+        self._list_depth -= 1
 
     def _process_list_item(self, cap, bull):
         cap = self.rules.list_item.findall(cap)
@@ -321,10 +329,15 @@ class BlockLexer(object):
 
     def parse_block_quote(self, m):
         self.tokens.append({'type': 'block_quote_start'})
-        # clean leading >
-        cap = _block_quote_leading_pattern.sub('', m.group(0))
-        self.parse(cap)
+        self._blockquote_depth += 1
+        if self._blockquote_depth > self._max_recursive_depth:
+            self.parse_text(m)
+        else:
+            # clean leading >
+            cap = _block_quote_leading_pattern.sub('', m.group(0))
+            self.parse(cap)
         self.tokens.append({'type': 'block_quote_end'})
+        self._blockquote_depth -= 1
 
     def parse_def_links(self, m):
         key = _keyify(m.group(1))

@@ -11,6 +11,7 @@ Not released.
 * Support an escaped pipe char in a table cell. `#150`_
 * Fix ordered and unordered list. `#152`_
 * Fix spaces between = in HTML tags
+* Add max_recursive_depth for list and blockquote.
 
 .. _`#150`: https://github.com/lepture/mistune/pull/150
 .. _`#152`: https://github.com/lepture/mistune/pull/152

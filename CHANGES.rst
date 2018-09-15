@@ -3,6 +3,18 @@ Changelog
 
 Here is the full history of mistune.
 
+Version 0.8.4
+~~~~~~~~~~~~~
+
+Not released.
+
+* Support an escaped pipe char in a table cell. `#150`_
+* Fix ordered and unordered list. `#152`_
+* Fix spaces between = in HTML tags
+
+.. _`#150`: https://github.com/lepture/mistune/pull/150
+.. _`#152`: https://github.com/lepture/mistune/pull/152
+
 Version 0.8.3
 ~~~~~~~~~~~~~
 

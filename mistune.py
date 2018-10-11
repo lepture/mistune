@@ -280,7 +280,9 @@ class BlockLexer(object):
         })
         self._list_depth += 1
         if self._list_depth > self._max_recursive_depth:
+            self.tokens.append({'type': 'list_item_start'})
             self.parse_text(m)
+            self.tokens.append({'type': 'list_item_end'})
         else:
             cap = m.group(0)
             self._process_list_item(cap, bull)

@@ -6,7 +6,7 @@ Here is the full history of mistune.
 Version 0.8.4
 ~~~~~~~~~~~~~
 
-Not released.
+Released on Oct. 11, 2018
 
 * Support an escaped pipe char in a table cell. `#150`_
 * Fix ordered and unordered list. `#152`_

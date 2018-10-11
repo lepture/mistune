@@ -1,7 +1,7 @@
 Mistune
 =======
 
-The fastest markdown parser in pure Python with renderer features,
+The 2nd fastest markdown parser in pure Python with renderer features,
 inspired by marked_.
 
 .. image:: https://img.shields.io/badge/donate-lepture-green.svg
@@ -33,7 +33,7 @@ Features
 --------
 
 * **Pure Python**. Tested in Python 2.7, Python 3.5+ and PyPy.
-* **Very Fast**. It is the fastest in all **pure Python** markdown parsers.
+* **Very Fast**. It is the 2nd fastest in all **pure Python** markdown parsers.
 * **More Features**. Table, footnotes, autolink, fenced code etc.
 
 View the `benchmark results <https://github.com/lepture/mistune/issues/1>`_.

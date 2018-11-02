@@ -4,7 +4,7 @@ Mistune
 The fastest markdown parser in pure Python with renderer features,
 inspired by marked_.
 
-.. image:: https://img.shields.io/badge/donate-lepture-green.svg
+.. image:: https://img.shields.io/badge/donate-lepture-ff69b4.svg
    :target: https://lepture.com/donate
    :alt: Donate lepture
 .. image:: https://img.shields.io/pypi/wheel/mistune.svg?style=flat

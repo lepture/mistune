@@ -1,10 +1,10 @@
 
 class ASTRenderer(object):
-    IS_AST = True
+    IS_TREE = True
 
 
 class HTMLRenderer(object):
-    IS_AST = False
+    IS_TREE = False
 
     def text(self, text):
         return text
@@ -34,7 +34,7 @@ class HTMLRenderer(object):
         return '<del>' + text + '</del>'
 
     def linebreak(self):
-        return '<br/>'
+        return '<br />\n'
 
     def inline_html(self, html):
         return html

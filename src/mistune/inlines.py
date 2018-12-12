@@ -1,7 +1,14 @@
 import re
+try:
+    import html
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
+    html = None
 from .scanner import Scanner
 
-ESCAPE = r'''\\[\\!"#$%&'()*+,.\/:;<=>?@\[\]^`{}|_~-]'''
+PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
+ESCAPE = r'\\[' + PUNCTUATION + ']'
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
@@ -10,7 +17,7 @@ HTML_ATTRIBUTES = (
 ESCAPE_CHAR = re.compile(r'''\\([\\!"#$%&'()*+,.\/:;<=>?@\[\]^`{}|_~-])''')
 
 
-class InlineTokenizer(object):
+class InlineParser(object):
     ESCAPE = ESCAPE
 
     #: link or email syntax::
@@ -26,9 +33,13 @@ class InlineTokenizer(object):
         r'!?\[('
         r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
         r')\]\(\s*'
-        r'(?P<link_url><)?([\s\S]*?)(?(link_url)>)'
-        r'''(?:\s+(?P<link_quote>['"])([\s\S]*?)(?P=link_quote))?\s*'''
-        r'\)'
+
+        r'(<(?:\\[<>]?|[^\s<>\\])*>|'
+        r'(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)'
+
+        r'(?:\s+('
+        r'''"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)'''
+        r'))?\s*\)'
     )
 
     #: Get link from references. References are defined in DEF_LINK in blocks.
@@ -42,7 +53,7 @@ class InlineTokenizer(object):
         r'\s*\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
     )
 
-    #: simple form of reference link::
+    #: Simple form of reference link::
     #:
     #:    [an example]
     #:
@@ -56,9 +67,12 @@ class InlineTokenizer(object):
     #:    *text*
     #:    _text_
     EMPHASIS = (
-        r'\b_((?:__|[^_])+?)_\b'  # _word_
-        r'|'
-        r'\*((?:\*\*|[^\*])+?)\*(?!\*)'  # *word*
+        r'\b_[^\s_]_(?!_)\b|'  # _s_
+        r'\*[^\s*"<\[]\*(?!\*)|'  # *s*
+        r'\b_[^\s][\s\S]*?[^\s_]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
+        r'\b_[^\s_][\s\S]*?[^\s]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
+        r'\*[^\s"<\[][\s\S]*?[^\s*]\*(?!\*)|'
+        r'\*[^\s*"<\[][\s\S]*?[^\s]\*(?!\*)'
     )
 
     #: strong with ** or __::
@@ -66,16 +80,17 @@ class InlineTokenizer(object):
     #:    **text**
     #:    __text__
     STRONG = (
-        r'__([\s\S]+?)__(?!_)'  # __word__
-        r'|'
-        r'\*\*([\s\S]+?)\*\*(?!\*)'  # **word**
+        r'\b__[^\s]__(?!_)\b|'
+        r'\*\*[^\s]\*\*(?!\*)|'
+        r'\b__[^\s][\s\S]*?[^\s]__(?!_)\b|'
+        r'\*\*[^\s][\s\S]*?[^\s]\*\*(?!\*)'
     )
 
     #: codespan with `::
     #:
     #:    `code`
     CODESPAN = (
-        r'(`+)\s*((?:\\`|[^\1])*?)\s*\1(?!`)'
+        r'(?<!\\|`)(?:\\\\)*(`+)(?!`)([\s\S]+?)(?<!`)\1(?!`)'
     )
 
     #: linebreak leaves two spaces at the end of line
@@ -124,27 +139,36 @@ class InlineTokenizer(object):
         self._cached_sc = {}
 
     def register_rule(self, name, pattern, method):
-        self.rules[name] = (pattern, lambda m: method(self, m))
+        self.rules[name] = (pattern, lambda m, state: method(self, m, state))
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
         return self.renderer.text(text)
 
     def parse_auto_link(self, m, state):
-        return self.renderer.link(m.group(1))
+        text = m.group(1)
+        if '@' in text:
+            link = 'mailto:' + text
+        else:
+            link = text
+        return self.renderer.link(escape_url(link), text)
 
     def parse_std_link(self, m, state):
         line = m.group(0)
         text = m.group(1)
-        link = ESCAPE_CHAR.sub(r'\1', m.group(3))
-        title = m.group(5)
-        if title:
-            title = ESCAPE_CHAR.sub(r'\1', title)
+        link = ESCAPE_CHAR.sub(r'\1', m.group(2))
+        if link.startswith('<') and link.endswith('>'):
+            link = link[1:-1]
 
-        # TODO: parse text
+        title = m.group(3)
+        if title:
+            title = ESCAPE_CHAR.sub(r'\1', title[1:-1])
+
         if line[0] == '!':
             return self.renderer.image(link, text, title)
-        return self.renderer.link(link, text, title)
+
+        text = self._process_link_text(text, state)
+        return self.renderer.link(escape_url(link), text, title)
 
     def parse_ref_link(self, m, state):
         line = m.group(0)
@@ -157,14 +181,24 @@ class InlineTokenizer(object):
         if not def_links or key not in def_links:
             return self.renderer.text(line)
 
-        # TODO: parse text
         link, title = def_links.get(key)
         if line[0] == '!':
             return self.renderer.image(link, text, title)
-        return self.renderer.link(link, text, title)
+
+        if m.group(2):
+            text = self._process_link_text(text, state)
+        return self.renderer.link(escape_url(link), text, title)
+
+    def _process_link_text(self, text, state):
+        if state.get('_in_link'):
+            return text
+        state['_in_link'] = True
+        text = self.parse(text)
+        state['_in_link'] = False
+        return text
 
     def parse_url_link(self, m, state):
-        return self.renderer.link(m.group(0))
+        return self.renderer.link(escape_url(m.group(0)))
 
     def parse_footnote(self, m, state):
         key = m.group(1)
@@ -183,16 +217,15 @@ class InlineTokenizer(object):
         return self.renderer.footnote_ref(key, index)
 
     def parse_emphasis(self, m, state):
-        text = m.group(1) or m.group(2)
+        text = m.group(0)[1:-1]
         return self.renderer.emphasis(self.parse(text))
 
     def parse_strong(self, m, state):
-        text = m.group(1) or m.group(2)
+        text = m.group(0)[2:-2]
         return self.renderer.strong(self.parse(text))
 
     def parse_codespan(self, m, state):
-        code = m.group(2)
-        code = ESCAPE_CHAR.sub(r'\1', code)
+        code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
         return self.renderer.codespan(code)
 
     def parse_strikethrough(self, m, state):
@@ -205,29 +238,57 @@ class InlineTokenizer(object):
     def parse_inline_html(self, m, state):
         return self.renderer.inline_html(m.group(0))
 
+    def parse_text(self, text):
+        text = escape(text)
+        return self.renderer.text(text)
+
     def parse(self, text, state=None, rules=None):
         if rules is None:
             rules = self.default_rules
         if state is None:
             state = {}
 
-        sc = self._create_scanner(rules, state)
-        tokens = sc.iter(text, self.renderer.text)
-        if self.renderer.IS_AST:
+        sc = self._create_scanner(rules)
+        tokens = self._scan(sc, text, state)
+        if self.renderer.IS_TREE:
             return list(tokens)
         return ''.join(tokens)
 
-    def _create_scanner(self, rules, state):
+    def _scan(self, sc, text, state):
+        for name, m in sc.iter(text):
+            if name == '_text_':
+                yield self.parse_text(m)
+            else:
+                method = self.rules.get(name)[1]
+                yield method(m, state)
+
+    def _create_scanner(self, rules):
         sc_key = '|'.join(rules)
         sc = self._cached_sc.get(sc_key)
         if sc:
             return sc
 
-        def _lexicon():
-            for n in rules:
-                pattern, method = self.rules[n]
-                yield pattern, lambda m: method(m, state)
-
-        sc = Scanner(_lexicon())
+        lexicon = [(self.rules[n][0], n) for n in rules]
+        sc = Scanner(lexicon)
         self._cached_sc[sc_key] = sc
         return sc
+
+    def __call__(self, text, state=None):
+        return self.parse(text, state)
+
+
+def escape(s, quote=True):
+    s = s.replace("&", "&amp;")
+    s = s.replace("<", "&lt;")
+    s = s.replace(">", "&gt;")
+    if quote:
+        s = s.replace('"', "&quot;")
+        s = s.replace("'", "&#x27;")
+    return s
+
+
+def escape_url(link):
+    safe = '/#:()*?=%@+,&'
+    if html is None:
+        return quote(link, safe=safe)
+    return html.escape(quote(html.unescape(link), safe=safe))

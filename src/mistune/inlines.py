@@ -5,7 +5,7 @@ try:
 except ImportError:
     from urllib import quote
     html = None
-from .scanner import Scanner
+from .scanner import ScannerParser
 
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE = r'\\[' + PUNCTUATION + ']'
@@ -17,7 +17,7 @@ HTML_ATTRIBUTES = (
 ESCAPE_CHAR = re.compile(r'''\\([\\!"#$%&'()*+,.\/:;<=>?@\[\]^`{}|_~-])''')
 
 
-class InlineParser(object):
+class InlineParser(ScannerParser):
     ESCAPE = ESCAPE
 
     #: link or email syntax::
@@ -114,6 +114,7 @@ class InlineParser(object):
     )
 
     def __init__(self, renderer):
+        super(InlineParser, self).__init__()
         self.renderer = renderer
         self.rules = {
             'escape': (self.ESCAPE, self.parse_escape),
@@ -136,10 +137,6 @@ class InlineParser(object):
             'std_link', 'ref_link', 'ref_link2', 'strong', 'emphasis',
             'codespan', 'strikethrough', 'linebreak',
         )
-        self._cached_sc = {}
-
-    def register_rule(self, name, pattern, method):
-        self.rules[name] = (pattern, lambda m, state: method(self, m, state))
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
@@ -242,39 +239,16 @@ class InlineParser(object):
         text = escape(text)
         return self.renderer.text(text)
 
-    def parse(self, text, state=None, rules=None):
+    def parse(self, s, state=None, rules=None):
         if rules is None:
             rules = self.default_rules
         if state is None:
             state = {}
 
-        sc = self._create_scanner(rules)
-        tokens = self._scan(sc, text, state)
+        tokens = self._scan(s, state, rules)
         if self.renderer.IS_TREE:
             return list(tokens)
         return ''.join(tokens)
-
-    def _scan(self, sc, text, state):
-        for name, m in sc.iter(text):
-            if name == '_text_':
-                yield self.parse_text(m)
-            else:
-                method = self.rules.get(name)[1]
-                yield method(m, state)
-
-    def _create_scanner(self, rules):
-        sc_key = '|'.join(rules)
-        sc = self._cached_sc.get(sc_key)
-        if sc:
-            return sc
-
-        lexicon = [(self.rules[n][0], n) for n in rules]
-        sc = Scanner(lexicon)
-        self._cached_sc[sc_key] = sc
-        return sc
-
-    def __call__(self, text, state=None):
-        return self.parse(text, state)
 
 
 def escape(s, quote=True):

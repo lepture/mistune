@@ -12,6 +12,7 @@ class Markdown(object):
 
         self.block = block
         self.inline = inline
+        self.renderer = inline.renderer
 
     def use(self, plugin):
         plugin(self)

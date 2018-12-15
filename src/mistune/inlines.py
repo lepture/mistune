@@ -125,7 +125,7 @@ class InlineParser(ScannerParser):
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
-        return self.renderer.text(text)
+        return 'text', text
 
     def parse_auto_link(self, m, state):
         text = m.group(1)
@@ -133,7 +133,7 @@ class InlineParser(ScannerParser):
             link = 'mailto:' + text
         else:
             link = text
-        return self.renderer.link(escape_url(link), text)
+        return 'link', escape_url(link), text
 
     def parse_std_link(self, m, state):
         line = m.group(0)
@@ -147,10 +147,10 @@ class InlineParser(ScannerParser):
             title = ESCAPE_CHAR.sub(r'\1', title[1:-1])
 
         if line[0] == '!':
-            return self.renderer.image(link, text, title)
+            return 'image', link, text, title
 
         text = self._process_link_text(text, state)
-        return self.renderer.link(escape_url(link), text, title)
+        return 'link', escape_url(link), text, title
 
     def parse_ref_link(self, m, state):
         line = m.group(0)
@@ -161,15 +161,15 @@ class InlineParser(ScannerParser):
 
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
-            return self.renderer.text(line)
+            return 'text', line
 
         link, title = def_links.get(key)
         if line[0] == '!':
-            return self.renderer.image(link, text, title)
+            return 'image', link, text, title
 
         if m.group(2):
             text = self._process_link_text(text, state)
-        return self.renderer.link(escape_url(link), text, title)
+        return 'link', escape_url(link), text, title
 
     def parse_ref_link2(self, m, state):
         return self.parse_ref_link(m, state)
@@ -183,51 +183,53 @@ class InlineParser(ScannerParser):
         return text
 
     def parse_url_link(self, m, state):
-        return self.renderer.link(escape_url(m.group(0)))
+        return 'link', escape_url(m.group(0))
 
     def parse_footnote(self, m, state):
         key = m.group(1).lower()
         def_footnotes = state.get('def_footnotes')
         if not def_footnotes or key not in def_footnotes:
-            return self.renderer.text(m.group(0))
+            return 'text', m.group(0)
 
         index = state.get('footnote_index', 0)
         index += 1
         state['footnote_index'] = index
         state['footnotes'].append(key)
-        return self.renderer.footnote_ref(key, index)
+        return 'footnote_ref', key, index
 
     def parse_emphasis(self, m, state):
         text = m.group(0)[1:-1]
-        return self.renderer.emphasis(self.parse(text, state))
+        return 'emphasis', self.parse(text, state)
 
     def parse_strong(self, m, state):
         text = m.group(0)[2:-2]
-        return self.renderer.strong(self.parse(text, state))
+        return 'strong', self.parse(text, state)
 
     def parse_codespan(self, m, state):
         code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
-        return self.renderer.codespan(code)
+        return 'codespan', code
 
     def parse_strikethrough(self, m, state):
         text = m.group(1)
-        return self.renderer.strikethrough(self.parse(text, state))
+        return 'strikethrough', self.parse(text, state)
 
     def parse_linebreak(self, m, state):
-        return self.renderer.linebreak()
+        return 'linebreak',
 
     def parse_inline_html(self, m, state):
-        return self.renderer.inline_html(m.group(0))
+        return 'inline_html', m.group(0)
 
     def parse_text(self, text, state):
-        text = escape(text)
-        return self.renderer.text(text)
+        return 'text', escape(text)
 
     def parse(self, s, state, rules=None):
         if rules is None:
             rules = self.default_rules
 
-        tokens = self._scan(s, state, rules)
+        tokens = (
+            self.renderer._get_method(t[0])(*t[1:])
+            for t in self._scan(s, state, rules)
+        )
         if self.renderer.IS_TREE:
             return list(tokens)
         return ''.join(tokens)

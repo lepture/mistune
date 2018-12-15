@@ -141,7 +141,7 @@ class BlockParser(ScannerParser):
 
     def _iter_render(self, tokens, inline, state):
         for tok in tokens:
-            method = getattr(inline.renderer, tok['type'])
+            method = inline.renderer._get_method(tok['type'])
             if 'children' not in tok and 'text' not in tok:
                 yield method()
                 return

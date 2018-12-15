@@ -1,5 +1,19 @@
 
-class AstRenderer(object):
+class BaseRenderer(object):
+    NAME = 'base'
+    IS_TREE = False
+
+    def __init__(self):
+        self._methods = {}
+
+    def _get_method(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            return self._methods.get(name)
+
+
+class AstRenderer(BaseRenderer):
     NAME = 'ast'
     IS_TREE = True
 
@@ -37,14 +51,19 @@ class AstRenderer(object):
             'language': language
         }
 
-    def __getattr__(self, key):
-        try:
-            return object.__getattribute__(self, key)
-        except AttributeError:
-            return lambda children: {'type': key, 'children': children}
+    def _create_default_method(self, name):
+        def __ast(children):
+            return {'type': name, 'children': children}
+        return __ast
+
+    def _get_method(self, name):
+        method = super(AstRenderer, self)._get_method(name)
+        if not method:
+            method = self._create_default_method(name)
+        return method
 
 
-class HTMLRenderer(object):
+class HTMLRenderer(BaseRenderer):
     NAME = 'html'
     IS_TREE = False
 
@@ -105,4 +124,4 @@ class HTMLRenderer(object):
         return html + '>' + code + '</code></pre>\n'
 
     def block_quote(self, text):
-        return '<blockquote>' + text.rstrip() + '</blockquote>\n'
+        return '<blockquote>\n' + text + '</blockquote>\n'

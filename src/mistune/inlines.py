@@ -1,7 +1,7 @@
 import re
 try:
-    import html
     from urllib.parse import quote
+    import html
 except ImportError:
     from urllib import quote
     html = None
@@ -113,30 +113,15 @@ class InlineParser(ScannerParser):
         r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
     )
 
+    RULE_NAMES = (
+        'escape', 'inline_html', 'auto_link', 'url_link', 'footnote',
+        'std_link', 'ref_link', 'ref_link2', 'strong', 'emphasis',
+        'codespan', 'strikethrough', 'linebreak',
+    )
+
     def __init__(self, renderer):
         super(InlineParser, self).__init__()
         self.renderer = renderer
-        self.rules = {
-            'escape': (self.ESCAPE, self.parse_escape),
-            'auto_link': (self.AUTO_LINK, self.parse_auto_link),
-            'url_link': (self.URL_LINK, self.parse_url_link),
-            'std_link': (self.STD_LINK, self.parse_std_link),
-            'ref_link': (self.REF_LINK, self.parse_ref_link),
-            'ref_link2': (self.REF_LINK2, self.parse_ref_link),
-            'footnote': (self.FOOTNOTE, self.parse_footnote),
-            'strong': (self.STRONG, self.parse_strong),
-            'emphasis': (self.EMPHASIS, self.parse_emphasis),
-            'codespan': (self.CODESPAN, self.parse_codespan),
-            'strikethrough': (self.STRIKETHROUGH, self.parse_strikethrough),
-            'linebreak': (self.LINEBREAK, self.parse_linebreak),
-            'inline_html': (self.INLINE_HTML, self.parse_inline_html),
-        }
-
-        self.default_rules = (
-            'escape', 'inline_html', 'auto_link', 'url_link', 'footnote',
-            'std_link', 'ref_link', 'ref_link2', 'strong', 'emphasis',
-            'codespan', 'strikethrough', 'linebreak',
-        )
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
@@ -186,11 +171,14 @@ class InlineParser(ScannerParser):
             text = self._process_link_text(text, state)
         return self.renderer.link(escape_url(link), text, title)
 
+    def parse_ref_link2(self, m, state):
+        return self.parse_ref_link(m, state)
+
     def _process_link_text(self, text, state):
         if state.get('_in_link'):
             return text
         state['_in_link'] = True
-        text = self.parse(text)
+        text = self.parse(text, state)
         state['_in_link'] = False
         return text
 
@@ -198,7 +186,7 @@ class InlineParser(ScannerParser):
         return self.renderer.link(escape_url(m.group(0)))
 
     def parse_footnote(self, m, state):
-        key = m.group(1)
+        key = m.group(1).lower()
         def_footnotes = state.get('def_footnotes')
         if not def_footnotes or key not in def_footnotes:
             return self.renderer.text(m.group(0))
@@ -206,20 +194,16 @@ class InlineParser(ScannerParser):
         index = state.get('footnote_index', 0)
         index += 1
         state['footnote_index'] = index
-
-        if 'footnotes' not in state:
-            state['footnotes'] = [key]
-        else:
-            state['footnotes'].append(key)
+        state['footnotes'].append(key)
         return self.renderer.footnote_ref(key, index)
 
     def parse_emphasis(self, m, state):
         text = m.group(0)[1:-1]
-        return self.renderer.emphasis(self.parse(text))
+        return self.renderer.emphasis(self.parse(text, state))
 
     def parse_strong(self, m, state):
         text = m.group(0)[2:-2]
-        return self.renderer.strong(self.parse(text))
+        return self.renderer.strong(self.parse(text, state))
 
     def parse_codespan(self, m, state):
         code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
@@ -227,7 +211,7 @@ class InlineParser(ScannerParser):
 
     def parse_strikethrough(self, m, state):
         text = m.group(1)
-        return self.renderer.strikethrough(self.parse(text))
+        return self.renderer.strikethrough(self.parse(text, state))
 
     def parse_linebreak(self, m, state):
         return self.renderer.linebreak()
@@ -235,20 +219,21 @@ class InlineParser(ScannerParser):
     def parse_inline_html(self, m, state):
         return self.renderer.inline_html(m.group(0))
 
-    def parse_text(self, text):
+    def parse_text(self, text, state):
         text = escape(text)
         return self.renderer.text(text)
 
-    def parse(self, s, state=None, rules=None):
+    def parse(self, s, state, rules=None):
         if rules is None:
             rules = self.default_rules
-        if state is None:
-            state = {}
 
         tokens = self._scan(s, state, rules)
         if self.renderer.IS_TREE:
             return list(tokens)
         return ''.join(tokens)
+
+    def __call__(self, s, state):
+        return self.parse(s, state)
 
 
 def escape(s, quote=True):

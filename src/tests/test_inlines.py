@@ -13,7 +13,8 @@ class TestInlineParser(TestCase):
 
 def attach_case(n, text, html):
     def test_fixture(self):
-        self.assertEqual(inline(text), html)
+        state = {'footnotes': []}
+        self.assertEqual(inline(text, state), html)
     name = 'test_{}'.format(n)
     setattr(TestInlineParser, name, test_fixture)
 

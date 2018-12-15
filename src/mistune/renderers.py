@@ -1,6 +1,43 @@
 
-class ASTRenderer(object):
+class AstRenderer(object):
     IS_TREE = True
+
+    def text(self, text):
+        return {'type': 'text', 'text': text}
+
+    def link(self, link, text=None, title=None):
+        return {'type': 'link', 'link': link, 'text': text, 'title': title}
+
+    def image(self, src, alt="", title=None):
+        return {'type': 'image', 'src': src, 'alt': alt, 'title': title}
+
+    def codespan(self, text):
+        return {'type': 'codespan', 'text': text}
+
+    def linebreak(self):
+        return {'type': 'linebreak'}
+
+    def inline_html(self, html):
+        return {'type': 'inline_html', 'text': html}
+
+    def footnote_ref(self, key, index):
+        return {'type': 'footnote_ref', 'key': key, 'index': index}
+
+    def heading(self, children, level):
+        return {'type': 'heading', 'children': children, 'level': level}
+
+    def block_code(self, children, language=None):
+        return {
+            'type': 'block_code',
+            'children': children,
+            'language': language
+        }
+
+    def __getattr__(self, key):
+        try:
+            return object.__getattribute__(self, key)
+        except AttributeError:
+            return lambda children: {'type': key, 'children': children}
 
 
 class HTMLRenderer(object):
@@ -45,3 +82,16 @@ class HTMLRenderer(object):
             '<a href="#fn-%d">%d</a></sup>'
         ) % (index, index, index)
         return html
+
+    def paragraph(self, text):
+        return '<p>' + text + '</p>\n'
+
+    def heading(self, text, level):
+        tag = 'h' + str(level)
+        return '<' + tag + '>' + text + '</' + tag + '>\n'
+
+    def block_code(self, code, language=None):
+        html = '<pre><code'
+        if language:
+            html += ' class="language-' + language + '"'
+        return html + '>' + code + '</code></pre>\n'

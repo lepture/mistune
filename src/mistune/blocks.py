@@ -2,6 +2,8 @@ import re
 from .scanner import ScannerParser, Matcher
 
 LINE_BREAK = re.compile(r'\n{2,}')
+BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
+_END = r'(?:\n+|$)'
 
 
 class BlockParser(ScannerParser):
@@ -19,9 +21,15 @@ class BlockParser(ScannerParser):
         r')'
     )
 
-    # TODO
-    AXT_HEADING = re.compile(r' *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)')
-    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-)+ *(?:\n+|$)')
+    AXT_HEADING = re.compile(
+        r' {0,3}(#{1,6})(?:' + _END + r'|'
+        r'\s*(.*?)(?:' + _END + r'|\s+?#+\s*' + _END + r'))'
+    )
+    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,} *' + _END)
+    THEMATIC_BREAK = re.compile(
+        r' {0,3}((?:- *){3,}|'
+        r'(?:_ *){3,}|(?:\* *){3,})' + _END
+    )
 
     INDENT_CODE = re.compile(r'(?: {4}[^\n]+\n*)+')
     FENCED_CODE = re.compile(
@@ -29,12 +37,17 @@ class BlockParser(ScannerParser):
         r'(?:|([\s\S]*?)\n)'
         r'(?: {0,3}\1[~`]* *(?:\n+|$)|$)'
     )
+    BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]+(\n[^\n]+)*\n*)+')
 
     RULE_NAMES = (
         'indent_code', 'fenced_code',
         'axt_heading', 'setex_heading',
+        'thematic_break', 'block_quote',
         'def_link', 'def_footnote',
     )
+
+    # list
+    # block html
 
     def parse_indent_code(self, m):
         # TODO: clean leading spaces
@@ -59,6 +72,23 @@ class BlockParser(ScannerParser):
         text = m.group(1)
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
+    def parse_thematic_break(self, m, state):
+        return {'type': 'thematic_break'}
+
+    def parse_block_quote(self, m, state):
+        depth = state.get('in_block_quote', 0) + 1
+        if depth > 5:
+            rules = list(self.default_rules)
+            rules.remove('block_quote')
+        else:
+            rules = None
+
+        state['in_block_quote'] = depth
+        text = BLOCK_QUOTE_LEADING.sub('', m.group(0))
+        children = self.parse(text, state, rules)
+        state['in_block_quote'] = depth - 1
+        return {'type': 'block_quote', 'children': children}
+
     def parse_def_link(self, m, state):
         key = m.group(1).lower()
         link = m.group(2)
@@ -80,7 +110,7 @@ class BlockParser(ScannerParser):
         return {'type': 'footnote_item', 'children': children}
 
     def parse_text(self, text, state):
-        if state.get('tight'):
+        if state.get('tight') is True:
             return {'type': 'text', 'text': text.strip()}
 
         tokens = []
@@ -111,19 +141,17 @@ class BlockParser(ScannerParser):
 
     def _iter_render(self, tokens, inline, state):
         for tok in tokens:
-            token_type = tok['type']
+            method = getattr(inline.renderer, tok['type'])
+            if 'children' not in tok and 'text' not in tok:
+                yield method()
+                return
 
             if 'children' in tok:
-                text = self.render(tok['children'], inline, state)
+                children = self.render(tok['children'], inline, state)
             else:
-                text = tok.get('text')
-
-            method = getattr(inline.renderer, token_type)
-            if text is None:
-                yield method()
+                children = inline(tok['text'], state)
+            params = tok.get('params')
+            if params:
+                yield method(children, *params)
             else:
-                params = tok.get('params')
-                if params:
-                    yield method(inline(text, state), *params)
-                else:
-                    yield method(inline(text, state))
+                yield method(children)

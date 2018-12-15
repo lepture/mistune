@@ -1,5 +1,6 @@
 
 class AstRenderer(object):
+    NAME = 'ast'
     IS_TREE = True
 
     def text(self, text):
@@ -26,6 +27,9 @@ class AstRenderer(object):
     def heading(self, children, level):
         return {'type': 'heading', 'children': children, 'level': level}
 
+    def thematic_break(self):
+        return {'type': 'thematic_break'}
+
     def block_code(self, children, language=None):
         return {
             'type': 'block_code',
@@ -41,6 +45,7 @@ class AstRenderer(object):
 
 
 class HTMLRenderer(object):
+    NAME = 'html'
     IS_TREE = False
 
     def text(self, text):
@@ -90,8 +95,14 @@ class HTMLRenderer(object):
         tag = 'h' + str(level)
         return '<' + tag + '>' + text + '</' + tag + '>\n'
 
+    def thematic_break(self):
+        return '<hr />\n'
+
     def block_code(self, code, language=None):
         html = '<pre><code'
         if language:
             html += ' class="language-' + language + '"'
         return html + '>' + code + '</code></pre>\n'
+
+    def block_quote(self, text):
+        return '<blockquote>' + text.rstrip() + '</blockquote>\n'

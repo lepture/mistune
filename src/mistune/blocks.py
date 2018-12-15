@@ -1,9 +1,35 @@
 import re
 from .scanner import ScannerParser, Matcher
 
-LINE_BREAK = re.compile(r'\n{2,}')
-BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
 _END = r'(?:\n+|$)'
+_LINE_BREAK = re.compile(r'\n{2,}')
+
+BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
+_BLOCK_TAGS = {
+    'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
+    'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
+    'dialog', 'dir', 'div', 'dl', 'dt', 'fieldset', 'figcaption',
+    'figure', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3',
+    'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html', 'iframe',
+    'legend', 'li', 'link', 'main', 'menu', 'menuitem', 'meta', 'nav',
+    'noframes', 'ol', 'optgroup', 'option', 'p', 'param', 'section',
+    'source', 'summary', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead',
+    'title', 'tr', 'track', 'ul'
+}
+_BLOCK_HTML_RULE6 = (
+    r'</?(?:' + '|'.join(_BLOCK_TAGS) + r')'
+    r'(?: +|\n|/?>)[\s\S]*?'
+    r'(?:\n{2,}|$)'
+)
+_BLOCK_HTML_RULE7 = (
+    # open tag
+    r'<(?!script|pre|style)([a-z][\w-]*)(?:'
+    r' +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"|'
+    r''' *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?'''
+    r')*? */?>(?=\s*\n)[\s\S]*?(?:\n{2,}|$)|'
+    # close tag
+    r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|$)'
+)
 
 
 class BlockParser(ScannerParser):
@@ -39,15 +65,23 @@ class BlockParser(ScannerParser):
     )
     BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]+(\n[^\n]+)*\n*)+')
 
+    BLOCK_HTML = re.compile((
+        r' {0,3}(?:'
+        r'<(script|pre|style)[\s>][\s\S]*?(?:</\1>[^\n]*\n+|$)|'
+        r'<!--(?!-?>)[\s\S]*?-->[^\n]*(?:\n+|$)|'
+        r'<\?[\s\S]*?\?>[^\n]*(?:\n+|$)|'
+        r'<![A-Z][\s\S]*?>[^\n]*(?:\n+|$)|'
+        r'<!\[CDATA\[[\s\S]*?\]\]>[^\n]*(?:\n+|$)'
+        r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
+    ), re.I)
+
     RULE_NAMES = (
         'indent_code', 'fenced_code',
-        'axt_heading', 'setex_heading',
-        'thematic_break', 'block_quote',
+        'axt_heading', 'setex_heading', 'thematic_break',
+        'block_quote', 'block_html',
         'def_link', 'def_footnote',
     )
-
     # list
-    # block html
 
     def parse_indent_code(self, m):
         # TODO: clean leading spaces
@@ -89,6 +123,10 @@ class BlockParser(ScannerParser):
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
 
+    def parse_block_html(self, m, state):
+        html = m.group(0).rstrip()
+        return {'type': 'block_html', 'text': html}
+
     def parse_def_link(self, m, state):
         key = m.group(1).lower()
         link = m.group(2)
@@ -114,7 +152,7 @@ class BlockParser(ScannerParser):
             return {'type': 'text', 'text': text.strip()}
 
         tokens = []
-        for p in LINE_BREAK.split(text):
+        for p in _LINE_BREAK.split(text):
             p = p.strip()
             if p:
                 tokens.append({'type': 'paragraph', 'text': p})
@@ -141,13 +179,16 @@ class BlockParser(ScannerParser):
 
     def _iter_render(self, tokens, inline, state):
         for tok in tokens:
-            method = inline.renderer._get_method(tok['type'])
+            token_type = tok['type']
+            method = inline.renderer._get_method(token_type)
             if 'children' not in tok and 'text' not in tok:
                 yield method()
                 return
 
             if 'children' in tok:
                 children = self.render(tok['children'], inline, state)
+            elif token_type == 'block_html':
+                children = tok['text']
             else:
                 children = inline(tok['text'], state)
             params = tok.get('params')

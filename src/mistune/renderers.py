@@ -1,3 +1,5 @@
+from .scanner import escape
+
 
 class BaseRenderer(object):
     NAME = 'base'
@@ -67,6 +69,10 @@ class HTMLRenderer(BaseRenderer):
     NAME = 'html'
     IS_TREE = False
 
+    def __init__(self, escape=True):
+        super(HTMLRenderer, self).__init__()
+        self._escape = escape
+
     def text(self, text):
         return text
 
@@ -98,6 +104,8 @@ class HTMLRenderer(BaseRenderer):
         return '<br />\n'
 
     def inline_html(self, html):
+        if self._escape:
+            return escape(html)
         return html
 
     def footnote_ref(self, key, index):
@@ -125,3 +133,8 @@ class HTMLRenderer(BaseRenderer):
 
     def block_quote(self, text):
         return '<blockquote>\n' + text + '</blockquote>\n'
+
+    def block_html(self, html):
+        if not self._escape:
+            return html + '\n'
+        return '<p>' + escape(html) + '</p>\n'

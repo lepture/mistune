@@ -1,11 +1,5 @@
 import re
-try:
-    from urllib.parse import quote
-    import html
-except ImportError:
-    from urllib import quote
-    html = None
-from .scanner import ScannerParser
+from .scanner import ScannerParser, escape, escape_url
 
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE = r'\\[' + PUNCTUATION + ']'
@@ -217,7 +211,8 @@ class InlineParser(ScannerParser):
         return 'linebreak',
 
     def parse_inline_html(self, m, state):
-        return 'inline_html', m.group(0)
+        html = m.group(0)
+        return 'inline_html', html
 
     def parse_text(self, text, state):
         return 'text', escape(text)
@@ -236,20 +231,3 @@ class InlineParser(ScannerParser):
 
     def __call__(self, s, state):
         return self.parse(s, state)
-
-
-def escape(s, quote=True):
-    s = s.replace("&", "&amp;")
-    s = s.replace("<", "&lt;")
-    s = s.replace(">", "&gt;")
-    if quote:
-        s = s.replace('"', "&quot;")
-        s = s.replace("'", "&#x27;")
-    return s
-
-
-def escape_url(link):
-    safe = '/#:()*?=%@+,&'
-    if html is None:
-        return quote(link, safe=safe)
-    return html.escape(quote(html.unescape(link), safe=safe))

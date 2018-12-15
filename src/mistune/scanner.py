@@ -1,4 +1,10 @@
 import re
+try:
+    from urllib.parse import quote
+    import html
+except ImportError:
+    from urllib import quote
+    html = None
 
 
 class Scanner(re.Scanner):
@@ -96,3 +102,20 @@ class ScannerParser(object):
         sc = self.scanner_cls(lexicon)
         self._cached_sc[sc_key] = sc
         return sc
+
+
+def escape(s, quote=True):
+    s = s.replace("&", "&amp;")
+    s = s.replace("<", "&lt;")
+    s = s.replace(">", "&gt;")
+    if quote:
+        s = s.replace('"', "&quot;")
+        s = s.replace("'", "&#x27;")
+    return s
+
+
+def escape_url(link):
+    safe = '/#:()*?=%@+,&'
+    if html is None:
+        return quote(link, safe=safe)
+    return html.escape(quote(html.unescape(link), safe=safe))

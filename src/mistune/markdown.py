@@ -1,5 +1,9 @@
+import re
 from .blocks import BlockParser
 from .inlines import InlineParser
+
+_newline_pattern = re.compile(r'\r\n|\r')
+_blank_lines = re.compile(r'^ +$', re.M)
 
 
 class Markdown(object):
@@ -25,6 +29,16 @@ class Markdown(object):
             'def_links': {},
             'def_footnotes': {},
         })
+
+        if s is None:
+            s = '\n'
+        else:
+            s = s.replace('\u2424', '\n')
+            s = _newline_pattern.sub('\n', s)
+            s = _blank_lines.sub('', s)
+            if not s.endswith('\n'):
+                s += '\n'
+
         for hook in self.before_parse_hooks:
             s, state = hook(s, state)
         return s, state

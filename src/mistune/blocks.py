@@ -1,7 +1,6 @@
 import re
 from .scanner import ScannerParser, Matcher
 
-_END = r'(?:\n+|$)'
 _LINE_BREAK = re.compile(r'\n{2,}')
 
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
@@ -19,16 +18,16 @@ _BLOCK_TAGS = {
 _BLOCK_HTML_RULE6 = (
     r'</?(?:' + '|'.join(_BLOCK_TAGS) + r')'
     r'(?: +|\n|/?>)[\s\S]*?'
-    r'(?:\n{2,}|$)'
+    r'(?:\n{2,}|\n*$)'
 )
 _BLOCK_HTML_RULE7 = (
     # open tag
     r'<(?!script|pre|style)([a-z][\w-]*)(?:'
     r' +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"|'
     r''' *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?'''
-    r')*? */?>(?=\s*\n)[\s\S]*?(?:\n{2,}|$)|'
+    r')*? */?>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)|'
     # close tag
-    r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|$)'
+    r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
 )
 
 
@@ -38,40 +37,40 @@ class BlockParser(ScannerParser):
     DEF_LINK = re.compile(
         r'^ *\[([^^\]]+)\]: *'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
-        r'(?: +["(]([^\n]+)[")])? *(?:\n+|$)'
+        r'(?: +["(]([^\n]+)[")])? *\n+'
     )
     DEF_FOOTNOTE = re.compile(
         r'^\[\^([^\]]+)\]: *('
-        r'[^\n]*(?:\n+|$)'  # [^key]:
-        r'(?: {1,}[^\n]*(?:\n+|$))*'
+        r'[^\n]*\n+'  # [^key]:
+        r'(?: {1,}[^\n]*\n+)*'
         r')'
     )
 
     AXT_HEADING = re.compile(
-        r' {0,3}(#{1,6})(?:' + _END + r'|'
-        r'\s*(.*?)(?:' + _END + r'|\s+?#+\s*' + _END + r'))'
+        r' {0,3}(#{1,6})(?:\n+|'
+        r'\s*(.*?)(?:\n+|\s+?#+\s*\n+))'
     )
-    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,} *' + _END)
+    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,} *\n+')
     THEMATIC_BREAK = re.compile(
         r' {0,3}((?:- *){3,}|'
-        r'(?:_ *){3,}|(?:\* *){3,})' + _END
+        r'(?:_ *){3,}|(?:\* *){3,})\n+'
     )
 
     INDENT_CODE = re.compile(r'(?: {4}[^\n]+\n*)+')
     FENCED_CODE = re.compile(
         r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
-        r'(?: {0,3}\1[~`]* *(?:\n+|$)|$)'
+        r'(?: {0,3}\1[~`]* *\n+|$)'
     )
     BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]+(\n[^\n]+)*\n*)+')
 
     BLOCK_HTML = re.compile((
         r' {0,3}(?:'
         r'<(script|pre|style)[\s>][\s\S]*?(?:</\1>[^\n]*\n+|$)|'
-        r'<!--(?!-?>)[\s\S]*?-->[^\n]*(?:\n+|$)|'
-        r'<\?[\s\S]*?\?>[^\n]*(?:\n+|$)|'
-        r'<![A-Z][\s\S]*?>[^\n]*(?:\n+|$)|'
-        r'<!\[CDATA\[[\s\S]*?\]\]>[^\n]*(?:\n+|$)'
+        r'<!--(?!-?>)[\s\S]*?-->[^\n]*\n+|'
+        r'<\?[\s\S]*?\?>[^\n]*\n+|'
+        r'<![A-Z][\s\S]*?>[^\n]*\n+|'
+        r'<!\[CDATA\[[\s\S]*?\]\]>[^\n]*\n+'
         r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
     ), re.I)
 

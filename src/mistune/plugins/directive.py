@@ -20,8 +20,8 @@ import re
 
 DIRECTIVE_PATTERN = re.compile(
     r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<value>[^\n]*)\n+'
-    r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9\-]+\: *[^\n]*(?:\n[ \t]*)+)*)'
-    r'(?P<text>(?:\n+(?:  \1 {0,3}[^\n]*\n)*)*)(?:\n+|$)'
+    r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9\-]+\: *[^\n]*:\n+)*)'
+    r'(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
 )
 
 

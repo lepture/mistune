@@ -1,5 +1,5 @@
 """
-    Admonition Syntax
+    Directive Syntax
     ~~~~~~~~~~~~~~~~~
 
     This syntax is inspired by reStructuredText. The syntax is very powerful,
@@ -7,7 +7,7 @@
 
     The syntax looks like::
 
-        .. admonition-name:: admonition title
+        .. directive-name:: directive value
            :option-key: option value
            :option-key: option value
 
@@ -18,8 +18,8 @@
 
 import re
 
-ADMONITION_PATTERN = re.compile(
-    r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<title>[^\n]*)\n+'
+DIRECTIVE_PATTERN = re.compile(
+    r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<value>[^\n]*)\n+'
     r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9\-]+\: *[^\n]*(?:\n[ \t]*)+)*)'
     r'(?P<text>(?:\n+(?:  \1 {0,3}[^\n]*\n)*)*)(?:\n+|$)'
 )
@@ -52,12 +52,12 @@ def _parse_text_lines(text, leading):
         yield line
 
 
-def parse_admonition(self, m, state):
+def parse_directive(self, m, state):
     token = {
-        'type': 'admonition',
+        'type': 'directive',
         'params': (
             m.group('name'),
-            m.group('title'),
+            m.group('value'),
             _parse_options(m.group('options')),
         )
     }
@@ -69,23 +69,23 @@ def parse_admonition(self, m, state):
 
     text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
     rules = list(self.default_rules)
-    rules.remove('admonition')
+    rules.remove('directive')
     children = self.parse(text, state, rules)
     token['children'] = children
     return token
 
 
-def render_ast_admonition(children, name, title=None, options=None):
+def render_ast_directive(children, name, value=None, options=None):
     return {
-        'type': 'admonition',
+        'type': 'directive',
         'name': name,
-        'title': title,
+        'value': value,
         'options': options,
         'children': children,
     }
 
 
-def render_html_admonition(text, name, title=None, options=None):
+def render_html_admonition(text, name, title=None):
     html = '<section class="admonition ' + name + '">\n'
     if title:
         html += '<h1>' + title + '</h1>\n'
@@ -94,33 +94,39 @@ def render_html_admonition(text, name, title=None, options=None):
     return html + '</section>\n'
 
 
-def register_admonition(md, html_renderer):
-    md.block.register_rule('admonition', ADMONITION_PATTERN, parse_admonition)
-    md.block.default_rules.append('admonition')
+def render_html_directive(text, name, value=None, options=None):
+    if not options:
+        # admonition is a special directive that has no options
+        return render_html_admonition(text, name, title=value)
+    return '<!-- directive (' + name + ') not supported yet -->\n'
+
+
+def register_directive(md, html_renderer):
+    md.block.register_rule('directive', DIRECTIVE_PATTERN, parse_directive)
+    md.block.default_rules.append('directive')
 
     if md.renderer.NAME == 'ast':
-        md.renderer._methods['admonition'] = render_ast_admonition
+        md.renderer._methods['directive'] = render_ast_directive
     elif md.renderer.NAME == 'html':
-        md.renderer._methods['admonition'] = html_renderer
+        md.renderer._methods['directive'] = html_renderer
 
 
-def admonition(md):
-    register_admonition(md, render_html_admonition)
+def directive(md):
+    register_directive(md, render_html_directive)
 
 
-class Admonition(object):
+class Directive(object):
     def __init__(self):
         self._html_renderers = {}
 
     def register_html_renderer(self, name, fn):
         self._html_renderers[name] = fn
 
-    def render_html_admonition(self, text, name, title=None, options=None):
+    def render_html_directive(self, text, name, value=None, options=None):
         render = self._html_renderers.get(name)
         if render:
-            return render(text, title=title, options=options)
-        return render_html_admonition(
-            text, name, title=title, options=options)
+            return render(text, value=value, options=options)
+        return render_html_directive(text, name, value=value, options=options)
 
     def __call__(self, md):
-        register_admonition(md, self.render_html_admonition)
+        register_directive(md, self.render_html_directive)

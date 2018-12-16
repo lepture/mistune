@@ -185,11 +185,11 @@ class HTMLRenderer(BaseRenderer):
             html = '<ol'
             if start:
                 html += ' start="' + str(start) + '"'
-            return html + '>' + text + '</ol>\n'
-        return '<ul>' + text + '</ul>\n'
+            return html + '>\n' + text + '</ol>\n'
+        return '<ul>\n' + text + '</ul>\n'
 
     def list_item(self, text):
-        return '<li>' + text + '<li>\n'
+        return '<li>' + text + '</li>\n'
 
     def footnote(self, text):
         return (

@@ -54,8 +54,8 @@ class BlockParser(ScannerParser):
     )
 
     AXT_HEADING = re.compile(
-        r' {0,3}(#{1,6})(?:\n+|'
-        r'\s*(.*?)(?:\n+|\s+?#+\s*\n+))'
+        r' {0,3}(#{1,6})(?!#+)(?: *\n+|'
+        r'\s+([^\n]*?)(?:\n+|\s+?#+\s*\n+))'
     )
     SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,}[ \t]*\n+')
     THEMATIC_BREAK = re.compile(
@@ -63,7 +63,8 @@ class BlockParser(ScannerParser):
         r'(?:_ *){3,}|(?:\* *){3,})\n+'
     )
 
-    INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
+    # INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
+    INDENT_CODE = re.compile(r'(?:^|(?<=\n\n))(?:(?: {4}| *\t)[^\n]+\n*)+')
     FENCED_CODE = re.compile(
         r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
@@ -105,8 +106,8 @@ class BlockParser(ScannerParser):
 
     RULE_NAMES = (
         'indent_code', 'fenced_code',
-        'axt_heading', 'setex_heading', 'thematic_break',
         'block_quote', 'block_html', 'list',
+        'thematic_break', 'axt_heading', 'setex_heading',
         'def_link', 'def_footnote',
     )
 
@@ -138,12 +139,16 @@ class BlockParser(ScannerParser):
 
     def parse_axt_heading(self, m, state):
         level = len(m.group(1))
-        text = m.group(2)
+        text = m.group(2) or ''
+        text = text.strip()
+        if set(text) == {'#'}:
+            text = ''
         return self.tokenize_heading(text, level, state)
 
     def parse_setex_heading(self, m, state):
         level = 1 if m.group(2) == '=' else 2
         text = m.group(1)
+        text = text.strip()
         return self.tokenize_heading(text, level, state)
 
     def tokenize_heading(self, text, level, state):
@@ -311,7 +316,7 @@ class BlockParser(ScannerParser):
             method = inline.renderer._get_method(tok['type'])
             if 'blank' in tok:
                 yield method()
-                return
+                continue
 
             if 'children' in tok:
                 children = self.render(tok['children'], inline, state)

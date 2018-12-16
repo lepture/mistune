@@ -119,7 +119,7 @@ class InlineParser(ScannerParser):
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
-        return 'text', text
+        return 'text', escape(text)
 
     def parse_auto_link(self, m, state):
         text = m.group(1)

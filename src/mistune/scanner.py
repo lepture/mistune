@@ -117,5 +117,5 @@ def escape(s, quote=True):
 def escape_url(link):
     safe = '/#:()*?=%@+,&'
     if html is None:
-        return quote(link, safe=safe)
+        return quote(link.encode('utf-8'), safe=safe)
     return html.escape(quote(html.unescape(link), safe=safe))

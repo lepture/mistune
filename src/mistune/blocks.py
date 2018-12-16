@@ -59,8 +59,8 @@ class BlockParser(ScannerParser):
     )
     SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,}[ \t]*\n+')
     THEMATIC_BREAK = re.compile(
-        r' {0,3}((?:- *){3,}|'
-        r'(?:_ *){3,}|(?:\* *){3,})\n+'
+        r' {0,3}((?:-[ \t]*){3,}|'
+        r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
     )
 
     # INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
@@ -84,11 +84,11 @@ class BlockParser(ScannerParser):
 
     LIST = re.compile(
         # * list
-        r'(?:( {0,3})\*(?:[ \t]*|[ \t]+(?!(?:\* *){2,}\n+)[^\n]+)\n+'
+        r'(?:( {0,3})\*(?:[ \t]*|[ \t]+(?!(?:\*[ \t]*){2,}\n+)[^\n]+)\n+'
         r'(?:\1[ \t]+[^\n]+\n+)*)+|'
 
         # - list
-        r'(?:( {0,3})\-(?:[ \t]*|[ \t]+(?!(?:\- *){2,}\n+)[^\n]+)\n+'
+        r'(?:( {0,3})\-(?:[ \t]*|[ \t]+(?!(?:\-[ \t]*){2,}\n+)[^\n]+)\n+'
         r'(?:\2[ \t]+[^\n]+\n+)*)+|'
 
         # + list
@@ -128,7 +128,7 @@ class BlockParser(ScannerParser):
 
     def parse_fenced_code(self, m, state):
         lang = m.group(2)
-        code = m.group(3)
+        code = m.group(3) or ''
         return self.tokenize_block_code(code, lang, state)
 
     def tokenize_block_code(self, code, lang, state):

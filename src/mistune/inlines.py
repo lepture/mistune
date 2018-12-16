@@ -123,7 +123,7 @@ class InlineParser(ScannerParser):
 
     def parse_auto_link(self, m, state):
         text = m.group(1)
-        if '@' in text:
+        if '@' in text and not text.lower().startswith('mailto:'):
             link = 'mailto:' + text
         else:
             link = text

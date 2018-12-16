@@ -49,9 +49,12 @@ class AstRenderer(BaseRenderer):
     def block_code(self, children, language=None):
         return {
             'type': 'block_code',
-            'children': children,
+            'text': children,
             'language': language
         }
+
+    def block_html(self, children):
+        return {'type': 'block_html', 'text': children}
 
     def _create_default_method(self, name):
         def __ast(children):

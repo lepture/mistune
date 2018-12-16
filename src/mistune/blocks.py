@@ -83,15 +83,18 @@ class BlockParser(ScannerParser):
     )
     # list
 
-    def parse_indent_code(self, m):
+    def parse_indent_code(self, m, state):
         # TODO: clean leading spaces
         code = m.group(0)
-        return {'type': 'block_code', 'text': code}
+        return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
         lang = m.group(2)
         code = m.group(3)
-        token = {'type': 'block_code', 'text': code}
+        return self.tokenize_block_code(code, lang, state)
+
+    def tokenize_block_code(self, code, lang, state):
+        token = {'type': 'block_code', 'raw': code}
         if lang:
             token['params'] = (lang, )
         return token
@@ -99,11 +102,14 @@ class BlockParser(ScannerParser):
     def parse_axt_heading(self, m, state):
         level = len(m.group(1))
         text = m.group(2)
-        return {'type': 'heading', 'text': text, 'params': (level,)}
+        return self.tokenize_heading(text, level, state)
 
     def parse_setex_heading(self, m, state):
         level = 1 if m.group(2) == '=' else 2
         text = m.group(1)
+        return self.tokenize_heading(text, level, state)
+
+    def tokenize_heading(self, text, level, state):
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
     def parse_thematic_break(self, m, state):
@@ -125,7 +131,7 @@ class BlockParser(ScannerParser):
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
-        return {'type': 'block_html', 'text': html}
+        return {'type': 'block_html', 'raw': html}
 
     def parse_def_link(self, m, state):
         key = m.group(1).lower()
@@ -181,14 +187,14 @@ class BlockParser(ScannerParser):
         for tok in tokens:
             token_type = tok['type']
             method = inline.renderer._get_method(token_type)
-            if 'children' not in tok and 'text' not in tok:
+            if token_type == 'thematic_break':
                 yield method()
                 return
 
             if 'children' in tok:
                 children = self.render(tok['children'], inline, state)
-            elif token_type == 'block_html':
-                children = tok['text']
+            elif 'raw' in tok:
+                children = tok['raw']
             else:
                 children = inline(tok['text'], state)
             params = tok.get('params')

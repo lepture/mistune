@@ -13,21 +13,23 @@ class Markdown(object):
         self.block = block
         self.inline = inline
         self.renderer = inline.renderer
+        self.before_parse_hooks = []
+        self.after_parse_hooks = []
 
     def use(self, plugin):
         plugin(self)
 
-    def parse(self, s, state=None):
-        if state is None:
-            state = {}
-
+    def before_parse(self, s, state):
         # prepare state for blocks
         state.update({
             'def_links': {},
             'def_footnotes': {},
         })
+        for hook in self.before_parse_hooks:
+            s, state = hook(s, state)
+        return s, state
 
-        tokens = self.block.parse(s, state)
+    def after_parse(self, tokens, state):
         footnotes = state.get('footnotes')
         if footnotes:
             def_footnotes = state['def_footnotes']
@@ -36,6 +38,18 @@ class Markdown(object):
                 for k in footnotes
             ]
             tokens.append({'type': 'footnote', 'children': children})
+
+        for hook in self.after_parse_hooks:
+            tokens, state = hook(tokens, state)
+        return tokens, state
+
+    def parse(self, s, state=None):
+        if state is None:
+            state = {}
+
+        s, state = self.before_parse(s, state)
+        tokens = self.block.parse(s, state)
+        tokens, state = self.after_parse(tokens, state)
         return self.block.render(tokens, self.inline, state)
 
     def __call__(self, s):

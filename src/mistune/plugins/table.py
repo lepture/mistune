@@ -104,10 +104,12 @@ def render_html_table_cell(text, align=None, is_head=False):
     return '<td>' + text + '</td>\n'
 
 
-def render_ast_table_cell(text, align=None, is_head=False):
+def render_ast_table_cell(children, align=None, is_head=False):
     return {
-        'type': 'table_cell', 'text': text,
-        'align': align, 'is_head': is_head
+        'type': 'table_cell',
+        'children': children,
+        'align': align,
+        'is_head': is_head
     }
 
 

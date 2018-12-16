@@ -29,6 +29,12 @@ _BLOCK_HTML_RULE7 = (
     # close tag
     r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
 )
+_LIST_ITEM = re.compile(
+    r'^(( {0,3})(?:[\*\+-]|\d+[.)])(?: *| +[^\n]+)\n+'
+    r'(?:\2 +[^\n]+\n+)*)',
+    flags=re.M
+)
+_LIST_BULLET = re.compile(r'^ *(?:[*+-]|\d+[.)]) ?')
 
 
 class BlockParser(ScannerParser):
@@ -74,13 +80,29 @@ class BlockParser(ScannerParser):
         r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
     ), re.I)
 
+    LIST = re.compile(
+        r'(?:( {0,3})\*(?: *| +(?!(?:\* *){2,}\n+)[^\n]+)\n+'
+        r'(?:\1 +[^\n]+\n+)*)+|'
+
+        r'(?:( {0,3})\-(?: *| +(?!(?:\- *){2,}\n+)[^\n]+)\n+'
+        r'(?:\2 +[^\n]+\n+)*)+|'
+
+        r'(?:( {0,3})\+(?: *| +[^\n]+)\n+'
+        r'(?:\3 +[^\n]+\n+)*)+|'
+
+        r'(?:( {0,3})\d{0,9}\.(?: *| +[^\n]+)\n+'
+        r'(?:\4 +[^\n]+\n+)*)+|'
+
+        r'(?:( {0,3})\d{0,9}\)(?: *| +[^\n]+)\n+'
+        r'(?:\5 +[^\n]+\n+)*)+'
+    )
+
     RULE_NAMES = (
         'indent_code', 'fenced_code',
         'axt_heading', 'setex_heading', 'thematic_break',
-        'block_quote', 'block_html',
+        'block_quote', 'block_html', 'list',
         'def_link', 'def_footnote',
     )
-    # list
 
     def parse_indent_code(self, m, state):
         # TODO: clean leading spaces
@@ -128,23 +150,55 @@ class BlockParser(ScannerParser):
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
 
-    def parse_block_list(self, m, state):
-        depth = state.get('in_block_list', 0) + 1
+    def parse_list(self, m, state):
+        text = m.group(0)
+
+        depth = state.get('in_list', 0) + 1
         if depth > 5:
             rules = list(self.default_rules)
-            rules.remove('block_list')
+            rules.remove('list')
         else:
             rules = None
 
-        state['in_block_list'] = depth
-        text = m.group(0)
-        # TODO: fix text
+        state['in_list'] = depth
+
         children = list(self.parse_list_items(text, state))
-        state['in_block_list'] = depth - 1
-        return {'type': 'block_list', 'children': children}
+        for tok in children:
+            if tok['text']:
+                text = tok.pop('text')
+                tok['children'] = self.parse(text, state, rules)
+
+        state['in_list'] = depth - 1
+        token = {'type': 'list', 'children': children}
+        state['tight'] = None
+        return token
 
     def parse_list_items(self, text, state):
-        pass
+        items = _LIST_ITEM.findall(text)
+
+        tight = True
+        for text, leading in items:
+            text_length = len(text)
+            text = _LIST_BULLET.sub('', text)
+            if tight:
+                line_count = text.count('\n\n')
+                if line_count > 1:
+                    tight = False
+                elif line_count == 1 and len(items) > 1:
+                    tight = False
+
+            if not text.strip():
+                yield {'type': 'list_item', 'text': ''}
+                continue
+
+            # outdent
+            if '\n ' in text:
+                space = text_length - len(text)
+                pattern = re.compile(r'^ {1,%d}' % space, flags=re.M)
+                text = pattern.sub('', text)
+
+            yield {'type': 'list_item', 'text': text}
+        state['tight'] = tight
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()

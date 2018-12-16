@@ -4,7 +4,7 @@ from mistune.inlines import InlineParser
 from mistune.renderers import HTMLRenderer
 
 
-inline = InlineParser(HTMLRenderer())
+inline = InlineParser(HTMLRenderer(escape=False))
 
 
 class TestInlineParser(TestCase):

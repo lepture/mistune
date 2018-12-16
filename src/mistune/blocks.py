@@ -4,7 +4,7 @@ from .scanner import ScannerParser, Matcher
 _END = r'(?:\n+|$)'
 _LINE_BREAK = re.compile(r'\n{2,}')
 
-BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
+_BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
     'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
@@ -113,7 +113,7 @@ class BlockParser(ScannerParser):
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
     def parse_thematic_break(self, m, state):
-        return {'type': 'thematic_break'}
+        return {'type': 'thematic_break', 'blank': True}
 
     def parse_block_quote(self, m, state):
         depth = state.get('in_block_quote', 0) + 1
@@ -124,10 +124,28 @@ class BlockParser(ScannerParser):
             rules = None
 
         state['in_block_quote'] = depth
-        text = BLOCK_QUOTE_LEADING.sub('', m.group(0))
+        text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
         children = self.parse(text, state, rules)
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
+
+    def parse_block_list(self, m, state):
+        depth = state.get('in_block_list', 0) + 1
+        if depth > 5:
+            rules = list(self.default_rules)
+            rules.remove('block_list')
+        else:
+            rules = None
+
+        state['in_block_list'] = depth
+        text = m.group(0)
+        # TODO: fix text
+        children = list(self.parse_list_items(text, state))
+        state['in_block_list'] = depth - 1
+        return {'type': 'block_list', 'children': children}
+
+    def parse_list_items(self, text, state):
+        pass
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
@@ -185,9 +203,8 @@ class BlockParser(ScannerParser):
 
     def _iter_render(self, tokens, inline, state):
         for tok in tokens:
-            token_type = tok['type']
-            method = inline.renderer._get_method(token_type)
-            if token_type == 'thematic_break':
+            method = inline.renderer._get_method(tok['type'])
+            if 'blank' in tok:
                 yield method()
                 return
 

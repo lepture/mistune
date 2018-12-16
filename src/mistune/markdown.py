@@ -18,7 +18,7 @@ class Markdown(object):
         self.inline = inline
         self.renderer = inline.renderer
         self.before_parse_hooks = []
-        self.after_parse_hooks = []
+        self.after_render_hooks = []
 
     def use(self, plugin):
         plugin(self)
@@ -28,6 +28,7 @@ class Markdown(object):
         state.update({
             'def_links': {},
             'def_footnotes': {},
+            'footnotes': [],
         })
 
         if s is None:
@@ -43,19 +44,29 @@ class Markdown(object):
             s, state = hook(s, state)
         return s, state
 
-    def after_parse(self, tokens, state):
-        footnotes = state.get('footnotes')
-        if footnotes:
-            def_footnotes = state['def_footnotes']
-            children = [
-                self.block.parse_footnote_item(def_footnotes[k])
-                for k in footnotes
-            ]
-            tokens.append({'type': 'footnote', 'children': children})
+    def after_render(self, result, state):
+        footnotes = self.render_footnotes(state)
+        if footnotes is not None:
+            if self.renderer.IS_TREE:
+                result.extend(footnotes)
+            else:
+                result += footnotes
 
-        for hook in self.after_parse_hooks:
-            tokens, state = hook(tokens, state)
-        return tokens, state
+        for hook in self.after_render_hooks:
+            result = hook(result, state)
+        return result
+
+    def render_footnotes(self, state):
+        footnotes = state.get('footnotes')
+        if not footnotes:
+            return None
+
+        children = [
+            self.block.parse_footnote_item(k, i, state)
+            for i, k in enumerate(footnotes)
+        ]
+        tokens = [{'type': 'footnote', 'children': children}]
+        return self.block.render(tokens, self.inline, state)
 
     def parse(self, s, state=None):
         if state is None:
@@ -63,8 +74,9 @@ class Markdown(object):
 
         s, state = self.before_parse(s, state)
         tokens = self.block.parse(s, state)
-        tokens, state = self.after_parse(tokens, state)
-        return self.block.render(tokens, self.inline, state)
+        result = self.block.render(tokens, self.inline, state)
+        result = self.after_render(result, state)
+        return result
 
     def __call__(self, s):
         return self.parse(s)

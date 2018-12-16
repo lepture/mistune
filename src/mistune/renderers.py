@@ -12,7 +12,10 @@ class BaseRenderer(object):
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
-            return self._methods.get(name)
+            method = self._methods.get(name)
+            if not method:
+                raise AttributeError('No renderer "{!r}"'.format(name))
+            return method
 
 
 class AstRenderer(BaseRenderer):
@@ -62,16 +65,24 @@ class AstRenderer(BaseRenderer):
             token['start'] = start
         return token
 
+    def footnote_item(self, children, key, index):
+        return {
+            'type': 'footnote_item',
+            'children': children,
+            'key': key,
+            'index': index,
+        }
+
     def _create_default_method(self, name):
         def __ast(children):
             return {'type': name, 'children': children}
         return __ast
 
     def _get_method(self, name):
-        method = super(AstRenderer, self)._get_method(name)
-        if not method:
-            method = self._create_default_method(name)
-        return method
+        try:
+            return super(AstRenderer, self)._get_method(name)
+        except AttributeError:
+            return self._create_default_method(name)
 
 
 class HTMLRenderer(BaseRenderer):
@@ -141,11 +152,9 @@ class HTMLRenderer(BaseRenderer):
         return html
 
     def footnote_ref(self, key, index):
-        html = (
-            '<sup class="footnote-ref" id="fnref-%d">'
-            '<a href="#fn-%d">%d</a></sup>'
-        ) % (index, index, index)
-        return html
+        i = str(index)
+        html = '<sup class="footnote-ref" id="fnref-' + i + '">'
+        return html + '<a href="#fn-' + i + '">' + i + '</a></sup>'
 
     def paragraph(self, text):
         return '<p>' + text + '</p>\n'
@@ -181,3 +190,21 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text):
         return '<li>' + text + '<li>\n'
+
+    def footnote(self, text):
+        return (
+            '<section class="footnote">\n<ol>\n'
+            + text +
+            '</ol>\n</section>\n'
+        )
+
+    def footnote_item(self, text, key, index):
+        i = str(index)
+        back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
+
+        text = text.rstrip()
+        if text.endswith('</p>'):
+            text = text[:-4] + back + '</p>'
+        else:
+            text = text + back
+        return '<li id="fn-' + i + '">' + text + '</li>\n'

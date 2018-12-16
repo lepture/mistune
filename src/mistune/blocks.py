@@ -42,14 +42,14 @@ class BlockParser(ScannerParser):
     scanner_cls = Matcher
 
     DEF_LINK = re.compile(
-        r'^ *\[([^^\]]+)\]:[ \t]*'  # [key]:
+        r' {0,3}\[([^^\]]+)\]:[ \t]*'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )
     DEF_FOOTNOTE = re.compile(
-        r'^\[\^([^\]]+)\]:[ \t]*('
+        r'( {0,3})\[\^([^\]]+)\]:[ \t]*('
         r'[^\n]*\n+'  # [^key]:
-        r'(?:[ \t]{1,}[^\n]*\n+)*'
+        r'(?:\1 {1,3}[^\n]*\n+)*'
         r')'
     )
 
@@ -245,18 +245,36 @@ class BlockParser(ScannerParser):
         if key not in state['def_links']:
             state['def_links'][key] = (link, title)
 
-    def parse_def_footnotes(self, m, state):
-        key = m.group(1).lower()
+    def parse_def_footnote(self, m, state):
+        key = m.group(2).lower()
         if key not in state['def_footnotes']:
-            state['def_footnotes'][key] = m.group(2)
+            state['def_footnotes'][key] = m.group(3)
 
-    def parse_footnote_item(self, text):
-        if '\n' not in text:
-            children = [{'type': 'paragraph', 'text': text}]
+    def parse_footnote_item(self, k, i, state):
+        def_footnotes = state['def_footnotes']
+        text = def_footnotes[k]
+
+        stripped_text = text.strip()
+        if '\n' not in stripped_text:
+            children = [{'type': 'paragraph', 'text': stripped_text}]
         else:
-            # TODO: parse again
-            children = [{'type': 'paragraph', 'text': text}]
-        return {'type': 'footnote_item', 'children': children}
+            lines = text.splitlines()
+            for second_line in lines[1:]:
+                if second_line:
+                    break
+
+            spaces = len(second_line) - len(second_line.lstrip())
+            pattern = re.compile(r'^ {' + str(spaces) + r',}', flags=re.M)
+            text = pattern.sub('', text)
+            children = self.parse_text(text, state)
+            if not isinstance(children, list):
+                children = [children]
+
+        return {
+            'type': 'footnote_item',
+            'children': children,
+            'params': (k, i)
+        }
 
     def parse_text(self, text, state):
         if state.get('tight') is True:

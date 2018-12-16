@@ -71,15 +71,38 @@ class AstRenderer(BaseRenderer):
 class HTMLRenderer(BaseRenderer):
     NAME = 'html'
     IS_TREE = False
+    HARMFUL_PROTOCOLS = {
+        'javascript:',
+        'vbscript:',
+        'data:',
+    }
 
-    def __init__(self, escape=True):
+    def __init__(self, escape=True, allow_harmful_protocols=None):
         super(HTMLRenderer, self).__init__()
         self._escape = escape
+        self._allow_harmful_protocols = allow_harmful_protocols
 
     def text(self, text):
         return text
 
     def link(self, link, text=None, title=None):
+        if text is None:
+            text = link
+
+        if self._allow_harmful_protocols is None:
+            schemes = self.HARMFUL_PROTOCOLS
+        elif self._allow_harmful_protocols is True:
+            schemes = None
+        else:
+            allowed = set(self._allow_harmful_protocols)
+            schemes = self.HARMFUL_PROTOCOLS - allowed
+
+        if schemes:
+            for s in schemes:
+                if link.startswith(s):
+                    link = '#harmful-link'
+                    break
+
         s = '<a href="' + link + '"'
         if title:
             s += ' title="' + title + '"'

@@ -56,6 +56,12 @@ class AstRenderer(BaseRenderer):
     def block_html(self, children):
         return {'type': 'block_html', 'text': children}
 
+    def list(self, children, ordered=False, start=None):
+        token = {'type': 'list', 'children': children, 'ordered': ordered}
+        if start is not None:
+            token['start'] = start
+        return token
+
     def _create_default_method(self, name):
         def __ast(children):
             return {'type': name, 'children': children}
@@ -164,3 +170,14 @@ class HTMLRenderer(BaseRenderer):
         if not self._escape:
             return html + '\n'
         return '<p>' + escape(html) + '</p>\n'
+
+    def list(self, text, ordered=False, start=None):
+        if ordered:
+            html = '<ol'
+            if start:
+                html += ' start="' + str(start) + '"'
+            return html + '>' + text + '</ol>\n'
+        return '<ul>' + text + '</ul>\n'
+
+    def list_item(self, text):
+        return '<li>' + text + '<li>\n'

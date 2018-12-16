@@ -34,7 +34,7 @@ _LIST_ITEM = re.compile(
     r'(?:\2 +[^\n]+\n+)*)',
     flags=re.M
 )
-_LIST_BULLET = re.compile(r'^ *(?:[*+-]|\d+[.)]) ?')
+_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)]) ?')
 
 
 class BlockParser(ScannerParser):
@@ -152,6 +152,15 @@ class BlockParser(ScannerParser):
 
     def parse_list(self, m, state):
         text = m.group(0)
+        m = _LIST_BULLET.match(text)
+
+        marker = m.group(1)
+        ordered = len(marker) != 1
+        params = (ordered, None)
+        if ordered:
+            start = int(marker[:-1])
+            if start != 1:
+                params = (ordered, start)
 
         depth = state.get('in_list', 0) + 1
         if depth > 5:
@@ -169,7 +178,7 @@ class BlockParser(ScannerParser):
                 tok['children'] = self.parse(text, state, rules)
 
         state['in_list'] = depth - 1
-        token = {'type': 'list', 'children': children}
+        token = {'type': 'list', 'children': children, 'params': params}
         state['tight'] = None
         return token
 

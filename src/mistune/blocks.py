@@ -3,7 +3,8 @@ from .scanner import ScannerParser, Matcher
 
 _LINE_BREAK = re.compile(r'\n{2,}')
 
-_BLOCK_QUOTE_LEADING = re.compile(r'^ *> ?', flags=re.M)
+_LEADING_TAB = re.compile(r'^\t', flags=re.M)
+_BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
     'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
@@ -34,21 +35,21 @@ _LIST_ITEM = re.compile(
     r'(?:\2 +[^\n]+\n+)*)',
     flags=re.M
 )
-_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)]) ?')
+_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 
 class BlockParser(ScannerParser):
     scanner_cls = Matcher
 
     DEF_LINK = re.compile(
-        r'^ *\[([^^\]]+)\]: *'  # [key]:
+        r'^ *\[([^^\]]+)\]:[ \t]*'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )
     DEF_FOOTNOTE = re.compile(
-        r'^\[\^([^\]]+)\]: *('
+        r'^\[\^([^\]]+)\]:[ \t]*('
         r'[^\n]*\n+'  # [^key]:
-        r'(?: {1,}[^\n]*\n+)*'
+        r'(?:[ \t]{1,}[^\n]*\n+)*'
         r')'
     )
 
@@ -56,13 +57,13 @@ class BlockParser(ScannerParser):
         r' {0,3}(#{1,6})(?:\n+|'
         r'\s*(.*?)(?:\n+|\s+?#+\s*\n+))'
     )
-    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,} *\n+')
+    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,}[ \t]*\n+')
     THEMATIC_BREAK = re.compile(
         r' {0,3}((?:- *){3,}|'
         r'(?:_ *){3,}|(?:\* *){3,})\n+'
     )
 
-    INDENT_CODE = re.compile(r'(?: {4}[^\n]+\n*)+')
+    INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
     FENCED_CODE = re.compile(
         r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
@@ -81,20 +82,25 @@ class BlockParser(ScannerParser):
     ), re.I)
 
     LIST = re.compile(
-        r'(?:( {0,3})\*(?: *| +(?!(?:\* *){2,}\n+)[^\n]+)\n+'
-        r'(?:\1 +[^\n]+\n+)*)+|'
+        # * list
+        r'(?:( {0,3})\*(?:[ \t]*|[ \t]+(?!(?:\* *){2,}\n+)[^\n]+)\n+'
+        r'(?:\1[ \t]+[^\n]+\n+)*)+|'
 
-        r'(?:( {0,3})\-(?: *| +(?!(?:\- *){2,}\n+)[^\n]+)\n+'
-        r'(?:\2 +[^\n]+\n+)*)+|'
+        # - list
+        r'(?:( {0,3})\-(?:[ \t]*|[ \t]+(?!(?:\- *){2,}\n+)[^\n]+)\n+'
+        r'(?:\2[ \t]+[^\n]+\n+)*)+|'
 
-        r'(?:( {0,3})\+(?: *| +[^\n]+)\n+'
-        r'(?:\3 +[^\n]+\n+)*)+|'
+        # + list
+        r'(?:( {0,3})\+(?:[ \t]*|[ \t]+[^\n]+)\n+'
+        r'(?:\3[ \t]+[^\n]+\n+)*)+|'
 
-        r'(?:( {0,3})\d{0,9}\.(?: *| +[^\n]+)\n+'
-        r'(?:\4 +[^\n]+\n+)*)+|'
+        # 1. list
+        r'(?:( {0,3})\d{0,9}\.(?:[ \t]*|[ \t]+[^\n]+)\n+'
+        r'(?:\4[ \t]+[^\n]+\n+)*)+|'
 
-        r'(?:( {0,3})\d{0,9}\)(?: *| +[^\n]+)\n+'
-        r'(?:\5 +[^\n]+\n+)*)+'
+        # 1) list
+        r'(?:( {0,3})\d{0,9}\)(?:[ \t]*|[ \t]+[^\n]+)\n+'
+        r'(?:\5[ \t]+[^\n]+\n+)*)+'
     )
 
     RULE_NAMES = (
@@ -105,8 +111,18 @@ class BlockParser(ScannerParser):
     )
 
     def parse_indent_code(self, m, state):
-        # TODO: clean leading spaces
-        code = m.group(0)
+        text = m.group(0)
+
+        code = ''
+        for line in text.splitlines():
+            if not line:
+                code += '\n'
+                continue
+
+            if not line.startswith('    '):
+                line = line.replace('\t', '    ', 1)
+            code += line.replace('    ', '', 1) + '\n'
+
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
@@ -145,7 +161,12 @@ class BlockParser(ScannerParser):
             rules = None
 
         state['in_block_quote'] = depth
+
         text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
+        text = _LEADING_TAB.sub('    ', text)
+        if text[0] == ' ':
+            text = text[1:]
+
         children = self.parse(text, state, rules)
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
@@ -189,6 +210,10 @@ class BlockParser(ScannerParser):
         for text, leading in items:
             text_length = len(text)
             text = _LIST_BULLET.sub('', text)
+            text = _LEADING_TAB.sub('    ', text)
+            if text[0] == ' ':
+                text = text[1:]
+
             if tight:
                 line_count = text.count('\n\n')
                 if line_count > 1:

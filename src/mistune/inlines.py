@@ -149,15 +149,16 @@ class InlineParser(ScannerParser):
     def parse_ref_link(self, m, state):
         line = m.group(0)
         text = m.group(1)
-        key = m.group(2)
-        if not key:
-            key = text
-
+        key = (m.group(2) or text).lower()
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
             return 'text', line
 
         link, title = def_links.get(key)
+        link = ESCAPE_CHAR.sub(r'\1', link)
+        if title:
+            title = ESCAPE_CHAR.sub(r'\1', title)
+
         if line[0] == '!':
             return 'image', link, text, title
 

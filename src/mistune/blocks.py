@@ -72,7 +72,11 @@ class BlockParser(ScannerParser):
         r'(?:|([\s\S]*?)\n)'
         r'(?: {0,3}\1[~`]* *\n+|$)'
     )
-    BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]+(\n[^\n]+)*\n*)+')
+    BLOCK_QUOTE = re.compile(
+        r'(?: {0,3}>[^\n]+(?:\n'
+        r'(?! {0,3}(?:-[ \t]*){3,}\n+)'
+        r'[^\n]+)*\n*)+'
+    )
 
     BLOCK_HTML = re.compile((
         r' {0,3}(?:'
@@ -119,14 +123,14 @@ class BlockParser(ScannerParser):
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
-        lang = m.group(2)
+        info = m.group(2)
         code = m.group(3) or ''
-        return self.tokenize_block_code(code, lang, state)
+        return self.tokenize_block_code(code + '\n', info, state)
 
-    def tokenize_block_code(self, code, lang, state):
+    def tokenize_block_code(self, code, info, state):
         token = {'type': 'block_code', 'raw': code}
-        if lang:
-            token['params'] = (lang, )
+        if info:
+            token['params'] = (info, )
         return token
 
     def parse_axt_heading(self, m, state):
@@ -159,6 +163,7 @@ class BlockParser(ScannerParser):
 
         state['in_block_quote'] = depth
 
+        # TODO: fix block quote text
         text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
         text = _TRIM_1.sub('', expand_leading_tab(text))
 

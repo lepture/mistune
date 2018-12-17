@@ -49,11 +49,11 @@ class AstRenderer(BaseRenderer):
     def thematic_break(self):
         return {'type': 'thematic_break'}
 
-    def block_code(self, children, language=None):
+    def block_code(self, children, info=None):
         return {
             'type': 'block_code',
             'text': children,
-            'language': language
+            'info': info
         }
 
     def block_html(self, children):
@@ -122,7 +122,7 @@ class HTMLRenderer(BaseRenderer):
 
         s = '<a href="' + link + '"'
         if title:
-            s += ' title="' + title + '"'
+            s += ' title="' + escape(title) + '"'
         return s + '>' + (text or link) + '</a>'
 
     def image(self, src, alt="", title=None):
@@ -166,10 +166,11 @@ class HTMLRenderer(BaseRenderer):
     def thematic_break(self):
         return '<hr />\n'
 
-    def block_code(self, code, language=None):
+    def block_code(self, code, info=None):
         html = '<pre><code'
-        if language:
-            html += ' class="language-' + language + '"'
+        if info:
+            lang = info.strip().split(None, 1)[0]
+            html += ' class="language-' + lang + '"'
         return html + '>' + escape(code) + '</code></pre>\n'
 
     def block_quote(self, text):

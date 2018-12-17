@@ -170,7 +170,7 @@ class HTMLRenderer(BaseRenderer):
         html = '<pre><code'
         if language:
             html += ' class="language-' + language + '"'
-        return html + '>' + code + '</code></pre>\n'
+        return html + '>' + escape(code) + '</code></pre>\n'
 
     def block_quote(self, text):
         return '<blockquote>\n' + text + '</blockquote>\n'
@@ -183,7 +183,7 @@ class HTMLRenderer(BaseRenderer):
     def list(self, text, ordered=False, start=None):
         if ordered:
             html = '<ol'
-            if start:
+            if start is not None:
                 html += ' start="' + str(start) + '"'
             return html + '>\n' + text + '</ol>\n'
         return '<ul>\n' + text + '</ul>\n'

@@ -2,7 +2,7 @@ from .markdown import Markdown
 from .renderers import AstRenderer, HTMLRenderer
 
 
-def html(text, escape=True):
+def html(text, escape=False):
     renderer = HTMLRenderer(escape=escape)
     md = Markdown(renderer)
     return md(text)

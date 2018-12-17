@@ -28,9 +28,29 @@ class Scanner(re.Scanner):
 
 class Matcher(object):
     NEWLINE = re.compile(r'\n+')
+    INDENT_CODE = re.compile(r'(?: {4}| *\t)')
 
     def __init__(self, lexicon):
         self.lexicon = lexicon
+
+    def search_pos(self, string, pos):
+        m = self.NEWLINE.search(string, pos)
+        if not m:
+            return None
+
+        pos = m.end()
+        if m.group(0) != '\n':
+            return pos
+
+        m = self.INDENT_CODE.match(string, pos)
+        if not m:
+            return pos
+
+        m = self.NEWLINE.search(string, m.end())
+        if not m:
+            return None
+
+        return self.search_pos(string, m.end())
 
     def iter(self, string):
         pos = 0
@@ -49,10 +69,10 @@ class Matcher(object):
                     last_end = pos = match.end()
                     break
             else:
-                m = self.NEWLINE.search(string, pos)
-                if not m:
+                found = self.search_pos(string, pos)
+                if found is None:
                     break
-                pos = m.end()
+                pos = found
 
         if last_end < endpos:
             yield '_text_', string[last_end:]
@@ -110,7 +130,7 @@ def escape(s, quote=True):
     s = s.replace(">", "&gt;")
     if quote:
         s = s.replace('"', "&quot;")
-        s = s.replace("'", "&#x27;")
+        # s = s.replace("'", "&#x27;")
     return s
 
 

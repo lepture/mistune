@@ -3,7 +3,9 @@ from .scanner import ScannerParser, Matcher
 
 _LINE_BREAK = re.compile(r'\n{2,}')
 
-_LEADING_TAB = re.compile(r'^\t', flags=re.M)
+_TRIM_1 = re.compile(r'^ ', flags=re.M)
+_TRIM_4 = re.compile(r'^ {1,4}', flags=re.M)
+_EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
@@ -63,8 +65,8 @@ class BlockParser(ScannerParser):
         r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
     )
 
-    # INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
-    INDENT_CODE = re.compile(r'(?:^|(?<=\n\n))(?:(?: {4}| *\t)[^\n]+\n*)+')
+    INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
+
     FENCED_CODE = re.compile(
         r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
@@ -105,25 +107,15 @@ class BlockParser(ScannerParser):
     )
 
     RULE_NAMES = (
-        'indent_code', 'fenced_code',
+        'thematic_break', 'fenced_code', 'indent_code',
         'block_quote', 'block_html', 'list',
-        'thematic_break', 'axt_heading', 'setex_heading',
+        'axt_heading', 'setex_heading',
         'def_link', 'def_footnote',
     )
 
     def parse_indent_code(self, m, state):
-        text = m.group(0)
-
-        code = ''
-        for line in text.splitlines():
-            if not line:
-                code += '\n'
-                continue
-
-            if not line.startswith('    '):
-                line = line.replace('\t', '    ', 1)
-            code += line.replace('    ', '', 1) + '\n'
-
+        text = expand_leading_tab(m.group(0))
+        code = _TRIM_4.sub('', text)
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
@@ -168,9 +160,7 @@ class BlockParser(ScannerParser):
         state['in_block_quote'] = depth
 
         text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
-        text = _LEADING_TAB.sub('    ', text)
-        if text[0] == ' ':
-            text = text[1:]
+        text = _TRIM_1.sub('', expand_leading_tab(text))
 
         children = self.parse(text, state, rules)
         state['in_block_quote'] = depth - 1
@@ -179,6 +169,9 @@ class BlockParser(ScannerParser):
     def parse_list(self, m, state):
         text = m.group(0)
         m = _LIST_BULLET.match(text)
+
+        tight = '\n\n' not in text.strip()
+        state['tight'] = tight
 
         marker = m.group(1)
         ordered = len(marker) != 1
@@ -196,35 +189,18 @@ class BlockParser(ScannerParser):
             rules = None
 
         state['in_list'] = depth
-
-        children = list(self.parse_list_items(text, state))
-        for tok in children:
-            if tok['text']:
-                text = tok.pop('text')
-                tok['children'] = self.parse(text, state, rules)
-
+        children = list(self.parse_list_items(text, state, rules))
         state['in_list'] = depth - 1
         token = {'type': 'list', 'children': children, 'params': params}
         state['tight'] = None
         return token
 
-    def parse_list_items(self, text, state):
+    def parse_list_items(self, text, state, rules):
         items = _LIST_ITEM.findall(text)
-
-        tight = True
         for text, leading in items:
             text_length = len(text)
             text = _LIST_BULLET.sub('', text)
-            text = _LEADING_TAB.sub('    ', text)
-            if text[0] == ' ':
-                text = text[1:]
-
-            if tight:
-                line_count = text.count('\n\n')
-                if line_count > 1:
-                    tight = False
-                elif line_count == 1 and len(items) > 1:
-                    tight = False
+            text = _TRIM_1.sub('', expand_leading_tab(text))
 
             if not text.strip():
                 yield {'type': 'list_item', 'text': ''}
@@ -236,8 +212,8 @@ class BlockParser(ScannerParser):
                 pattern = re.compile(r'^ {1,%d}' % space, flags=re.M)
                 text = pattern.sub('', text)
 
-            yield {'type': 'list_item', 'text': text}
-        state['tight'] = tight
+            children = self.parse(text, state, rules)
+            yield {'type': 'list_item', 'children': children}
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
@@ -329,3 +305,12 @@ class BlockParser(ScannerParser):
                 yield method(children, *params)
             else:
                 yield method(children)
+
+
+def expand_leading_tab(text):
+    return _EXPAND_TAB.sub(_expand_tab_repl, text)
+
+
+def _expand_tab_repl(m):
+    s = m.group(1)
+    return s + ' ' * (4 - len(s))

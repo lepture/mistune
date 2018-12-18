@@ -3,9 +3,10 @@ from .scanner import ScannerParser, Matcher
 
 _LINE_BREAK = re.compile(r'\n{2,}')
 
-_TRIM_1 = re.compile(r'^ ', flags=re.M)
-_TRIM_4 = re.compile(r'^ {1,4}', flags=re.M)
+_TRIM_1 = re.compile(r'^ ')
+_TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
+_INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
@@ -34,7 +35,7 @@ _BLOCK_HTML_RULE7 = (
 )
 _LIST_ITEM = re.compile(
     r'^(( {0,3})(?:[\*\+-]|\d+[.)])(?: *| +[^\n]+)\n+'
-    r'(?:\2 +[^\n]+\n+)*)',
+    r'(?:\2 {2,}[^\n]+\n+)*)',
     flags=re.M
 )
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
@@ -91,23 +92,23 @@ class BlockParser(ScannerParser):
     LIST = re.compile(
         # * list
         r'(?:( {0,3})\*(?:[ \t]*|[ \t]+(?!(?:\*[ \t]*){2,}\n+)[^\n]+)\n+'
-        r'(?:\1[ \t]+[^\n]+\n+)*)+|'
+        r'(?:\1(?: {2,}| *\t)[^\n]+\n+)*)+|'
 
         # - list
         r'(?:( {0,3})\-(?:[ \t]*|[ \t]+(?!(?:\-[ \t]*){2,}\n+)[^\n]+)\n+'
-        r'(?:\2[ \t]+[^\n]+\n+)*)+|'
+        r'(?:\2(?: {2,}| *\t)[^\n]+\n+)*)+|'
 
         # + list
         r'(?:( {0,3})\+(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\3[ \t]+[^\n]+\n+)*)+|'
+        r'(?:\3(?: {2,}| *\t)[^\n]+\n+)*)+|'
 
         # 1. list
         r'(?:( {0,3})\d{0,9}\.(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\4[ \t]+[^\n]+\n+)*)+|'
+        r'(?:\4(?: {2,}| *\t)[^\n]+\n+)*)+|'
 
         # 1) list
         r'(?:( {0,3})\d{0,9}\)(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\5[ \t]+[^\n]+\n+)*)+'
+        r'(?:\5(?: {2,}| *\t)[^\n]+\n+)*)+'
     )
 
     RULE_NAMES = (
@@ -119,7 +120,7 @@ class BlockParser(ScannerParser):
 
     def parse_indent_code(self, m, state):
         text = expand_leading_tab(m.group(0))
-        code = _TRIM_4.sub('', text)
+        code = _INDENT_CODE_TRIM.sub('', text)
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
@@ -205,18 +206,27 @@ class BlockParser(ScannerParser):
         for text, leading in items:
             text_length = len(text)
             text = _LIST_BULLET.sub('', text)
-            text = _TRIM_1.sub('', expand_leading_tab(text))
 
             if not text.strip():
                 yield {'type': 'list_item', 'text': ''}
                 continue
 
+            space = text_length - len(text)
+            text = expand_leading_tab(text)
+            if text.startswith('     '):
+                text = text[1:]
+                space += 1
+            else:
+                text_length = len(text)
+                text = _TRIM_4.sub('', text)
+                space += max(text_length - len(text), 1)
+
             # outdent
             if '\n ' in text:
-                space = text_length - len(text)
-                pattern = re.compile(r'^ {1,%d}' % space, flags=re.M)
-                text = pattern.sub('', text)
+                pattern = re.compile(r'\n {1,' + str(space) + r'}')
+                text = pattern.sub(r'\n', text)
 
+            text = text.lstrip('\n')
             children = self.parse(text, state, rules)
             yield {'type': 'list_item', 'children': children}
 

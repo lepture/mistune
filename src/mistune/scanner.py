@@ -27,30 +27,23 @@ class Scanner(re.Scanner):
 
 
 class Matcher(object):
-    NEWLINE = re.compile(r'\n+')
-    INDENT_CODE = re.compile(r'(?: {4}| *\t)')
+    PARAGRAPH_END = re.compile(
+        r'(?:\n{2,})|'
+        r'(?:\n {0,3}#{1,6})|'  # axt heading
+        r'(?:\n {0,3}(?:`{3,}|~{3,}))|'  # fenced code
+        r'(?:\n {0,3}<)'  # block html
+    )
 
     def __init__(self, lexicon):
         self.lexicon = lexicon
 
     def search_pos(self, string, pos):
-        m = self.NEWLINE.search(string, pos)
+        m = self.PARAGRAPH_END.search(string, pos)
         if not m:
             return None
-
-        pos = m.end()
-        if m.group(0) != '\n':
-            return pos
-
-        m = self.INDENT_CODE.match(string, pos)
-        if not m:
-            return pos
-
-        m = self.NEWLINE.search(string, m.end())
-        if not m:
-            return None
-
-        return self.search_pos(string, m.end())
+        if set(m.group(0)) == {'\n'}:
+            return m.end()
+        return m.start() + 1
 
     def iter(self, string):
         pos = 0

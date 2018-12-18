@@ -17,6 +17,8 @@
 """
 
 import re
+import os
+from ..markdown import preprocess
 
 DIRECTIVE_PATTERN = re.compile(
     r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<value>[^\n]*)\n+'
@@ -52,21 +54,60 @@ def _parse_text_lines(text, leading):
         yield line
 
 
+def _parse_include(self, filepath, options, state):
+    source_file = state.get('__file__')
+    if not source_file:
+        return {
+            'type': 'include',
+            'text': '<!-- no source file -->',
+            'params': (filepath, None, options)
+        }
+
+    dest = os.path.join(os.path.dirname(source_file), filepath)
+    dest = os.path.normpath(dest)
+    if not os.path.isfile(dest):
+        return {
+            'type': 'include',
+            'text': '<!-- no include file -->',
+            'params': (filepath, dest, options)
+        }
+
+    with open(dest, 'rb') as f:
+        content = f.read()
+        text = content.decode('utf-8')
+
+    if not options:
+        ext = os.path.splitext(filepath)[1]
+        if ext in {'.md', '.markdown', '.mkd'}:
+            text, state = preprocess(text, {'__file__': dest})
+            return self.parse(text, state)
+        if ext in {'.html', '.xhtml', '.htm'}:
+            return {'type': 'block_html', 'text': text}
+
+    return {
+        'type': 'include',
+        'text': text,
+        'params': (filepath, dest, options)
+    }
+
+
 def parse_directive(self, m, state):
+    name = m.group('name')
+    value = m.group('value')
+    options = _parse_options(m.group('options'))
+    if name == 'include':
+        return _parse_include(self, value, options, state)
+
     token = {
         'type': 'directive',
-        'params': (
-            m.group('name'),
-            m.group('value'),
-            _parse_options(m.group('options')),
-        )
+        'params': (name, value, options)
     }
     text = m.group('text')
     if not text.strip():
         token['children'] = []
         return token
-    leading = len(m.group(1)) + 2
 
+    leading = len(m.group(1)) + 2
     text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
     rules = list(self.default_rules)
     rules.remove('directive')
@@ -82,6 +123,15 @@ def render_ast_directive(children, name, value=None, options=None):
         'value': value,
         'options': options,
         'children': children,
+    }
+
+
+def render_ast_include(text, relpath, abspath=None, options=None):
+    return {
+        'type': text,
+        'relpath': relpath,
+        'abspath': abspath,
+        'options': options,
     }
 
 
@@ -101,14 +151,21 @@ def render_html_directive(text, name, value=None, options=None):
     return '<!-- directive (' + name + ') not supported yet -->\n'
 
 
+def render_html_include(text, relpath, abspath=None, options=None):
+    html = '<section class="directive-include" data-relpath="'
+    return html + relpath + '">\n' + text + '</section>\n'
+
+
 def register_directive(md, html_renderer):
     md.block.register_rule('directive', DIRECTIVE_PATTERN, parse_directive)
     md.block.default_rules.append('directive')
 
     if md.renderer.NAME == 'ast':
-        md.renderer._methods['directive'] = render_ast_directive
+        md.renderer.register('directive', render_ast_directive)
+        md.renderer.register('include', render_ast_include)
     elif md.renderer.NAME == 'html':
-        md.renderer._methods['directive'] = html_renderer
+        md.renderer.register('directive', render_html_directive)
+        md.renderer.register('include', render_html_include)
 
 
 def directive(md):

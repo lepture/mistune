@@ -24,23 +24,7 @@ class Markdown(object):
         plugin(self)
 
     def before_parse(self, s, state):
-        # prepare state for blocks
-        state.update({
-            'def_links': {},
-            'def_footnotes': {},
-            'footnotes': [],
-        })
-
-        if s is None:
-            s = '\n'
-        else:
-            s = s.replace('\u2424', '\n')
-            s = _newline_pattern.sub('\n', s)
-            s = _blank_lines.sub('', s)
-            s = s.lstrip('\n')
-            if not s.endswith('\n'):
-                s += '\n'
-
+        s, state = preprocess(s, state)
         for hook in self.before_parse_hooks:
             s, state = hook(s, state)
         return s, state
@@ -79,5 +63,35 @@ class Markdown(object):
         result = self.after_render(result, state)
         return result
 
+    def read(self, filepath, state=None):
+        if state is None:
+            state = {}
+
+        state['__file__'] = filepath
+        with open(filepath, 'rb') as f:
+            s = f.read()
+
+        return self.parse(s.decode('utf-8'), state)
+
     def __call__(self, s):
         return self.parse(s)
+
+
+def preprocess(s, state):
+    state.update({
+        'def_links': {},
+        'def_footnotes': {},
+        'footnotes': [],
+    })
+
+    if s is None:
+        s = '\n'
+    else:
+        s = s.replace('\u2424', '\n')
+        s = _newline_pattern.sub('\n', s)
+        s = _blank_lines.sub('', s)
+        s = s.lstrip('\n')
+        if not s.endswith('\n'):
+            s += '\n'
+
+    return s, state

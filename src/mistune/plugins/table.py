@@ -120,11 +120,11 @@ def table(md):
     md.block.default_rules.append('nptable')
 
     if md.renderer.NAME == 'html':
-        md.renderer._methods['table'] = render_html_table
-        md.renderer._methods['table_head'] = render_html_table_head
-        md.renderer._methods['table_body'] = render_html_table_body
-        md.renderer._methods['table_row'] = render_html_table_row
-        md.renderer._methods['table_cell'] = render_html_table_cell
+        md.renderer.register('table', render_html_table)
+        md.renderer.register('table_head', render_html_table_head)
+        md.renderer.register('table_body', render_html_table_body)
+        md.renderer.register('table_row', render_html_table_row)
+        md.renderer.register('table_cell', render_html_table_cell)
 
     elif md.renderer.NAME == 'ast':
-        md.renderer._methods['table_cell'] = render_ast_table_cell
+        md.renderer.register('table_cell', render_ast_table_cell)

@@ -8,6 +8,9 @@ class BaseRenderer(object):
     def __init__(self):
         self._methods = {}
 
+    def register(self, name, method):
+        self._methods[name] = method
+
     def _get_method(self, name):
         try:
             return object.__getattribute__(self, name)

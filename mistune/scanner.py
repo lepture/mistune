@@ -158,7 +158,6 @@ def escape(s, quote=True):
     s = s.replace(">", "&gt;")
     if quote:
         s = s.replace('"', "&quot;")
-        # s = s.replace("'", "&#x27;")
     return s
 
 
@@ -167,3 +166,9 @@ def escape_url(link):
     if html is None:
         return quote(link.encode('utf-8'), safe=safe)
     return html.escape(quote(html.unescape(link), safe=safe))
+
+
+def escape_html(s):
+    if html is not None:
+        return html.escape(html.unescape(s)).replace('&#x27;', "'")
+    return escape(s)

@@ -1,5 +1,5 @@
 import re
-from .scanner import ScannerParser, escape, escape_url
+from .scanner import ScannerParser, escape_url
 
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE = r'\\[' + PUNCTUATION + ']'
@@ -44,7 +44,7 @@ class InlineParser(ScannerParser):
     #:    [id]: https://example.com "optional title"
     REF_LINK = (
         r'!?\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
-        r'\s*\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
+        r'\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
     )
 
     #: Simple form of reference link::
@@ -61,12 +61,10 @@ class InlineParser(ScannerParser):
     #:    *text*
     #:    _text_
     EMPHASIS = (
-        r'\b_[^\s_]_(?!_)\b|'  # _s_
-        r'\*[^\s*"<\[]\*(?!\*)|'  # *s*
-        r'\b_[^\s][\s\S]*?[^\s_]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
-        r'\b_[^\s_][\s\S]*?[^\s]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
-        r'\*[^\s"<\[][\s\S]*?[^\s*]\*(?!\*)|'
-        r'\*[^\s*"<\[][\s\S]*?[^\s]\*(?!\*)'
+        r'\b_[^\s_](?:(?<=\\)_)?_(?!_)\b|'  # _s_
+        r'\*[^\s*"<\[](?:(?<=\\)\*)?\*|'  # *s*
+        r'\b_[^\s_][\s\S]*?[^\s_]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
+        r'\*[^\s*"<\[][\s\S]*?[^\s*]\*'
     )
 
     #: strong with ** or __::
@@ -74,8 +72,8 @@ class InlineParser(ScannerParser):
     #:    **text**
     #:    __text__
     STRONG = (
-        r'\b__[^\s]__(?!_)\b|'
-        r'\*\*[^\s]\*\*(?!\*)|'
+        r'\b__[^\s\_]__(?!_)\b|'
+        r'\*\*[^\s\*]\*\*(?!\*)|'
         r'\b__[^\s][\s\S]*?[^\s]__(?!_)\b|'
         r'\*\*[^\s][\s\S]*?[^\s]\*\*(?!\*)'
     )
@@ -119,7 +117,7 @@ class InlineParser(ScannerParser):
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
-        return 'text', escape(text)
+        return 'text', text
 
     def parse_auto_link(self, m, state):
         text = m.group(1)
@@ -162,8 +160,7 @@ class InlineParser(ScannerParser):
         if line[0] == '!':
             return 'image', link, text, title
 
-        if m.group(2):
-            text = self._process_link_text(text, state)
+        text = self._process_link_text(text, state)
         return 'link', escape_url(link), text, title
 
     def parse_ref_link2(self, m, state):
@@ -216,7 +213,7 @@ class InlineParser(ScannerParser):
         return 'inline_html', html
 
     def parse_text(self, text, state):
-        return 'text', escape(text)
+        return 'text', text
 
     def parse(self, s, state, rules=None):
         if rules is None:

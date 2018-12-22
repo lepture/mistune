@@ -1,5 +1,5 @@
 import re
-from .blocks import BlockParser
+from .blocks import BlockParser, expand_leading_tab
 from .inlines import InlineParser
 
 _newline_pattern = re.compile(r'\r\n|\r')
@@ -90,6 +90,7 @@ def preprocess(s, state):
         s = s.replace('\u2424', '\n')
         s = _newline_pattern.sub('\n', s)
         s = _blank_lines.sub('', s)
+        s = expand_leading_tab(s)
         if not s.endswith('\n'):
             s += '\n'
 

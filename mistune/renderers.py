@@ -1,4 +1,4 @@
-from .scanner import escape
+from .scanner import escape, escape_html
 
 
 class BaseRenderer(object):
@@ -106,7 +106,7 @@ class HTMLRenderer(BaseRenderer):
         self._allow_harmful_protocols = allow_harmful_protocols
 
     def text(self, text):
-        return text
+        return escape_html(text)
 
     def link(self, link, text=None, title=None):
         if text is None:
@@ -128,13 +128,13 @@ class HTMLRenderer(BaseRenderer):
 
         s = '<a href="' + link + '"'
         if title:
-            s += ' title="' + escape(title) + '"'
+            s += ' title="' + escape_html(title) + '"'
         return s + '>' + (text or link) + '</a>'
 
     def image(self, src, alt="", title=None):
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
-            s += ' title="' + title + '"'
+            s += ' title="' + escape_html(title) + '"'
         return s + ' />'
 
     def emphasis(self, text):
@@ -144,7 +144,7 @@ class HTMLRenderer(BaseRenderer):
         return '<strong>' + text + '</strong>'
 
     def codespan(self, text):
-        return '<code>' + text + '</code>'
+        return '<code>' + escape(text) + '</code>'
 
     def strikethrough(self, text):
         return '<del>' + text + '</del>'
@@ -179,6 +179,7 @@ class HTMLRenderer(BaseRenderer):
         html = '<pre><code'
         if info:
             lang = info.strip().split(None, 1)[0]
+            lang = escape_html(lang)
             html += ' class="language-' + lang + '"'
         return html + '>' + escape(code) + '</code></pre>\n'
 

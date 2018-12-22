@@ -1,5 +1,6 @@
 import re
 from .scanner import MatcherParser
+from .inlines import ESCAPE_CHAR
 
 _TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
@@ -105,7 +106,7 @@ class BlockParser(MatcherParser):
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
-        info = m.group(2)
+        info = ESCAPE_CHAR.sub(r'\1', m.group(2))
         code = m.group(3) or ''
         return self.tokenize_block_code(code + '\n', info, state)
 

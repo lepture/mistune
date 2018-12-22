@@ -18,7 +18,7 @@
 
 import re
 import os
-from ..markdown import preprocess
+from mistune.markdown import preprocess
 
 DIRECTIVE_PATTERN = re.compile(
     r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<value>[^\n]*)\n+'
@@ -58,18 +58,16 @@ def _parse_include(self, filepath, options, state):
     source_file = state.get('__file__')
     if not source_file:
         return {
-            'type': 'include',
-            'text': '<!-- no source file -->',
-            'params': (filepath, None, options)
+            'type': 'block_error',
+            'raw': 'Missing source file configuration',
         }
 
     dest = os.path.join(os.path.dirname(source_file), filepath)
     dest = os.path.normpath(dest)
     if not os.path.isfile(dest):
         return {
-            'type': 'include',
-            'text': '<!-- no include file -->',
-            'params': (filepath, dest, options)
+            'type': 'block_error',
+            'raw': 'Cound find file: ' + filepath,
         }
 
     with open(dest, 'rb') as f:

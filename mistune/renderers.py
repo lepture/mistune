@@ -191,6 +191,9 @@ class HTMLRenderer(BaseRenderer):
             return html + '\n'
         return '<p>' + escape(html) + '</p>\n'
 
+    def block_error(self, html):
+        return '<div class="error">' + html + '</div>\n'
+
     def list(self, text, ordered=False, start=None):
         if ordered:
             html = '<ol'

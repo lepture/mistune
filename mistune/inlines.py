@@ -17,7 +17,12 @@ class InlineParser(ScannerParser):
     #: link or email syntax::
     #:
     #: <https://example.com>
-    AUTO_LINK = r'<([^ >]+(@|:)[^ >]+)>'
+    AUTO_LINK = (
+        r'(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:'
+        r"[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9]"
+        r'(?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?'
+        r'(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>'
+    )
 
     #: link or image syntax::
     #:
@@ -53,8 +58,6 @@ class InlineParser(ScannerParser):
     #:
     #:    [an example]: https://example.com "optional title"
     REF_LINK2 = r'!?\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
-
-    URL_LINK = r'''(https?:\/\/[^\s<]+[^<.,:;"')\]\s])'''
 
     #: emphasis with * or _::
     #:
@@ -106,7 +109,7 @@ class InlineParser(ScannerParser):
     )
 
     RULE_NAMES = (
-        'escape', 'inline_html', 'auto_link', 'url_link', 'footnote',
+        'escape', 'inline_html', 'auto_link', 'footnote',
         'std_link', 'ref_link', 'ref_link2', 'strong', 'emphasis',
         'codespan', 'strikethrough', 'linebreak',
     )
@@ -150,7 +153,7 @@ class InlineParser(ScannerParser):
         key = (m.group(2) or text).lower()
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
-            return 'text', line
+            return 'text', ESCAPE_CHAR.sub(r'\1', line)
 
         link, title = def_links.get(key)
         link = ESCAPE_CHAR.sub(r'\1', link)
@@ -173,9 +176,6 @@ class InlineParser(ScannerParser):
         text = self.parse(text, state)
         state['_in_link'] = False
         return text
-
-    def parse_url_link(self, m, state):
-        return 'link', escape_url(m.group(0))
 
     def parse_footnote(self, m, state):
         key = m.group(1).lower()

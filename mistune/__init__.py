@@ -8,5 +8,5 @@ def html(text, escape=False):
     return md(text)
 
 
-__all__ = ['Markdown', 'AstRenderer', 'HTMLRenderer']
+__all__ = ['Markdown', 'AstRenderer', 'HTMLRenderer', 'html']
 __version__ = '2.0.0'

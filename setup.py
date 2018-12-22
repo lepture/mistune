@@ -18,7 +18,9 @@ setup(
     description='The fastest markdown parser in pure Python',
     long_description=fread('README.rst'),
     license='BSD',
-    py_modules=['mistune'],
+    packages=[
+        'mistune', 'mistune.plugins'
+    ],
     zip_safe=False,
     platforms='any',
     tests_require=['nose'],

@@ -1,5 +1,5 @@
 import re
-from .scanner import MatcherParser
+from .scanner import ScannerParser, Matcher
 from .inlines import ESCAPE_CHAR
 
 _TRIM_4 = re.compile(r'^ {1,4}')
@@ -37,7 +37,9 @@ _PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 
-class BlockParser(MatcherParser):
+class BlockParser(ScannerParser):
+    scanner_cls = Matcher
+
     NEWLINE = re.compile(r'\n+')
     DEF_LINK = re.compile(
         r' {0,3}\[([^^\]]+)\]:[ \t]*'  # [key]:

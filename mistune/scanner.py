@@ -8,22 +8,22 @@ except ImportError:
 
 
 class Scanner(re.Scanner):
-    def iter(self, string):
+    def iter(self, string, state, parse_text):
         sc = self.scanner.scanner(string)
 
         pos = 0
         for match in iter(sc.search, None):
-            name = self.lexicon[match.lastindex - 1][1]
+            name, method = self.lexicon[match.lastindex - 1][1]
             hole = string[pos:match.start()]
             if hole:
-                yield '_text_', hole
+                yield parse_text(hole, state)
 
-            yield name, match
+            yield method(match, state)
             pos = match.end()
 
         hole = string[pos:]
         if hole:
-            yield '_text_', hole
+            yield parse_text(hole, state)
 
 
 class ScannerParser(object):
@@ -53,12 +53,12 @@ class ScannerParser(object):
 
     def _scan(self, s, state, rules):
         sc = self._create_scanner(rules)
-        for name, m in sc.iter(s):
-            if name == '_text_':
-                yield self.parse_text(m, state)
-            else:
-                method = self.get_rule_method(name)
-                yield method(m, state)
+        for tok in sc.iter(s, state, self.parse_text):
+            if isinstance(tok, list):
+                for t in tok:
+                    yield t
+            elif tok:
+                yield tok
 
     def _create_scanner(self, rules):
         sc_key = '|'.join(rules)
@@ -66,7 +66,10 @@ class ScannerParser(object):
         if sc:
             return sc
 
-        lexicon = [(self.get_rule_pattern(n), n) for n in rules]
+        lexicon = [
+            (self.get_rule_pattern(n), (n, self.get_rule_method(n)))
+            for n in rules
+        ]
         sc = self.scanner_cls(lexicon)
         self._cached_sc[sc_key] = sc
         return sc
@@ -100,7 +103,7 @@ class Matcher(object):
         while 1:
             if pos >= endpos:
                 break
-            for name, rule, method in self.lexicon:
+            for rule, (name, method) in self.lexicon:
                 match = rule.match(string, pos)
                 if match is not None:
                     start, end = match.span()
@@ -123,33 +126,6 @@ class Matcher(object):
 
         if last_end < endpos:
             yield parse_text(string[last_end:], state)
-
-
-class MatcherParser(ScannerParser):
-    scanner_cls = Matcher
-
-    def _scan(self, s, state, rules):
-        sc = self._create_scanner(rules)
-        for tok in sc.iter(s, state, self.parse_text):
-            if isinstance(tok, list):
-                for t in tok:
-                    yield t
-            elif tok:
-                yield tok
-
-    def _create_scanner(self, rules):
-        sc_key = '|'.join(rules)
-        sc = self._cached_sc.get(sc_key)
-        if sc:
-            return sc
-
-        lexicon = [
-            (n, self.get_rule_pattern(n), self.get_rule_method(n))
-            for n in rules
-        ]
-        sc = self.scanner_cls(lexicon)
-        self._cached_sc[sc_key] = sc
-        return sc
 
 
 def escape(s, quote=True):

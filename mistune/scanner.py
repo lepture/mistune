@@ -81,7 +81,7 @@ class Matcher(object):
         r'(?:\n {0,3}#{1,6})|'  # axt heading
         r'(?:\n {0,3}(?:`{3,}|~{3,}))|'  # fenced code
         r'(?:\n {0,3}>)|'  # blockquote
-        r'(?:\n {0,3}[\*\+-])|'  # list
+        r'(?:\n {0,3}(?:[\*\+-]|1[.)]))|'  # list
         r'(?:\n {0,3}<)'  # block html
     )
 

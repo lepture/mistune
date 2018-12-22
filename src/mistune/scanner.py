@@ -77,6 +77,8 @@ class Matcher(object):
         r'(?:\n{2,})|'
         r'(?:\n {0,3}#{1,6})|'  # axt heading
         r'(?:\n {0,3}(?:`{3,}|~{3,}))|'  # fenced code
+        r'(?:\n {0,3}>)|'  # blockquote
+        r'(?:\n {0,3}[\*\+-])|'  # list
         r'(?:\n {0,3}<)'  # block html
     )
 
@@ -98,19 +100,19 @@ class Matcher(object):
         while 1:
             if pos >= endpos:
                 break
-            for rule, method in self.lexicon:
+            for name, rule, method in self.lexicon:
                 match = rule.match(string, pos)
                 if match is not None:
                     start, end = match.span()
                     if start > last_end:
                         yield parse_text(string[last_end:start], state)
 
-                    token = method(match, state, string)
-                    if isinstance(token, tuple):
+                    if name.endswith('_start'):
+                        token = method(match, state, string)
                         yield token[0]
                         end = token[1]
                     else:
-                        yield token
+                        yield method(match, state)
                     last_end = pos = end
                     break
             else:
@@ -142,7 +144,7 @@ class MatcherParser(ScannerParser):
             return sc
 
         lexicon = [
-            (self.get_rule_pattern(n), self.get_rule_method(n))
+            (n, self.get_rule_pattern(n), self.get_rule_method(n))
             for n in rules
         ]
         sc = self.scanner_cls(lexicon)

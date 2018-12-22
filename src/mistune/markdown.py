@@ -90,7 +90,6 @@ def preprocess(s, state):
         s = s.replace('\u2424', '\n')
         s = _newline_pattern.sub('\n', s)
         s = _blank_lines.sub('', s)
-        s = s.lstrip('\n')
         if not s.endswith('\n'):
             s += '\n'
 

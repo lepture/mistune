@@ -49,6 +49,9 @@ class AstRenderer(BaseRenderer):
     def heading(self, children, level):
         return {'type': 'heading', 'children': children, 'level': level}
 
+    def newline(self):
+        return {'type': 'newline'}
+
     def thematic_break(self):
         return {'type': 'thematic_break'}
 
@@ -132,7 +135,7 @@ class HTMLRenderer(BaseRenderer):
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + title + '"'
-        return s + '/>'
+        return s + ' />'
 
     def emphasis(self, text):
         return '<em>' + text + '</em>'
@@ -165,6 +168,9 @@ class HTMLRenderer(BaseRenderer):
     def heading(self, text, level):
         tag = 'h' + str(level)
         return '<' + tag + '>' + text + '</' + tag + '>\n'
+
+    def newline(self):
+        return ''
 
     def thematic_break(self):
         return '<hr />\n'

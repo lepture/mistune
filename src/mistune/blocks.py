@@ -1,12 +1,10 @@
 import re
 from .scanner import MatcherParser
 
-_LINE_BREAK = re.compile(r'\n{2,}')
-
-_TRIM_1 = re.compile(r'^ ')
 _TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
+_BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
@@ -33,15 +31,13 @@ _BLOCK_HTML_RULE7 = (
     # close tag
     r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
 )
-_LIST_ITEM = re.compile(
-    r'^(( {0,3})(?:[\*\+-]|\d+[.)])(?: *| +[^\n]+)\n+'
-    r'(?:\2 {2,}[^\n]+\n+)*)',
-    flags=re.M
-)
+
+_PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 
 class BlockParser(MatcherParser):
+    NEWLINE = re.compile(r'\n+')
     DEF_LINK = re.compile(
         r' {0,3}\[([^^\]]+)\]:[ \t]*'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
@@ -64,7 +60,7 @@ class BlockParser(MatcherParser):
         r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
     )
 
-    INDENT_CODE = re.compile(r'(?:(?: {4}| *\t)[^\n]+\n*)+')
+    INDENT_CODE = re.compile(r'(?:\n*)(?:(?: {4}| *\t)[^\n]+\n*)+')
 
     FENCED_CODE = re.compile(
         r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
@@ -72,9 +68,10 @@ class BlockParser(MatcherParser):
         r'(?: {0,3}\1[~`]* *\n+|$)'
     )
     BLOCK_QUOTE = re.compile(
-        r'(?: {0,3}>[^\n]+(?:\n'
-        r'(?! {0,3}(?:-[ \t]*){3,}\n+)'
-        r'[^\n]+)*\n*)+'
+        r'(?: {0,3}>[^\n]*\n)+'
+    )
+    LIST_START = re.compile(
+        r'( {0,3})([\*\+-]|\d{0,9}[.)])(?:[ \t]*|[ \t][^\n]+)\n+'
     )
 
     BLOCK_HTML = re.compile((
@@ -87,41 +84,27 @@ class BlockParser(MatcherParser):
         r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
     ), re.I)
 
-    LIST = re.compile(
-        # * list
-        r'(?:( {0,3})\*(?:[ \t]*|[ \t]+(?!(?:\*[ \t]*){2,}\n+)[^\n]+)\n+'
-        r'(?:\1(?: {2,}| *\t)[^\n]+\n+)*)+|'
-
-        # - list
-        r'(?:( {0,3})\-(?:[ \t]*|[ \t]+(?!(?:\-[ \t]*){2,}\n+)[^\n]+)\n+'
-        r'(?:\2(?: {2,}| *\t)[^\n]+\n+)*)+|'
-
-        # + list
-        r'(?:( {0,3})\+(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\3(?: {2,}| *\t)[^\n]+\n+)*)+|'
-
-        # 1. list
-        r'(?:( {0,3})\d{0,9}\.(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\4(?: {3,}| *\t)[^\n]+\n+)*)+|'
-
-        # 1) list
-        r'(?:( {0,3})\d{0,9}\)(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\5(?: {3,}| *\t)[^\n]+\n+)*)+'
-    )
-
     RULE_NAMES = (
-        'thematic_break', 'fenced_code', 'indent_code',
-        'block_quote', 'block_html', 'list',
+        'newline', 'thematic_break',
+        'fenced_code', 'indent_code',
+        'block_quote', 'block_html', 'list_start',
         'axt_heading', 'setex_heading',
         'def_link', 'def_footnote',
     )
 
-    def parse_indent_code(self, m, state, string):
+    def parse_newline(self, m, state):
+        return {'type': 'newline', 'blank': True}
+
+    def parse_thematic_break(self, m, state):
+        return {'type': 'thematic_break', 'blank': True}
+
+    def parse_indent_code(self, m, state):
         text = expand_leading_tab(m.group(0))
         code = _INDENT_CODE_TRIM.sub('', text)
+        code = code.lstrip('\n')
         return self.tokenize_block_code(code, None, state)
 
-    def parse_fenced_code(self, m, state, string):
+    def parse_fenced_code(self, m, state):
         info = m.group(2)
         code = m.group(3) or ''
         return self.tokenize_block_code(code + '\n', info, state)
@@ -132,7 +115,7 @@ class BlockParser(MatcherParser):
             token['params'] = (info, )
         return token
 
-    def parse_axt_heading(self, m, state, string):
+    def parse_axt_heading(self, m, state):
         level = len(m.group(1))
         text = m.group(2) or ''
         text = text.strip()
@@ -140,7 +123,7 @@ class BlockParser(MatcherParser):
             text = ''
         return self.tokenize_heading(text, level, state)
 
-    def parse_setex_heading(self, m, state, string):
+    def parse_setex_heading(self, m, state):
         level = 1 if m.group(2) == '=' else 2
         text = m.group(1)
         text = text.strip()
@@ -149,10 +132,7 @@ class BlockParser(MatcherParser):
     def tokenize_heading(self, text, level, state):
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
-    def parse_thematic_break(self, m, state, string):
-        return {'type': 'thematic_break', 'blank': True}
-
-    def parse_block_quote(self, m, state, string):
+    def parse_block_quote(self, m, state):
         depth = state.get('in_block_quote', 0) + 1
         if depth > 5:
             rules = list(self.default_rules)
@@ -161,23 +141,20 @@ class BlockParser(MatcherParser):
             rules = None
 
         state['in_block_quote'] = depth
-
-        # TODO: fix block quote text
         text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
-        text = _TRIM_1.sub('', expand_leading_tab(text))
-
+        text = expand_leading_tab(text)
+        text = _BLOCK_QUOTE_TRIM.sub('', text)
         children = self.parse(text, state, rules)
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
 
-    def parse_list(self, m, state, string):
-        text = m.group(0)
-        m = _LIST_BULLET.match(text)
+    def parse_list_start(self, m, state, string):
+        items = []
+        spaces = m.group(1)
+        marker = m.group(2)
+        items, pos = _find_list_items(string, m.start(), spaces, marker)
+        tight = '\n\n' not in ''.join(items).strip()
 
-        tight = '\n\n' not in text.strip()
-        state['tight'] = tight
-
-        marker = m.group(1)
         ordered = len(marker) != 1
         params = (ordered, None)
         if ordered:
@@ -192,54 +169,62 @@ class BlockParser(MatcherParser):
         else:
             rules = None
 
+        state['tight'] = tight
         state['in_list'] = depth
-        children = list(self.parse_list_items(text, state, rules))
+        children = [self.parse_list_item(item, state, rules) for item in items]
         state['in_list'] = depth - 1
-        token = {'type': 'list', 'children': children, 'params': params}
         state['tight'] = None
-        return token
+        token = {'type': 'list', 'children': children, 'params': params}
+        return token, pos
 
-    def parse_list_items(self, text, state, rules):
-        items = _LIST_ITEM.findall(text)
-        for text, leading in items:
+    def parse_list_item(self, text, state, rules):
+        text_length = len(text)
+        text = _LIST_BULLET.sub('', text)
+
+        if not text.strip():
+            return {
+                'type': 'list_item',
+                'children': [{'type': 'text', 'text': ''}]
+            }
+
+        space = text_length - len(text)
+        text = expand_leading_tab(text)
+        if text.startswith('     '):
+            text = text[1:]
+            space += 1
+        else:
             text_length = len(text)
-            text = _LIST_BULLET.sub('', text)
+            text = _TRIM_4.sub('', text)
+            space += max(text_length - len(text), 1)
 
-            if not text.strip():
-                yield {'type': 'list_item', 'text': ''}
-                continue
+        # outdent
+        if '\n ' in text:
+            pattern = re.compile(r'\n {1,' + str(space) + r'}')
+            text = pattern.sub(r'\n', text)
 
-            space = text_length - len(text)
-            text = expand_leading_tab(text)
-            if text.startswith('     '):
-                text = text[1:]
-                space += 1
+        children = self.parse(text, state, rules)
+        return {'type': 'list_item', 'children': children}
+
+    def _reformat_list_item(self, children):
+        for token in children:
+            if token['type'] == 'text':
+                for tok in self.parse_text(token['text'], {}):
+                    yield tok
             else:
-                text_length = len(text)
-                text = _TRIM_4.sub('', text)
-                space += max(text_length - len(text), 1)
+                yield token
 
-            # outdent
-            if '\n ' in text:
-                pattern = re.compile(r'\n {1,' + str(space) + r'}')
-                text = pattern.sub(r'\n', text)
-
-            text = text.lstrip('\n')
-            children = self.parse(text, state, rules)
-            yield {'type': 'list_item', 'children': children}
-
-    def parse_block_html(self, m, state, string):
+    def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
         return {'type': 'block_html', 'raw': html}
 
-    def parse_def_link(self, m, state, string):
+    def parse_def_link(self, m, state):
         key = m.group(1).lower()
         link = m.group(2)
         title = m.group(3)
         if key not in state['def_links']:
             state['def_links'][key] = (link, title)
 
-    def parse_def_footnote(self, m, state, string):
+    def parse_def_footnote(self, m, state):
         key = m.group(2).lower()
         if key not in state['def_footnotes']:
             state['def_footnotes'][key] = m.group(3)
@@ -271,14 +256,14 @@ class BlockParser(MatcherParser):
         }
 
     def parse_text(self, text, state):
-        if state.get('tight') is True:
+        if state.get('tight'):
             return {'type': 'text', 'text': text.strip()}
 
         tokens = []
-        for p in _LINE_BREAK.split(text):
-            p = p.strip()
-            if p:
-                tokens.append({'type': 'paragraph', 'text': p})
+        for s in _PARAGRAPH_SPLIT.split(text):
+            s = s.strip()
+            if s:
+                tokens.append({'type': 'paragraph', 'text': s})
         return tokens
 
     def parse(self, s, state, rules=None):
@@ -320,3 +305,61 @@ def expand_leading_tab(text):
 def _expand_tab_repl(m):
     s = m.group(1)
     return s + ' ' * (4 - len(s))
+
+
+def _create_list_item_pattern(spaces, marker):
+    prefix = r'( {0,' + str(len(spaces) + len(marker)) + r'})'
+
+    if len(marker) > 1:
+        if marker[-1] == '.':
+            prefix = prefix + r'\d{0,9}\.'
+        else:
+            prefix = prefix + r'\d{0,9}\)'
+    else:
+        if marker == '*':
+            prefix = prefix + r'\*'
+        elif marker == '+':
+            prefix = prefix + r'\+'
+        else:
+            prefix = prefix + r'-'
+
+    s1 = ' {' + str(len(marker) + 1) + ',}'
+    if len(marker) > 4:
+        s2 = ' {' + str(len(marker) - 4) + r',}\t'
+    else:
+        s2 = r' *\t'
+    return re.compile(
+        prefix + r'(?:[ \t]*|[ \t]+[^\n]+)\n+'
+        r'(?:\1(?:' + s1 + '|' + s2 + ')'
+        r'[^\n]+\n+)*'
+    )
+
+
+def _find_list_items(string, pos, spaces, marker):
+    items = []
+
+    if marker in {'*', '-'}:
+        is_hr = re.compile(
+            r' *((?:-[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
+        )
+    else:
+        is_hr = None
+
+    pattern = _create_list_item_pattern(spaces, marker)
+    while 1:
+        m = pattern.match(string, pos)
+        if not m:
+            break
+
+        text = m.group(0)
+        if is_hr and is_hr.match(text):
+            break
+
+        new_spaces = m.group(1)
+        if new_spaces != spaces:
+            spaces = new_spaces
+            pattern = _create_list_item_pattern(spaces, marker)
+
+        items.append(text)
+        pos = m.end()
+    return items, pos

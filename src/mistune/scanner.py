@@ -26,51 +26,6 @@ class Scanner(re.Scanner):
             yield '_text_', hole
 
 
-class Matcher(object):
-    PARAGRAPH_END = re.compile(
-        r'(?:\n{2,})|'
-        r'(?:\n {0,3}#{1,6})|'  # axt heading
-        r'(?:\n {0,3}(?:`{3,}|~{3,}))|'  # fenced code
-        r'(?:\n {0,3}<)'  # block html
-    )
-
-    def __init__(self, lexicon):
-        self.lexicon = lexicon
-
-    def search_pos(self, string, pos):
-        m = self.PARAGRAPH_END.search(string, pos)
-        if not m:
-            return None
-        if set(m.group(0)) == {'\n'}:
-            return m.end()
-        return m.start() + 1
-
-    def iter(self, string):
-        pos = 0
-        endpos = len(string)
-        last_end = 0
-        while 1:
-            if pos >= endpos:
-                break
-            for rule, name in self.lexicon:
-                match = rule.match(string, pos)
-                if match is not None:
-                    start, end = match.span()
-                    if start > last_end:
-                        yield '_text_', string[last_end:start]
-                    yield name, match
-                    last_end = pos = match.end()
-                    break
-            else:
-                found = self.search_pos(string, pos)
-                if found is None:
-                    break
-                pos = found
-
-        if last_end < endpos:
-            yield '_text_', string[last_end:]
-
-
 class ScannerParser(object):
     scanner_cls = Scanner
     RULE_NAMES = tuple()
@@ -112,6 +67,84 @@ class ScannerParser(object):
             return sc
 
         lexicon = [(self.get_rule_pattern(n), n) for n in rules]
+        sc = self.scanner_cls(lexicon)
+        self._cached_sc[sc_key] = sc
+        return sc
+
+
+class Matcher(object):
+    PARAGRAPH_END = re.compile(
+        r'(?:\n{2,})|'
+        r'(?:\n {0,3}#{1,6})|'  # axt heading
+        r'(?:\n {0,3}(?:`{3,}|~{3,}))|'  # fenced code
+        r'(?:\n {0,3}<)'  # block html
+    )
+
+    def __init__(self, lexicon):
+        self.lexicon = lexicon
+
+    def search_pos(self, string, pos):
+        m = self.PARAGRAPH_END.search(string, pos)
+        if not m:
+            return None
+        if set(m.group(0)) == {'\n'}:
+            return m.end()
+        return m.start() + 1
+
+    def iter(self, string, state, parse_text):
+        pos = 0
+        endpos = len(string)
+        last_end = 0
+        while 1:
+            if pos >= endpos:
+                break
+            for rule, method in self.lexicon:
+                match = rule.match(string, pos)
+                if match is not None:
+                    start, end = match.span()
+                    if start > last_end:
+                        yield parse_text(string[last_end:start], state)
+
+                    token = method(match, state, string)
+                    if isinstance(token, tuple):
+                        yield token[0]
+                        end = token[1]
+                    else:
+                        yield token
+                    last_end = pos = end
+                    break
+            else:
+                found = self.search_pos(string, pos)
+                if found is None:
+                    break
+                pos = found
+
+        if last_end < endpos:
+            yield parse_text(string[last_end:], state)
+
+
+class MatcherParser(ScannerParser):
+    scanner_cls = Matcher
+
+    def _scan(self, s, state, rules):
+        sc = self._create_scanner(rules)
+        for tok in sc.iter(s, state, self.parse_text):
+            if isinstance(tok, list):
+                for t in tok:
+                    yield t
+            elif tok:
+                yield tok
+
+    def _create_scanner(self, rules):
+        sc_key = '|'.join(rules)
+        sc = self._cached_sc.get(sc_key)
+        if sc:
+            return sc
+
+        lexicon = [
+            (self.get_rule_pattern(n), self.get_rule_method(n))
+            for n in rules
+        ]
         sc = self.scanner_cls(lexicon)
         self._cached_sc[sc_key] = sc
         return sc

@@ -1,5 +1,5 @@
 import re
-from .scanner import ScannerParser, Matcher
+from .scanner import MatcherParser
 
 _LINE_BREAK = re.compile(r'\n{2,}')
 
@@ -41,9 +41,7 @@ _LIST_ITEM = re.compile(
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 
-class BlockParser(ScannerParser):
-    scanner_cls = Matcher
-
+class BlockParser(MatcherParser):
     DEF_LINK = re.compile(
         r' {0,3}\[([^^\]]+)\]:[ \t]*'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
@@ -118,12 +116,12 @@ class BlockParser(ScannerParser):
         'def_link', 'def_footnote',
     )
 
-    def parse_indent_code(self, m, state):
+    def parse_indent_code(self, m, state, string):
         text = expand_leading_tab(m.group(0))
         code = _INDENT_CODE_TRIM.sub('', text)
         return self.tokenize_block_code(code, None, state)
 
-    def parse_fenced_code(self, m, state):
+    def parse_fenced_code(self, m, state, string):
         info = m.group(2)
         code = m.group(3) or ''
         return self.tokenize_block_code(code + '\n', info, state)
@@ -134,7 +132,7 @@ class BlockParser(ScannerParser):
             token['params'] = (info, )
         return token
 
-    def parse_axt_heading(self, m, state):
+    def parse_axt_heading(self, m, state, string):
         level = len(m.group(1))
         text = m.group(2) or ''
         text = text.strip()
@@ -142,7 +140,7 @@ class BlockParser(ScannerParser):
             text = ''
         return self.tokenize_heading(text, level, state)
 
-    def parse_setex_heading(self, m, state):
+    def parse_setex_heading(self, m, state, string):
         level = 1 if m.group(2) == '=' else 2
         text = m.group(1)
         text = text.strip()
@@ -151,10 +149,10 @@ class BlockParser(ScannerParser):
     def tokenize_heading(self, text, level, state):
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
-    def parse_thematic_break(self, m, state):
+    def parse_thematic_break(self, m, state, string):
         return {'type': 'thematic_break', 'blank': True}
 
-    def parse_block_quote(self, m, state):
+    def parse_block_quote(self, m, state, string):
         depth = state.get('in_block_quote', 0) + 1
         if depth > 5:
             rules = list(self.default_rules)
@@ -172,7 +170,7 @@ class BlockParser(ScannerParser):
         state['in_block_quote'] = depth - 1
         return {'type': 'block_quote', 'children': children}
 
-    def parse_list(self, m, state):
+    def parse_list(self, m, state, string):
         text = m.group(0)
         m = _LIST_BULLET.match(text)
 
@@ -230,18 +228,18 @@ class BlockParser(ScannerParser):
             children = self.parse(text, state, rules)
             yield {'type': 'list_item', 'children': children}
 
-    def parse_block_html(self, m, state):
+    def parse_block_html(self, m, state, string):
         html = m.group(0).rstrip()
         return {'type': 'block_html', 'raw': html}
 
-    def parse_def_link(self, m, state):
+    def parse_def_link(self, m, state, string):
         key = m.group(1).lower()
         link = m.group(2)
         title = m.group(3)
         if key not in state['def_links']:
             state['def_links'][key] = (link, title)
 
-    def parse_def_footnote(self, m, state):
+    def parse_def_footnote(self, m, state, string):
         key = m.group(2).lower()
         if key not in state['def_footnotes']:
             state['def_footnotes'][key] = m.group(3)
@@ -287,14 +285,7 @@ class BlockParser(ScannerParser):
         if rules is None:
             rules = self.default_rules
 
-        tokens = []
-        for tok in self._scan(s, state, rules):
-            if isinstance(tok, dict):
-                tokens.append(tok)
-            elif tok and isinstance(tok, list):
-                tokens.extend(tok)
-
-        return tokens
+        return list(self._scan(s, state, rules))
 
     def render(self, tokens, inline, state):
         data = self._iter_render(tokens, inline, state)

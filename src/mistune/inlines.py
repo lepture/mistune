@@ -232,19 +232,3 @@ class InlineParser(ScannerParser):
 
     def __call__(self, s, state):
         return self.parse(s, state)
-
-
-def expand_leading_tab(text):
-    return ''.join(_expand_lines_leading_tab(text.splitlines(True)))
-
-
-def _expand_lines_leading_tab(lines):
-    for line in lines:
-        if ' \t' not in line:
-            yield line
-            continue
-        spaces = len(line) - len(line.lstrip(' '))
-        if spaces < 4 and line[spaces] == '\t':
-            yield line.replace('\t', ' ' * (4 - spaces), 1)
-        else:
-            yield line

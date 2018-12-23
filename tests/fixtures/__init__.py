@@ -13,11 +13,12 @@ EXAMPLE_PATTERN = re.compile(
 
 def load_cases(TestClass, assert_method, filename, ignore=None):
     def attach_case(n, text, html):
-        def test_case(self):
+        def method(self):
             assert_method(self, n, text, html)
 
         name = 'test_{}'.format(n)
-        setattr(TestClass, name, test_case)
+        method.__name__ = name
+        setattr(TestClass, name, method)
 
     for n, text, html in load_examples(filename):
         if ignore and ignore(n):
@@ -45,7 +46,7 @@ def parse_examples(text):
 
         if md and html:
             count += 1
-            n = '%s_%02d' % (section, count)
+            n = '%s_%03d' % (section, count)
             md = md.replace(u'\u2192', '\t')
             html = html.replace(u'\u2192', '\t')
             yield n, md, html

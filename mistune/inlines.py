@@ -58,26 +58,18 @@ class InlineParser(ScannerParser):
     #:    [an example]: https://example.com "optional title"
     REF_LINK2 = r'!?\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
 
-    #: emphasis with * or _::
+    #: emphasis and strong * or _::
     #:
-    #:    *text*
-    #:    _text_
-    EMPHASIS = (
-        r'\b_[^\s_](?:(?<=\\)_)?_|'  # _s_ and _\_-
-        r'\*[^\s*](?:(?<=\\)\*)?\*|'  # *s* and *\**
-        r'\b_[^\s_][\s\S]*?[^\s_]_(?!_|[^\s' + PUNCTUATION + r'])\b|'
-        r'\*[^\s*"<\[][\s\S]*?[^\s*]\*'
+    #:    *emphasis*  **strong**
+    #:    _emphasis_  __strong__
+    ASTERISK_EMPHASIS = (
+        r'(\*{1,2})((?:(?:' + ESCAPE + r'|[^\s*"<\[])[\s\S]*?)?'
+        r'(?:' + ESCAPE + r'|[^\s*]))\1'
     )
-
-    #: strong with ** or __::
-    #:
-    #:    **text**
-    #:    __text__
-    STRONG = (
-        r'\b__[^\s\_]__(?!_)\b|'
-        r'\*\*[^\s\*]\*\*(?!\*)|'
-        r'\b__[^\s][\s\S]*?[^\s]__(?!_)\b|'
-        r'\*\*[^\s][\s\S]*?[^\s]\*\*(?!\*)'
+    UNDERSCORE_EMPHASIS = (
+        r'\b(_{1,2})((?:(?:' + ESCAPE + r'|[^\s_])[\s\S]*?)?'
+        r'(?:' + ESCAPE + r'|[^\s_]))\1'
+        r'(?!_|[^\s' + PUNCTUATION + r'])\b'
     )
 
     #: codespan with `::
@@ -109,7 +101,8 @@ class InlineParser(ScannerParser):
 
     RULE_NAMES = (
         'escape', 'inline_html', 'auto_link', 'footnote',
-        'std_link', 'ref_link', 'ref_link2', 'strong', 'emphasis',
+        'std_link', 'ref_link', 'ref_link2',
+        'asterisk_emphasis', 'underscore_emphasis',
         'codespan', 'strikethrough', 'linebreak',
     )
 
@@ -186,12 +179,17 @@ class InlineParser(ScannerParser):
         state['footnotes'].append(key)
         return 'footnote_ref', key, index
 
-    def parse_emphasis(self, m, state):
-        text = m.group(0)[1:-1]
-        return 'emphasis', self.render(text, state)
+    def parse_asterisk_emphasis(self, m, state):
+        return self.tokenize_emphasis(m, state)
 
-    def parse_strong(self, m, state):
-        text = m.group(0)[2:-2]
+    def parse_underscore_emphasis(self, m, state):
+        return self.tokenize_emphasis(m, state)
+
+    def tokenize_emphasis(self, m, state):
+        marker = m.group(1)
+        text = m.group(2)
+        if len(marker) == 1:
+            return 'emphasis', self.render(text, state)
         return 'strong', self.render(text, state)
 
     def parse_codespan(self, m, state):

@@ -43,6 +43,18 @@ IGNORE_CASES = {
     'entity_and_numeric_character_references_04',  # &entity is allowed
     'entity_and_numeric_character_references_05',
 
+    'links_31',  # different behavior
+    'links_37',
+    'links_38',  # code has no priority
+    'links_39',
+    'links_45',  # different behavior
+    'links_46',
+    'links_49',
+    'links_50',  # code has no priority
+    'links_51',  # different behavior
+    'links_64',  # allow empty key
+    'links_65',
+
     'images_02',  # we just keep everything as raw
     'images_03',
     'images_04',
@@ -65,6 +77,14 @@ INSANE_CASES = {
     'link_reference_definitions_05',
     'link_reference_definitions_07',
     'link_reference_definitions_21',
+
+    'links_25',
+    'links_32',
+    'links_33',
+    'links_41',
+    'links_60',
+    'links_82',
+    'links_84',
 }
 
 DIFFERENCES = {
@@ -78,29 +98,19 @@ class TestCommonMark(TestCase):
     pass
 
 
-def attach_case(n, text, html):
-    def test_spec(self):
-        print(text)
-        result = mistune.html(text)
-        # normalize to match commonmark
-        result = re.sub(r'\s*\n+\s*', '\n', result)
-        result = re.sub(r'>\n', '>', result)
-        result = re.sub(r'\n<', '<', result)
-        expect = re.sub(r'\s*\n+\s*', '\n', html)
-        expect = re.sub(r'>\n', '>', expect)
-        expect = re.sub(r'\n<', '<', expect)
-        if n in DIFFERENCES:
-            expect = DIFFERENCES[n](expect)
-        self.assertEqual(result, expect)
-
-    name = 'test_{}'.format(n)
-    setattr(TestCommonMark, name, test_spec)
-
-
-def load_cases(prefix):
-    for n, text, html in fixtures.load('commonmark.txt', prefix):
-        if n not in IGNORE_CASES and n not in INSANE_CASES:
-            attach_case(n, text, html)
+def assert_spec(self, n, text, html):
+    print(text)
+    result = mistune.html(text)
+    # normalize to match commonmark
+    result = re.sub(r'\s*\n+\s*', '\n', result)
+    result = re.sub(r'>\n', '>', result)
+    result = re.sub(r'\n<', '<', result)
+    expect = re.sub(r'\s*\n+\s*', '\n', html)
+    expect = re.sub(r'>\n', '>', expect)
+    expect = re.sub(r'\n<', '<', expect)
+    if n in DIFFERENCES:
+        expect = DIFFERENCES[n](expect)
+    self.assertEqual(result, expect)
 
 
 PASSED = {
@@ -116,4 +126,10 @@ PASSED = {
 }
 
 
-load_cases(None)
+def ignore(n):
+    if not n.startswith('links'):
+        return True
+    return (n in IGNORE_CASES) or (n in INSANE_CASES)
+
+
+fixtures.load_cases(TestCase, assert_spec, 'commonmark.txt', ignore)

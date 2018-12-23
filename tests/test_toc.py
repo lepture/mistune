@@ -12,7 +12,7 @@ def parse(text, escape=False):
     return html, toc
 
 
-def assert_method(self, text, html):
+def assert_method(self, name, text, html):
     result = '.\n'.join(parse(text))
     self.assertEqual(result, html)
 

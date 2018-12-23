@@ -1,5 +1,5 @@
 import re
-from .scanner import ScannerParser, escape_url
+from .scanner import ScannerParser, escape_url, unikey
 
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE = r'\\[' + PUNCTUATION + ']'
@@ -9,6 +9,7 @@ HTML_ATTRIBUTES = (
     r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
 ESCAPE_CHAR = re.compile(r'''\\([\\!"#$%&'()*+,.\/:;<=>?@\[\]^`{}|_~-])''')
+LINK_LABEL = r'\[((?:\[[^\[\]]*\]|\\[\[\]]?|`[^`]*`|[^\[\]\\])*?)\]'
 
 
 class InlineParser(ScannerParser):
@@ -29,9 +30,7 @@ class InlineParser(ScannerParser):
     #: [text](/link "title")
     #: ![alt](/src "title")
     STD_LINK = (
-        r'!?\[('
-        r'(?:\[[^^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*'
-        r')\]\(\s*'
+        r'!?' + LINK_LABEL + r'\(\s*'
 
         r'(<(?:\\[<>]?|[^\s<>\\])*>|'
         r'(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)'
@@ -48,7 +47,7 @@ class InlineParser(ScannerParser):
     #:
     #:    [id]: https://example.com "optional title"
     REF_LINK = (
-        r'!?\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
+        r'!?' + LINK_LABEL +
         r'\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
     )
 
@@ -144,13 +143,12 @@ class InlineParser(ScannerParser):
         if line[0] == '!':
             return 'image', link, text, title
 
-        text = self._process_link_text(text, state)
-        return 'link', escape_url(link), text, title
+        return self.tokenize_link(line, link, text, title, state)
 
     def parse_ref_link(self, m, state):
         line = m.group(0)
         text = m.group(1)
-        key = (m.group(2) or text).lower()
+        key = unikey(m.group(2) or text)
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
             return 'text', ESCAPE_CHAR.sub(r'\1', line)
@@ -163,19 +161,18 @@ class InlineParser(ScannerParser):
         if line[0] == '!':
             return 'image', link, text, title
 
-        text = self._process_link_text(text, state)
-        return 'link', escape_url(link), text, title
+        return self.tokenize_link(line, link, text, title, state)
 
     def parse_ref_link2(self, m, state):
         return self.parse_ref_link(m, state)
 
-    def _process_link_text(self, text, state):
+    def tokenize_link(self, line, link, text, title, state):
         if state.get('_in_link'):
-            return text
+            return 'text', line
         state['_in_link'] = True
-        text = self.parse(text, state)
+        text = self.render(text, state)
         state['_in_link'] = False
-        return text
+        return 'link', escape_url(link), text, title
 
     def parse_footnote(self, m, state):
         key = m.group(1).lower()
@@ -191,11 +188,11 @@ class InlineParser(ScannerParser):
 
     def parse_emphasis(self, m, state):
         text = m.group(0)[1:-1]
-        return 'emphasis', self.parse(text, state)
+        return 'emphasis', self.render(text, state)
 
     def parse_strong(self, m, state):
         text = m.group(0)[2:-2]
-        return 'strong', self.parse(text, state)
+        return 'strong', self.render(text, state)
 
     def parse_codespan(self, m, state):
         code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
@@ -203,7 +200,7 @@ class InlineParser(ScannerParser):
 
     def parse_strikethrough(self, m, state):
         text = m.group(1)
-        return 'strikethrough', self.parse(text, state)
+        return 'strikethrough', self.render(text, state)
 
     def parse_linebreak(self, m, state):
         return 'linebreak',
@@ -223,9 +220,13 @@ class InlineParser(ScannerParser):
             self.renderer._get_method(t[0])(*t[1:])
             for t in self._scan(s, state, rules)
         )
+        return tokens
+
+    def render(self, s, state, rules=None):
+        tokens = self.parse(s, state, rules)
         if self.renderer.IS_TREE:
             return list(tokens)
         return ''.join(tokens)
 
     def __call__(self, s, state):
-        return self.parse(s, state)
+        return self.render(s, state)

@@ -11,24 +11,29 @@ EXAMPLE_PATTERN = re.compile(
 )
 
 
-def load_cases(TestClass, assert_method, filename, prefix=None):
-    def test_case(self):
-        assert_method(self, text, html)
+def load_cases(TestClass, assert_method, filename, ignore=None):
+    def attach_case(n, text, html):
+        def test_case(self):
+            assert_method(self, n, text, html)
 
-    for n, text, html in load_examples(filename, prefix):
         name = 'test_{}'.format(n)
         setattr(TestClass, name, test_case)
 
+    for n, text, html in load_examples(filename):
+        if ignore and ignore(n):
+            continue
+        attach_case(n, text, html)
 
-def load_examples(filename, prefix=None):
+
+def load_examples(filename):
     with open(os.path.join(ROOT, filename), 'rb') as f:
         content = f.read()
         text = content.decode('utf-8')
 
-    return parse_examples(text, prefix)
+    return parse_examples(text)
 
 
-def parse_examples(text, prefix=None):
+def parse_examples(text):
     data = EXAMPLE_PATTERN.findall(text)
 
     section = None
@@ -37,9 +42,6 @@ def parse_examples(text, prefix=None):
         if title:
             count = 0
             section = title.lower().replace(' ', '_')
-
-        if prefix and not section.startswith(prefix):
-            continue
 
         if md and html:
             count += 1

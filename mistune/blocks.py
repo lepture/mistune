@@ -1,6 +1,6 @@
 import re
-from .scanner import ScannerParser, Matcher
-from .inlines import ESCAPE_CHAR
+from .scanner import ScannerParser, Matcher, unikey
+from .inlines import ESCAPE_CHAR, LINK_LABEL
 
 _TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
@@ -42,7 +42,7 @@ class BlockParser(ScannerParser):
 
     NEWLINE = re.compile(r'\n+')
     DEF_LINK = re.compile(
-        r' {0,3}\[([^^\]]+)\]:[ \t]*'  # [key]:
+        r' {0,3}' + LINK_LABEL + r':[ \t]*'  # [key]:
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )
@@ -221,14 +221,14 @@ class BlockParser(ScannerParser):
         return {'type': 'block_html', 'raw': html}
 
     def parse_def_link(self, m, state):
-        key = m.group(1).lower()
+        key = unikey(m.group(1))
         link = m.group(2)
         title = m.group(3)
         if key not in state['def_links']:
             state['def_links'][key] = (link, title)
 
     def parse_def_footnote(self, m, state):
-        key = m.group(2).lower()
+        key = unikey(m.group(2))
         if key not in state['def_footnotes']:
             state['def_footnotes'][key] = m.group(3)
 

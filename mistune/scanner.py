@@ -148,3 +148,7 @@ def escape_html(s):
     if html is not None:
         return html.escape(html.unescape(s)).replace('&#x27;', "'")
     return escape(s)
+
+
+def unikey(s):
+    return ' '.join(s.split()).lower()

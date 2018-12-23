@@ -64,10 +64,16 @@ def _parse_include(self, filepath, options, state):
 
     dest = os.path.join(os.path.dirname(source_file), filepath)
     dest = os.path.normpath(dest)
+    if dest == source_file:
+        return {
+            'type': 'block_error',
+            'raw': 'Could not include self: ' + filepath,
+        }
+
     if not os.path.isfile(dest):
         return {
             'type': 'block_error',
-            'raw': 'Cound find file: ' + filepath,
+            'raw': 'Could not find file: ' + filepath,
         }
 
     with open(dest, 'rb') as f:

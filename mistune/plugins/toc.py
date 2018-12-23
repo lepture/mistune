@@ -1,4 +1,9 @@
+import re
+from mistune.scanner import escape_url
 from mistune.renderers import HTMLRenderer
+
+TAG = re.compile(r'<.*?>')
+LINK = re.compile(r'</?a( .+?)?>')
 
 
 class TocRenderer(HTMLRenderer):
@@ -11,20 +16,23 @@ class TocRenderer(HTMLRenderer):
         if level > self._toc_level:
             return super(TocRenderer, self).heading(text, level)
 
-        k = self.generate_heading_id(text, level)
+        k = gen_toc_id(text)
         self._tocs.append((k, text, level))
 
         tag = 'h' + str(level)
         html = '<' + tag + ' id="' + k + '">'
         return html + text + '</' + tag + '>\n'
 
-    def generate_heading_id(self, text, level):
-        return 'toc-' + str(len(self._tocs) + 1)
-
     def render_toc(self):
         html = render_html_toc(self._tocs)
         self._tocs = []
-        return '<section class="toc">' + html + '<section>\n'
+        return '<section class="toc">\n' + html + '<section>\n'
+
+
+def gen_toc_id(text):
+    text = TAG.sub('', text)
+    text = '-'.join(text.split()).strip('-')
+    return escape_url(text.lower())
 
 
 def render_html_toc(toc):
@@ -50,6 +58,7 @@ def render_html_toc(toc):
     s = '<ul>\n'
     levels = []
     for k, text, level in toc:
+        text = LINK.sub('', text)
         item = '<a href="#{}">{}</a>'.format(k, text)
         if not levels:
             s += '<li>' + item
@@ -72,6 +81,8 @@ def render_html_toc(toc):
                     levels.append(last_level)
                     levels.append(level)
                     break
+                else:
+                    s += '</li>\n</ul>\n'
             else:
                 levels.append(level)
                 s += '</li>\n</ul>\n</li>\n<li>' + item

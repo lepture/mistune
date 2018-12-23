@@ -97,6 +97,23 @@ def attach_case(n, text, html):
     setattr(TestCommonMark, name, test_spec)
 
 
-for n, text, html in fixtures.load('commonmark.txt'):
-    if n not in IGNORE_CASES and n not in INSANE_CASES:
-        attach_case(n, text, html)
+def load_cases(prefix):
+    for n, text, html in fixtures.load('commonmark.txt', prefix):
+        if n not in IGNORE_CASES and n not in INSANE_CASES:
+            attach_case(n, text, html)
+
+
+PASSED = {
+    'tabs', 'thematic', 'atx',
+    'setext', 'indented', 'fenced',
+    'html_blocks', 'link_ref',
+    'paragraphs', 'blank_lines',
+    'block_quotes', 'list_items', 'lists',
+    'backslash', 'entity', 'code_spans',
+    # emphasis, links
+    'images', 'autolinks', 'raw_html',
+    'hard_line', 'soft_line', 'textual',
+}
+
+
+load_cases(None)

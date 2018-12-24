@@ -8,8 +8,9 @@ HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
     r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
-ESCAPE_CHAR = re.compile(r'''\\([\\!"#$%&'()*+,.\/:;<=>?@\[\]^`{}|_~-])''')
-LINK_LABEL = r'\[((?:\[[^\[\]]*\]|\\[\[\]]?|`[^`]*`|[^\[\]\\])*?)\]'
+ESCAPE_CHAR = re.compile(r'\\([' + PUNCTUATION + r'])')
+LINK_TEXT = r'(?:\[[^\[\]]*\]|\\[\[\]]?|`[^`]*`|[^\[\]\\])*?'
+LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE + r'){0,1000}'
 
 
 class InlineParser(ScannerParser):
@@ -30,7 +31,7 @@ class InlineParser(ScannerParser):
     #: [text](/link "title")
     #: ![alt](/src "title")
     STD_LINK = (
-        r'!?' + LINK_LABEL + r'\(\s*'
+        r'!?\[(' + LINK_TEXT + r')\]\(\s*'
 
         r'(<(?:\\[<>]?|[^\s<>\\])*>|'
         r'(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)'
@@ -47,8 +48,8 @@ class InlineParser(ScannerParser):
     #:
     #:    [id]: https://example.com "optional title"
     REF_LINK = (
-        r'!?' + LINK_LABEL +
-        r'\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
+        r'!?\[(' + LINK_TEXT + r')\]'
+        r'\[(' + LINK_LABEL + r')\]'
     )
 
     #: Simple form of reference link::
@@ -56,18 +57,20 @@ class InlineParser(ScannerParser):
     #:    [an example]
     #:
     #:    [an example]: https://example.com "optional title"
-    REF_LINK2 = r'!?\[((?:[^\\\[\]]|' + ESCAPE + '){0,1000})\]'
+    REF_LINK2 = r'!?\[(' + LINK_LABEL + r')\]'
 
     #: emphasis and strong * or _::
     #:
     #:    *emphasis*  **strong**
     #:    _emphasis_  __strong__
     ASTERISK_EMPHASIS = (
-        r'(\*{1,2})((?:(?:' + ESCAPE + r'|[^\s*"<\[])[\s\S]*?)?'
+        r'(\*{1,2})(?=[^\s*"<\[])('
+        r'(?:\\\*|[^\*])*'
         r'(?:' + ESCAPE + r'|[^\s*]))\1'
     )
     UNDERSCORE_EMPHASIS = (
-        r'\b(_{1,2})((?:(?:' + ESCAPE + r'|[^\s_])[\s\S]*?)?'
+        r'\b(_{1,2})(?=[^\s_])('
+        r'(?:\\_|[^_])*'
         r'(?:' + ESCAPE + r'|[^\s_]))\1'
         r'(?!_|[^\s' + PUNCTUATION + r'])\b'
     )
@@ -82,13 +85,10 @@ class InlineParser(ScannerParser):
     #: linebreak leaves two spaces at the end of line
     LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
 
-    #: strike through syntax looks like: ``~~word~~``
-    STRIKETHROUGH = r'~~(?=\S)([\s\S]*?\S)~~'
-
     #: footnote syntax looks like::
     #:
     #:    [^key]
-    FOOTNOTE = r'\[\^([^\]]+)\]'
+    FOOTNOTE = r'\[\^(' + LINK_LABEL + r')\]'
 
     INLINE_HTML = (
         r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
@@ -103,7 +103,7 @@ class InlineParser(ScannerParser):
         'escape', 'inline_html', 'auto_link', 'footnote',
         'std_link', 'ref_link', 'ref_link2',
         'asterisk_emphasis', 'underscore_emphasis',
-        'codespan', 'strikethrough', 'linebreak',
+        'codespan', 'linebreak',
     )
 
     def __init__(self, renderer):
@@ -195,10 +195,6 @@ class InlineParser(ScannerParser):
     def parse_codespan(self, m, state):
         code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
         return 'codespan', code
-
-    def parse_strikethrough(self, m, state):
-        text = m.group(1)
-        return 'strikethrough', self.render(text, state)
 
     def parse_linebreak(self, m, state):
         return 'linebreak',

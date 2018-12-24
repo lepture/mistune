@@ -1,5 +1,6 @@
 import re
 import mistune
+from mistune.scanner import html
 from tests import fixtures
 from unittest import TestCase
 
@@ -43,10 +44,12 @@ IGNORE_CASES = {
     'entity_and_numeric_character_references_004',  # &entity is allowed
     'entity_and_numeric_character_references_005',
 
+    'links_029',  # emphasis problem
     'links_031',  # different behavior
     'links_037',
     'links_038',  # code has no priority
     'links_039',
+    'links_043',  # emphasis problem
     'links_045',  # different behavior
     'links_046',
     'links_049',
@@ -87,6 +90,19 @@ INSANE_CASES = {
     'links_084',
 }
 
+if html is None:
+    PY2_IGNORES = {
+        'entity_and_numeric_character_references_001',
+        'entity_and_numeric_character_references_002',
+        'entity_and_numeric_character_references_003',
+        'entity_and_numeric_character_references_008',
+        'entity_and_numeric_character_references_009',
+        'entity_and_numeric_character_references_010',
+        'links_016', 'links_019',
+    }
+else:
+    PY2_IGNORES = []
+
 DIFFERENCES = {
     'tabs_005': lambda s: s.replace('<code>  ', '<code>'),
     'tabs_006': lambda s: s.replace('<code>  ', '<code>'),
@@ -95,7 +111,6 @@ DIFFERENCES = {
 
 
 def assert_spec(self, n, text, html):
-    print(text)
     result = mistune.html(text)
     # normalize to match commonmark
     result = re.sub(r'\s*\n+\s*', '\n', result)
@@ -124,6 +139,8 @@ PASSED = {
 
 def ignore(n):
     if n.startswith('emphasis'):
+        return True
+    if PY2_IGNORES and n in PY2_IGNORES:
         return True
     return (n in IGNORE_CASES) or (n in INSANE_CASES)
 

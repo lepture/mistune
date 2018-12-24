@@ -146,9 +146,6 @@ class HTMLRenderer(BaseRenderer):
     def codespan(self, text):
         return '<code>' + escape(text) + '</code>'
 
-    def strikethrough(self, text):
-        return '<del>' + text + '</del>'
-
     def linebreak(self):
         return '<br />\n'
 

@@ -42,7 +42,7 @@ class BlockParser(ScannerParser):
 
     NEWLINE = re.compile(r'\n+')
     DEF_LINK = re.compile(
-        r' {0,3}' + LINK_LABEL + r':[ \t]*'  # [key]:
+        r' {0,3}\[(' + LINK_LABEL + r')\]:[ \t]*'
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )

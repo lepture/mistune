@@ -3,15 +3,31 @@
 ## Simple
 
 ```````````````````````````````` example
+none
+.
+<p>none</p>
+.
+<section class="toc">
+</section>
+````````````````````````````````
+
+
+```````````````````````````````` example
 # H1
+## H2
 .
 <h1 id="h1">H1</h1>
+<h2 id="h2">H2</h2>
 .
 <section class="toc">
 <ul>
-<li><a href="#h1">H1</a></li>
+<li><a href="#h1">H1</a>
+<ul>
+<li><a href="#h2">H2</a></li>
 </ul>
-<section>
+</li>
+</ul>
+</section>
 ````````````````````````````````
 
 ## Complex
@@ -45,7 +61,7 @@
 <li><a href="#h1-b">H1 B</a></li>
 <li><a href="#h1-c">H1 <code>C</code></a></li>
 </ul>
-<section>
+</section>
 ````````````````````````````````
 
 ## Insane
@@ -79,9 +95,26 @@
 </li>
 <li><a href="#h1-b">H1 B</a></li>
 </ul>
-<section>
+</section>
 ````````````````````````````````
 
+```````````````````````````````` example
+### H3
+## H2
+# H1
+.
+<h3 id="h3">H3</h3>
+<h2 id="h2">H2</h2>
+<h1 id="h1">H1</h1>
+.
+<section class="toc">
+<ul>
+<li><a href="#h3">H3</a></li>
+<li><a href="#h2">H2</a></li>
+<li><a href="#h1">H1</a></li>
+</ul>
+</section>
+````````````````````````````````
 
 ## Link in Heading
 
@@ -95,5 +128,5 @@
 <ul>
 <li><a href="#foo">foo</a></li>
 </ul>
-<section>
+</section>
 ````````````````````````````````

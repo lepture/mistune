@@ -26,7 +26,7 @@ class TocRenderer(HTMLRenderer):
     def render_toc(self):
         html = render_html_toc(self._tocs)
         self._tocs = []
-        return '<section class="toc">\n' + html + '<section>\n'
+        return '<section class="toc">\n' + html + '</section>\n'
 
 
 def gen_toc_id(text):
@@ -85,7 +85,7 @@ def render_html_toc(toc):
                     s += '</li>\n</ul>\n'
             else:
                 levels.append(level)
-                s += '</li>\n</ul>\n</li>\n<li>' + item
+                s += '</li>\n<li>' + item
 
     while len(levels) > 1:
         s += '</li>\n</ul>\n'

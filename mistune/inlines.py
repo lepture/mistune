@@ -65,12 +65,11 @@ class InlineParser(ScannerParser):
     #:    _emphasis_  __strong__
     ASTERISK_EMPHASIS = (
         r'(\*{1,2})(?=[^\s*"<\[])('
-        r'(?:\\\*|[^\*])*'
+        r'(?:\\[\\*]|[^*])*'
         r'(?:' + ESCAPE + r'|[^\s*]))\1'
     )
     UNDERSCORE_EMPHASIS = (
-        r'\b(_{1,2})(?=[^\s_])('
-        r'(?:\\_|[^_])*'
+        r'\b(_{1,2})(?=[^\s_])([\s\S]*'
         r'(?:' + ESCAPE + r'|[^\s_]))\1'
         r'(?!_|[^\s' + PUNCTUATION + r'])\b'
     )
@@ -115,6 +114,9 @@ class InlineParser(ScannerParser):
         return 'text', text
 
     def parse_auto_link(self, m, state):
+        if state.get('_in_link'):
+            return 'text', m.group(0)
+
         text = m.group(1)
         if '@' in text and not text.lower().startswith('mailto:'):
             link = 'mailto:' + text

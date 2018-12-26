@@ -26,32 +26,13 @@ class Markdown(object):
     def before_parse(self, s, state):
         s, state = preprocess(s, state)
         for hook in self.before_parse_hooks:
-            s, state = hook(s, state)
+            s, state = hook(self, s, state)
         return s, state
 
     def after_render(self, result, state):
-        footnotes = self.render_footnotes(state)
-        if footnotes is not None:
-            if self.renderer.IS_TREE:
-                result.extend(footnotes)
-            else:
-                result += footnotes
-
         for hook in self.after_render_hooks:
-            result = hook(result, state)
+            result = hook(self, result, state)
         return result
-
-    def render_footnotes(self, state):
-        footnotes = state.get('footnotes')
-        if not footnotes:
-            return None
-
-        children = [
-            self.block.parse_footnote_item(k, i, state)
-            for i, k in enumerate(footnotes)
-        ]
-        tokens = [{'type': 'footnote', 'children': children}]
-        return self.block.render(tokens, self.inline, state)
 
     def parse(self, s, state=None):
         if state is None:

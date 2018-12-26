@@ -46,12 +46,6 @@ class BlockParser(ScannerParser):
         r'<?([^\s>]+)>?'  # <link> or link
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )
-    DEF_FOOTNOTE = re.compile(
-        r'( {0,3})\[\^([^\]]+)\]:[ \t]*('
-        r'[^\n]*\n+'  # [^key]:
-        r'(?:\1 {1,3}[^\n]*\n+)*'
-        r')'
-    )
 
     AXT_HEADING = re.compile(
         r' {0,3}(#{1,6})(?!#+)(?: *\n+|'
@@ -90,9 +84,10 @@ class BlockParser(ScannerParser):
     RULE_NAMES = (
         'newline', 'thematic_break',
         'fenced_code', 'indent_code',
-        'block_quote', 'block_html', 'list_start',
+        'block_quote', 'block_html',
+        'list_start',
         'axt_heading', 'setex_heading',
-        'def_link', 'def_footnote',
+        'def_link',
     )
 
     def parse_newline(self, m, state):
@@ -226,37 +221,6 @@ class BlockParser(ScannerParser):
         title = m.group(3)
         if key not in state['def_links']:
             state['def_links'][key] = (link, title)
-
-    def parse_def_footnote(self, m, state):
-        key = unikey(m.group(2))
-        if key not in state['def_footnotes']:
-            state['def_footnotes'][key] = m.group(3)
-
-    def parse_footnote_item(self, k, i, state):
-        def_footnotes = state['def_footnotes']
-        text = def_footnotes[k]
-
-        stripped_text = text.strip()
-        if '\n' not in stripped_text:
-            children = [{'type': 'paragraph', 'text': stripped_text}]
-        else:
-            lines = text.splitlines()
-            for second_line in lines[1:]:
-                if second_line:
-                    break
-
-            spaces = len(second_line) - len(second_line.lstrip())
-            pattern = re.compile(r'^ {' + str(spaces) + r',}', flags=re.M)
-            text = pattern.sub('', text)
-            children = self.parse_text(text, state)
-            if not isinstance(children, list):
-                children = [children]
-
-        return {
-            'type': 'footnote_item',
-            'children': children,
-            'params': (k, i)
-        }
 
     def parse_text(self, text, state):
         if state.get('tight'):

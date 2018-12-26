@@ -43,9 +43,6 @@ class AstRenderer(BaseRenderer):
     def inline_html(self, html):
         return {'type': 'inline_html', 'text': html}
 
-    def footnote_ref(self, key, index):
-        return {'type': 'footnote_ref', 'key': key, 'index': index}
-
     def heading(self, children, level):
         return {'type': 'heading', 'children': children, 'level': level}
 
@@ -70,14 +67,6 @@ class AstRenderer(BaseRenderer):
         if start is not None:
             token['start'] = start
         return token
-
-    def footnote_item(self, children, key, index):
-        return {
-            'type': 'footnote_item',
-            'children': children,
-            'key': key,
-            'index': index,
-        }
 
     def _create_default_method(self, name):
         def __ast(children):
@@ -154,11 +143,6 @@ class HTMLRenderer(BaseRenderer):
             return escape(html)
         return html
 
-    def footnote_ref(self, key, index):
-        i = str(index)
-        html = '<sup class="footnote-ref" id="fnref-' + i + '">'
-        return html + '<a href="#fn-' + i + '">' + i + '</a></sup>'
-
     def paragraph(self, text):
         return '<p>' + text + '</p>\n'
 
@@ -201,21 +185,3 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text):
         return '<li>' + text + '</li>\n'
-
-    def footnote(self, text):
-        return (
-            '<section class="footnote">\n<ol>\n'
-            + text +
-            '</ol>\n</section>\n'
-        )
-
-    def footnote_item(self, text, key, index):
-        i = str(index)
-        back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
-
-        text = text.rstrip()
-        if text.endswith('</p>'):
-            text = text[:-4] + back + '</p>'
-        else:
-            text = text + back
-        return '<li id="fn-' + i + '">' + text + '</li>\n'

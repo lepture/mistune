@@ -84,11 +84,6 @@ class InlineParser(ScannerParser):
     #: linebreak leaves two spaces at the end of line
     LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
 
-    #: footnote syntax looks like::
-    #:
-    #:    [^key]
-    FOOTNOTE = r'\[\^(' + LINK_LABEL + r')\]'
-
     INLINE_HTML = (
         r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
         r'(?<!\\)</' + HTML_TAGNAME + r'\s*>|'  # close tag
@@ -99,7 +94,7 @@ class InlineParser(ScannerParser):
     )
 
     RULE_NAMES = (
-        'escape', 'inline_html', 'auto_link', 'footnote',
+        'escape', 'inline_html', 'auto_link',
         'std_link', 'ref_link', 'ref_link2',
         'asterisk_emphasis', 'underscore_emphasis',
         'codespan', 'linebreak',
@@ -168,18 +163,6 @@ class InlineParser(ScannerParser):
         text = self.render(text, state)
         state['_in_link'] = False
         return 'link', escape_url(link), text, title
-
-    def parse_footnote(self, m, state):
-        key = m.group(1).lower()
-        def_footnotes = state.get('def_footnotes')
-        if not def_footnotes or key not in def_footnotes:
-            return 'text', m.group(0)
-
-        index = state.get('footnote_index', 0)
-        index += 1
-        state['footnote_index'] = index
-        state['footnotes'].append(key)
-        return 'footnote_ref', key, index
 
     def parse_asterisk_emphasis(self, m, state):
         return self.tokenize_emphasis(m, state)

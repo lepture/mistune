@@ -21,8 +21,8 @@ import os
 from mistune.markdown import preprocess
 
 DIRECTIVE_PATTERN = re.compile(
-    r'\.\.( +)(?P<name>[a-zA-Z0-9\-]+)\:\: *(?P<value>[^\n]*)\n+'
-    r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9\-]+\: *[^\n]*:\n+)*)'
+    r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<value>[^\n]*)\n+'
+    r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
     r'(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
 )
 

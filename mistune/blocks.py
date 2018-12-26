@@ -154,11 +154,12 @@ class BlockParser(ScannerParser):
         tight = '\n\n' not in ''.join(items).strip()
 
         ordered = len(marker) != 1
-        params = (ordered, None)
         if ordered:
             start = int(marker[:-1])
-            if start != 1:
-                params = (ordered, start)
+            if start == 1:
+                start = None
+        else:
+            start = None
 
         depth = state.get('in_list', 0) + 1
         if depth > 5:
@@ -172,6 +173,7 @@ class BlockParser(ScannerParser):
         children = [self.parse_list_item(item, state, rules) for item in items]
         state['in_list'] = depth - 1
         state['tight'] = None
+        params = (ordered, depth, start)
         token = {'type': 'list', 'children': children, 'params': params}
         return token, pos
 
@@ -182,6 +184,7 @@ class BlockParser(ScannerParser):
         if not text.strip():
             return {
                 'type': 'list_item',
+                'params': (state['in_list'],),
                 'children': [{'type': 'text', 'text': ''}]
             }
 
@@ -200,8 +203,11 @@ class BlockParser(ScannerParser):
             pattern = re.compile(r'\n {1,' + str(space) + r'}')
             text = pattern.sub(r'\n', text)
 
-        children = self.parse(text, state, rules)
-        return {'type': 'list_item', 'children': children}
+        return {
+            'type': 'list_item',
+            'params': (state['in_list'],),
+            'children': self.parse(text, state, rules)
+        }
 
     def _reformat_list_item(self, children):
         for token in children:

@@ -62,11 +62,19 @@ class AstRenderer(BaseRenderer):
     def block_html(self, children):
         return {'type': 'block_html', 'text': children}
 
-    def list(self, children, ordered=False, start=None):
-        token = {'type': 'list', 'children': children, 'ordered': ordered}
+    def list(self, children, ordered, level, start=None):
+        token = {
+            'type': 'list',
+            'children': children,
+            'ordered': ordered,
+            'level': level,
+        }
         if start is not None:
             token['start'] = start
         return token
+
+    def list_item(self, children, level):
+        return {'type': 'list_item', 'children': children, 'level': level}
 
     def _create_default_method(self, name):
         def __ast(children):
@@ -175,7 +183,7 @@ class HTMLRenderer(BaseRenderer):
     def block_error(self, html):
         return '<div class="error">' + html + '</div>\n'
 
-    def list(self, text, ordered=False, start=None):
+    def list(self, text, ordered, level, start=None):
         if ordered:
             html = '<ol'
             if start is not None:
@@ -183,5 +191,5 @@ class HTMLRenderer(BaseRenderer):
             return html + '>\n' + text + '</ol>\n'
         return '<ul>\n' + text + '</ul>\n'
 
-    def list_item(self, text):
+    def list_item(self, text, level):
         return '<li>' + text + '</li>\n'

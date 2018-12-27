@@ -164,7 +164,7 @@ class BlockParser(ScannerParser):
         depth = state.get('in_list', 0) + 1
         if depth > 5:
             rules = list(self.default_rules)
-            rules.remove('list')
+            rules.remove('list_start')
         else:
             rules = None
 
@@ -208,14 +208,6 @@ class BlockParser(ScannerParser):
             'params': (state['in_list'],),
             'children': self.parse(text, state, rules)
         }
-
-    def _reformat_list_item(self, children):
-        for token in children:
-            if token['type'] == 'text':
-                for tok in self.parse_text(token['text'], {}):
-                    yield tok
-            else:
-                yield token
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()

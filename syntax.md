@@ -40,3 +40,90 @@ The most important thing in Markdown would be readability.
 
 This Mistune Flavored Markdown is not a specification. It is not created to
 enforce other developers to follow these rules.
+
+## Blocks
+
+
+### Setext headings
+
+
+```````````````````````````````` example
+Foo
+Bar
+---
+.
+<p>Foo
+Bar</p>
+<hr />
+````````````````````````````````
+
+## Containers
+
+Keep only 6 level containers.
+
+```````````````````````````````` example
+> > > > > > > 7
+.
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>&gt; 7</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+````````````````````````````````
+
+
+### Lists
+
+```````````````````````````````` example
+- 1
+  - 2
+    - 3
+      - 4
+        - 5
+          - 6
+            - 7
+.
+<ul>
+<li>1<ul>
+<li>2<ul>
+<li>3<ul>
+<li>4<ul>
+<li>5<ul>
+<li>6
+- 7</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+````````````````````````````````
+
+## Inlines
+
+
+### Emphasis
+
+
+### Links
+
+Links can't contain links.
+
+```````````````````````````````` example
+[<https://example.com>](/foo)
+.
+<p><a href="/foo">&lt;https://example.com&gt;</a></p>
+````````````````````````````````

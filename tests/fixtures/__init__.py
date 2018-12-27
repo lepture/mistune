@@ -12,6 +12,13 @@ EXAMPLE_PATTERN = re.compile(
 
 
 def load_cases(TestClass, assert_method, filename, ignore=None):
+    with open(os.path.join(ROOT, filename), 'rb') as f:
+        content = f.read()
+        s = content.decode('utf-8')
+    parse_cases(TestClass, assert_method, s, ignore)
+
+
+def parse_cases(TestClass, assert_method, s, ignore=None):
     def attach_case(n, text, html):
         def method(self):
             assert_method(self, n, text, html)
@@ -20,18 +27,10 @@ def load_cases(TestClass, assert_method, filename, ignore=None):
         method.__name__ = name
         setattr(TestClass, name, method)
 
-    for n, text, html in load_examples(filename):
+    for n, text, html in parse_examples(s):
         if ignore and ignore(n):
             continue
         attach_case(n, text, html)
-
-
-def load_examples(filename):
-    with open(os.path.join(ROOT, filename), 'rb') as f:
-        content = f.read()
-        text = content.decode('utf-8')
-
-    return parse_examples(text)
 
 
 def parse_examples(text):

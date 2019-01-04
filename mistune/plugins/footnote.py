@@ -136,7 +136,6 @@ def footnote(md):
     else:
         md.block.default_rules.append('def_footnote')
 
-
     if md.renderer.NAME == 'html':
         md.renderer.register('footnote_ref', render_html_footnote_ref)
         md.renderer.register('footnote_item', render_html_footnote_item)

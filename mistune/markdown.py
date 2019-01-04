@@ -7,7 +7,7 @@ _blank_lines = re.compile(r'^ +$', re.M)
 
 
 class Markdown(object):
-    def __init__(self, renderer, block=None, inline=None):
+    def __init__(self, renderer, block=None, inline=None, plugins=None):
         if block is None:
             block = BlockParser()
 
@@ -19,6 +19,10 @@ class Markdown(object):
         self.renderer = inline.renderer
         self.before_parse_hooks = []
         self.after_render_hooks = []
+
+        if plugins:
+            for plugin in plugins:
+                plugin(self)
 
     def use(self, plugin):
         plugin(self)

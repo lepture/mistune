@@ -42,8 +42,8 @@ class BlockParser(ScannerParser):
 
     NEWLINE = re.compile(r'\n+')
     DEF_LINK = re.compile(
-        r' {0,3}\[(' + LINK_LABEL + r')\]:[ \t]*'
-        r'<?([^\s>]+)>?'  # <link> or link
+        r' {0,3}\[(' + LINK_LABEL + r')\]:(?:[ \t]*\n)?[ \t]*'
+        r'<?([^\s>]+)>?(?:[ \t]*\n)?'
         r'(?: +["(]([^\n]+)[")])? *\n+'
     )
 
@@ -81,6 +81,8 @@ class BlockParser(ScannerParser):
         r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
     ), re.I)
 
+    LIST_MAX_DEPTH = 6
+    BLOCK_QUOTE_MAX_DEPTH = 6
     RULE_NAMES = (
         'newline', 'thematic_break',
         'fenced_code', 'indent_code',
@@ -132,7 +134,7 @@ class BlockParser(ScannerParser):
 
     def parse_block_quote(self, m, state):
         depth = state.get('in_block_quote', 0) + 1
-        if depth > 5:
+        if depth > self.BLOCK_QUOTE_MAX_DEPTH - 1:
             rules = list(self.default_rules)
             rules.remove('block_quote')
         else:
@@ -162,7 +164,7 @@ class BlockParser(ScannerParser):
             start = None
 
         depth = state.get('in_list', 0) + 1
-        if depth > 5:
+        if depth > self.LIST_MAX_DEPTH - 1:
             rules = list(self.default_rules)
             rules.remove('list_start')
         else:

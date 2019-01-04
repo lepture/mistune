@@ -8,25 +8,17 @@
 ## Introduction
 
 Mistune Flavored Markdown (MFM) is a dialect of Markdown that Mistune 2.0
-supported. It includes the basic syntax and extension syntax.
+supported. This document contains the basic Markdown syntax.
 
 ### Why Not CommonMark
 
-CommonMark has gained its popularity nowadays. CommonMark has been taken into
-consideration when rewriting Mistune 2.0, there is even test cases for
-CommonMark in Mistune 2.0, however it is not adopted in Mistune since there
-are many weird rules in CommonMark.
-
-CommonMark declares:
-
-> John Gruber's canonical description of Markdown's syntax does not specify
-> the syntax unambiguously.
-
-It certainly makes some sense at first glimpse. But diving into the CommonMark
-spec, it turns out that many so called unambiguous syntax are not unambiguous
-at all. They are not declared clearly, because there are not needed to. No
-wonder John Gruber would suggest a name of
-[Pedantic Markdown](https://twitter.com/gruber/status/507615356295200770).
+CommonMark has certainly done something right. But there are so many weird
+rules that made it not Markdown anymore. Mistune 2.0 has taken CommonMark
+into consideration at the rewritting, there are test cases for CommonMark
+in the tests folder. While implementing the CommonMark rules, it turns out
+that John Gruber is right, the name of
+[Pedantic Markdown](https://twitter.com/gruber/status/507615356295200770)
+makes sense.
 
 > Markdown is a text-to-HTML conversion tool for web writers. Markdown allows
 > you to write using an easy-to-read, easy-to-write plain text format, then
@@ -34,17 +26,132 @@ wonder John Gruber would suggest a name of
 >
 > -- [John Gruber](https://daringfireball.net/projects/markdown/)
 
-The most important thing in Markdown would be readability. 
+The most difference among Markdown and other formatting syntax is
+readability, while cases in CommonMark on the other hand are not. Take the
+link definition as an example:
+
+```
+[foo]: /url '
+title
+line1
+line2
+'
+
+[foo]
+```
+
+Is it easy-to-read? Absolutely no. There are certainly cases that you need
+multiple lines for a link definition, either the link or the title is too
+long. The original perl script provided by John Gruber does accept multiple
+line link definition, it looks like:
+
+```
+[foo]: /url
+"title"
+
+[foo]
+```
 
 ### Why MFM
 
 This Mistune Flavored Markdown is not a specification. It is not created to
-enforce other developers to follow these rules.
+enforce other developers to follow these rules. Instead, it is a clarification
+on how will Mistune render your text.
+
+This file contains only the very basic Markdown syntax. Mistune has serval
+plugins to extend Markdown grammers, there documentation will be located in
+docs folder.
+
 
 ## Blocks
 
 
+### Thematic breaks
+
+```````````````````````````````` example
+***
+---
+___
+.
+<hr />
+<hr />
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
++++
+.
+<p>+++</p>
+````````````````````````````````
+
+```````````````````````````````` example
+--
+**
+__
+.
+<p>--
+**
+__</p>
+````````````````````````````````
+
+```````````````````````````````` example
+ ***
+  ***
+   ***
+
+.
+<hr />
+<hr />
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+    ***
+.
+<pre><code>***
+</code></pre>
+````````````````````````````````
+
+```````````````````````````````` example
+Foo
+    ***
+.
+<p>Foo
+    ***</p>
+````````````````````````````````
+
+```````````````````````````````` example
+_____________________________________
+.
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+ - - -
+.
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+ **  * ** * ** * **
+.
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+-     -      -      -
+.
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+- - - -    
+.
+<hr />
+````````````````````````````````
+
 ### Setext headings
+
 
 
 ```````````````````````````````` example
@@ -126,4 +233,12 @@ Links can't contain links.
 [<https://example.com>](/foo)
 .
 <p><a href="/foo">&lt;https://example.com&gt;</a></p>
+````````````````````````````````
+
+Harmful link protection:
+
+```````````````````````````````` example
+<javascript:alert(0)>
+.
+<p><a href="#harmful-link">javascript:alert(0)</a></p>
 ````````````````````````````````

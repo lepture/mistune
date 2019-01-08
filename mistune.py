@@ -204,6 +204,7 @@ class BlockLexer(object):
         self._max_recursive_depth = kwargs.get('max_recursive_depth', 6)
         self._list_depth = 0
         self._blockquote_depth = 0
+        self.default_rules = self.default_rules[:]
 
     def __call__(self, text, rules=None):
         return self.parse(text, rules)
@@ -550,6 +551,8 @@ class InlineLexer(object):
         self._in_link = False
         self._in_footnote = False
         self._parse_inline_html = kwargs.get('parse_inline_html')
+        self.default_rules = self.default_rules[:]
+        self.inline_html_rules = self.inline_html_rules[:]
 
     def __call__(self, text, rules=None):
         return self.output(text, rules)

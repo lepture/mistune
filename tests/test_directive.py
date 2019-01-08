@@ -1,6 +1,8 @@
 import os
+import json
 from mistune import Markdown, AstRenderer, HTMLRenderer
 from mistune.plugins.directive import Directive
+from tests import fixtures
 from tests.fixtures import ROOT
 from unittest import TestCase
 
@@ -25,16 +27,12 @@ class TestPluginDirective(TestCase):
         self.assertIn('<h1>Warnning</h1>', html)
 
     def test_ast_directive(self):
-        s = '.. name::\n   :k1: v1\n   :k2:v2'
+        data = fixtures.load_json('directive.json')
         md = Markdown(renderer=AstRenderer())
         md.use(Directive())
-        token = md(s)
-        tok = token[0]
-        self.assertEqual(tok['type'], 'directive')
-        self.assertEqual(tok['name'], 'name')
-
-        options = tok['options']
-        self.assertEqual(dict(options), {'k1': 'v1', 'k2': 'v2'})
+        # Use JSON to fix the differences between tuple and list
+        tokens = json.loads(json.dumps(md(data['text'])))
+        self.assertEqual(tokens, data['tokens'])
 
     def test_not_supported_directive(self):
         s = '.. name::\n   :k1: v1\n   :k2:v2\n\n   message'

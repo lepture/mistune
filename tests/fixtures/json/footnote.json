@@ -1,0 +1,29 @@
+{
+  "text": "[^1]\n\n[^1]: foo",
+  "tokens": [
+    {
+      "type": "paragraph",
+      "children": [
+        {"type": "footnote_ref", "key": "1", "index": 1}
+      ]
+    },
+    {
+      "type": "footnotes",
+      "children": [
+        {
+          "type": "footnote_item",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {"type": "text", "text": "foo"}
+              ]
+            }
+          ],
+          "key": "1",
+          "index": 1
+        }
+      ]
+    }
+  ]
+}

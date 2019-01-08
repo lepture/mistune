@@ -1,5 +1,6 @@
 import os
 import re
+import json
 
 ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -9,6 +10,11 @@ EXAMPLE_PATTERN = re.compile(
     r'^`{32}$|^#{1,6} *(.*)$',
     flags=re.M
 )
+
+
+def load_json(filename):
+    with open(os.path.join(ROOT, 'json', filename)) as f:
+        return json.load(f)
 
 
 def load_cases(TestClass, assert_method, filename, ignore=None):

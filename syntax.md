@@ -427,6 +427,22 @@ Links can't contain links.
 <p><a href="/foo">&lt;https://example.com&gt;</a></p>
 ````````````````````````````````
 
+```````````````````````````````` example
+[[foo]](/foo)
+
+[foo]: https://example.com/
+.
+<p><a href="/foo">[foo]</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[[foo][]](/foo)
+
+[foo]: https://example.com/
+.
+<p><a href="/foo">[foo][]</a></p>
+````````````````````````````````
+
 Harmful link protection:
 
 ```````````````````````````````` example

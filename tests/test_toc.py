@@ -1,5 +1,5 @@
 from mistune import Markdown
-from mistune.plugins.toc import TocRenderer
+from mistune.toc import TocRenderer
 from tests import fixtures
 from unittest import TestCase
 

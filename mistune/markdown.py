@@ -1,6 +1,6 @@
 import re
-from .blocks import BlockParser, expand_leading_tab
-from .inlines import InlineParser
+from .block_parser import BlockParser, expand_leading_tab
+from .inline_parser import InlineParser
 
 _newline_pattern = re.compile(r'\r\n|\r')
 _blank_lines = re.compile(r'^ +$', re.M)

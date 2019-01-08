@@ -1,5 +1,8 @@
 from mistune.scanner import escape_url
-from mistune.inlines import ESCAPE
+from mistune.inline_parser import ESCAPE
+
+__all__ = ['plugin_url', 'plugin_strikethrough']
+
 
 #: url link like: ``https://lepture.com/````````
 URL_LINK_PATTERN = r'''(https?:\/\/[^\s<]+[^<.,:;"')\]\s])'''
@@ -9,7 +12,7 @@ def parse_url_link(self, m, state):
     return 'link', escape_url(m.group(0))
 
 
-def url(md):
+def plugin_url(md):
     md.inline.register_rule('url_link', URL_LINK_PATTERN, parse_url_link)
     md.inline.default_rules.append('url_link')
 
@@ -31,7 +34,7 @@ def render_html_strikethrough(text):
     return '<del>' + text + '</del>'
 
 
-def strikethrough(md):
+def plugin_strikethrough(md):
     md.inline.register_rule(
         'strikethrough', STRIKETHROUGH_PATTERN, parse_strikethrough)
 

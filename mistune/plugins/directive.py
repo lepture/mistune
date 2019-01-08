@@ -20,6 +20,9 @@ import re
 import os
 from mistune.markdown import preprocess
 
+__all__ = ['plugin_directive', 'PluginDirective']
+
+
 DIRECTIVE_PATTERN = re.compile(
     r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<value>[^\n]*)\n+'
     r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
@@ -172,11 +175,11 @@ def register_directive(md, html_renderer):
         md.renderer.register('include', render_html_include)
 
 
-def directive(md):
+def plugin_directive(md):
     register_directive(md, render_html_directive)
 
 
-class Directive(object):
+class PluginDirective(object):
     def __init__(self):
         self._html_renderers = {}
 

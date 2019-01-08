@@ -1,14 +1,14 @@
 import os
 import json
 from mistune import Markdown, AstRenderer, HTMLRenderer
-from mistune.plugins.directive import Directive
+from mistune.plugins import PluginDirective
 from tests import fixtures
 from tests.fixtures import ROOT
 from unittest import TestCase
 
 
 md = Markdown(renderer=HTMLRenderer(escape=False))
-md.use(Directive())
+md.use(PluginDirective())
 
 
 class TestPluginDirective(TestCase):
@@ -29,7 +29,7 @@ class TestPluginDirective(TestCase):
     def test_ast_directive(self):
         data = fixtures.load_json('directive.json')
         md = Markdown(renderer=AstRenderer())
-        md.use(Directive())
+        md.use(PluginDirective())
         # Use JSON to fix the differences between tuple and list
         tokens = json.loads(json.dumps(md(data['text'])))
         self.assertEqual(tokens, data['tokens'])

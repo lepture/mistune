@@ -1,6 +1,8 @@
 import re
-from mistune.inlines import LINK_LABEL
+from mistune.inline_parser import LINK_LABEL
 from mistune.scanner import unikey
+
+__all__ = ['plugin_footnote']
 
 #: inline footnote syntax looks like::
 #:
@@ -117,7 +119,7 @@ def render_html_footnote_item(text, key, index):
     return '<li id="fn-' + i + '">' + text + '</li>\n'
 
 
-def footnote(md):
+def plugin_footnote(md):
     md.inline.register_rule(
         'footnote',
         INLINE_FOOTNOTE_PATTERN,

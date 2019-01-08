@@ -1,5 +1,7 @@
 import re
 
+__all__ = ['plugin_table']
+
 TABLE_PATTERN = re.compile(
     r' {0,3}\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*'
 )
@@ -113,7 +115,7 @@ def render_ast_table_cell(children, align=None, is_head=False):
     }
 
 
-def table(md):
+def plugin_table(md):
     md.block.register_rule('table', TABLE_PATTERN, parse_table)
     md.block.register_rule('nptable', NP_TABLE_PATTERN, parse_nptable)
     md.block.default_rules.append('table')

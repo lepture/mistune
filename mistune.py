@@ -433,7 +433,7 @@ class BlockLexer(object):
         for i, line in enumerate(cells):
             for c, cell in enumerate(line):
                 # de-escape any pipe inside the cell here
-                cells[i][c] = re.sub('\\\\\|', '|', cell)
+                cells[i][c] = re.sub('\\\\\\|', '|', cell)
 
         return cells
 

@@ -5,6 +5,7 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 <a href="https://lepture.com/donate"><img src="https://badgen.net/badge/donate/lepture/ff69b4?icon=patreon" /></a>
 <a href="https://travis-ci.com/lepture/mistune"><img src="https://badgen.net/travis/lepture/mistune/v2.0" alt="Build Status"></a>
 <a href="https://codecov.io/gh/lepture/mistune"><img src="https://badgen.net/codecov/c/github/lepture/mistune/v2.0" alt="Coverage"></a>
+<a href="https://ci.appveyor.com/project/lepture/mistune"><img src="https://badgen.net/appveyor/ci/lepture/mistune/v2.0" alt="AppVeyor CI"></a>
 
 ## Overview
 

@@ -4,7 +4,7 @@ from mistune.inline_parser import ESCAPE
 __all__ = ['plugin_url', 'plugin_strikethrough']
 
 
-#: url link like: ``https://lepture.com/````````
+#: url link like: ``https://lepture.com/``
 URL_LINK_PATTERN = r'''(https?:\/\/[^\s<]+[^<.,:;"')\]\s])'''
 
 

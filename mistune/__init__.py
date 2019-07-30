@@ -14,10 +14,7 @@ def markdown(text, escape=True, renderer=None, plugins=None):
     elif renderer == 'ast':
         renderer = AstRenderer()
 
-    md = Markdown(renderer)
-    if plugins:
-        for plugin in plugins:
-            md.use(plugin)
+    md = Markdown(renderer, plugins=plugins)
     return md(text)
 
 

@@ -4,7 +4,9 @@ Mistune
 The fastest markdown parser in pure Python with renderer features,
 inspired by marked_.
 
-.. image:: https://img.shields.io/badge/donate-lepture-ff69b4.svg
+**NOTICE: WE ARE REWRITING MISTUNE NOW. PLEASE CHECKOUT v2.0 BRANCH**
+
+.. image:: https://badgen.net/badge/donate/lepture/ff69b4?icon=patreon
    :target: https://lepture.com/donate
    :alt: Donate lepture
 .. image:: https://img.shields.io/pypi/wheel/mistune.svg?style=flat
@@ -13,16 +15,16 @@ inspired by marked_.
 .. image:: https://anaconda.org/conda-forge/mistune/badges/version.svg
    :target: https://anaconda.org/conda-forge/mistune
    :alt: Conda Version
-.. image:: https://img.shields.io/pypi/v/mistune.svg
+.. image:: https://badgen.net/pypi/v/mistune
    :target: https://pypi.python.org/pypi/mistune/
    :alt: Latest Version
-.. image:: https://travis-ci.org/lepture/mistune.svg?branch=master
-   :target: https://travis-ci.org/lepture/mistune
+.. image:: https://badgen.net/travis/lepture/mistune
+   :target: https://travis-ci.com/lepture/mistune
    :alt: Travis CI Status
-.. image:: https://coveralls.io/repos/lepture/mistune/badge.svg?branch=master
-   :target: https://coveralls.io/r/lepture/mistune
+.. image:: https://badgen.net/codecov/c/github/lepture/authlib
+   :target: https://codecov.io/gh/lepture/mistune
    :alt: Coverage Status
-.. image:: https://ci.appveyor.com/api/projects/status/8ai8tfwp75oela17?svg=true
+.. image:: https://badgen.net/appveyor/ci/lepture/mistune
    :target: https://ci.appveyor.com/project/lepture/mistune
    :alt: App Veyor CI Status
 

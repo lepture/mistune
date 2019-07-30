@@ -10,9 +10,9 @@ script:
     - python setup.py -q nosetests
 
 after_success:
-    - pip install coveralls
+    - pip install codecov
     - coverage run --source=mistune setup.py -q nosetests
-    - coveralls
+    - codecov
 
 notifications:
     email: false

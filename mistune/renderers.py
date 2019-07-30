@@ -102,13 +102,7 @@ class HTMLRenderer(BaseRenderer):
         self._escape = escape
         self._allow_harmful_protocols = allow_harmful_protocols
 
-    def text(self, text):
-        return escape_html(text)
-
-    def link(self, link, text=None, title=None):
-        if text is None:
-            text = link
-
+    def _safe_url(self, url):
         if self._allow_harmful_protocols is None:
             schemes = self.HARMFUL_PROTOCOLS
         elif self._allow_harmful_protocols is True:
@@ -119,11 +113,19 @@ class HTMLRenderer(BaseRenderer):
 
         if schemes:
             for s in schemes:
-                if link.startswith(s):
-                    link = '#harmful-link'
+                if url.startswith(s):
+                    url= '#harmful-link'
                     break
+        return url
 
-        s = '<a href="' + link + '"'
+    def text(self, text):
+        return escape_html(text)
+
+    def link(self, link, text=None, title=None):
+        if text is None:
+            text = link
+
+        s = '<a href="' + self._safe_url(link) + '"'
         if title:
             s += ' title="' + escape_html(title) + '"'
         return s + '>' + (text or link) + '</a>'

@@ -21,7 +21,7 @@ inspired by marked_.
 .. image:: https://badgen.net/travis/lepture/mistune
    :target: https://travis-ci.com/lepture/mistune
    :alt: Travis CI Status
-.. image:: https://badgen.net/codecov/c/github/lepture/authlib
+.. image:: https://badgen.net/codecov/c/github/lepture/mistune
    :target: https://codecov.io/gh/lepture/mistune
    :alt: Coverage Status
 .. image:: https://badgen.net/appveyor/ci/lepture/mistune

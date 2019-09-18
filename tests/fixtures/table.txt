@@ -1,0 +1,89 @@
+# Table in Markdown
+
+https://michelf.ca/projects/php-markdown/extra/#table
+
+
+## nptable
+
+
+```````````````````````````````` example
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+.
+<table>
+<thead>
+<tr>
+  <th>First Header</th>
+  <th>Second Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Content Cell</td>
+  <td>Content Cell</td>
+</tr>
+<tr>
+  <td>Content Cell</td>
+  <td>Content Cell</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+
+## table
+
+```````````````````````````````` example
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
+.
+<table>
+<thead>
+<tr>
+  <th>First Header</th>
+  <th>Second Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Content Cell</td>
+  <td>Content Cell</td>
+</tr>
+<tr>
+  <td>Content Cell</td>
+  <td>Content Cell</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+
+```````````````````````````````` example
+| Command | Description |
+| --- | --- |
+| git status | List all new or modified files |
+| git diff | Show file differences that haven't been staged |
+.
+<table>
+<thead>
+<tr>
+  <th>Command</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>git status</td>
+  <td>List all new or modified files</td>
+</tr>
+<tr>
+  <td>git diff</td>
+  <td>Show file differences that haven't been staged</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````

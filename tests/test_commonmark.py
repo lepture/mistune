@@ -1,8 +1,7 @@
 import re
 import mistune
 from mistune.scanner import html
-from tests import fixtures
-from unittest import TestCase
+from tests import BaseTestCase
 
 
 IGNORE_CASES = {
@@ -110,20 +109,6 @@ DIFFERENCES = {
 }
 
 
-def assert_spec(self, n, text, html):
-    result = mistune.html(text)
-    # normalize to match commonmark
-    result = re.sub(r'\s*\n+\s*', '\n', result)
-    result = re.sub(r'>\n', '>', result)
-    result = re.sub(r'\n<', '<', result)
-    expect = re.sub(r'\s*\n+\s*', '\n', html)
-    expect = re.sub(r'>\n', '>', expect)
-    expect = re.sub(r'\n<', '<', expect)
-    if n in DIFFERENCES:
-        expect = DIFFERENCES[n](expect)
-    self.assertEqual(result, expect)
-
-
 PASSED = {
     'tabs', 'thematic', 'atx',
     'setext', 'indented', 'fenced',
@@ -137,16 +122,27 @@ PASSED = {
 }
 
 
-def ignore(n):
-    if n.startswith('emphasis'):
-        return True
-    if PY2_IGNORES and n in PY2_IGNORES:
-        return True
-    return (n in IGNORE_CASES) or (n in INSANE_CASES)
+class TestCommonMark(BaseTestCase):
+    @classmethod
+    def ignore_case(cls, n):
+        if n.startswith('emphasis'):
+            return True
+        if PY2_IGNORES and n in PY2_IGNORES:
+            return True
+        return (n in IGNORE_CASES) or (n in INSANE_CASES)
+
+    def assert_case(self, n, text, html):
+        result = mistune.html(text)
+        # normalize to match commonmark
+        result = re.sub(r'\s*\n+\s*', '\n', result)
+        result = re.sub(r'>\n', '>', result)
+        result = re.sub(r'\n<', '<', result)
+        expect = re.sub(r'\s*\n+\s*', '\n', html)
+        expect = re.sub(r'>\n', '>', expect)
+        expect = re.sub(r'\n<', '<', expect)
+        if n in DIFFERENCES:
+            expect = DIFFERENCES[n](expect)
+        self.assertEqual(result, expect)
 
 
-class TestCommonMark(TestCase):
-    pass
-
-
-fixtures.load_cases(TestCommonMark, assert_spec, 'commonmark.txt', ignore)
+TestCommonMark.load_fixtures('commonmark.txt')

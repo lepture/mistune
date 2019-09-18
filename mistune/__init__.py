@@ -24,4 +24,5 @@ __all__ = [
     'escape', 'escape_url', 'escape_html', 'unikey',
     'html', 'markdown',
 ]
+
 __version__ = '2.0.0'

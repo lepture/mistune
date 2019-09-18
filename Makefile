@@ -33,9 +33,6 @@ clean-docs:
 docs:
 	@$(MAKE) -C docs html
 
-rtd:
-	curl -X POST http://readthedocs.org/build/mistune
-
 publish:
 	@twine upload dist/*.tar.gz
 	@twine upload dist/*.whl

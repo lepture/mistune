@@ -116,7 +116,7 @@ def parse_directive(self, m, state):
 
     leading = len(m.group(1)) + 2
     text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
-    rules = list(self.default_rules)
+    rules = list(self.rules)
     rules.remove('directive')
     children = self.parse(text, state, rules)
     token['children'] = children
@@ -165,7 +165,7 @@ def render_html_include(text, relpath, abspath=None, options=None):
 
 def register_directive(md, html_renderer):
     md.block.register_rule('directive', DIRECTIVE_PATTERN, parse_directive)
-    md.block.default_rules.append('directive')
+    md.block.rules.append('directive')
 
     if md.renderer.NAME == 'ast':
         md.renderer.register('directive', render_ast_directive)

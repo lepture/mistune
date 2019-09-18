@@ -125,18 +125,18 @@ def plugin_footnote(md):
         INLINE_FOOTNOTE_PATTERN,
         parse_inline_footnote
     )
-    index = md.inline.default_rules.index('std_link')
+    index = md.inline.rules.index('std_link')
     if index != -1:
-        md.inline.default_rules.insert(index, 'footnote')
+        md.inline.rules.insert(index, 'footnote')
     else:
-        md.inline.default_rules.append('footnote')
+        md.inline.rules.append('footnote')
 
     md.block.register_rule('def_footnote', DEF_FOOTNOTE, parse_def_footnote)
-    index = md.block.default_rules.index('def_link')
+    index = md.block.rules.index('def_link')
     if index != -1:
-        md.block.default_rules.insert(index, 'def_footnote')
+        md.block.rules.insert(index, 'def_footnote')
     else:
-        md.block.default_rules.append('def_footnote')
+        md.block.rules.append('def_footnote')
 
     if md.renderer.NAME == 'html':
         md.renderer.register('footnote_ref', render_html_footnote_ref)

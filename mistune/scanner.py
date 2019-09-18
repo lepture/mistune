@@ -31,21 +31,21 @@ class ScannerParser(object):
     RULE_NAMES = tuple()
 
     def __init__(self):
-        self.rules = {}
-        self.default_rules = list(self.RULE_NAMES)
+        self.rules = list(self.RULE_NAMES)
+        self.rule_methods = {}
         self._cached_sc = {}
 
     def register_rule(self, name, pattern, method):
-        self.rules[name] = (pattern, lambda m, state: method(self, m, state))
+        self.rule_methods[name] = (pattern, lambda m, state: method(self, m, state))
 
     def get_rule_pattern(self, name):
         if name not in self.RULE_NAMES:
-            return self.rules[name][0]
+            return self.rule_methods[name][0]
         return getattr(self, name.upper())
 
     def get_rule_method(self, name):
         if name not in self.RULE_NAMES:
-            return self.rules[name][1]
+            return self.rule_methods[name][1]
         return getattr(self, 'parse_' + name)
 
     def parse_text(self, text, state):

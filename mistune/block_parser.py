@@ -135,7 +135,7 @@ class BlockParser(ScannerParser):
     def parse_block_quote(self, m, state):
         depth = state.get('in_block_quote', 0) + 1
         if depth > self.BLOCK_QUOTE_MAX_DEPTH - 1:
-            rules = list(self.default_rules)
+            rules = list(self.rules)
             rules.remove('block_quote')
         else:
             rules = None
@@ -165,7 +165,7 @@ class BlockParser(ScannerParser):
 
         depth = state.get('in_list', 0) + 1
         if depth > self.LIST_MAX_DEPTH - 1:
-            rules = list(self.default_rules)
+            rules = list(self.rules)
             rules.remove('list_start')
         else:
             rules = None
@@ -235,7 +235,7 @@ class BlockParser(ScannerParser):
 
     def parse(self, s, state, rules=None):
         if rules is None:
-            rules = self.default_rules
+            rules = self.rules
 
         return list(self._scan(s, state, rules))
 

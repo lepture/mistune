@@ -193,7 +193,7 @@ class InlineParser(ScannerParser):
 
     def parse(self, s, state, rules=None):
         if rules is None:
-            rules = self.default_rules
+            rules = self.rules
 
         tokens = (
             self.renderer._get_method(t[0])(*t[1:])

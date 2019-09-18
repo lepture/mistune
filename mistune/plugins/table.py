@@ -85,7 +85,7 @@ def render_html_table(text):
 
 
 def render_html_table_head(text):
-    return '<thead><tr>\n' + text + '</tr></thead>\n'
+    return '<thead>\n<tr>\n' + text + '</tr>\n</thead>\n'
 
 
 def render_html_table_body(text):
@@ -97,13 +97,16 @@ def render_html_table_row(text):
 
 
 def render_html_table_cell(text, align=None, is_head=False):
-    if align:
-        if is_head:
-            return '<th style="text-align:' + align + '">' + text + '</th>\n'
-        return '<td style="text-align:' + align + '">' + text + '</td>\n'
     if is_head:
-        return '<th>' + text + '</th>\n'
-    return '<td>' + text + '</td>\n'
+        tag = 'th'
+    else:
+        tag = 'td'
+
+    html = '  <' + tag
+    if align:
+        html += ' style="text-align:' + align + '"'
+
+    return html + '>' + text + '</' + tag + '>\n'
 
 
 def render_ast_table_cell(children, align=None, is_head=False):
@@ -118,8 +121,8 @@ def render_ast_table_cell(children, align=None, is_head=False):
 def plugin_table(md):
     md.block.register_rule('table', TABLE_PATTERN, parse_table)
     md.block.register_rule('nptable', NP_TABLE_PATTERN, parse_nptable)
-    md.block.default_rules.append('table')
-    md.block.default_rules.append('nptable')
+    md.block.rules.append('table')
+    md.block.rules.append('nptable')
 
     if md.renderer.NAME == 'html':
         md.renderer.register('table', render_html_table)

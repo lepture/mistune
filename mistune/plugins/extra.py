@@ -14,12 +14,12 @@ def parse_url_link(self, m, state):
 
 def plugin_url(md):
     md.inline.register_rule('url_link', URL_LINK_PATTERN, parse_url_link)
-    md.inline.default_rules.append('url_link')
+    md.inline.rules.append('url_link')
 
 
 #: strike through syntax looks like: ``~~word~~``
 STRIKETHROUGH_PATTERN = (
-    r'~~(?=[^\s~])('
+    r'~~(?=[^\s~"<\[])('
     r'(?:\\~|[^~])*'
     r'(?:' + ESCAPE + r'|[^\s~]))~~'
 )
@@ -38,11 +38,11 @@ def plugin_strikethrough(md):
     md.inline.register_rule(
         'strikethrough', STRIKETHROUGH_PATTERN, parse_strikethrough)
 
-    index = md.inline.default_rules.index('codespan')
+    index = md.inline.rules.index('codespan')
     if index != -1:
-        md.inline.default_rules.insert(index + 1, 'strikethrough')
+        md.inline.rules.insert(index + 1, 'strikethrough')
     else:
-        md.inline.default_rules.append('strikethrough')
+        md.inline.rules.append('strikethrough')
 
     if md.renderer.NAME == 'html':
         md.renderer.register('strikethrough', render_html_strikethrough)

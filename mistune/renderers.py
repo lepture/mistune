@@ -166,6 +166,9 @@ class HTMLRenderer(BaseRenderer):
     def thematic_break(self):
         return '<hr />\n'
 
+    def block_text(self, text):
+        return text
+
     def block_code(self, code, info=None):
         html = '<pre><code'
         if info:

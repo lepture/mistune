@@ -1,0 +1,119 @@
+[
+  {
+    "text": "hello  \nworld",
+    "tokens": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hello"
+          },
+          {
+            "type": "linebreak"
+          },
+          {
+            "type": "text",
+            "text": "world"
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    "text": "hello **world**",
+    "tokens": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hello "
+          },
+          {
+            "type": "strong",
+            "children": [
+              {
+                "type": "text",
+                "text": "world"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "hello `world`",
+    "tokens": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hello "
+          },
+          {
+            "type": "codespan",
+            "text": "world"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "hello\n\n---\n\nworld",
+    "tokens": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hello"
+          }
+        ]
+      },
+      {
+        "type": "thematic_break"
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "world"
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    "text": "1. list",
+    "tokens": [
+      {
+        "type": "list",
+        "ordered": true,
+        "level": 1,
+        "children": [
+          {
+            "type": "list_item",
+            "level": 1,
+            "children": [
+              {
+                "type": "block_text",
+                "children": [
+                  {
+                    "type": "text",
+                    "text": "list"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

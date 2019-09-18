@@ -187,7 +187,7 @@ class BlockParser(ScannerParser):
             return {
                 'type': 'list_item',
                 'params': (state['in_list'],),
-                'children': [{'type': 'text', 'text': ''}]
+                'children': [{'type': 'block_text', 'text': ''}]
             }
 
         space = text_length - len(text)
@@ -224,7 +224,7 @@ class BlockParser(ScannerParser):
 
     def parse_text(self, text, state):
         if state.get('tight'):
-            return {'type': 'text', 'text': text.strip()}
+            return {'type': 'block_text', 'text': text.strip()}
 
         tokens = []
         for s in _PARAGRAPH_SPLIT.split(text):

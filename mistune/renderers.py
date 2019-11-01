@@ -198,3 +198,66 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text, level):
         return '<li>' + text + '</li>\n'
+
+
+class TextRenderer(BaseRenderer):
+    NAME = 'text'
+    IS_TREE = False
+
+    def __init__(self):
+        super(TextRenderer, self).__init__()
+
+    def text(self, text):
+        return text
+
+    def heading(self, text, level):
+        return '#' * level + ' ' + text.strip() + '\n\n'
+
+    def list(self, text, ordered, level, start=None):
+        assert not ordered
+        return text
+
+    def list_item(self, text, level):
+        return ' ' * (level-1) + '- ' + text + '\n'
+
+    def block_text(self, text):
+        return text
+
+    def thematic_break(self):
+        return '\n---\n\n'
+
+    def paragraph(self, text):
+        return text.strip('\n') + '\n\n'
+
+    def link(self, link, text=None, title=None):
+        return f'[{text}]({link})'
+
+    def block_quote(self, text):
+        return '\n'.join(['> ' + line for line in text.strip().splitlines()]) + '\n'
+
+    def newline(self):
+        return '\n'
+
+    def block_code(self, code, info=None):
+        return f"```{info or ''}\n" + code.strip('\n') + "\n```\n\n"
+
+    def codespan(self, text):
+        return f'`{text}`'
+
+    def strong(self, text):
+        return '**' + text + '**'
+
+    def table(self, table):
+        from bs4 import BeautifulSoup
+        from tabulate import tabulate
+        soup = BeautifulSoup('<table>' + table + '</table>', 'html.parser')
+        table = soup.find('table')
+        thead = table.find('thead')
+        headers = [cell.text for cell in thead.find_all('th')]
+        tbody = table.find('tbody')
+        rows = [[cell.text for cell in row.find_all('td')]
+                 for row in tbody.find_all('tr')]
+        return tabulate(rows, headers=headers) + self.linebreak() + self.linebreak()
+
+    def linebreak(self):
+        return '\n'

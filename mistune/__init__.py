@@ -1,7 +1,7 @@
 from .markdown import Markdown
 from .block_parser import BlockParser
 from .inline_parser import InlineParser
-from .renderers import AstRenderer, HTMLRenderer
+from .renderers import AstRenderer, HTMLRenderer, TextRenderer
 from .scanner import escape, escape_url, escape_html, unikey
 from .plugins import PLUGINS
 
@@ -27,6 +27,10 @@ def create_markdown(escape=True, renderer=None, plugins=None):
         renderer = HTMLRenderer(escape=escape)
     elif renderer == 'ast':
         renderer = AstRenderer()
+    elif renderer == 'text':
+        renderer = TextRenderer()
+    else:
+        raise ValueError("Unknown renderer '{}'".format(renderer))
 
     if plugins:
         _plugins = []
@@ -45,6 +49,12 @@ html = create_markdown(
     plugins=['strikethrough', 'footnotes', 'table'],
 )
 
+text = create_markdown(
+    escape=False,
+    renderer='text',
+    plugins=['table'],
+    )
+
 
 def markdown(text, escape=True, renderer=None, plugins=None):
     md = create_markdown(escape, renderer, plugins)
@@ -55,7 +65,7 @@ __all__ = [
     'Markdown', 'AstRenderer', 'HTMLRenderer',
     'BlockParser', 'InlineParser',
     'escape', 'escape_url', 'escape_html', 'unikey',
-    'html', 'create_markdown', 'markdown',
+    'html', 'create_markdown', 'markdown', 'text',
 ]
 
 __version__ = '2.0.0a1'

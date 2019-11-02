@@ -23,14 +23,14 @@ mistune.html(your_markdown_text)
 ## Sponsors
 
 <table>
-  <tr>
-    <td><img align="middle" width="48" src="https://user-images.githubusercontent.com/2379650/45126032-50b69880-b13f-11e8-9c2c-abd16c433495.png"></td>
-    <td>Get professionally-supported Mistune with the <a href="https://tidelift.com/subscription/pkg/pypi-mistune?utm_source=pypi-mistune&utm_medium=referral&utm_campaign=readme">Tidelift Subscription</a>.
-    </td>
-  </tr>
+<tr>
+<td><img align="middle" width="48" src="https://user-images.githubusercontent.com/2379650/45126032-50b69880-b13f-11e8-9c2c-abd16c433495.png"></td>
+<td>Get professionally-supported Mistune with the <a href="https://tidelift.com/subscription/pkg/pypi-mistune?utm_source=pypi-mistune&utm_medium=referral&utm_campaign=readme">Tidelift Subscription</a>.
+</td>
+</tr>
 </table>
 
-[**Become a backer via Patreon**](https://www.patreon.com/lepture).
+[**Support Me via GitHub Sponsors**](https://github.com/users/lepture/sponsorship).
 
 ## Installation
 

@@ -38,6 +38,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'sphinx_typlog_theme'
 html_theme_path = [sphinx_typlog_theme.get_path()]
 html_theme_options = {
+    'description': (
+        'A fast yet powerful Python Markdown parser '
+        'with renderers and plugins'
+    ),
     'color': '#3E7FCB',
     'github_user': 'lepture',
     'github_repo': 'mistune',

@@ -6,6 +6,34 @@
 Mistune: Python Markdown Parser
 ===============================
 
+Release v\ |version|.
+
+A fast yet powerful Python Markdown parser with renderers and plugins,
+compatible with sane CommonMark rules.
+
+Installation
+------------
+
+Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_::
+
+    $ pip install mistune
+
+Mistune has no external dependencies.
+
+
+Overview
+--------
+
+
+User Guide
+----------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+
+   intro
+   guide
+   plugins
+   advanced
+   api
+   changes

@@ -41,7 +41,7 @@ def plugin_strikethrough(md):
     index = md.inline.rules.index('codespan')
     if index != -1:
         md.inline.rules.insert(index + 1, 'strikethrough')
-    else:
+    else:  # pragma: no cover
         md.inline.rules.append('strikethrough')
 
     if md.renderer.NAME == 'html':

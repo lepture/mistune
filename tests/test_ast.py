@@ -12,7 +12,6 @@ class TestAstRenderer(TestCase):
 
             def method(self):
                 tokens = mistune.markdown(data['text'], renderer='ast')
-                print(tokens)
                 self.assertEqual(tokens, data['tokens'])
 
             name = 'test_{}'.format(n)

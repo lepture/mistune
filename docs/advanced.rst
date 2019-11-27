@@ -1,2 +1,2 @@
-Advanced Usage of Mistune
+Advanced Guide of Mistune
 =========================

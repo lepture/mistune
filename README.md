@@ -1,3 +1,7 @@
+<a href="https://github.com/lepture/mistune">
+<img align="right" width="120" height="120" src="docs/_static/logo.svg">
+</a>
+
 # Mistune v2
 
 A fast yet powerful Python Markdown parser with renderers and plugins.
@@ -8,7 +12,7 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 <a href="https://ci.appveyor.com/project/lepture/mistune"><img src="https://badgen.net/appveyor/ci/lepture/mistune" alt="AppVeyor CI"></a>
 
 
-**NOTE**: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.
+**NOTE: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.**
 
 ## Overview
 
@@ -24,8 +28,8 @@ mistune.html(your_markdown_text)
 
 <table>
 <tr>
-<td><img align="middle" width="48" src="https://user-images.githubusercontent.com/2379650/45126032-50b69880-b13f-11e8-9c2c-abd16c433495.png"></td>
-<td>Get professionally-supported Mistune with the <a href="https://tidelift.com/subscription/pkg/pypi-mistune?utm_source=pypi-mistune&utm_medium=referral&utm_campaign=readme">Tidelift Subscription</a>.
+<td><img align="middle" width="64" src="https://typlog.com/android-chrome-512x512.png"></td>
+<td>Mistune is sponsored by Typlog, a blogging and podcast hosting platform, simple yet powerful. <a href="https://typlog.com/?utm_source=mistune&utm_medium=referral&utm_campaign=readme">Write in Markdown</a>.
 </td>
 </tr>
 </table>

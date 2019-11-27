@@ -1,6 +1,7 @@
 import mistune
 from unittest import TestCase
 
+
 class TestMiscCases(TestCase):
     def test_none(self):
         self.assertEqual(mistune.html(None), '')
@@ -37,4 +38,11 @@ class TestMiscCases(TestCase):
         md = mistune.Markdown(renderer)
         result = md('[h](javascript:alert)')
         expected = '<p><a href="javascript:alert">h</a></p>'
+        self.assertEqual(result.strip(), expected)
+
+    def test_allow_data_protocols(self):
+        renderer = mistune.HTMLRenderer(allow_harmful_protocols=['data:'])
+        md = mistune.Markdown(renderer)
+        result = md('[h](data:alert)')
+        expected = '<p><a href="data:alert">h</a></p>'
         self.assertEqual(result.strip(), expected)

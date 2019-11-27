@@ -87,3 +87,28 @@ Content Cell  | Content Cell
 </tbody>
 </table>
 ````````````````````````````````
+
+## align table
+
+```````````````````````````````` example
+| Left | Center | Right |
+| :--- | :----: | ----: |
+| a    | b      | c     |
+.
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">Left</th>
+  <th style="text-align:center">Center</th>
+  <th style="text-align:right">Right</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left">a</td>
+  <td style="text-align:center">b</td>
+  <td style="text-align:right">c</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````

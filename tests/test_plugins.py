@@ -27,4 +27,4 @@ def load_plugin(plugin_name, ast=False):
 load_plugin('url')
 load_plugin('strikethrough')
 load_plugin('footnote', True)
-load_plugin('table')
+load_plugin('table', True)

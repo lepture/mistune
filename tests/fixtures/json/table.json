@@ -1,0 +1,69 @@
+{
+  "text": "|A|B|\n|-|-|\n|a|b|",
+  "tokens": [
+    {
+      "type": "table",
+      "children": [
+        {
+          "type": "table_head",
+          "children": [
+            {
+              "type": "table_cell",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A"
+                }
+              ],
+              "align": null,
+              "is_head": true
+            },
+            {
+              "type": "table_cell",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "B"
+                }
+              ],
+              "align": null,
+              "is_head": true
+            }
+          ]
+        },
+        {
+          "type": "table_body",
+          "children": [
+            {
+              "type": "table_row",
+              "children": [
+                {
+                  "type": "table_cell",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "a"
+                    }
+                  ],
+                  "align": null,
+                  "is_head": false
+                },
+                {
+                  "type": "table_cell",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "b"
+                    }
+                  ],
+                  "align": null,
+                  "is_head": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

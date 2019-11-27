@@ -6,9 +6,6 @@ from .scanner import escape, escape_url, escape_html, unikey
 from .plugins import PLUGINS
 
 
-html = Markdown(HTMLRenderer(escape=False))
-
-
 def create_markdown(escape=True, renderer=None, plugins=None):
     """Create a Markdown instance based on the given condition.
 
@@ -40,6 +37,13 @@ def create_markdown(escape=True, renderer=None, plugins=None):
                 _plugins.append(p)
         plugins = _plugins
     return Markdown(renderer, plugins=plugins)
+
+
+html = create_markdown(
+    escape=False,
+    renderer='html',
+    plugins=['strikethrough', 'footnote', 'table'],
+)
 
 
 def markdown(text, escape=True, renderer=None, plugins=None):

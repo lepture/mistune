@@ -8,7 +8,7 @@ text into HTML::
 
     mistune.html(YOUR_MARKDOWN_TEXT)
 
-The ``mistune.html`` methods has enabled all the features you might want
+The ``.html()`` methods has enabled all the features you might want
 by default:
 
 * No escape of HTML tags

@@ -73,7 +73,7 @@ def _process_row(row, aligns):
     for i, s in enumerate(re.split(r' *(?<!\\)\| *', row)):
         cells.append({
             'type': 'table_cell',
-            'text': re.sub(r'\\\|', '|', s),
+            'text': re.sub(r'\\\|', '|', s.strip()),
             'params': (aligns[i], False)
         })
 

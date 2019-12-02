@@ -93,7 +93,7 @@ def _parse_include(block, filepath, options, state):
 
     return {
         'type': 'include',
-        'text': text,
+        'raw': text,
         'params': (filepath, dest, options)
     }
 
@@ -139,7 +139,8 @@ def render_ast_directive(children, name, value=None, options=None):
 
 def render_ast_include(text, relpath, abspath=None, options=None):
     return {
-        'type': text,
+        'type': 'include',
+        'text': text,
         'relpath': relpath,
         'abspath': abspath,
         'options': options,

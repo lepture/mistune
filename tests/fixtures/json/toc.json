@@ -1,0 +1,24 @@
+{
+  "text": ".. toc::\n# H1",
+  "tokens": [
+    {
+      "type": "toc",
+      "items": [
+        ["toc_1", "H1", 1]
+      ],
+      "title": "",
+      "level": null
+    },
+    {
+      "type": "heading",
+      "children": [
+        {
+          "type": "text",
+          "text": "H1"
+        }
+      ],
+      "level": 1,
+      "id": "toc_1"
+    }
+  ]
+}

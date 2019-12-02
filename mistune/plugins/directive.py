@@ -30,7 +30,7 @@ DIRECTIVE_PATTERN = re.compile(
 )
 
 
-def _parse_options(text):
+def parse_directive_options(text):
     if not text.strip():
         return []
 
@@ -57,7 +57,7 @@ def _parse_text_lines(text, leading):
         yield line
 
 
-def _parse_include(self, filepath, options, state):
+def _parse_include(block, filepath, options, state):
     source_file = state.get('__file__')
     if not source_file:
         return {
@@ -87,7 +87,7 @@ def _parse_include(self, filepath, options, state):
         ext = os.path.splitext(filepath)[1]
         if ext in {'.md', '.markdown', '.mkd'}:
             text, state = preprocess(text, {'__file__': dest})
-            return self.parse(text, state)
+            return block.parse(text, state)
         if ext in {'.html', '.xhtml', '.htm'}:
             return {'type': 'block_html', 'text': text}
 
@@ -98,12 +98,16 @@ def _parse_include(self, filepath, options, state):
     }
 
 
-def parse_directive(self, m, state):
+def parse_directive(block, m, state):
     name = m.group('name')
+    method = block.rule_methods.get('directive_' + name)
+    if method:
+        return method[1](m, state)
+
     value = m.group('value')
-    options = _parse_options(m.group('options'))
+    options = parse_directive_options(m.group('options'))
     if name == 'include':
-        return _parse_include(self, value, options, state)
+        return _parse_include(block, value, options, state)
 
     token = {
         'type': 'directive',
@@ -116,9 +120,9 @@ def parse_directive(self, m, state):
 
     leading = len(m.group(1)) + 2
     text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
-    rules = list(self.rules)
+    rules = list(block.rules)
     rules.remove('directive')
-    children = self.parse(text, state, rules)
+    children = block.parse(text, state, rules)
     token['children'] = children
     return token
 
@@ -171,7 +175,7 @@ def register_directive(md, html_renderer):
         md.renderer.register('directive', render_ast_directive)
         md.renderer.register('include', render_ast_include)
     elif md.renderer.NAME == 'html':
-        md.renderer.register('directive', render_html_directive)
+        md.renderer.register('directive', html_renderer)
         md.renderer.register('include', render_html_include)
 
 

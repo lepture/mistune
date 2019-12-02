@@ -18,6 +18,7 @@ class Markdown(object):
         self.inline = inline
         self.renderer = inline.renderer
         self.before_parse_hooks = []
+        self.before_render_hooks = []
         self.after_render_hooks = []
 
         if plugins:
@@ -33,6 +34,11 @@ class Markdown(object):
             s, state = hook(self, s, state)
         return s, state
 
+    def before_render(self, tokens, state):
+        for hook in self.before_render_hooks:
+            tokens = hook(self, tokens, state)
+        return tokens
+
     def after_render(self, result, state):
         for hook in self.after_render_hooks:
             result = hook(self, result, state)
@@ -44,6 +50,7 @@ class Markdown(object):
 
         s, state = self.before_parse(s, state)
         tokens = self.block.parse(s, state)
+        tokens = self.before_render(tokens, state)
         result = self.block.render(tokens, self.inline, state)
         result = self.after_render(result, state)
         return result

@@ -114,7 +114,7 @@ class HTMLRenderer(BaseRenderer):
         if schemes:
             for s in schemes:
                 if url.startswith(s):
-                    url= '#harmful-link'
+                    url = '#harmful-link'
                     break
         return url
 

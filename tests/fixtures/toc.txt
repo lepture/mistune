@@ -1,33 +1,46 @@
 # Table of Contents
 
-## Simple
+## No TOC
 
 ```````````````````````````````` example
 none
 .
 <p>none</p>
-.
-<section class="toc">
-</section>
 ````````````````````````````````
 
 
+## Simple TOC
+
 ```````````````````````````````` example
+.. toc::
+
 # H1
 ## H2
 .
-<h1 id="h1">H1</h1>
-<h2 id="h2">H2</h2>
-.
 <section class="toc">
 <ul>
-<li><a href="#h1">H1</a>
+<li><a href="#toc_1">H1</a>
 <ul>
-<li><a href="#h2">H2</a></li>
+<li><a href="#toc_2">H2</a></li>
 </ul>
 </li>
 </ul>
 </section>
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+````````````````````````````````
+
+## Invalid Option
+
+```````````````````````````````` example
+# H1
+## H2
+.. toc::
+   :level: s
+.
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+<div class="error">TOC level MUST be integer</div>
 ````````````````````````````````
 
 ## Complex
@@ -39,27 +52,30 @@ none
 #### H4
 # H1 B
 # H1 `C`
+
+.. toc:: Table of Contents
+   :level: 3
 .
-<h1 id="h1">H1</h1>
-<h2 id="h2">H2</h2>
-<h3 id="h3">H3</h3>
-<h4>H4</h4>
-<h1 id="h1-b">H1 B</h1>
-<h1 id="h1-c">H1 <code>C</code></h1>
-.
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+<h3 id="toc_3">H3</h3>
+<h4 id="toc_4">H4</h4>
+<h1 id="toc_5">H1 B</h1>
+<h1 id="toc_6">H1 <code>C</code></h1>
 <section class="toc">
+<h1>Table of Contents</h1>
 <ul>
-<li><a href="#h1">H1</a>
+<li><a href="#toc_1">H1</a>
 <ul>
-<li><a href="#h2">H2</a>
+<li><a href="#toc_2">H2</a>
 <ul>
-<li><a href="#h3">H3</a></li>
+<li><a href="#toc_3">H3</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#h1-b">H1 B</a></li>
-<li><a href="#h1-c">H1 <code>C</code></a></li>
+<li><a href="#toc_5">H1 B</a></li>
+<li><a href="#toc_6">H1 C</a></li>
 </ul>
 </section>
 ````````````````````````````````
@@ -73,27 +89,27 @@ none
 #### H4
 ### H3 B
 # H1 B
+.. toc::
 .
-<h1 id="h1">H1</h1>
-<h3 id="h3">H3</h3>
-<h2 id="h2">H2</h2>
-<h4>H4</h4>
-<h3 id="h3-b">H3 B</h3>
-<h1 id="h1-b">H1 B</h1>
-.
+<h1 id="toc_1">H1</h1>
+<h3 id="toc_2">H3</h3>
+<h2 id="toc_3">H2</h2>
+<h4 id="toc_4">H4</h4>
+<h3 id="toc_5">H3 B</h3>
+<h1 id="toc_6">H1 B</h1>
 <section class="toc">
 <ul>
-<li><a href="#h1">H1</a>
+<li><a href="#toc_1">H1</a>
 <ul>
-<li><a href="#h3">H3</a></li>
-<li><a href="#h2">H2</a>
+<li><a href="#toc_2">H3</a></li>
+<li><a href="#toc_3">H2</a>
 <ul>
-<li><a href="#h3-b">H3 B</a></li>
+<li><a href="#toc_5">H3 B</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#h1-b">H1 B</a></li>
+<li><a href="#toc_6">H1 B</a></li>
 </ul>
 </section>
 ````````````````````````````````
@@ -102,16 +118,16 @@ none
 ### H3
 ## H2
 # H1
+.. toc::
 .
-<h3 id="h3">H3</h3>
-<h2 id="h2">H2</h2>
-<h1 id="h1">H1</h1>
-.
+<h3 id="toc_1">H3</h3>
+<h2 id="toc_2">H2</h2>
+<h1 id="toc_3">H1</h1>
 <section class="toc">
 <ul>
-<li><a href="#h3">H3</a></li>
-<li><a href="#h2">H2</a></li>
-<li><a href="#h1">H1</a></li>
+<li><a href="#toc_1">H3</a></li>
+<li><a href="#toc_2">H2</a></li>
+<li><a href="#toc_3">H1</a></li>
 </ul>
 </section>
 ````````````````````````````````
@@ -121,12 +137,26 @@ none
 
 ```````````````````````````````` example
 # [foo](/bar)
+.. toc::
 .
-<h1 id="foo"><a href="/bar">foo</a></h1>
-.
+<h1 id="toc_1"><a href="/bar">foo</a></h1>
 <section class="toc">
 <ul>
-<li><a href="#foo">foo</a></li>
+<li><a href="#toc_1">foo</a></li>
+</ul>
+</section>
+````````````````````````````````
+
+## HTML in Heading
+
+```````````````````````````````` example
+# <em>H1</em>
+.. toc::
+.
+<h1 id="toc_1"><em>H1</em></h1>
+<section class="toc">
+<ul>
+<li><a href="#toc_1">H1</a></li>
 </ul>
 </section>
 ````````````````````````````````

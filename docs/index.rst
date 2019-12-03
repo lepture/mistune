@@ -21,10 +21,6 @@ Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_::
 Mistune has no external dependencies.
 
 
-Overview
---------
-
-
 User Guide
 ----------
 
@@ -34,6 +30,7 @@ User Guide
    intro
    guide
    plugins
+   directives
    advanced
    api
    changes

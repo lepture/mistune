@@ -57,4 +57,34 @@ Customize Renderer
 ------------------
 
 Mistune supports renderer feature which enables developers to customize
-the output.
+the output. For instance, to add code syntax highlight::
+
+    import mistune
+    from pygments import highlight
+    from pygments.lexers import get_lexer_by_name
+    from pygments.formatters import html
+
+
+    class HighlightRenderer(mistune.HTMLRenderer):
+        def block_code(self, code, lang=None):
+            if lang:
+                lexer = get_lexer_by_name(lang, stripall=True)
+                formatter = html.HtmlFormatter()
+                return highlight(code, lexer, formatter)
+            return '<pre><code>' + mistune.escape(code) + '</code></pre>'
+
+    markdown = mistune.create_markdown(renderer=HighlightRenderer())
+
+    print(markdown('```python\nassert 1 == 1\n```'))
+
+In this way, we can use Pygments to highlight the fenced code.
+
+
+AstRenderer
+-----------
+
+Mistune can produce AST by default with ``mistune.AstRenderer``::
+
+    markdown = mistune.create_markdown(renderer=mistune.AstRenderer())
+
+This ``markdown`` function will generate tokens instead of HTML.

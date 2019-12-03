@@ -1,5 +1,6 @@
 from mistune import create_markdown
-from mistune.plugins import PluginToc
+from mistune.plugins.directive import PluginDirective
+from mistune.plugins.toc import PluginToc
 from mistune.plugins.toc import render_toc_ul, extract_toc_items
 from tests import BaseTestCase, fixtures
 
@@ -7,7 +8,10 @@ from tests import BaseTestCase, fixtures
 class TestPluginToc(BaseTestCase):
     @staticmethod
     def parse(text):
-        md = create_markdown(escape=False, plugins=['directive', 'toc'])
+        md = create_markdown(
+            escape=False,
+            plugins=[PluginDirective(), PluginToc()]
+        )
         html = md(text)
         return html
 
@@ -16,21 +20,16 @@ class TestPluginToc(BaseTestCase):
         self.assertEqual(result, html)
 
 
-class TestPluginToc2(TestPluginToc):
-    @staticmethod
-    def parse(text):
-        md = create_markdown(escape=False, plugins=['directive', PluginToc()])
-        html = md(text)
-        return html
-
-
 class TestPluginTocAst(BaseTestCase):
     def test_render_toc_ul(self):
         result = render_toc_ul(None)
         self.assertEqual(result, '')
 
     def test_extract_toc_items(self):
-        md = create_markdown(renderer='ast', plugins=['toc'])
+        md = create_markdown(
+            renderer='ast',
+            plugins=[PluginDirective(), PluginToc()]
+        )
         self.assertEqual(extract_toc_items(md, ''), [])
         s = '# H1\n## H2\n# H1'
         result = extract_toc_items(md, s)
@@ -42,7 +41,10 @@ class TestPluginTocAst(BaseTestCase):
         self.assertEqual(result, expected)
 
     def test_ast_renderer(self):
-        md = create_markdown(renderer='ast', plugins=['directive', 'toc'])
+        md = create_markdown(
+            renderer='ast',
+            plugins=[PluginDirective(), PluginToc()]
+        )
         data = fixtures.load_json('toc.json')
         self.assertEqual(md(data['text']), data['tokens'])
 

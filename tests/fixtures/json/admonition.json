@@ -1,0 +1,16 @@
+{
+  "text": ".. note::\n   hello",
+  "tokens": [
+    {
+      "type": "admonition",
+      "name": "note",
+      "title": "",
+      "children": [
+        {
+          "type": "paragraph",
+          "children": [{"type": "text", "text": "hello"}]
+        }
+      ]
+    }
+  ]
+}

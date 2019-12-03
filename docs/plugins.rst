@@ -126,6 +126,3 @@ Another way to create your own Markdown instance::
 
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[plugin_url])
-
-directive
----------

@@ -17,10 +17,8 @@
 """
 
 import re
-import os
-from mistune.markdown import preprocess
 
-__all__ = ['plugin_directive', 'PluginDirective']
+__all__ = ['Directive', 'PluginAdmonition', 'PluginDirective']
 
 
 DIRECTIVE_PATTERN = re.compile(
@@ -30,121 +28,45 @@ DIRECTIVE_PATTERN = re.compile(
 )
 
 
-def parse_directive_options(text):
-    if not text.strip():
-        return []
+class Directive(object):
+    @staticmethod
+    def parse_text(m):
+        text = m.group('text')
+        if not text.strip():
+            return ''
 
-    options = []
-    for line in re.split(r'\n+', text):
-        line = line.strip()[1:]
-        if not line:
-            continue
-        i = line.find(':')
-        k = line[:i]
-        v = line[i + 1:].strip()
-        options.append((k, v))
-    return options
+        leading = len(m.group(1)) + 2
+        text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
+        return text
 
+    @staticmethod
+    def parse_options(m):
+        text = m.group('options')
+        if not text.strip():
+            return []
 
-def _parse_text_lines(text, leading):
-    spaces = ' ' * leading
-    for line in text.splitlines():
-        line = line.replace(spaces, '', 1)
-        if not line.startswith('    '):
-            line = line.strip()
-        else:
-            line = line.rstrip()
-        yield line
+        options = []
+        for line in re.split(r'\n+', text):
+            line = line.strip()[1:]
+            if not line:
+                continue
+            i = line.find(':')
+            k = line[:i]
+            v = line[i + 1:].strip()
+            options.append((k, v))
+        return options
 
+    def register_directive(self, md, name):
+        plugin = getattr(md, '_directive', None)
+        if not plugin:
+            raise RuntimeError('You MUST add "directive" plugin at first')
+        plugin.register_directive(name, self.parse)
 
-def _parse_include(block, filepath, options, state):
-    source_file = state.get('__file__')
-    if not source_file:
-        return {
-            'type': 'block_error',
-            'raw': 'Missing source file configuration',
-        }
+    def parse(self, block, m, state):
+        raise NotImplementedError()
 
-    dest = os.path.join(os.path.dirname(source_file), filepath)
-    dest = os.path.normpath(dest)
-    if dest == source_file:
-        return {
-            'type': 'block_error',
-            'raw': 'Could not include self: ' + filepath,
-        }
-
-    if not os.path.isfile(dest):
-        return {
-            'type': 'block_error',
-            'raw': 'Could not find file: ' + filepath,
-        }
-
-    with open(dest, 'rb') as f:
-        content = f.read()
-        text = content.decode('utf-8')
-
-    if not options:
-        ext = os.path.splitext(filepath)[1]
-        if ext in {'.md', '.markdown', '.mkd'}:
-            text, state = preprocess(text, {'__file__': dest})
-            return block.parse(text, state)
-        if ext in {'.html', '.xhtml', '.htm'}:
-            return {'type': 'block_html', 'text': text}
-
-    return {
-        'type': 'include',
-        'raw': text,
-        'params': (filepath, dest, options)
-    }
-
-
-def parse_directive(block, m, state):
-    name = m.group('name')
-    method = block.rule_methods.get('directive_' + name)
-    if method:
-        return method[1](m, state)
-
-    value = m.group('value')
-    options = parse_directive_options(m.group('options'))
-    if name == 'include':
-        return _parse_include(block, value, options, state)
-
-    token = {
-        'type': 'directive',
-        'params': (name, value, options)
-    }
-    text = m.group('text')
-    if not text.strip():
-        token['children'] = []
-        return token
-
-    leading = len(m.group(1)) + 2
-    text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
-    rules = list(block.rules)
-    rules.remove('directive')
-    children = block.parse(text, state, rules)
-    token['children'] = children
-    return token
-
-
-def render_ast_directive(children, name, value=None, options=None):
-    return {
-        'type': 'directive',
-        'name': name,
-        'value': value,
-        'options': options,
-        'children': children,
-    }
-
-
-def render_ast_include(text, relpath, abspath=None, options=None):
-    return {
-        'type': 'include',
-        'text': text,
-        'relpath': relpath,
-        'abspath': abspath,
-        'options': options,
-    }
+    def __call__(self, md):
+        raise NotImplementedError()
 
 
 def render_html_admonition(text, name, title=None):
@@ -156,46 +78,85 @@ def render_html_admonition(text, name, title=None):
     return html + '</section>\n'
 
 
-def render_html_directive(text, name, value=None, options=None):
-    if not options:
-        # admonition is a special directive that has no options
-        return render_html_admonition(text, name, title=value)
-    return '<!-- directive (' + name + ') not supported yet -->\n'
+def render_ast_admonition(children, name, title=None):
+    return {
+        'type': 'admonition',
+        'children': children,
+        'name': name,
+        'title': title,
+    }
 
 
-def render_html_include(text, relpath, abspath=None, options=None):
-    html = '<section class="directive-include" data-relpath="'
-    return html + relpath + '">\n' + text + '</section>\n'
+class PluginAdmonition(Directive):
+    SUPPORTED_NAMES = {
+        "attention", "caution", "danger", "error", "hint",
+        "important", "note", "tip", "warning",
+    }
 
+    def parse(self, block, m, state):
+        options = self.parse_options(m)
+        if options:
+            return {
+                'type': 'block_error',
+                'raw': 'Admonition has no options'
+            }
+        name = m.group('name')
+        title = m.group('value')
+        text = self.parse_text(m)
 
-def register_directive(md, html_renderer):
-    md.block.register_rule('directive', DIRECTIVE_PATTERN, parse_directive)
-    md.block.rules.append('directive')
+        rules = list(block.rules)
+        rules.remove('directive')
+        children = block.parse(text, state, rules)
+        return {
+            'type': 'admonition',
+            'children': children,
+            'params': (name, title)
+        }
 
-    if md.renderer.NAME == 'ast':
-        md.renderer.register('directive', render_ast_directive)
-        md.renderer.register('include', render_ast_include)
-    elif md.renderer.NAME == 'html':
-        md.renderer.register('directive', html_renderer)
-        md.renderer.register('include', render_html_include)
+    def __call__(self, md):
+        for name in self.SUPPORTED_NAMES:
+            self.register_directive(md, name)
 
-
-def plugin_directive(md):
-    register_directive(md, render_html_directive)
+        if md.renderer.NAME == 'html':
+            md.renderer.register('admonition', render_html_admonition)
+        elif md.renderer.NAME == 'ast':
+            md.renderer.register('admonition', render_ast_admonition)
 
 
 class PluginDirective(object):
     def __init__(self):
-        self._html_renderers = {}
+        self._directives = {}
 
-    def register_html_renderer(self, name, fn):
-        self._html_renderers[name] = fn
+    def register_directive(self, name, fn):
+        self._directives[name] = fn
 
-    def render_html_directive(self, text, name, value=None, options=None):
-        render = self._html_renderers.get(name)
-        if render:
-            return render(text, value=value, options=options)
-        return render_html_directive(text, name, value=value, options=options)
+    def parse_block_directive(self, block, m, state):
+        name = m.group('name')
+        method = self._directives.get(name)
+        if method:
+            return method(block, m, state)
+
+        token = {
+            'type': 'block_error',
+            'raw': 'Unsupported directive: ' + name,
+        }
+        return token
 
     def __call__(self, md):
-        register_directive(md, self.render_html_directive)
+        md._directive = self
+        md.block.register_rule(
+            'directive', DIRECTIVE_PATTERN,
+            self.parse_block_directive
+        )
+        md.block.rules.append('directive')
+
+
+def _parse_text_lines(text, leading):
+    spaces = ' ' * leading
+    for line in text.splitlines():
+        line = line.replace(spaces, '', 1)
+        if not line.startswith('    '):
+            line = line.strip()
+        else:
+            line = line.rstrip()
+        yield line

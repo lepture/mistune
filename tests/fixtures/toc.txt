@@ -8,6 +8,14 @@ none
 <p>none</p>
 ````````````````````````````````
 
+```````````````````````````````` example
+# H1
+## H2
+.
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+````````````````````````````````
+
 
 ## Simple TOC
 
@@ -36,11 +44,11 @@ none
 # H1
 ## H2
 .. toc::
-   :level: s
+   :depth: s
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>
-<div class="error">TOC level MUST be integer</div>
+<div class="error">TOC depth MUST be integer</div>
 ````````````````````````````````
 
 ## Complex
@@ -54,7 +62,7 @@ none
 # H1 `C`
 
 .. toc:: Table of Contents
-   :level: 3
+   :depth: 3
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>

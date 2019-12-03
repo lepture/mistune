@@ -6,31 +6,59 @@
     directive plugin to use this feature. The syntax looks like::
 
         .. toc:: Title
-           :level: 3
+           :depth: 3
 
-    "Title" and "level" option can be empty. "level" is an integer less
+    "Title" and "depth" option can be empty. "depth" is an integer less
     than 6, which defines the max heading level writers want to include
     in TOC.
 """
-from .directive import parse_directive_options
+from .directive import Directive
 
 
-def parse_directive_toc(block, m, state):
-    title = m.group('value')
-    level = None
-    options = parse_directive_options(m.group('options'))
-    if options:
-        level = dict(options).get('level')
-        if level:
-            try:
-                level = int(level)
-            except (ValueError, TypeError):
-                return {
-                    'type': 'block_error',
-                    'raw': 'TOC level MUST be integer',
-                }
+class PluginToc(Directive):
+    def __init__(self, depth=3):
+        self.depth = 3
 
-    return {'type': 'toc', 'raw': None, 'params': (title, level)}
+    def parse(self, block, m, state):
+        title = m.group('value')
+        depth = None
+        options = self.parse_options(m)
+        if options:
+            depth = dict(options).get('depth')
+            if depth:
+                try:
+                    depth = int(depth)
+                except (ValueError, TypeError):
+                    return {
+                        'type': 'block_error',
+                        'raw': 'TOC depth MUST be integer',
+                    }
+
+        return {'type': 'toc', 'raw': None, 'params': (title, depth)}
+
+    def reset_toc_state(self, md, s, state):
+        state['toc_depth'] = self.depth
+        state['toc_headings'] = []
+        return s, state
+
+    def register_plugin(self, md):
+        md.block.tokenize_heading = record_toc_heading
+        md.before_parse_hooks.append(self.reset_toc_state)
+        md.before_render_hooks.append(md_toc_hook)
+
+        if md.renderer.NAME == 'html':
+            md.renderer.register('theading', render_html_theading)
+        elif md.renderer.NAME == 'ast':
+            md.renderer.register('theading', render_ast_theading)
+
+    def __call__(self, md):
+        self.register_directive(md, 'toc')
+        self.register_plugin(md)
+
+        if md.renderer.NAME == 'html':
+            md.renderer.register('toc', render_html_toc)
+        elif md.renderer.NAME == 'ast':
+            md.renderer.register('toc', render_ast_toc)
 
 
 def record_toc_heading(text, level, state):
@@ -46,23 +74,23 @@ def md_toc_hook(md, tokens, state):
         return tokens
 
     # add TOC items into the given location
-    default_level = state.get('toc_level', 3)
+    default_depth = state.get('toc_depth', 3)
     headings = list(_cleanup_headings_text(md.inline, headings, state))
     for tok in tokens:
         if tok['type'] == 'toc':
             params = tok['params']
-            level = params[1] or default_level
-            items = [d for d in headings if d[2] <= level]
+            depth = params[1] or default_depth
+            items = [d for d in headings if d[2] <= depth]
             tok['raw'] = items
     return tokens
 
 
-def render_ast_toc(items, title, level):
+def render_ast_toc(items, title, depth):
     return {
         'type': 'toc',
         'items': [list(d) for d in items],
         'title': title,
-        'level': level,
+        'depth': depth,
     }
 
 
@@ -73,7 +101,7 @@ def render_ast_theading(children, level, tid):
     }
 
 
-def render_html_toc(items, title, level):
+def render_html_toc(items, title, depth):
     html = '<section class="toc">\n'
     if title:
         html += '<h1>' + title + '</h1>\n'
@@ -84,39 +112,6 @@ def render_html_toc(items, title, level):
 def render_html_theading(text, level, tid):
     tag = 'h' + str(level)
     return '<' + tag + ' id="' + tid + '">' + text + '</' + tag + '>\n'
-
-
-def register_toc_plugin(md, level=3):
-    def reset_toc_state(md, s, state):
-        state['toc_level'] = level
-        state['toc_headings'] = []
-        return s, state
-
-    md.block.tokenize_heading = record_toc_heading
-    # we don't pass any TOC pattern
-    md.block.register_rule('directive_toc', None, parse_directive_toc)
-    md.before_parse_hooks.append(reset_toc_state)
-    md.before_render_hooks.append(md_toc_hook)
-
-    if md.renderer.NAME == 'html':
-        md.renderer.register('theading', render_html_theading)
-        md.renderer.register('toc', render_html_toc)
-
-    elif md.renderer.NAME == 'ast':
-        md.renderer.register('theading', render_ast_theading)
-        md.renderer.register('toc', render_ast_toc)
-
-
-def plugin_toc(md):
-    register_toc_plugin(md)
-
-
-class PluginToc(object):
-    def __init__(self, level=3):
-        self.level = level
-
-    def __call__(self, md):
-        register_toc_plugin(md, self.level)
 
 
 def extract_toc_items(md, s):

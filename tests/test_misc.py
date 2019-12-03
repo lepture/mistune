@@ -46,3 +46,8 @@ class TestMiscCases(TestCase):
         result = md('[h](data:alert)')
         expected = '<p><a href="data:alert">h</a></p>'
         self.assertEqual(result.strip(), expected)
+
+    def test_use_plugin(self):
+        from mistune.plugins import plugin_url
+        md = mistune.Markdown(mistune.HTMLRenderer())
+        md.use(plugin_url)

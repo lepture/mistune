@@ -1,7 +1,6 @@
 import os
 from mistune import create_markdown
-from mistune.plugins.directive import PluginDirective
-from mistune.plugins.include import PluginInclude
+from mistune.directives import DirectiveInclude
 from tests.fixtures import ROOT
 from unittest import TestCase
 
@@ -10,7 +9,7 @@ class TestPluginDirective(TestCase):
     def test_html_include(self):
         md = create_markdown(
             escape=False,
-            plugins=[PluginDirective(), PluginInclude()]
+            plugins=[DirectiveInclude()]
         )
         html = md.read(os.path.join(ROOT, 'include/text.md'))
         self.assertIn('Could not include self', html)
@@ -20,9 +19,7 @@ class TestPluginDirective(TestCase):
         self.assertIn('# Table of Contents', html)
 
     def test_include_missing_source(self):
-        md = create_markdown(
-            plugins=[PluginDirective(), PluginInclude()]
-        )
+        md = create_markdown(plugins=[DirectiveInclude()])
         s = '.. include:: foo.txt'
         html = md(s)
         self.assertIn('Missing source file', html)
@@ -30,7 +27,7 @@ class TestPluginDirective(TestCase):
     def test_ast_include(self):
         md = create_markdown(
             renderer='ast',
-            plugins=[PluginDirective(), PluginInclude()]
+            plugins=[DirectiveInclude()]
         )
         filepath = os.path.join(ROOT, 'include/foo.txt')
         s = '.. include:: hello.txt'

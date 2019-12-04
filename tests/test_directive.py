@@ -1,27 +1,19 @@
 import json
 from mistune import create_markdown
-from mistune.plugins.directive import PluginDirective, PluginAdmonition
+from mistune.directives import Admonition
 from tests import fixtures
 from unittest import TestCase
 
 
-class TestPluginDirective(TestCase):
-    def test_raise_without_directive(self):
-        self.assertRaises(
-            RuntimeError,
-            lambda: create_markdown(plugins=[PluginAdmonition()])
-        )
-
+class TestPluginAdmonition(TestCase):
     def test_unsupported_directive(self):
-        md = create_markdown(plugins=[PluginDirective()])
-        s = '.. note:: Warnning\n\n   message'
+        md = create_markdown(plugins=[Admonition()])
+        s = '.. hello:: Warnning\n\n   message'
         html = md(s)
-        self.assertIn('Unsupported directive: note', html)
+        self.assertIn('Unsupported directive: hello', html)
 
     def test_note_admonition(self):
-        md = create_markdown(
-            plugins=[PluginDirective(), PluginAdmonition()]
-        )
+        md = create_markdown(plugins=[Admonition()])
         s = '.. note:: Warnning\n\n   message'
         html = md(s)
         self.assertIn('class="admonition note"', html)
@@ -30,7 +22,7 @@ class TestPluginDirective(TestCase):
 
     def test_note_admonition_no_text(self):
         md = create_markdown(
-            plugins=[PluginDirective(), PluginAdmonition()]
+            plugins=[Admonition()]
         )
         s = '.. note:: Warnning'
         html = md(s)
@@ -38,9 +30,7 @@ class TestPluginDirective(TestCase):
         self.assertIn('<h1>Warnning</h1>', html)
 
     def test_admonition_options(self):
-        md = create_markdown(
-            plugins=[PluginDirective(), PluginAdmonition()]
-        )
+        md = create_markdown(plugins=[Admonition()])
         s = '.. note:: Warnning\n\n   :option: 3'
         html = md(s)
         self.assertIn('Admonition has no options', html)
@@ -49,7 +39,7 @@ class TestPluginDirective(TestCase):
         data = fixtures.load_json('admonition.json')
         md = create_markdown(
             renderer='ast',
-            plugins=[PluginDirective(), PluginAdmonition()]
+            plugins=[Admonition()]
         )
         # Use JSON to fix the differences between tuple and list
         tokens = json.loads(json.dumps(md(data['text'])))

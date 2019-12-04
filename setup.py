@@ -19,7 +19,7 @@ setup(
     long_description=fread('README.rst'),
     license='BSD',
     packages=[
-        'mistune', 'mistune.plugins'
+        'mistune', 'mistune.plugins', 'mistune.directives'
     ],
     zip_safe=False,
     platforms='any',

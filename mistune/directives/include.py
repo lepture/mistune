@@ -1,9 +1,9 @@
 import os
 from mistune.markdown import preprocess
-from .directive import Directive
+from .base import Directive
 
 
-class PluginInclude(Directive):
+class DirectiveInclude(Directive):
     def parse(self, block, m, state):
         source_file = state.get('__file__')
         if not source_file:

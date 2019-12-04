@@ -1,9 +1,8 @@
 """
-    TOC plugin
-    ~~~~~~~~~~
+    TOC directive
+    ~~~~~~~~~~~~~
 
-    This TOC plugin is based on directive plugin. Developers MUST enable
-    directive plugin to use this feature. The syntax looks like::
+    The TOC directive syntax looks like::
 
         .. toc:: Title
            :depth: 3
@@ -12,10 +11,11 @@
     than 6, which defines the max heading level writers want to include
     in TOC.
 """
-from .directive import Directive
+
+from .base import Directive
 
 
-class PluginToc(Directive):
+class DirectiveToc(Directive):
     def __init__(self, depth=3):
         self.depth = 3
 

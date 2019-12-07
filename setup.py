@@ -15,7 +15,7 @@ setup(
     url='https://github.com/lepture/mistune',
     author='Hsiaoming Yang',
     author_email='me@lepture.com',
-    description='A sane Markdown parser with useful plugins',
+    description='A sane Markdown parser with useful plugins and renderers',
     long_description=fread('README.rst'),
     license='BSD',
     packages=[

@@ -1,5 +1,23 @@
 [
   {
+    "text": "  \n\nhello",
+    "tokens": [
+      {
+        "type": "newline"
+      },
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "hello"
+          }
+        ]
+      }
+    ]
+  },
+
+  {
     "text": "hello  \nworld",
     "tokens": [
       {

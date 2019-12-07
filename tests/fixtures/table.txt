@@ -38,7 +38,7 @@ Content Cell  | Content Cell
 ```````````````````````````````` example
 | First Header  | Second Header |
 | ------------- | ------------- |
-| Content Cell  | Content Cell  |
+| Content Cell  |               |
 | Content Cell  | Content Cell  |
 .
 <table>
@@ -51,7 +51,7 @@ Content Cell  | Content Cell
 <tbody>
 <tr>
   <td>Content Cell</td>
-  <td>Content Cell</td>
+  <td></td>
 </tr>
 <tr>
   <td>Content Cell</td>
@@ -131,6 +131,151 @@ Content Cell  | Content Cell
   <td style="text-align:left">a</td>
   <td style="text-align:center">b</td>
   <td style="text-align:right">c</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+## Misc Table
+
+```````````````````````````````` example
+| A |
+| - | - |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+| A | |
+| - | |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+| A | |
+| - |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+| A |
+| - |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+| A |
+| - | - |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+| A |
+| - | |
+| a | b |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
+```````````````````````````````` example
+A |
+- |
+a | b
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
 </tr>
 </tbody>
 </table>

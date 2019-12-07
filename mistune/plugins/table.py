@@ -8,14 +8,15 @@ TABLE_PATTERN = re.compile(
 NP_TABLE_PATTERN = re.compile(
     r' {0,3}(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*'
 )
-HEADER_SUB = re.compile(r'^ *| *\| *$')
+HEADER_SUB = re.compile(r'\| *$')
 HEADER_SPLIT = re.compile(r' *\| *')
-ALIGN_SUB = re.compile(r' *|\| *$')
 ALIGN_SPLIT = re.compile(r' *\| *')
 
 
 def parse_table(self, m, state):
-    thead, aligns = _process_table(m)
+    header = HEADER_SUB.sub('', m.group(1)).strip()
+    align = HEADER_SUB.sub('', m.group(2))
+    thead, aligns = _process_table(header, align)
 
     text = re.sub(r'(?: *\| *)?\n$', '', m.group(3))
     rows = []
@@ -28,7 +29,7 @@ def parse_table(self, m, state):
 
 
 def parse_nptable(self, m, state):
-    thead, aligns = _process_table(m)
+    thead, aligns = _process_table(m.group(1), m.group(2))
 
     text = re.sub(r'\n$', '', m.group(3))
     rows = []
@@ -39,16 +40,15 @@ def parse_nptable(self, m, state):
     return {'type': 'table', 'children': children}
 
 
-def _process_table(m):
-    header = HEADER_SUB.sub('', m.group(1))
+def _process_table(header, align):
     headers = HEADER_SPLIT.split(header)
-    align = ALIGN_SUB.sub('', m.group(2))
     aligns = ALIGN_SPLIT.split(align)
+
+    if header.endswith('|'):
+        headers.append('')
 
     cells = []
     for i, v in enumerate(aligns):
-        if not v.strip():
-            break
         if re.search(r'^ *-+: *$', v):
             aligns[i] = 'right'
         elif re.search(r'^ *:-+: *$', v):
@@ -58,11 +58,22 @@ def _process_table(m):
         else:
             aligns[i] = None
 
+        if len(headers) > i:
+            cells.append({
+                'type': 'table_cell',
+                'text': headers[i],
+                'params': (aligns[i], True)
+            })
+
+    i += 1
+    while i + 1 < len(headers):
         cells.append({
             'type': 'table_cell',
             'text': headers[i],
-            'params': (aligns[i], True)
+            'params': (None, True)
         })
+        aligns.append(None)
+        i += 1
 
     thead = {'type': 'table_head', 'children': cells}
     return thead, aligns
@@ -71,12 +82,19 @@ def _process_table(m):
 def _process_row(row, aligns):
     cells = []
     for i, s in enumerate(re.split(r' *(?<!\\)\| *', row)):
-        cells.append({
-            'type': 'table_cell',
-            'text': re.sub(r'\\\|', '|', s.strip()),
-            'params': (aligns[i], False)
-        })
-
+        text = re.sub(r'\\\|', '|', s.strip())
+        if len(aligns) < i + 1:
+            cells.append({
+                'type': 'table_cell',
+                'text': text,
+                'params': (None, False)
+            })
+        else:
+            cells.append({
+                'type': 'table_cell',
+                'text': text,
+                'params': (aligns[i], False)
+            })
     return {'type': 'table_row', 'children': cells}
 
 

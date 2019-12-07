@@ -24,8 +24,8 @@ Another way to create your own Markdown instance::
     markdown = mistune.Markdown(renderer, plugins=[plugin_strikethrough])
 
 
-footnote
---------
+footnotes
+---------
 
 .. code-block:: text
 
@@ -37,14 +37,14 @@ footnote
 ``mistune.html()`` has enabled footnote plugin by default. To create
 a markdown instance your own::
 
-    markdown = mistune.create_markdown(plugins=['footnote'])
+    markdown = mistune.create_markdown(plugins=['footnotes'])
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_footnote
+    from mistune.plugins import plugin_footnotes
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_footnote])
+    markdown = mistune.Markdown(renderer, plugins=[plugin_footnotes])
 
 
 table

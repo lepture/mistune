@@ -18,7 +18,7 @@ def create_markdown(escape=True, renderer=None, plugins=None):
         markdown = create_markdown(
             escape=False,
             renderer='html',
-            plugins=['url', 'strikethrough', 'footnote', 'table'],
+            plugins=['url', 'strikethrough', 'footnotes', 'table'],
         )
         # re-use markdown function
         markdown('.... your text ...')
@@ -42,7 +42,7 @@ def create_markdown(escape=True, renderer=None, plugins=None):
 html = create_markdown(
     escape=False,
     renderer='html',
-    plugins=['strikethrough', 'footnote', 'table'],
+    plugins=['strikethrough', 'footnotes', 'table'],
 )
 
 

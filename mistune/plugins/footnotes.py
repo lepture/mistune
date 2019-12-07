@@ -2,7 +2,7 @@ import re
 from mistune.inline_parser import LINK_LABEL
 from mistune.scanner import unikey
 
-__all__ = ['plugin_footnote']
+__all__ = ['plugin_footnotes']
 
 #: inline footnote syntax looks like::
 #:
@@ -101,7 +101,7 @@ def render_html_footnote_ref(key, index):
 
 def render_html_footnotes(text):
     return (
-        '<section class="footnote">\n<ol>\n'
+        '<section class="footnotes">\n<ol>\n'
         + text +
         '</ol>\n</section>\n'
     )
@@ -119,7 +119,7 @@ def render_html_footnote_item(text, key, index):
     return '<li id="fn-' + i + '">' + text + '</li>\n'
 
 
-def plugin_footnote(md):
+def plugin_footnotes(md):
     md.inline.register_rule(
         'footnote',
         INLINE_FOOTNOTE_PATTERN,

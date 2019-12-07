@@ -9,6 +9,8 @@ project = 'Mistune'
 copyright = '2019, Hsiaoming Yang'
 author = 'Hsiaoming Yang'
 
+master_doc = 'index'
+
 # The full version, including alpha/beta/rc tags
 version = mistune.__version__
 release = version

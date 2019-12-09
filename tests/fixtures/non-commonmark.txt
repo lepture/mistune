@@ -1,0 +1,105 @@
+# Links
+
+```````````````````````````````` example
+[link [foo [bar]]](/uri)
+.
+<p>[link [foo [bar]]](/uri)</p>
+````````````````````````````````
+
+```````````````````````````````` example
+[link *foo **bar** `#`*](/uri)
+.
+<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo [bar](/uri)](/uri)
+.
+<p><a href="/uri">foo [bar](/uri)</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+*[foo*](/uri)
+.
+<p><em>[foo</em>](/uri)</p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo <bar attr="](baz)">
+.
+<p><a href="baz">foo &lt;bar attr=&quot;</a>&quot;&gt;</p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo`](/uri)`
+.
+<p><a href="/uri">foo`</a>`</p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo<http://example.com/?search=](uri)>
+.
+<p><a href="uri">foo&lt;http://example.com/?search=</a>&gt;</p>
+````````````````````````````````
+
+```````````````````````````````` example
+[link *foo **bar** `#`*][ref]
+
+[ref]: /uri
+.
+<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo [bar](/uri)][ref]
+
+[ref]: /uri
+.
+<p><a href="/uri">foo [bar](/uri)</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+*[foo*][ref]
+
+[ref]: /uri
+.
+<p><em>[foo</em>]<a href="/uri">ref</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo *bar][ref]
+
+[ref]: /uri
+.
+<p><a href="/uri">foo *bar</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo <bar attr="][ref]">
+
+[ref]: /uri
+.
+<p><a href="/uri">foo &lt;bar attr=&quot;</a>&quot;&gt;</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+[foo`](/uri)`
+.
+<p><a href="/uri">foo`</a>`</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+[foo<http://example.com/?search=][ref]>
+
+[ref]: /uri
+.
+<p><a href="/uri">foo&lt;http://example.com/?search=</a>&gt;</p>
+````````````````````````````````
+
+```````````````````````````````` example
+**[hello](/)**
+.
+<p><strong><a href="/">hello</a></strong></p>
+````````````````````````````````

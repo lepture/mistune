@@ -45,17 +45,20 @@ IGNORE_CASES = {
 
     'links_029',  # emphasis problem
     'links_031',  # different behavior
+    'links_034',
     'links_037',
     'links_038',  # code has no priority
     'links_039',
     'links_043',  # emphasis problem
     'links_045',  # different behavior
     'links_046',
+    'links_047',
     'links_049',
     'links_050',  # code has no priority
     'links_051',  # different behavior
     'links_064',  # allow empty key
     'links_065',
+    'links_077',
 
     'images_002',  # we just keep everything as raw
     'images_003',

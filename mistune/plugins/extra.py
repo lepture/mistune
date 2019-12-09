@@ -19,7 +19,7 @@ def plugin_url(md):
 
 #: strike through syntax looks like: ``~~word~~``
 STRIKETHROUGH_PATTERN = (
-    r'~~(?=[^\s~"<\[])('
+    r'~~(?=[^\s~])('
     r'(?:\\~|[^~])*'
     r'(?:' + ESCAPE + r'|[^\s~]))~~'
 )

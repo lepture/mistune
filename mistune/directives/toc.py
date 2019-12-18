@@ -128,8 +128,7 @@ def extract_toc_items(md, s):
     :param s: text string.
     """
     s, state = md.before_parse(s, {})
-    rules = ('newline', 'axt_heading', 'setex_heading')
-    md.block.parse(s, state, rules)
+    md.block.parse(s, state)
     headings = state.get('toc_headings')
     if not headings:
         return []

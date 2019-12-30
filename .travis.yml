@@ -1,11 +1,25 @@
 language: python
 
-python:
-    - "2.7"
-    - "3.5"
-    - "3.6"
-    - "3.7"
-    - "pypy"
+matrix:
+  include:
+    - arch: arm64
+      python: 2.7
+    - arch: amd64
+      python: 2.7
+    - arch: arm64
+      python: 3.5
+    - arch: amd64
+      python: 3.5
+    - arch: arm64
+      python: 3.6
+    - arch: amd64
+      python: 3.6
+    - arch: arm64
+      python: 3.7
+    - arch: amd64
+      python: 3.7
+    - arch: amd64
+      python: pypy
 
 script:
     - python setup.py -q nosetests

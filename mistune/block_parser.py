@@ -68,7 +68,7 @@ class BlockParser(ScannerParser):
         r'(?: {0,3}>[^\n]*\n)+'
     )
     LIST_START = re.compile(
-        r'( {0,3})([\*\+-]|\d{0,9}[.)])(?:[ \t]*|[ \t][^\n]+)\n+'
+        r'( {0,3})([\*\+-]|\d{1,9}[.)])(?:[ \t]*|[ \t][^\n]+)\n+'
     )
 
     BLOCK_HTML = re.compile((

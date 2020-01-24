@@ -163,18 +163,18 @@ class BlockParser(ScannerParser):
         else:
             start = None
 
-        depth = state.get('in_list', 0) + 1
-        if depth > self.LIST_MAX_DEPTH - 1:
+        list_tights = state.get('list_tights', [])
+        if len(list_tights) > self.LIST_MAX_DEPTH:
             rules = list(self.rules)
             rules.remove('list_start')
         else:
             rules = None
 
-        state['tight'] = tight
-        state['in_list'] = depth
+        list_tights.append(tight)
+        state['list_tights'] = list_tights
+        depth = len(list_tights)
         children = [self.parse_list_item(item, state, rules) for item in items]
-        state['in_list'] = depth - 1
-        state['tight'] = None
+        list_tights.pop()
         params = (ordered, depth, start)
         token = {'type': 'list', 'children': children, 'params': params}
         return token, pos
@@ -182,11 +182,12 @@ class BlockParser(ScannerParser):
     def parse_list_item(self, text, state, rules):
         text_length = len(text)
         text = _LIST_BULLET.sub('', text)
+        depth = len(state['list_tights'])
 
         if not text.strip():
             return {
                 'type': 'list_item',
-                'params': (state['in_list'],),
+                'params': (depth,),
                 'children': [{'type': 'block_text', 'text': ''}]
             }
 
@@ -207,7 +208,7 @@ class BlockParser(ScannerParser):
 
         return {
             'type': 'list_item',
-            'params': (state['in_list'],),
+            'params': (depth,),
             'children': self.parse(text, state, rules)
         }
 
@@ -223,7 +224,8 @@ class BlockParser(ScannerParser):
             state['def_links'][key] = (link, title)
 
     def parse_text(self, text, state):
-        if state.get('tight'):
+        list_tights = state.get('list_tights')
+        if list_tights and list_tights[-1]:
             return {'type': 'block_text', 'text': text.strip()}
 
         tokens = []

@@ -164,7 +164,7 @@ class BlockParser(ScannerParser):
             start = None
 
         list_tights = state.get('list_tights', [])
-        if len(list_tights) > self.LIST_MAX_DEPTH:
+        if len(list_tights) > self.LIST_MAX_DEPTH - 2:
             rules = list(self.rules)
             rules.remove('list_start')
         else:

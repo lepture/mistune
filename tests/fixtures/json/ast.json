@@ -20,7 +20,6 @@
       }
     ]
   },
-
   {
     "text": "hello **world**",
     "tokens": [
@@ -39,6 +38,28 @@
                 "text": "world"
               }
             ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "short strong [**0**]",
+    "tokens": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "text": "short strong ["
+          },
+          {
+            "type": "strong",
+            "text": "0"
+          },
+          {
+            "type": "text",
+            "text": "]"
           }
         ]
       }

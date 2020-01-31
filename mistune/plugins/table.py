@@ -36,7 +36,7 @@ def text_parse_and_render_table(self, m, state):
     tbody = table['children'][1]['children']
     rows = [[cell['text'] for cell in row['children']] for row in tbody]
 
-    return {'type': 'table', 'text': tabulate(rows, headers=headers)}
+    return {'type': 'table', 'text': tabulate(rows, headers=headers) + '\n\n'}
 
 
 def parse_nptable(self, m, state):

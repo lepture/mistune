@@ -134,6 +134,7 @@ def render_html_table_cell(text, align=None, is_head=False):
     html = '  <' + tag
     if align:
         html += ' style="text-align:' + align + '"'
+
     return html + '>' + text + '</' + tag + '>\n'
 
 

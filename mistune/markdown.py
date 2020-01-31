@@ -47,6 +47,7 @@ class Markdown(object):
     def parse(self, s, state=None):
         if state is None:
             state = {}
+
         s, state = self.before_parse(s, state)
         tokens = self.block.parse(s, state)
         tokens = self.before_render(tokens, state)

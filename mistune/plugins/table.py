@@ -39,8 +39,15 @@ def text_parse_table(self, m, state):
         rows.append(_process_row(v, aligns))
 
     children = [thead, {'type': 'table_body', 'children': rows}]
-    table = {'type': 'table', 'text': children}
-    return table
+    table = {'type': 'table', 'children': children}
+
+    from tabulate import tabulate
+    thead = table['children'][0]['children']
+    headers = [cell['text'] for cell in thead]
+    tbody = table['children'][1]['children']
+    rows = [[cell['text'] for cell in row['children']] for row in tbody]
+
+    return {'type': 'table', 'text': tabulate(rows, headers=headers)}
 
 
 def parse_nptable(self, m, state):
@@ -142,14 +149,6 @@ def render_html_table_cell(text, align=None, is_head=False):
 
 
 def render_text_table(text):
-    from tabulate import tabulate
-    print(text)
-    thead = text[0]['children']
-    headers = [cell['text'] for cell in thead]
-    tbody = table['children'][1]['children']
-    rows = [[cell['text'] for cell in row['children']] for row in tbody]
-
-    return {'type': 'table', 'text': tabulate(rows, headers=headers)}
     return text
 
 

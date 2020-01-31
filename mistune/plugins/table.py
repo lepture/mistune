@@ -27,6 +27,28 @@ def parse_table(self, m, state):
     children = [thead, {'type': 'table_body', 'children': rows}]
     return {'type': 'table', 'children': children}
 
+def text_parse_table(self, m, state):
+    header = HEADER_SUB.sub('', m.group(1)).strip()
+    align = HEADER_SUB.sub('', m.group(2))
+    thead, aligns = _process_table(header, align)
+
+    text = re.sub(r'(?: *\| *)?\n$', '', m.group(3))
+    rows = []
+    for i, v in enumerate(text.split('\n')):
+        v = re.sub(r'^ *\| *| *\| *$', '', v)
+        rows.append(_process_row(v, aligns))
+
+    children = [thead, {'type': 'table_body', 'children': rows}]
+    table = {'type': 'table', 'children': children}
+
+    from tabulate import tabulate
+    thead = table['children'][0]['children']
+    headers = [cell['text'] for cell in thead]
+    tbody = table['children'][1]['children']
+    rows = [[cell['text'] for cell in row['children']] for row in tbody]
+
+    return {'type': 'table', 'text': tabulate(rows, headers=headers)}
+
 
 def parse_nptable(self, m, state):
     thead, aligns = _process_table(m.group(1), m.group(2))
@@ -123,8 +145,11 @@ def render_html_table_cell(text, align=None, is_head=False):
     html = '  <' + tag
     if align:
         html += ' style="text-align:' + align + '"'
-
     return html + '>' + text + '</' + tag + '>\n'
+
+
+def render_text_table(text):
+    return text
 
 
 def render_ast_table_cell(children, align=None, is_head=False):
@@ -153,8 +178,5 @@ def plugin_table(md):
         md.renderer.register('table_cell', render_ast_table_cell)
 
     elif md.renderer.NAME == 'text':
-        md.renderer.register('table', render_html_table)
-        md.renderer.register('table_head', render_html_table_head)
-        md.renderer.register('table_body', render_html_table_body)
-        md.renderer.register('table_row', render_html_table_row)
-        md.renderer.register('table_cell', render_html_table_cell)
+        md.block.register_rule('table', TABLE_PATTERN, text_parse_table)
+        md.renderer.register('table', render_text_table)

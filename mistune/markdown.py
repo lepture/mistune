@@ -47,12 +47,18 @@ class Markdown(object):
     def parse(self, s, state=None):
         if state is None:
             state = {}
-
+        print('orignal string:', s)
         s, state = self.before_parse(s, state)
+        print('self.before_parse s, state:', s, state)
         tokens = self.block.parse(s, state)
+        # test here # TODO
+        print ('self.block.parse token:',tokens)
         tokens = self.before_render(tokens, state)
+        print ('self.before_render token:', tokens)
         result = self.block.render(tokens, self.inline, state)
+        print ('self.block.render result:', result)
         result = self.after_render(result, state)
+        print ('self.after_render result:', result)
         return result
 
     def read(self, filepath, state=None):

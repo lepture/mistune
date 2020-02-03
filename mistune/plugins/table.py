@@ -1,4 +1,5 @@
 import re
+from .tabulate import tabulate
 
 __all__ = ['plugin_table']
 
@@ -29,8 +30,6 @@ def parse_table(self, m, state):
 
 def text_parse_and_render_table(self, m, state):
     table = parse_table(self, m, state)
-
-    from .tabulate import tabulate
     thead = table['children'][0]['children']
     headers = [cell['text'] for cell in thead]
     tbody = table['children'][1]['children']

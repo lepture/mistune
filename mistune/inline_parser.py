@@ -103,6 +103,10 @@ class InlineParser(ScannerParser):
     def __init__(self, renderer):
         super(InlineParser, self).__init__()
         self.renderer = renderer
+        rules = list(self.RULE_NAMES)
+        rules.remove('ref_link')
+        rules.remove('ref_link2')
+        self.ref_link_rules = rules
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
@@ -141,7 +145,7 @@ class InlineParser(ScannerParser):
         key = unikey(m.group(2) or text)
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
-            return 'text', ESCAPE_CHAR.sub(r'\1', line)
+            return list(self._scan(line, state, self.ref_link_rules))
 
         link, title = def_links.get(key)
         link = ESCAPE_CHAR.sub(r'\1', link)

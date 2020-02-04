@@ -245,7 +245,7 @@ class TextRenderer(BaseRenderer):
         return f'`{text}`'
 
     def strong(self, text):
-        return '\033[1m' + text + '\033[0m'
+        return '**' + text + '**'
 
     def linebreak(self):
         return '\n'

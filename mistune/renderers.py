@@ -245,7 +245,7 @@ class TextRenderer(BaseRenderer):
         return f'`{text}`'
 
     def strong(self, text):
-        return '**' + text + '**'
+        return '\033[1m' + text + '\033[0m'
 
     def table(self, table):
         from bs4 import BeautifulSoup

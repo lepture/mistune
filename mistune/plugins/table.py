@@ -1,4 +1,5 @@
 import re
+from .tabulate import tabulate
 
 __all__ = ['plugin_table']
 
@@ -26,6 +27,15 @@ def parse_table(self, m, state):
 
     children = [thead, {'type': 'table_body', 'children': rows}]
     return {'type': 'table', 'children': children}
+
+def text_parse_and_render_table(self, m, state):
+    table = parse_table(self, m, state)
+    thead = table['children'][0]['children']
+    headers = [cell['text'] for cell in thead]
+    tbody = table['children'][1]['children']
+    rows = [[cell['text'] for cell in row['children']] for row in tbody]
+
+    return {'type': 'table', 'text': tabulate(rows, headers=headers) + '\n\n'}
 
 
 def parse_nptable(self, m, state):
@@ -153,8 +163,4 @@ def plugin_table(md):
         md.renderer.register('table_cell', render_ast_table_cell)
 
     elif md.renderer.NAME == 'text':
-        md.renderer.register('table', render_html_table)
-        md.renderer.register('table_head', render_html_table_head)
-        md.renderer.register('table_body', render_html_table_body)
-        md.renderer.register('table_row', render_html_table_row)
-        md.renderer.register('table_cell', render_html_table_cell)
+        md.block.register_rule('table', TABLE_PATTERN, text_parse_and_render_table)

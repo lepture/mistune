@@ -247,17 +247,8 @@ class TextRenderer(BaseRenderer):
     def strong(self, text):
         return '\033[1m' + text + '\033[0m'
 
-    def table(self, table):
-        from bs4 import BeautifulSoup
-        from tabulate import tabulate
-        soup = BeautifulSoup('<table>' + table + '</table>', 'html.parser')
-        table = soup.find('table')
-        thead = table.find('thead')
-        headers = [cell.text for cell in thead.find_all('th')]
-        tbody = table.find('tbody')
-        rows = [[cell.text for cell in row.find_all('td')]
-                 for row in tbody.find_all('tr')]
-        return tabulate(rows, headers=headers) + self.linebreak() + self.linebreak()
-
     def linebreak(self):
         return '\n'
+
+    def table(self, text):
+        return text

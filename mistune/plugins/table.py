@@ -162,5 +162,8 @@ def plugin_table(md):
     elif md.renderer.NAME == 'ast':
         md.renderer.register('table_cell', render_ast_table_cell)
 
+    elif md.renderer.NAME == 'terminal':
+        md.block.register_rule('table', TABLE_PATTERN, text_parse_and_render_table)
+
     elif md.renderer.NAME == 'text':
         md.block.register_rule('table', TABLE_PATTERN, text_parse_and_render_table)

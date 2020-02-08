@@ -200,59 +200,6 @@ class HTMLRenderer(BaseRenderer):
         return '<li>' + text + '</li>\n'
 
 
-class TerminalRenderer(BaseRenderer):
-    NAME = 'terminal'
-    IS_TREE = False
-
-    def __init__(self):
-        super(TerminalRenderer, self).__init__()
-
-    def text(self, text):
-        return text
-
-    def heading(self, text, level):
-        return '#' * level + ' ' + text.strip() + '\n\n'
-
-    def list(self, text, ordered, level, start=None):
-        assert not ordered
-        return text
-
-    def list_item(self, text, level):
-        return ' ' * (level-1) + '- ' + text + '\n'
-
-    def block_text(self, text):
-        return text
-
-    def thematic_break(self):
-        return '\n---\n\n'
-
-    def paragraph(self, text):
-        return text.strip('\n') + '\n\n'
-
-    def link(self, link, text=None, title=None):
-        return f'[{text}]({link})'
-
-    def block_quote(self, text):
-        return '\n'.join(['> ' + line for line in text.strip().splitlines()]) + '\n'
-
-    def newline(self):
-        return '\n'
-
-    def block_code(self, code, info=None):
-        return f"```{info or ''}\n" + code.strip('\n') + "\n```\n\n"
-
-    def codespan(self, text):
-        return f'`{text}`'
-
-    def strong(self, text):
-        return '\033[1m' + text + '\033[0m'
-
-    def linebreak(self):
-        return '\n'
-
-    def table(self, text):
-        return text
-
 class TextRenderer(BaseRenderer):
     NAME = 'text'
     IS_TREE = False
@@ -305,3 +252,20 @@ class TextRenderer(BaseRenderer):
 
     def table(self, text):
         return text
+
+
+class TerminalRenderer(TextRenderer):
+    NAME = 'terminal'
+    IS_TREE = False
+
+    def __init__(self):
+        super(TerminalRenderer, self).__init__()
+
+    def block_code(self, code, info=None):
+        return f"\033[48;100m{info or ''}\n" + code.strip('\n') + "\n\033[0m\n\n"
+
+    def codespan(self, text):
+        return f'\033[48;100m{text}\033[0m'
+
+    def strong(self, text):
+        return '\033[1m' + text + '\033[0m'

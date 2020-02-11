@@ -252,3 +252,20 @@ class TextRenderer(BaseRenderer):
 
     def table(self, text):
         return text
+
+
+class TerminalRenderer(TextRenderer):
+    NAME = 'terminal'
+    IS_TREE = False
+
+    def __init__(self):
+        super(TerminalRenderer, self).__init__()
+
+    def block_code(self, code, info=None):
+        return f"\033[48;100m{info or ''}\n" + code.strip('\n') + "\n\033[0m\n\n"
+
+    def codespan(self, text):
+        return f'\033[48;100m{text}\033[0m'
+
+    def strong(self, text):
+        return '\033[1m' + text + '\033[0m'

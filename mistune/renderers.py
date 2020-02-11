@@ -230,7 +230,7 @@ class TextRenderer(BaseRenderer):
         return text.strip('\n') + '\n\n'
 
     def link(self, link, text=None, title=None):
-        return f'[{text}]({link})'
+        return '[{text}]({link})'.format(text=text, link=link)
 
     def block_quote(self, text):
         return '\n'.join(['> ' + line for line in text.strip().splitlines()]) + '\n'
@@ -239,10 +239,10 @@ class TextRenderer(BaseRenderer):
         return '\n'
 
     def block_code(self, code, info=None):
-        return f"```{info or ''}\n" + code.strip('\n') + "\n```\n\n"
+        return '```{}\n'.format(info if info else '') + code.strip('\n') + "\n```\n\n"
 
     def codespan(self, text):
-        return f'`{text}`'
+        return '`{text}`'.format(text=text)
 
     def strong(self, text):
         return '**' + text + '**'
@@ -262,10 +262,10 @@ class TerminalRenderer(TextRenderer):
         super(TerminalRenderer, self).__init__()
 
     def block_code(self, code, info=None):
-        return f"\033[48;100m{info or ''}\n" + code.strip('\n') + "\n\033[0m\n\n"
+        return '\033[48;100m{}\n'.format(info if info else '') + code.strip('\n') + '\n\033[0m\n\n'
 
     def codespan(self, text):
-        return f'\033[48;100m{text}\033[0m'
+        return '\033[48;100m{text}\033[0m'.format(text=text)
 
     def strong(self, text):
         return '\033[1m' + text + '\033[0m'

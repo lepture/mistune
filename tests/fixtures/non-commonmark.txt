@@ -1,6 +1,12 @@
 # Links
 
 ```````````````````````````````` example
+[**foo**]
+.
+<p>[<strong>foo</strong>]</p>
+````````````````````````````````
+
+```````````````````````````````` example
 [link [foo [bar]]](/uri)
 .
 <p>[link [foo [bar]]](/uri)</p>
@@ -102,4 +108,66 @@
 **[hello](/)**
 .
 <p><strong><a href="/">hello</a></strong></p>
+````````````````````````````````
+
+Links can't contain links.
+
+```````````````````````````````` example
+[<https://example.com>](/foo)
+.
+<p><a href="/foo">&lt;https://example.com&gt;</a></p>
+````````````````````````````````
+
+Harmful link protection:
+
+```````````````````````````````` example
+<javascript:alert(0)>
+.
+<p><a href="#harmful-link">javascript:alert(0)</a></p>
+````````````````````````````````
+
+## Lists
+
+```````````````````````````````` example
+- foo
+  - baz
+- baz
+.
+<ul>
+<li>foo<ul>
+<li>baz</li>
+</ul>
+</li>
+<li>baz</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- a
+  - b
+    - c
+      - d
+        - e
+          - f
+            - g
+.
+<ul>
+<li>a<ul>
+<li>b<ul>
+<li>c<ul>
+<li>d<ul>
+<li>e<ul>
+<li>f
+- g</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 ````````````````````````````````

@@ -14,7 +14,7 @@ supported. This document contains the basic Markdown syntax.
 
 CommonMark has certainly done something right. But there are so many weird
 rules that made it not Markdown anymore. Mistune 2.0 has taken CommonMark
-into consideration at the rewritting, there are test cases for CommonMark
+into consideration at the rewriting, there are test cases for CommonMark
 in the tests folder. While implementing the CommonMark rules, it turns out
 that John Gruber is right, the name of
 [Pedantic Markdown](https://twitter.com/gruber/status/507615356295200770)

@@ -171,8 +171,10 @@ class HTMLRenderer(BaseRenderer):
 
     def block_code(self, code, info=None):
         html = '<pre><code'
+        if info is not None:
+            info = info.strip()
         if info:
-            lang = info.strip().split(None, 1)[0]
+            lang = info.split(None, 1)[0]
             lang = escape_html(lang)
             html += ' class="language-' + lang + '"'
         return html + '>' + escape(code) + '</code></pre>\n'

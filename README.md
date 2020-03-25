@@ -14,6 +14,14 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 **NOTE: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.**
 
+## Install
+
+To install v2 of mistune:
+
+```
+$ pip install mistune==2.0.0a2
+```
+
 ## Overview
 
 Convert Markdown to HTML with ease:

@@ -14,6 +14,18 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 **NOTE: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.**
 
+## Sponsors
+
+<table>
+<tr>
+<td><img align="middle" width="64" src="https://typlog.com/android-chrome-512x512.png"></td>
+<td>Mistune is sponsored by Typlog, a blogging and podcast hosting platform, simple yet powerful. <a href="https://typlog.com/?utm_source=mistune&utm_medium=referral&utm_campaign=readme">Write in Markdown</a>.
+</td>
+</tr>
+</table>
+
+[**Support Me via GitHub Sponsors**](https://github.com/users/lepture/sponsorship).
+
 ## Install
 
 To install v2 of mistune:
@@ -31,27 +43,6 @@ import mistune
 
 mistune.html(your_markdown_text)
 ```
-
-## Sponsors
-
-<table>
-<tr>
-<td><img align="middle" width="64" src="https://typlog.com/android-chrome-512x512.png"></td>
-<td>Mistune is sponsored by Typlog, a blogging and podcast hosting platform, simple yet powerful. <a href="https://typlog.com/?utm_source=mistune&utm_medium=referral&utm_campaign=readme">Write in Markdown</a>.
-</td>
-</tr>
-</table>
-
-[**Support Me via GitHub Sponsors**](https://github.com/users/lepture/sponsorship).
-
-## Installation
-
-Installing mistune with pip:
-
-```shell
-$ pip install mistune
-```
-
 
 ## Security Reporting
 

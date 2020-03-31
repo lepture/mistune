@@ -11,12 +11,14 @@ Release v\ |version|.
 A fast yet powerful Python Markdown parser with renderers and plugins,
 compatible with sane CommonMark rules.
 
+Using old Mistune? Checkout docs: https://mistune.readthedocs.io/en/v0.8.4/
+
 Installation
 ------------
 
 Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_::
 
-    $ pip install mistune
+    $ pip install mistune==2.0.0a2
 
 Mistune has no external dependencies.
 

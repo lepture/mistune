@@ -14,6 +14,8 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 **NOTE: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.**
 
+Using old Mistune? Checkout docs: <https://mistune.readthedocs.io/en/v0.8.4/>
+
 ## Sponsors
 
 <table>

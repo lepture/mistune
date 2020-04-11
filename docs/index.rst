@@ -18,7 +18,7 @@ Installation
 
 Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_::
 
-    $ pip install mistune==2.0.0a2
+    $ pip install mistune==2.0.0a3
 
 Mistune has no external dependencies.
 

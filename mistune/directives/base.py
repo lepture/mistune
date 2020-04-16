@@ -36,8 +36,8 @@ class Directive(object):
             return ''
 
         leading = len(m.group(1)) + 2
-        text = '\n'.join(_parse_text_lines(text, leading)).lstrip('\n') + '\n'
-        return text
+        text = '\n'.join(line[leading:] for line in text.splitlines())
+        return text.lstrip('\n') + '\n'
 
     @staticmethod
     def parse_options(m):
@@ -97,14 +97,3 @@ class PluginDirective(object):
             self.parse_block_directive
         )
         md.block.rules.append('directive')
-
-
-def _parse_text_lines(text, leading):
-    spaces = ' ' * leading
-    for line in text.splitlines():
-        line = line.replace(spaces, '', 1)
-        if not line.startswith('    '):
-            line = line.strip()
-        else:
-            line = line.rstrip()
-        yield line

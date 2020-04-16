@@ -26,7 +26,7 @@ class TestPluginAdmonition(TestCase):
         html = md(s)
         self.assertIn('class="admonition note"', html)
         self.assertIn('<h1>Warnning</h1>', html)
-        self.assertIn('<pre><code>print()\n</code></pre>', html)
+        self.assertIn('<pre><code>print() \n</code></pre>', html)
 
     def test_note_admonition_no_text(self):
         md = create_markdown(

@@ -49,6 +49,7 @@ html_theme_options = {
     'github_user': 'lepture',
     'github_repo': 'mistune',
     'twitter': 'lepture',
+    'meta_html': '<style>.ethical-fixedfooter{display:none}</style>',
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -3,7 +3,7 @@ import re
 __all__ = ['plugin_task_lists']
 
 
-TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\]\s)(\s*\S.*)')
+TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\])\s(\s*\S.*)')
 
 
 def task_lists_hook(md, tokens, state):

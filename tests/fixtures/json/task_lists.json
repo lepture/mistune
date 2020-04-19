@@ -18,7 +18,7 @@
             }
           ],
           "level": 1,
-          "checked": true
+          "checked": false
         },
         {
           "type": "task_list_item",

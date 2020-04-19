@@ -6,7 +6,7 @@
 - [X] baz
 .
 <ul>
-<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>foo</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>foo</li>
 <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
 <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</li>
 </ul>
@@ -18,7 +18,7 @@
 .
 <ul>
 <li>foo</li>
-<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>bar</li>
 </ul>
 ````````````````````````````````
 
@@ -33,7 +33,7 @@
 <ul>
 <li><p>foo</p>
 </li>
-<li class="task-list-item"><p><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</p>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" type="checkbox" disabled/>bar</p>
 </li>
 <li class="task-list-item"><p><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</p>
 <p>text</p>
@@ -47,7 +47,7 @@
 3. [X] baz
 .
 <ol>
-<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>foo</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>foo</li>
 <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
 <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</li>
 </ol>

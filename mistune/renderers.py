@@ -29,7 +29,12 @@ class AstRenderer(BaseRenderer):
         return {'type': 'text', 'text': text}
 
     def link(self, link, children=None, title=None):
-        return {'type': 'link', 'link': link, 'children': children, 'title': title}
+        return {
+            'type': 'link',
+            'link': link,
+            'children': children,
+            'title': title,
+        }
 
     def image(self, src, alt="", title=None):
         return {'type': 'image', 'src': src, 'alt': alt, 'title': title}

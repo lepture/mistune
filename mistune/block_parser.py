@@ -186,23 +186,34 @@ class BlockParser(ScannerParser):
 
         depth = len(list_tights)
         rules = self.get_list_rules(depth)
-        children = [self.parse_list_item(item, state, rules) for item in items]
+        children = [
+            self.parse_list_item(item, depth, state, rules)
+            for item in items
+        ]
         list_tights.pop()
         params = (ordered, depth, start)
         token = {'type': 'list', 'children': children, 'params': params}
         return token, pos
 
-    def parse_list_item(self, text, state, rules):
+    def parse_list_item(self, text, depth, state, rules):
+        text = self.normalize_list_item_text(text)
+        if not text:
+            children = [{'type': 'block_text', 'text': ''}]
+        else:
+            children = self.parse(text, state, rules)
+        return {
+            'type': 'list_item',
+            'params': (depth,),
+            'children': children,
+        }
+
+    @staticmethod
+    def normalize_list_item_text(text):
         text_length = len(text)
         text = _LIST_BULLET.sub('', text)
-        depth = len(state['list_tights'])
 
         if not text.strip():
-            return {
-                'type': 'list_item',
-                'params': (depth,),
-                'children': [{'type': 'block_text', 'text': ''}]
-            }
+            return ''
 
         space = text_length - len(text)
         text = expand_leading_tab(text)
@@ -218,12 +229,7 @@ class BlockParser(ScannerParser):
         if '\n ' in text:
             pattern = re.compile(r'\n {1,' + str(space) + r'}')
             text = pattern.sub(r'\n', text)
-
-        return {
-            'type': 'list_item',
-            'params': (depth,),
-            'children': self.parse(text, state, rules)
-        }
+        return text
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()

@@ -77,7 +77,8 @@ the output. For instance, to add code syntax highlight::
 
     print(markdown('```python\nassert 1 == 1\n```'))
 
-In this way, we can use Pygments to highlight the fenced code.
+In this way, we can use Pygments to highlight the fenced code. Learn more
+at :ref:`renderers`.
 
 
 AstRenderer

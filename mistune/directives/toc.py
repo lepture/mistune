@@ -206,10 +206,10 @@ def _inline_token_text(token):
     if tok_type == 'inline_html':
         return ''
 
-    if tok_type in {'image', 'link'}:
-        return token[2]
-
     if len(token) == 2:
         return token[1]
+
+    if tok_type in {'image', 'link'}:
+        return token[2]
 
     return ''

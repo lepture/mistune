@@ -1,0 +1,54 @@
+# Task Lists
+
+```````````````````````````````` example
+- [ ] foo
+- [x] bar
+- [X] baz
+.
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>foo</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- foo
+- [ ] bar
+.
+<ul>
+<li>foo</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- foo
+
+- [ ] bar
+- [x] baz
+
+  text
+.
+<ul>
+<li><p>foo</p>
+</li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</p>
+</li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</p>
+<p>text</p>
+</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+1. [ ] foo
+2. [x] bar
+3. [X] baz
+.
+<ol>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>foo</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>bar</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>baz</li>
+</ol>
+````````````````````````````````

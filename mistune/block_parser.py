@@ -92,6 +92,11 @@ class BlockParser(ScannerParser):
         'def_link',
     )
 
+    def __init__(self):
+        super(BlockParser, self).__init__()
+        self.block_quote_rules = list(self.RULE_NAMES)
+        self.list_rules = list(self.RULE_NAMES)
+
     def parse_newline(self, m, state):
         return {'type': 'newline', 'blank': True}
 
@@ -132,21 +137,33 @@ class BlockParser(ScannerParser):
     def tokenize_heading(self, text, level, state):
         return {'type': 'heading', 'text': text, 'params': (level,)}
 
-    def parse_block_quote(self, m, state):
-        depth = state.get('in_block_quote', 0) + 1
+    def get_block_quote_rules(self, depth):
         if depth > self.BLOCK_QUOTE_MAX_DEPTH - 1:
-            rules = list(self.rules)
+            rules = list(self.block_quote_rules)
             rules.remove('block_quote')
-        else:
-            rules = None
+            return rules
+        return self.block_quote_rules
 
-        state['in_block_quote'] = depth
+    def parse_block_quote(self, m, state):
+        depth = state.get('block_quote_depth', 0) + 1
+        state['block_quote_depth'] = depth
+
+        # normalize block quote text
         text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
         text = expand_leading_tab(text)
         text = _BLOCK_QUOTE_TRIM.sub('', text)
+
+        rules = self.get_block_quote_rules(depth)
         children = self.parse(text, state, rules)
-        state['in_block_quote'] = depth - 1
+        state['block_quote_depth'] = depth - 1
         return {'type': 'block_quote', 'children': children}
+
+    def get_list_rules(self, depth):
+        if depth > self.LIST_MAX_DEPTH - 1:
+            rules = list(self.list_rules)
+            rules.remove('list_start')
+            return rules
+        return self.list_rules
 
     def parse_list_start(self, m, state, string):
         items = []
@@ -164,15 +181,11 @@ class BlockParser(ScannerParser):
             start = None
 
         list_tights = state.get('list_tights', [])
-        if len(list_tights) > self.LIST_MAX_DEPTH - 2:
-            rules = list(self.rules)
-            rules.remove('list_start')
-        else:
-            rules = None
-
         list_tights.append(tight)
         state['list_tights'] = list_tights
+
         depth = len(list_tights)
+        rules = self.get_list_rules(depth)
         children = [self.parse_list_item(item, state, rules) for item in items]
         list_tights.pop()
         params = (ordered, depth, start)

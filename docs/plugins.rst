@@ -126,3 +126,35 @@ Another way to create your own Markdown instance::
 
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[plugin_url])
+
+task_lists
+----------
+
+Task lists plugin enables creating GitHub todo items:
+
+.. code-block:: text
+
+    - [x] item 1
+    - [ ] item 2
+
+Will be converted into:
+
+.. code-block:: html
+
+    <ul>
+    <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>item 1</li>
+    <li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>item 2</li>
+    </ul>
+
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**task_lists** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['task_lists'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins import plugin_task_lists
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[plugin_task_lists])

@@ -60,7 +60,7 @@ class BlockParser(ScannerParser):
     INDENT_CODE = re.compile(r'(?:\n*)(?:(?: {4}| *\t)[^\n]+\n*)+')
 
     FENCED_CODE = re.compile(
-        r' {0,3}(`{3,}|~{3,})([^`\n]*)\n'
+        r'( {0,3})(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
         r'(?: {0,3}\1[~`]* *\n+|$)'
     )
@@ -110,8 +110,12 @@ class BlockParser(ScannerParser):
         return self.tokenize_block_code(code, None, state)
 
     def parse_fenced_code(self, m, state):
-        info = ESCAPE_CHAR.sub(r'\1', m.group(2))
-        code = m.group(3) or ''
+        info = ESCAPE_CHAR.sub(r'\1', m.group(3))
+        spaces = m.group(1)
+        code = m.group(4) or ''
+        if spaces and code:
+            _trim_pattern = re.compile('^' + spaces, re.M)
+            code = _trim_pattern.sub('', code)
         return self.tokenize_block_code(code + '\n', info, state)
 
     def tokenize_block_code(self, code, info, state):

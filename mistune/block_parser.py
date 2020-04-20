@@ -62,7 +62,7 @@ class BlockParser(ScannerParser):
     FENCED_CODE = re.compile(
         r'( {0,3})(`{3,}|~{3,})([^`\n]*)\n'
         r'(?:|([\s\S]*?)\n)'
-        r'(?: {0,3}\1[~`]* *\n+|$)'
+        r'(?: {0,3}\2[~`]* *\n+|$)'
     )
     BLOCK_QUOTE = re.compile(
         r'(?: {0,3}>[^\n]*\n)+'

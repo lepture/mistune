@@ -171,3 +171,17 @@ Harmful link protection:
 </li>
 </ul>
 ````````````````````````````````
+
+
+```````````````````````````````` example
+* test
+    ```
+    print()
+    ```
+.
+<ul>
+<li>test<pre><code>print()
+</code></pre>
+</li>
+</ul>
+````````````````````````````````

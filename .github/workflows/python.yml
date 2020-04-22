@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 6
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: [2.7, 3.6, 3.7, 3.8]
+        python: [2.7, 3.6, 3.7, 3.8, pypy2, pypy3]
 
     steps:
     - uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install nose codecov
 
-    - name: Test with ${{ matrix.python }} on ${{ matrix.os }}
+    - name: Test with Python ${{ matrix.python }} on ${{ matrix.os }}
       run: python setup.py -q nosetests
 
     - name: Report coverage

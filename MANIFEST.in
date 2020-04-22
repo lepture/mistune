@@ -1,5 +1,3 @@
-include Makefile LICENSE README.rst CHANGES.rst
-exclude mistune.c
+include Makefile LICENSE README.rst
 recursive-include tests *
 recursive-exclude tests *.pyc
-recursive-exclude tests *.pyo

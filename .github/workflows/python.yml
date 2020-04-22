@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  push:
+    branches-ignore:
+    - 'wip-*'
+    paths-ignore:
+    - 'docs/**'
+  pull_request:
+    branches-ignore:
+    - 'wip-*'
+    paths-ignore:
+    - 'docs/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        python:
+        - version: 2.7
+        - version: 3.6
+        - version: 3.7
+        - version: 3.8
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python.version }}
+      uses: actions/setup-python@v1.1.1
+      with:
+        python-version: ${{ matrix.python.version }}
+
+    - name: Test with ${{ matrix.python.version }}
+      run: python setup.py -q nosetests
+
+    - name: Report coverage
+      run: |
+        coverage run --source=mistune setup.py -q nosetests
+        coverage xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+        name: GitHub

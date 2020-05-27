@@ -17,7 +17,7 @@ from .base import Directive
 
 class DirectiveToc(Directive):
     def __init__(self, depth=3):
-        self.depth = 3
+        self.depth = depth
 
     def parse(self, block, m, state):
         title = m.group('value')

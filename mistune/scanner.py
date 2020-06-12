@@ -128,7 +128,10 @@ class Matcher(object):
             yield parse_text(string[last_end:], state)
 
 
-def escape(s, quote=True):
+def escape(s : str, quote : str = True) -> str:
+    """Escaping the HTML special Characters in `s`.
+    If `quote = True`, the " character is also escaped.
+    """
     s = s.replace("&", "&amp;")
     s = s.replace("<", "&lt;")
     s = s.replace(">", "&gt;")

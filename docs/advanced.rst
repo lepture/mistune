@@ -19,7 +19,7 @@ of ``mistune.HTMLRenderer``::
 
     # use customized renderer
     markdown = mistune.create_markdown(renderer=MyRenderer())
-    print(markdown('hi `$a^2=4`'))
+    print(markdown('hi `$a^2=4$`'))
 
 Here is a a list of available renderer functions::
 

@@ -42,7 +42,7 @@ Convert Markdown to HTML with ease:
 ```python
 import mistune
 
-mistune.html(your_markdown_text)
+mistune.markdown(your_markdown_text)
 ```
 
 ## Security Reporting

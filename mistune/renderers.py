@@ -124,6 +124,8 @@ class HTMLRenderer(BaseRenderer):
         return url
 
     def text(self, text):
+        if self._escape:
+            return escape(text)
         return escape_html(text)
 
     def link(self, link, text=None, title=None):

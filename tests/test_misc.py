@@ -17,6 +17,14 @@ class TestMiscCases(TestCase):
         md.parse('', state)
         self.assertEqual(state['name'], 'test')
 
+    def test_hard_wrap(self):
+        renderer = mistune.HTMLRenderer()
+        inline = mistune.InlineParser(renderer, hard_wrap=True)
+        md = mistune.Markdown(renderer, inline=inline)
+        result = md('foo\nbar')
+        expected = '<p>foo<br />\nbar</p>'
+        self.assertEqual(result.strip(), expected)
+
     def test_escape_html(self):
         md = mistune.create_markdown(escape=True)
         result = md('<div>1</div>')

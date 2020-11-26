@@ -58,4 +58,4 @@ __all__ = [
     'html', 'create_markdown', 'markdown',
 ]
 
-__version__ = '2.0.0a5'
+__version__ = '2.0.0a6'

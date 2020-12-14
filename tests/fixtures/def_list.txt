@@ -1,0 +1,94 @@
+# Definition Lists
+
+```````````````````````````````` example
+Term
+: definition
+.
+<dl>
+<dt>Term</dt>
+<dd>definition</dd>
+</dl>
+````````````````````````````````
+
+```````````````````````````````` example
+Term
+: definition1
+: definition2
+.
+<dl>
+<dt>Term</dt>
+<dd>definition1</dd>
+<dd>definition2</dd>
+</dl>
+````````````````````````````````
+
+```````````````````````````````` example
+Term
+: definition1
+: definition2
+
+paragraph
+.
+<dl>
+<dt>Term</dt>
+<dd>definition1</dd>
+<dd>definition2</dd>
+</dl>
+<p>paragraph</p>
+````````````````````````````````
+
+```````````````````````````````` example
+First Term
+: This is the definition of the first term.
+
+Second Term
+: This is one definition of the second term.
+: This is another definition of the second term.
+.
+<dl>
+<dt>First Term</dt>
+<dd>This is the definition of the first term.</dd>
+<dt>Second Term</dt>
+<dd>This is one definition of the second term.</dd>
+<dd>This is another definition of the second term.</dd>
+</dl>
+````````````````````````````````
+
+```````````````````````````````` example
+First Term
+: This is the definition of the first term.
+
+Second Term
+: This is one definition of the second term.
+: This is another definition of the second term.
+
+paragraph
+.
+<dl>
+<dt>First Term</dt>
+<dd>This is the definition of the first term.</dd>
+<dt>Second Term</dt>
+<dd>This is one definition of the second term.</dd>
+<dd>This is another definition of the second term.</dd>
+</dl>
+<p>paragraph</p>
+````````````````````````````````
+
+```````````````````````````````` example
+First Term
+: This is the definition of the first term.
+Second Term
+: This is one definition of the second term.
+: This is another definition of the second term.
+
+paragraph
+.
+<dl>
+<dt>First Term</dt>
+<dd>This is the definition of the first term.</dd>
+<dt>Second Term</dt>
+<dd>This is one definition of the second term.</dd>
+<dd>This is another definition of the second term.</dd>
+</dl>
+<p>paragraph</p>
+````````````````````````````````

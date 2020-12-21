@@ -34,6 +34,14 @@ def render_html_def_list_item(text):
     return "<dd>" + text + "</dd>\n"
 
 
+def render_ast_def_list_header(text):
+    return {"type": "def_list_header", "text": text[0]["text"]}
+
+
+def render_ast_def_list_item(text):
+    return {"type": "def_list_item", "text": text[0]["text"]}
+
+
 def plugin_def_list(md):
     md.block.register_rule("def_list", DEFINITION_LIST_PATTERN, parse_def_list)
     md.block.rules.append("def_list")
@@ -41,3 +49,6 @@ def plugin_def_list(md):
         md.renderer.register("def_list", render_html_def_list)
         md.renderer.register("def_list_header", render_html_def_list_header)
         md.renderer.register("def_list_item", render_html_def_list_item)
+    if md.renderer.NAME == "ast":
+        md.renderer.register("def_list_header", render_ast_def_list_header)
+        md.renderer.register("def_list_item", render_ast_def_list_item)

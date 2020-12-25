@@ -32,7 +32,7 @@ Using old Mistune? Checkout docs: <https://mistune.readthedocs.io/en/v0.8.4/>
 To install v2 of mistune:
 
 ```
-$ pip install mistune==2.0.0a4
+$ pip install mistune==2.0.0a6
 ```
 
 ## Overview

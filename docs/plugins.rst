@@ -158,3 +158,42 @@ Another way to create your own Markdown instance::
 
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[plugin_task_lists])
+
+def_list
+----------
+
+def_list plugin enables creating html definition lists:
+
+.. code-block:: text
+
+    First term
+    : First definition
+    : Second definition
+    
+    Second term
+    : Third definition
+    
+Will be converted into:
+
+.. code-block:: html
+
+    <dl>
+    <dt>First term</dt>
+    <dd>First definition</dd>
+    <dd>Second definition</dd>
+    <dt>Second term</dt>
+    <dd>Third definition</dd>
+    </dl>
+
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**def_list** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['def_list'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins import plugin_def_list
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[plugin_def_list])

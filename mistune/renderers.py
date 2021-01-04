@@ -3,7 +3,6 @@ from .scanner import escape, escape_html
 
 class BaseRenderer(object):
     NAME = 'base'
-    IS_TREE = False
 
     def __init__(self):
         self._methods = {}
@@ -20,10 +19,13 @@ class BaseRenderer(object):
                 raise AttributeError('No renderer "{!r}"'.format(name))
             return method
 
+    def finalize(self, data):
+        raise NotImplementedError(
+            'The renderer needs to implement the finalize method.')
+
 
 class AstRenderer(BaseRenderer):
     NAME = 'ast'
-    IS_TREE = True
 
     def text(self, text):
         return {'type': 'text', 'text': text}
@@ -92,10 +94,12 @@ class AstRenderer(BaseRenderer):
         except AttributeError:
             return self._create_default_method(name)
 
+    def finalize(self, data):
+        return list(data)
+
 
 class HTMLRenderer(BaseRenderer):
     NAME = 'html'
-    IS_TREE = False
     HARMFUL_PROTOCOLS = {
         'javascript:',
         'vbscript:',
@@ -209,3 +213,6 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text, level):
         return '<li>' + text + '</li>\n'
+
+    def finalize(self, data):
+        return ''.join(data)

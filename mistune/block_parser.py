@@ -266,9 +266,7 @@ class BlockParser(ScannerParser):
 
     def render(self, tokens, inline, state):
         data = self._iter_render(tokens, inline, state)
-        if inline.renderer.IS_TREE:
-            return list(data)
-        return ''.join(data)
+        return inline.renderer.finalize(data)
 
     def _iter_render(self, tokens, inline, state):
         for tok in tokens:

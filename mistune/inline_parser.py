@@ -210,9 +210,7 @@ class InlineParser(ScannerParser):
 
     def render(self, s, state, rules=None):
         tokens = self.parse(s, state, rules)
-        if self.renderer.IS_TREE:
-            return list(tokens)
-        return ''.join(tokens)
+        return self.renderer.finalize(tokens)
 
     def __call__(self, s, state):
         return self.render(s, state)

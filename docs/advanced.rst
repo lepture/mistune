@@ -61,6 +61,9 @@ Here is a a list of available renderer functions::
     footnotes(self, text)
     footnote_item(self, text, key, index)
 
+    # Finalize rendered content (define output)
+    finalize(self, data)
+
 
 .. _plugins:
 

@@ -1,14 +1,13 @@
 .PHONY: clean-pyc clean-build docs
 
 test:
-	@nosetests -s
+	@pytest -s
 
 bench:
 	@python tests/bench.py
 
 coverage:
-	@rm -f .coverage
-	@nosetests --with-coverage --cover-package=mistune --cover-html
+	@pytest --cov=mistune
 
 clean: clean-build clean-pyc clean-docs
 
@@ -18,7 +17,7 @@ clean-build:
 	@rm -fr dist/
 	@rm -fr *.egg-info
 	@rm -f mistune.c
-	@rm -fr cover/
+	@rm -fr .coverage
 
 
 clean-pyc:

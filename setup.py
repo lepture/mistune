@@ -23,8 +23,8 @@ setup(
     ],
     zip_safe=False,
     platforms='any',
-    tests_require=['nose'],
-    test_suite='nose.collector',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

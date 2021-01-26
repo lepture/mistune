@@ -197,3 +197,34 @@ Another way to create your own Markdown instance::
 
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[plugin_def_list])
+
+abbr
+----
+
+abbr plugin enables creating abbreviations:
+
+.. code-block:: text
+
+    The HTML specification is maintained by the W3C.
+
+    *[HTML]: Hyper Text Markup Language
+    *[W3C]: World Wide Web Consortium
+
+Will be converted into:
+
+.. code-block:: html
+
+    The <abbr title="Hyper Text Markup Language">HTML</abbr> specification is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**abbr** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['abbr'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins import abbr
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[abbr])
+

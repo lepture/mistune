@@ -1,0 +1,48 @@
+# Abbreviation
+
+## abbreviation
+
+```````````````````````````````` example
+HTML
+*[HTML]: Hyper Text Markup Language
+.
+<p><abbr title="Hyper Text Markup Language">HTML</abbr></p>
+````````````````````````````````
+
+```````````````````````````````` example
+The HTML specification is maintained by the W3C.
+*[HTML]: Hyper Text Markup Language
+*[W3C]: World Wide Web Consortium
+.
+<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+The HTML specification is maintained by the W3C.
+*[HTML]: Hyper Text Markup Language
+There is more text below this one.
+.
+<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
+<p>There is more text below this one.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+The latest spec of HTML is HTML5.
+*[HTML]: Hyper Text Markup Language
+.
+<p>The latest spec of <abbr title="Hyper Text Markup Language">HTML</abbr> is <abbr title="Hyper Text Markup Language">HTML</abbr>5.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+HTML should always be spelt with capital letters and not spelt html.
+*[HTML]: Hyper Text Markup Language
+.
+<p><abbr title="Hyper Text Markup Language">HTML</abbr> should always be spelt with capital letters and not spelt html.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+HTML is an abbreviation but nobody knows what it stands for.
+*[HTML]:
+.
+<p><abbr>HTML</abbr> is an abbreviation but nobody knows what it stands for.</p>
+````````````````````````````````

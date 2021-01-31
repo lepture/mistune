@@ -25,7 +25,7 @@ def plugin_abbr(md):
 
         rule_name = "{key}_abbr".format(key=key)
 
-        md.inline.register_rule(rule_name, key, _abbr_rule)
+        md.inline.register_rule(rule_name, re.escape(key), _abbr_rule)
         md.inline.rules.append(rule_name)
 
     md.block.register_rule("def_abbr", ABBR_PATTERN, _def_abbr)

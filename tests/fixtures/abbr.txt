@@ -46,3 +46,10 @@ HTML is an abbreviation but nobody knows what it stands for.
 .
 <p><abbr>HTML</abbr> is an abbreviation but nobody knows what it stands for.</p>
 ````````````````````````````````
+
+```````````````````````````````` example
+Foo.* looks like a regular expression.
+*[Foo.*]: Just foo
+.
+<p><abbr title="Just foo">Foo.*</abbr> looks like a regular expression.</p>
+````````````````````````````````

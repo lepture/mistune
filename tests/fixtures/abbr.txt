@@ -53,3 +53,10 @@ Foo.* looks like a regular expression.
 .
 <p><abbr title="Just foo">Foo.*</abbr> looks like a regular expression.</p>
 ````````````````````````````````
+
+```````````````````````````````` example
+Untrusted HTML should be escaped.
+*[HTML]: <p>This is some HTML</p>
+.
+<p>Untrusted <abbr title="&lt;p&gt;This is some HTML&lt;/p&gt;">HTML</abbr> should be escaped.</p>
+````````````````````````````````

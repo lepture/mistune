@@ -1,5 +1,7 @@
 import re
 
+from mistune.scanner import escape_html
+
 
 ABBR_PATTERN = re.compile(r"[*]\[(?P<key>[^\]]*)\][ ]?:[ ]*\n?[ ]*(?P<definition>.*)")
 
@@ -7,6 +9,7 @@ ABBR_PATTERN = re.compile(r"[*]\[(?P<key>[^\]]*)\][ ]?:[ ]*\n?[ ]*(?P<definition
 def render_html_abbr(key, definition):
     title_attribute = ""
     if definition:
+        definition = escape_html(definition)
         title_attribute = ' title="{}"'.format(definition)
 
     return "<abbr{title_attribute}>{key}</abbr>".format(

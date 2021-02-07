@@ -223,8 +223,8 @@ This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import abbr
+    from mistune.plugins import plugin_abbr
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[abbr])
+    markdown = mistune.Markdown(renderer, plugins=[plugin_abbr])
 

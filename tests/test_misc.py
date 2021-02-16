@@ -41,6 +41,11 @@ class TestMiscCases(TestCase):
         expected = '<p><em>em</em> <strong>strong</strong></p>'
         self.assertEqual(result.strip(), expected)
 
+    def test_harmful_links(self):
+        result = mistune.html('[h](javAscript:alert)')
+        expected = '<p><a href="#harmful-link">h</a></p>'
+        self.assertEqual(result.strip(), expected)
+
     def test_allow_harmful_protocols(self):
         renderer = mistune.HTMLRenderer(allow_harmful_protocols=True)
         md = mistune.Markdown(renderer)

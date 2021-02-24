@@ -18,3 +18,7 @@ cover/
 *.so
 venv/
 .python-version
+.coverage
+htmlcov
+.eggs
+coverage.xml

@@ -8,7 +8,7 @@ __all__ = ['plugin_url', 'plugin_strikethrough']
 URL_LINK_PATTERN = r'''(https?:\/\/[^\s<]+[^<.,:;"')\]\s])'''
 
 
-def parse_url_link(self, m, state):
+def parse_url_link(inline, m, state):
     return 'link', escape_url(m.group(0))
 
 
@@ -25,9 +25,9 @@ STRIKETHROUGH_PATTERN = (
 )
 
 
-def parse_strikethrough(self, m, state):
+def parse_strikethrough(inline, m, state):
     text = m.group(1)
-    return 'strikethrough', self.render(text, state)
+    return 'strikethrough', inline.render(text, state)
 
 
 def render_html_strikethrough(text):

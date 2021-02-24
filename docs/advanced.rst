@@ -84,8 +84,8 @@ A mistune plugin usually looks like::
     )
 
     # define how to parse matched item
-    def parse_wiki(self, m, state):
-        # ``self`` is ``md.inline``, see below
+    def parse_wiki(inline, m, state):
+        # ``inline`` is ``md.inline``, see below
         # ``m`` is matched regex item
         text = m.group(1)
         title, link = text.split('|')

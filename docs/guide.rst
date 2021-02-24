@@ -88,4 +88,22 @@ Mistune can produce AST by default with ``mistune.AstRenderer``::
 
     markdown = mistune.create_markdown(renderer=mistune.AstRenderer())
 
-This ``markdown`` function will generate tokens instead of HTML.
+This ``markdown`` function will generate a list of tokens instead of HTML::
+
+    text = 'hello **world**'
+    markdown(text)
+    # ==>
+    [{
+        'children': [
+            {'text': 'hello ', 'type': 'text'},
+            {
+                'children': [{'text': 'world', 'type': 'text'}],
+                'type': 'strong'
+            }
+        ],
+        'type': 'paragraph'
+    }]
+
+It is also possible to pass ``renderer='ast'`` to create the markdown instance::
+
+    markdown = mistune.create_markdown(renderer='ast')

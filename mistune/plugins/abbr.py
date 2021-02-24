@@ -1,9 +1,39 @@
 import re
+from ..scanner import escape_html
 
-from mistune.scanner import escape_html
+
+DEF_ABBR = re.compile(
+    # *[HTML]:
+    # *[HTML]: Hyper Text Markup Language
+    # *[HTML]:
+    #     Hyper Text Markup Language
+    r'\*\[([^\]]+)\]:'
+    r'((?:[ \t]*\n(?: {3,}|\t)[^\n]+)|(?:[^\n]*))\n*'
+)
 
 
-ABBR_PATTERN = re.compile(r"[*]\[(?P<key>[^\]]*)\][ ]?:[ ]*\n?[ ]*(?P<definition>.*)")
+def parse_def_abbr(block, m, state):
+    def_abbrs = state.get('def_abbrs', {})
+    label = m.group(1)
+    definition = m.group(2)
+    def_abbrs[label] = definition.strip()
+    state['def_abbrs'] = def_abbrs
+
+
+def parse_inline_abbr(inline, m, state):
+    def_abbrs = state['def_abbrs']
+    label = m.group(0)
+    return 'abbr', label, def_abbrs[label]
+
+
+def after_parse_def_abbr(md, tokens, state):
+    def_abbrs = state.get('def_abbrs')
+    if def_abbrs:
+        labels = list(def_abbrs.keys())
+        abbr_pattern = r'|'.join(re.escape(k) for k in labels)
+        md.inline.register_rule('abbr', abbr_pattern, parse_inline_abbr)
+        md.inline.rules.append('abbr')
+    return tokens
 
 
 def render_html_abbr(key, definition):
@@ -18,21 +48,16 @@ def render_html_abbr(key, definition):
     )
 
 
+def render_ast_abbr(key, definition):
+    return {'type': 'abbr', 'text': key, 'definition': definition}
+
+
 def plugin_abbr(md):
-    def _def_abbr(block, match, state):
-        key = match.group("key")
-        definition = match.group("definition")
+    md.block.register_rule('def_abbr', DEF_ABBR, parse_def_abbr)
+    md.before_render_hooks.append(after_parse_def_abbr)
+    md.block.rules.append('def_abbr')
 
-        def _abbr_rule(parser, match, state):
-            return "abbr", key, definition
-
-        rule_name = "{key}_abbr".format(key=key)
-
-        md.inline.register_rule(rule_name, re.escape(key), _abbr_rule)
-        md.inline.rules.append(rule_name)
-
-    md.block.register_rule("def_abbr", ABBR_PATTERN, _def_abbr)
-    md.block.rules.append("def_abbr")
-
-    if md.renderer.NAME == "html":
-        md.renderer.register("abbr", render_html_abbr)
+    if md.renderer.NAME == 'html':
+        md.renderer.register('abbr', render_html_abbr)
+    elif md.renderer.NAME == 'ast':
+        md.renderer.register('abbr', render_ast_abbr)

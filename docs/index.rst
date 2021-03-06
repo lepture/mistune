@@ -16,7 +16,9 @@ Using old Mistune? Checkout docs: https://mistune.readthedocs.io/en/v0.8.4/
 Installation
 ------------
 
-Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_::
+Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_.
+
+.. parsed-literal::
 
     $ pip install mistune==\ |version|
 

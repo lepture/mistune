@@ -120,7 +120,9 @@ class InlineParser(ScannerParser):
             return 'text', m.group(0)
 
         text = m.group(1)
-        if '@' in text and not text.lower().startswith('mailto:'):
+        if ('@' in text and
+            not text.lower().startswith('mailto:') and
+            not text.lower().startswith('http')):
             link = 'mailto:' + text
         else:
             link = text

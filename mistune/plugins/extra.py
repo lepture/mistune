@@ -1,5 +1,4 @@
-from mistune.scanner import escape_url
-from mistune.inline_parser import ESCAPE
+from ..util import escape_url, ESCAPE_TEXT
 
 __all__ = ['plugin_url', 'plugin_strikethrough']
 
@@ -21,7 +20,7 @@ def plugin_url(md):
 STRIKETHROUGH_PATTERN = (
     r'~~(?=[^\s~])('
     r'(?:\\~|[^~])*'
-    r'(?:' + ESCAPE + r'|[^\s~]))~~'
+    r'(?:' + ESCAPE_TEXT + r'|[^\s~]))~~'
 )
 
 

@@ -1,6 +1,6 @@
 import re
 import mistune
-from mistune.scanner import html
+from mistune.util import html
 from tests import BaseTestCase
 
 

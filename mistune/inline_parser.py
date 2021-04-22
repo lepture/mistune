@@ -1,8 +1,7 @@
 import re
-from .scanner import ScannerParser, escape_url, unikey
+from .scanner import ScannerParser
+from .util import PUNCTUATION, ESCAPE_TEXT, escape_url, unikey
 
-PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
-ESCAPE = r'\\[' + PUNCTUATION + ']'
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
@@ -10,11 +9,11 @@ HTML_ATTRIBUTES = (
 )
 ESCAPE_CHAR = re.compile(r'\\([' + PUNCTUATION + r'])')
 LINK_TEXT = r'(?:\[[^\[\]]*\]|\\[\[\]]?|`[^`]*`|[^\[\]\\])*?'
-LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE + r'){0,1000}'
+LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE_TEXT + r'){0,1000}'
 
 
 class InlineParser(ScannerParser):
-    ESCAPE = ESCAPE
+    ESCAPE = ESCAPE_TEXT
 
     #: link or email syntax::
     #:
@@ -66,11 +65,11 @@ class InlineParser(ScannerParser):
     ASTERISK_EMPHASIS = (
         r'(\*{1,2})(?=[^\s*])('
         r'(?:\\[\\*]|[^*])*'
-        r'(?:' + ESCAPE + r'|[^\s*]))\1'
+        r'(?:' + ESCAPE_TEXT + r'|[^\s*]))\1'
     )
     UNDERSCORE_EMPHASIS = (
         r'\b(_{1,2})(?=[^\s_])([\s\S]*?'
-        r'(?:' + ESCAPE + r'|[^\s_]))\1'
+        r'(?:' + ESCAPE_TEXT + r'|[^\s_]))\1'
         r'(?!_|[^\s' + PUNCTUATION + r'])\b'
     )
 

@@ -7,11 +7,7 @@ TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\])\s(\s*\S.*)')
 
 
 def task_lists_hook(md, tokens, state):
-    for tok in tokens:
-        if tok['type'] == 'list':
-            for item in tok['children']:
-                _rewrite_list_item(item)
-    return tokens
+    return _rewrite_lists(tokens)
 
 
 def render_ast_task_list_item(children, level, checked):
@@ -48,6 +44,15 @@ def plugin_task_lists(md):
         md.renderer.register('task_list_item', render_html_task_list_item)
     elif md.renderer.NAME == 'ast':
         md.renderer.register('task_list_item', render_ast_task_list_item)
+
+
+def _rewrite_lists(tokens):
+    for tok in tokens:
+        if tok['type'] == 'list':
+            for item in tok['children']:
+                _rewrite_list_item(item)
+                _rewrite_lists(item['children'])
+    return tokens
 
 
 def _rewrite_list_item(item):

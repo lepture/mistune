@@ -3,7 +3,7 @@ import re
 __all__ = ['plugin_task_lists']
 
 
-TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\])\s(\s*\S.*)')
+TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\])\s+')
 
 
 def task_lists_hook(md, tokens, state):
@@ -61,7 +61,7 @@ def _rewrite_list_item(item):
         m = TASK_LIST_ITEM.match(text)
         if m:
             mark = m.group(1)
-            first_child['text'] = m.group(2)
+            first_child['text'] = text[m.end():]
 
             params = item['params']
             if mark == '[ ]':

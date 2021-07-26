@@ -1,5 +1,5 @@
 import re
-from ..scanner import escape_html
+from ..util import escape_html
 
 
 DEF_ABBR = re.compile(

@@ -54,6 +54,16 @@
 ````````````````````````````````
 
 ```````````````````````````````` example
+- [ ] Task list item
+  over two lines
+.
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Task list item
+over two lines</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
 - [ ] foo
   - [x] bar
   - [ ] baz

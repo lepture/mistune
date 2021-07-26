@@ -2,8 +2,8 @@ from .markdown import Markdown
 from .block_parser import BlockParser
 from .inline_parser import InlineParser
 from .renderers import AstRenderer, HTMLRenderer
-from .scanner import escape, escape_url, escape_html, unikey
 from .plugins import PLUGINS
+from .util import escape, escape_url, escape_html, unikey
 
 
 def create_markdown(escape=True, renderer=None, plugins=None):

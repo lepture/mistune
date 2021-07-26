@@ -1,6 +1,7 @@
 import re
-from .scanner import ScannerParser, Matcher, unikey
+from .scanner import ScannerParser, Matcher
 from .inline_parser import ESCAPE_CHAR, LINK_LABEL
+from .util import unikey
 
 _TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)

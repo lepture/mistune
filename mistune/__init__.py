@@ -6,10 +6,11 @@ from .plugins import PLUGINS
 from .util import escape, escape_url, escape_html, unikey
 
 
-def create_markdown(escape=True, renderer=None, plugins=None):
+def create_markdown(escape=True, hard_wrap=False, renderer=None, plugins=None):
     """Create a Markdown instance based on the given condition.
 
     :param escape: Boolean. If using html renderer, escape html.
+    :param hard_wrap: Boolean. Break every new line into ``<br>``.
     :param renderer: renderer instance or string of ``html`` and ``ast``.
     :param plugins: List of plugins, string or callable.
 
@@ -36,7 +37,8 @@ def create_markdown(escape=True, renderer=None, plugins=None):
             else:
                 _plugins.append(p)
         plugins = _plugins
-    return Markdown(renderer, plugins=plugins)
+
+    return Markdown(renderer, inline=InlineParser(renderer, hard_wrap=hard_wrap), plugins=plugins)
 
 
 html = create_markdown(
@@ -47,7 +49,7 @@ html = create_markdown(
 
 
 def markdown(text, escape=True, renderer=None, plugins=None):
-    md = create_markdown(escape, renderer, plugins)
+    md = create_markdown(escape=escape, renderer=renderer, plugins=plugins)
     return md(text)
 
 

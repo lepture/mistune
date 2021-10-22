@@ -3,14 +3,13 @@
 test:
 	@pytest -s
 
-bench:
-	@python tests/bench.py
-
 coverage:
 	@pytest --cov=mistune
 
 clean: clean-build clean-pyc clean-docs
 
+build:
+	@python3 -m build
 
 clean-build:
 	@rm -fr build/

@@ -1,0 +1,364 @@
+[
+    { 
+        "message": "Standard Math Block",
+        "text": "# Heading\n\n$$\\alpha\\beta*2^{3i}$$\n\nNext paragraph",
+        "tokens": [
+            {"children": [{"text": "Heading", "type": "text"}], "level": 1, "type": "heading"},
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\\beta*2^{3i}"
+            },
+            {"type": "newline"},
+            {"children": [{"text": "Next paragraph", "type": "text"}], "type": "paragraph"}
+        ]
+    },
+    { 
+        "message": "Standard Math Block with Space Padding",
+        "text": "# Heading\n\n$$ \\alpha\\beta*2^{3i} $$\n\nNext paragraph",
+        "tokens": [
+            {"children": [{"text": "Heading", "type": "text"}], "level": 1, "type": "heading"},
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\\beta*2^{3i}"
+            },
+            {"type": "newline"},
+            {"children": [{"text": "Next paragraph", "type": "text"}], "type": "paragraph"}
+        ]
+    },
+    { 
+        "message": "Standard Math Block with text immediately following",
+        "text": "$$\\alpha\\beta*2^{3i}$$\nNext paragraph",
+        "tokens": [
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\\beta*2^{3i}"
+            },
+            {
+                "type": "newline"
+            },
+            {
+                "children": [
+                    {
+                        "text": "Next paragraph",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            }
+        ]
+    },
+    { 
+        "message": "Multiline math block",
+        "text": "# Heading\n\n$$\\alpha\n\\beta\n*2^{3i}$$\n\nNext paragraph",
+        "tokens": [
+            {"children": [{"text": "Heading", "type": "text"}], "level": 1, "type": "heading"},
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\n\\beta\n*2^{3i}"
+            },
+            {"type": "newline"},
+            {"children": [{"text": "Next paragraph", "type": "text"}], "type": "paragraph"}
+        ]
+    },
+    { 
+        "message": "Multiline math block with space padding",
+        "text": "# Heading\n\n$$ \\alpha\n\\beta\n*2^{3i} $$\n\nNext paragraph",
+        "tokens": [
+            {"children": [{"text": "Heading", "type": "text"}], "level": 1, "type": "heading"},
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\n\\beta\n*2^{3i}"
+            },
+            {"type": "newline"},
+            {"children": [{"text": "Next paragraph", "type": "text"}], "type": "paragraph"}
+        ]
+    },
+    { 
+        "message": "Multiline Math Block with text immediately following",
+        "text": "$$\\alpha\n\\beta\n*2^{3i}$$\nNext paragraph",
+        "tokens": [
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\n\\beta\n*2^{3i}"
+            },
+            {
+                "type": "newline"
+            },
+            {
+                "children": [
+                    {
+                        "text": "Next paragraph",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            }
+        ]
+    },
+    { 
+        "message": "Multiline math block with adjacent heading",
+        "text": "# Heading\n$$\\alpha\n\\beta\n*2^{3i}$$\nNext paragraph",
+        "tokens": [
+            {"children": [{"text": "Heading", "type": "text"}], "level": 1, "type": "heading"},
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\n\\beta\n*2^{3i}"
+            },
+            {"type": "newline"},
+            {"children": [{"text": "Next paragraph", "type": "text"}], "type": "paragraph"}
+        ]
+    },
+    { 
+        "message": "Multiline math blocks cannot include a full paragraph break",
+        "text": "# Heading\n$$\\alpha\n\n\\beta\n*2^{3i}$$\nNext paragraph",
+        "no_type": "mathblock"
+    },
+    { 
+        "message": "Test math block that is written inline renders as a separate block",
+        "text": "This should be on a separate line : $$\\alpha\\beta*2^{3i}$$ This line should be standalone on a new line.",
+        "tokens": [
+            {
+                "children": [
+                    {
+                        "text": [
+                            {
+                                "text": "This should be on a separate line :",
+                                "type": "text"
+                            }
+                        ],
+                        "type": "text"
+                    },
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathblock"
+                    }
+                ],
+                "type": "paragraph"
+            },
+            {
+                "children": [
+                    {
+                        "text": "This line should be standalone on a new line.",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            }
+        ]
+    },
+    { 
+        "message": "Test math block that is written inline and is multiline renders correctly and as a separate block",
+        "text": "This should be on a separate line : $$\\alpha\\n\\beta\\n*2^{3i}$$ This line should be standalone on a new line.",
+        "tokens": [
+            {
+                "children": [
+                    {
+                        "text": [
+                            {
+                                "text": "This should be on a separate line :",
+                                "type": "text"
+                            }
+                        ],
+                        "type": "text"
+                    },
+                    {
+                        "expression": "\\alpha\\n\\beta\\n*2^{3i}",
+                        "type": "mathblock"
+                    }
+                ],
+                "type": "paragraph"
+            },
+            {
+                "children": [
+                    {
+                        "text": "This line should be standalone on a new line.",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            }
+        ]
+    },
+    { 
+        "message": "Test inline, multiline math block with padding",
+        "text": "This should be on a separate line : $$ \\alpha\\n\\beta\\n*2^{3i} $$ This line should be standalone on a new line.",
+        "tokens": [
+            {
+                "children": [
+                    {
+                        "text": [
+                            {
+                                "text": "This should be on a separate line :",
+                                "type": "text"
+                            }
+                        ],
+                        "type": "text"
+                    },
+                    {
+                        "expression": "\\alpha\\n\\beta\\n*2^{3i}",
+                        "type": "mathblock"
+                    }
+                ],
+                "type": "paragraph"
+            },
+            {
+                "children": [
+                    {
+                        "text": "This line should be standalone on a new line.",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            }
+        ]
+    },
+    {
+        "message": "Test single character math block",
+        "text": "Test single character\n\n$$k$$\n\nMath block.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "text": "Test single character",
+                        "type": "text"
+                    }
+                ]
+            },
+            {
+                "type": "mathblock",
+                "expression": "k"
+            },
+            {"type": "newline"},
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "text": "Math block.",
+                        "type": "text"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test single character padded math block",
+        "text": "Test single character\n\n$$ k $$\n\nMath block.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "text": "Test single character",
+                        "type": "text"
+                    }
+                ]
+            },
+            {
+                "type": "mathblock",
+                "expression": "k"
+            },
+            {"type": "newline"},
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "text": "Math block.",
+                        "type": "text"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test inline single character math block",
+        "text": "Test the regexp for a single character $$k$$ inline resolves to math block.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": [
+                            {
+                                "type": "text",
+                                "text": "Test the regexp for a single character"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "mathblock",
+                        "expression": "k"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "inline resolves to math block."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "More than one space head padding fails",
+        "no_type": "mathblock",
+        "text": "# Heading\n\n$$  \\alpha\\beta*2^{3i} $$\n\nNext paragraph"
+    },
+    { 
+        "message": "More than one space tail padding fails",
+        "no_type": "mathblock",
+        "text": "# Heading\n\n$$ \\alpha\\beta*2^{3i}  $$\n\nNext paragraph"
+    },
+    { 
+        "message": "Test that missing a start token does not render",
+        "no_type": "mathblock",
+        "text": "# Heading\n\n$\\alpha\\beta*2^{3i}$$\n\nNext paragraph"
+    },
+    { 
+        "message": "Test that missing an end token does not render",
+        "no_type": "mathblock",
+        "text": "# Heading\n\n$$\\alpha\\beta*2^{3i}$\n\nNext paragraph"
+    },
+    { 
+        "message": "Test that using two dollar signs does not lead to a mathblock",
+        "no_type": "mathblock",
+        "text": "What If I have some money: $$ ?"
+    },
+    { 
+        "message": "Test that using four dollar signs does not lead to a mathblock",
+        "no_type": "mathblock",
+        "text": "What If I have lots of money: $$$$"
+    },
+    { 
+        "message": "Test that using four dollar signs as a block",
+        "no_type": "mathblock",
+        "text": "$$$$"
+    },
+    { 
+        "message": "Standard Math Block with text immediately preceeding",
+        "text": "Initial Text\n$$\\alpha\\beta*2^{3i}$$",
+        "tokens": [
+            {
+                "children": [
+                    {
+                        "text": "Initial Text",
+                        "type": "text"
+                    }
+                ],
+                "type": "paragraph"
+            },
+            {
+                "type": "newline"
+            },
+            {
+                "type": "mathblock",
+                "expression": "\\alpha\\beta*2^{3i}"
+            }
+        ]
+    }
+
+]

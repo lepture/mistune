@@ -20,21 +20,24 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 This plugin supports the very common $..$ and $$..$$ extended syntax for latex math inclusion in markdown. Certain pacakage parameters are modifiable to reflect specific markdown parser flavors.
 
+## Features
+
+- The plugin supports three distinct plugin names: 
+    - 'mathblock', which represents the $$..$$ math syntax that usually is rendered as a block display.
+    - 'mathspan', which represents the $..$ math syntax that usually is rendered as an inline display.
+    - 'math' will call the plugin_allmath function, which simply includes both $..$ as mathspan and $$..$$ as mathblock.
+- The plugin allows for the mathblock $$ token to be space-padded, e.g. $$ \\alpha $$. 
+- mathspan $ tokens may not be space padded as it creates syntax conflict with currency usage (and no major parser supports this).
+- The plugin supports multiline equations so long as each consecutive line between the open and close tokens have text. Multiline support does not cross paragraph breaks.
+- In cases of uneven start and end tokens, $$..$ and $..$$ will both be rendered as math spans with an extra $ token.
+
+
 ## Usage 
 
 The following package variables may be altered to modify the plugin operation:
-- ALLOW_SPACE_PADDING: If True, allows math blocks to be space padded, i.e. $$ x**2 $$ in addition to $$x**2$$ . Default is False.
+- ALLOW_SPACE_PADDING: If True, allows math blocks to be space padded, i.e. $$ x**2 $$ in addition to $$x**2$$ . Default is True.
 - MATHSPAN_DOUBLE_TOKEN: If True, the mathspan plugin looks for the double dollar sign for its token, which we see in dillinger.io's implementation. Note that in this case the mathblock plugin should not be used at all as they will conflict.
- 
-## Features
 
-- The plugin renders two elements: 
-    - 'mathblock', which represents the $$..$$ math syntax that usually is rendered as a block display.
-    - 'mathspan', which represents the $..$ math syntax that usually is rendered as an inline display
-- The plugin allows for the mathblock $$ token to be space-padded, e.g. $$ \alpha $$. 
-- mathspan $ tokens may not be space padded (no major parser supports this).
-- The plugin supports multiline equations so long as each consecutive line between the open and close tokens have text. Multiline support does not cross paragraph breaks.
-- In cases of uneven start and end tokens, $$..$ and $..$$ will both be rendered as math spans with an extra $ token.
 
 ## Comparison by Major Parsers
 
@@ -49,7 +52,7 @@ The following package variables may be altered to modify the plugin operation:
 """
 import re 
 
-# needed to separte return types 
+# the parsers are needed to separte return types 
 # for inline vs block parsers.
 # They have different interfaces for some reason.
 from .. import block_parser, inline_parser

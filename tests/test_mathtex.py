@@ -46,10 +46,13 @@ def load_plugin(plugin_name, ast=False):
             if "tokens" in phrase:
                 message += ("\n\n**Expected**: " + str( phrase["tokens"]).replace("'", '"'))
             
+            #try:
             if 'no_type' in phrase and phrase['no_type']:
                 self.assertFalse(find_type(md(phrase["text"]), phrase['no_type']), message)
             else:
                 self.assertEqual(md(phrase["text"]), phrase["tokens"], message)
+            #except AssertionError as ae:
+            #    print("\n\n" + message)
 
         if type(data) is list:
         
@@ -66,3 +69,4 @@ def load_plugin(plugin_name, ast=False):
     globals()["TestPlugin_" + plugin_name] = TestPlugin
 
 load_plugin('mathblock', True)
+load_plugin('mathspan', True)

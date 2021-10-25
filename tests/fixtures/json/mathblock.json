@@ -26,6 +26,25 @@
         ]
     },
     { 
+        "message": "Standard Math Block with text immediately preceeding",
+        "text": "Initial Text\n$$\\alpha\\beta*2^{3i}$$",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Initial Text"
+                    },
+                    {
+                        "type": "mathblock",
+                        "expression": "\\alpha\\beta*2^{3i}"
+                    }
+                ]
+            }
+        ]
+    },
+    { 
         "message": "Standard Math Block with text immediately following",
         "text": "$$\\alpha\\beta*2^{3i}$$\nNext paragraph",
         "tokens": [
@@ -297,24 +316,5 @@
         "message": "Test that using four dollar signs as a block",
         "no_type": "mathblock",
         "text": "$$$$"
-    },
-    { 
-        "message": "Standard Math Block with text immediately preceeding",
-        "text": "Initial Text\n$$\\alpha\\beta*2^{3i}$$",
-        "tokens": [
-            {
-                "type": "paragraph",
-                "children": [
-                    {
-                        "type": "text",
-                        "text": "Initial Text"
-                    },
-                    {
-                        "type": "mathblock",
-                        "expression": "\\alpha\\beta*2^{3i}"
-                    }
-                ]
-            }
-        ]
     }
 ]

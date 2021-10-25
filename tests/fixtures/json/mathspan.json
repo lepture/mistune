@@ -1,0 +1,382 @@
+[
+    {
+        "message": "Standard Math Span on its own",
+        "text": "# Heading\n\n$\\alpha\\beta*2^{3i}$\n\nNext paragraph",
+        "tokens": [
+            {
+                "type": "heading",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Heading"
+                    }
+                ],
+                "level": 1
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Next paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Standard Math Span with Space Padding should fail",
+        "text": "# Heading\n\n$ \\alpha\\beta*2^{3i} $\n\nNext paragraph",
+        "no_type": "mathspan"
+    },
+    {
+        "message": "Standard Math Span with text immediately preceeding, but on a newline",
+        "text": "Initial Text\n$\\alpha\\beta*2^{3i}$",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Initial Text\n"
+                    },
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Standard Math Span with text immediately following, but on a newline",
+        "text": "$\\alpha\\beta*2^{3i}$\nNext paragraph",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": "\nNext paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Multiline math Span",
+        "text": "# Heading\n\n$\\alpha\n\\beta\n*2^{3i}$\n\nNext paragraph",
+        "tokens": [
+            {
+                "type": "heading",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Heading"
+                    }
+                ],
+                "level": 1
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\n\\beta\n*2^{3i}",
+                        "type": "mathspan"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Next paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Multiline math Span with space padding does not parse",
+        "text": "# Heading\n\n$ \\alpha\n\\beta\n*2^{3i} $\n\nNext paragraph",
+        "no_type": "mathspan"
+    },
+    {
+        "message": "Multiline Math Span with text immediately following",
+        "text": "$\\alpha\n\\beta\n*2^{3i}$\nNext paragraph",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\n\\beta\n*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": "\nNext paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Multiline math Span with adjacent heading",
+        "text": "# Heading\n$\\alpha\n\\beta\n*2^{3i}$\nNext paragraph",
+        "tokens": [
+            {
+                "type": "heading",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Heading"
+                    }
+                ],
+                "level": 1
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\n\\beta\n*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": "\nNext paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Multiline math Spans cannot include a full paragraph break",
+        "text": "# Heading\n$\\alpha\n\n\\beta\n*2^{3i}$\nNext paragraph",
+        "no_type": "mathspan"
+    },
+    {
+        "message": "Test math Span that is written inline renders as an inline mathspan",
+        "text": "This is an equation: $\\alpha\\beta*2^{3i}$ and this continues the thought.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "This is an equation: "
+                    },
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": " and this continues the thought."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test math Span that is written inline renders and has immediately adjacent non-space characters rendrs as an inline mathspan",
+        "text": "This is an equation:$\\alpha\\beta*2^{3i}$.This continues the thought.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "This is an equation:"
+                    },
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": ".This continues the thought."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test math Span that is written inline and is multiline renders correctly",
+        "text": "Multiline mathspan coming up : $\\alpha\\n\\beta\\n*2^{3i}$. This line continues the thought",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Multiline mathspan coming up : "
+                    },
+                    {
+                        "expression": "\\alpha\\n\\beta\\n*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": ". This line continues the thought"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test inline, multiline math Span with padding fails",
+        "text": "This should be on a separate line : $ \\alpha\\n\\beta\\n*2^{3i} $ This line should be standalone on a new line.",
+        "no_type": "mathspan"
+    },
+    {
+        "message": "Test single character math Span in its own paragraph",
+        "text": "Test single character\n\n$k$\n\nMath Span.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Test single character"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "k",
+                        "type": "mathspan"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Math Span."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test single character close math span with lines",
+        "text": "Test single character\n$k$\nMath Span.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Test single character\n"
+                    },
+                    {
+                        "expression": "k",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": "\nMath Span."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test inline single character math Span",
+        "text": "Test the regexp for a single character $k$ inline resolves to math Span.",
+        "tokens": [
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Test the regexp for a single character "
+                    },
+                    {
+                        "expression": "k",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": " inline resolves to math Span."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test that an extra end token will render.",
+        "text": "# Heading\n\n$\\alpha\\beta*2^{3i}$$\n\nNext paragraph",
+        "tokens": [
+            {
+                "type": "heading",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Heading"
+                    }
+                ],
+                "level": 1
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "expression": "\\alpha\\beta*2^{3i}",
+                        "type": "mathspan"
+                    },
+                    {
+                        "type": "text",
+                        "text": "$"
+                    }
+                ]
+            },
+            {
+                "type": "paragraph",
+                "children": [
+                    {
+                        "type": "text",
+                        "text": "Next paragraph"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "message": "Test that an extra start token will not render",
+        "no_type": "mathspan",
+        "text": "# Heading\n\n$$\\alpha\\beta*2^{3i}$\n\nNext paragraph"
+    },
+    {
+        "message": "Test that using a dollar sign does not lead to a mathspan",
+        "no_type": "mathspan",
+        "text": "What If I have some money: $ ?"
+    },
+    {
+        "message": "Test that using two dollar signs does not lead to a mathSpan",
+        "no_type": "mathspan",
+        "text": "What If I have lots of money: $$"
+    },
+    {
+        "message": "Test that using four dollar signs does not lead to a mathspan",
+        "no_type": "mathspan",
+        "text": "$$$$"
+    }
+]

@@ -48,6 +48,12 @@ The following package variables may be altered to modify the plugin operation:
  
 """
 import re 
+
+# needed to separte return types 
+# for inline vs block parsers.
+# They have different interfaces for some reason.
+from .. import block_parser, inline_parser
+
 __all__ = [
     'plugin_mathspan', 
     'plugin_mathblock',
@@ -91,8 +97,10 @@ def plugin_mathblock(md):
     if ALLOW_SPACE_PADDING:
         # $${math expression}$$ or $$ {math expression} $$ 
         # - these seem to work
-        mathblock_pattern = re.compile(r'(.*?)\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$(.*?)', re.DOTALL) 
-        
+        math_pattern = r'(\s*)\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$'
+        inline_mathblock = re.compile(math_pattern) 
+
+        mathblock_re = re.compile(math_pattern + r'(.*?)', re.DOTALL) 
     else:
         raise Exception("Not tested yet")
         mathblock_pattern = re.compile(r'([^\n]*)\$\$([^\$\s][^\$]*?)(?<!\s)\$\$([^\n]*)') 
@@ -108,9 +116,20 @@ def plugin_mathblock(md):
         #mathexpr = rematch.group(2).strip()
         #epilog = rematch.group(4).strip()
         groups = rematch.groups()
+        mathexpr = groups[1]
+
+        if isinstance(parser, inline_parser.InlineParser):
+            # inline parsers are expected to return a tuple of the render function name and the matched parameters.  
+            return(('mathblock_renderer', mathexpr))
+
+
         prolog = groups[0].strip()
-        mathexpr = groups[1].strip()
         epilog = groups[-1].strip()
+
+        #import pdb ; pdb.set_trace()
+
+        #
+        # In contrast, block parsers are expected to have a dict with at least a type value. It will fail if it does not have another key as well. In this case, we use 'raw' because then it passes the math expression directly to the renderer
 
         mathblock = {
             'type': 'mathblock_renderer', 
@@ -145,12 +164,21 @@ def plugin_mathblock(md):
     # register the rule with the parser
     md.block.register_rule(
         'mathblock_parser', 
-        mathblock_pattern, 
+        #mathblock_pattern, 
+        mathblock_re, 
         parse_mathblock,
     )
-
     # add the rule to the list of rules
     md.block.rules.append('mathblock_parser')
+
+    # register the rule with the parser
+    md.inline.register_rule(
+        'mathspan_parser', 
+        math_pattern,
+        parse_mathblock,
+    )
+    # add the rule to the list of rules
+    md.inline.rules.append('mathspan_parser')
 
     # register the renderers
     if md.renderer.NAME == 'html':

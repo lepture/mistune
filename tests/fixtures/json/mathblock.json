@@ -118,97 +118,67 @@
         "text": "This should be on a separate line : $$\\alpha\\beta*2^{3i}$$ This line should be standalone on a new line.",
         "tokens": [
             {
+                "type": "paragraph",
                 "children": [
                     {
-                        "text": [
-                            {
-                                "text": "This should be on a separate line :",
-                                "type": "text"
-                            }
-                        ],
-                        "type": "text"
+                        "type": "text",
+                        "text": "This should be on a separate line :"
                     },
                     {
-                        "expression": "\\alpha\\beta*2^{3i}",
-                        "type": "mathblock"
-                    }
-                ],
-                "type": "paragraph"
-            },
-            {
-                "children": [
+                        "type": "mathblock",
+                        "expression": "\\alpha\\beta*2^{3i}"
+                    },
                     {
-                        "text": "This line should be standalone on a new line.",
-                        "type": "text"
+                        "type": "text",
+                        "text": " This line should be standalone on a new line."
                     }
-                ],
-                "type": "paragraph"
+                ]
             }
         ]
     },
-    { 
+    {
         "message": "Test math block that is written inline and is multiline renders correctly and as a separate block",
         "text": "This should be on a separate line : $$\\alpha\\n\\beta\\n*2^{3i}$$ This line should be standalone on a new line.",
         "tokens": [
             {
+                "type": "paragraph",
                 "children": [
                     {
-                        "text": [
-                            {
-                                "text": "This should be on a separate line :",
-                                "type": "text"
-                            }
-                        ],
-                        "type": "text"
+                        "type": "text",
+                        "text": "This should be on a separate line :"
                     },
                     {
-                        "expression": "\\alpha\\n\\beta\\n*2^{3i}",
-                        "type": "mathblock"
-                    }
-                ],
-                "type": "paragraph"
-            },
-            {
-                "children": [
+                        "type": "mathblock",
+                        "expression": "\\alpha\\n\\beta\\n*2^{3i}"
+                    },
                     {
-                        "text": "This line should be standalone on a new line.",
-                        "type": "text"
+                        "type": "text",
+                        "text": " This line should be standalone on a new line."
                     }
-                ],
-                "type": "paragraph"
+                ]
             }
         ]
     },
-    { 
+    {
         "message": "Test inline, multiline math block with padding",
         "text": "This should be on a separate line : $$ \\alpha\\n\\beta\\n*2^{3i} $$ This line should be standalone on a new line.",
         "tokens": [
             {
+                "type": "paragraph",
                 "children": [
                     {
-                        "text": [
-                            {
-                                "text": "This should be on a separate line :",
-                                "type": "text"
-                            }
-                        ],
-                        "type": "text"
+                        "type": "text",
+                        "text": "This should be on a separate line :"
                     },
                     {
-                        "expression": "\\alpha\\n\\beta\\n*2^{3i}",
-                        "type": "mathblock"
-                    }
-                ],
-                "type": "paragraph"
-            },
-            {
-                "children": [
+                        "type": "mathblock",
+                        "expression": "\\alpha\\n\\beta\\n*2^{3i}"
+                    },
                     {
-                        "text": "This line should be standalone on a new line.",
-                        "type": "text"
+                        "type": "text",
+                        "text": " This line should be standalone on a new line."
                     }
-                ],
-                "type": "paragraph"
+                ]
             }
         ]
     },
@@ -279,25 +249,15 @@
                 "children": [
                     {
                         "type": "text",
-                        "text": [
-                            {
-                                "type": "text",
-                                "text": "Test the regexp for a single character"
-                            }
-                        ]
+                        "text": "Test the regexp for a single character"
                     },
                     {
                         "type": "mathblock",
                         "expression": "k"
-                    }
-                ]
-            },
-            {
-                "type": "paragraph",
-                "children": [
+                    },
                     {
                         "type": "text",
-                        "text": "inline resolves to math block."
+                        "text": " inline resolves to math block."
                     }
                 ]
             }
@@ -343,22 +303,18 @@
         "text": "Initial Text\n$$\\alpha\\beta*2^{3i}$$",
         "tokens": [
             {
+                "type": "paragraph",
                 "children": [
                     {
-                        "text": "Initial Text",
-                        "type": "text"
+                        "type": "text",
+                        "text": "Initial Text"
+                    },
+                    {
+                        "type": "mathblock",
+                        "expression": "\\alpha\\beta*2^{3i}"
                     }
-                ],
-                "type": "paragraph"
-            },
-            {
-                "type": "newline"
-            },
-            {
-                "type": "mathblock",
-                "expression": "\\alpha\\beta*2^{3i}"
+                ]
             }
         ]
     }
-
 ]

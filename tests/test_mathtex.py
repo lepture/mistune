@@ -39,9 +39,12 @@ def load_plugin(plugin_name, ast=False):
             print("Run " + message)
 
             # - add more useful debugging information in case the assertion fails
-            message += "\n\n**Markdown Rendered**: " + str(md(phrase["text"]))
+            try:
+                message += "\n\n**Markdown Rendered**: " + str(md(phrase["text"])).replace("'", '"')
+            except Exception as e:
+                message += f"\n\nAttempting to render markdown fails with {e}"
             if "tokens" in phrase:
-                message += ("\n\n**Expected**: " + str( phrase["tokens"]))
+                message += ("\n\n**Expected**: " + str( phrase["tokens"]).replace("'", '"'))
             
             if 'no_type' in phrase and phrase['no_type']:
                 self.assertFalse(find_type(md(phrase["text"]), phrase['no_type']), message)

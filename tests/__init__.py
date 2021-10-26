@@ -25,4 +25,9 @@ class BaseTestCase(TestCase):
 
     def assert_case(self, name, text, html):
         result = self.md(text)
-        self.assertEqual(result, html)
+        try:
+            self.assertEqual(result.strip(), html.strip())
+        except AssertionError as ae:
+            #import pdb ; pdb.set_trace()
+            print(f"\n\nFailed to match case {name}\n\n--------------\nResult:\n{result}\n\nExpected:\n{html.strip()}\n--------------")
+            raise

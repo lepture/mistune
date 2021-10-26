@@ -70,7 +70,7 @@ MATHSPAN_DOUBLE_TOKEN = False
 
 # define the HTML renderer for math block
 def render_html_mathblock(mathexpression):
-    return (f'<div class="mathexpr">{mathexpression}</block>')
+    return (f'<div class="mathexpr">{mathexpression}</div>')
 
 # define the AST renderer for math blocks
 def render_ast_mathblock(mathexpression):
@@ -82,7 +82,7 @@ def render_ast_mathblock(mathexpression):
 
 # define the HTML renderer for math spans
 def render_html_mathspan(mathexpression):
-    return (f'<span class="mathjax">{mathexpression}</span>')
+    return (f'<span class="mathexpr">{mathexpression}</span>')
 
 # define the AST renderer for math spans
 def render_ast_mathspan(mathexpression):

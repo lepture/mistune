@@ -10,10 +10,8 @@ def load_plugin(plugin_name, ast=False):
 
     def test_ast_renderer(self):
         """ Test the AST JSON renderer. This shows up as one test in the output, so print statements are listed for each phrase processed to help in test verification (output is supressed in most testing contexts, of course). """
-        self.maxDiff = None
         md = Markdown(renderer=AstRenderer(), plugins=[_plugin])
         data = fixtures.load_json(plugin_name + ".json")
-        print("\n")
 
         def find_type(ref, badtype):
             if type(ref) is list:
@@ -37,6 +35,7 @@ def load_plugin(plugin_name, ast=False):
 
 
             print("Run " + message)
+            #print("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ example\n" + phrase['text'] + f'\n.\n{phrase["tokens"]}\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
             # - add more useful debugging information in case the assertion fails
             try:

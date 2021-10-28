@@ -1,6 +1,7 @@
 import re
 from .scanner import ScannerParser
 from .util import PUNCTUATION, ESCAPE_TEXT, escape_url, unikey
+from .renderers import BaseRenderer
 
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
@@ -100,6 +101,8 @@ class InlineParser(ScannerParser):
     )
 
     def __init__(self, renderer, hard_wrap=False):
+        if not isinstance(renderer, BaseRenderer):
+            raise RuntimeError("%s must be an instance of BaseRenderer" % renderer)
         super(InlineParser, self).__init__()
         if hard_wrap:
             #: every new line becomes <br>

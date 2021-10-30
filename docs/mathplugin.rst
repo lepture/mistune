@@ -23,11 +23,13 @@ The mathtex plugin actually creates three plugin options:
 * 'math' is just a shortcut that consumes both 'mathspan' and 'mathblock' plugins.
 
 For the AST renderer:
+
 * Block math is rendered as `{'type': 'mathblock', 'expression': '..'}`
 * Inline math is rendered as `{'type': 'mathspan', 'expression': '..'}`
 * The expression will have the '$$' removed and will be stripped of any preceeding/following space.
 
 For the HTML renderer:
+
 * Block math is rendered as `<div class="mathexpr">..</div>`
 * Inline math is rendered as `<span class="mathexpr">..</span>`
 * The expression will have the '$' removed and will be stripped of any preceeding/following space.
@@ -39,18 +41,18 @@ Features and Implementation Notes
 * inline $..$ tokens **may not** be space padded as it creates syntax conflicts too readily with currency usage (and no surveyed parser supports this).
 * The plugin supports multiline equations so long as each consecutive line between the open and close tokens have text. Multiline support does not cross full paragraph breaks.
 * In cases of uneven start and end tokens:
-  *  $..$$ is rendered as inline math with the extra $ beginning the following text (i.e., the $..$ is rendered).
-  *  $$..$ does not render at all. Technically, $$ could be perceived as an empty inline block, leaving the closing $ by itself, but this would be weird and almost definitely unintended. 
+   *  $..$$ is rendered as inline math with the extra $ beginning the following text (i.e., the $..$ is rendered).
+   *  $$..$ does not render at all. Technically, $$ could be perceived as an empty inline block, leaving the closing $ by itself, but this would be weird and almost definitely unintended. 
 * There is no way to create an explicitly blank math entity to fill in later, because any attempt of doing so (e.g., `$$$$` or `$ $`) would potentially conflict with written text. Alternatives for the user might include a single character (e.g., `$.$`, `$$_$$`) or, for silent html, an empty tag (`$$< />$$`).   
 * The KaTex and MathJax javascript renderers were surveyed and cookbook examples appear below.
 * In developing the plugin, StackEdit, dillinger.io, Typora, and OSF were surveyed to see how they handle Math Syntax in markdown. Some notes about the what was observed follow:
-  * `<StackEdit https://stackedit.io/>`'s default implementation matches the usage and features here. 
-  * `<Typora https://typora.io/>`'s default math renderer is exclusively '$$' math blocks. There is no support for inline spans.
-  * `<dillinger.io https://dillinger.io/>`'s default math implementation:
-    * does not recognize the $..$ math span at all.
-    * renders $$..$$ as an inline math span.
-    * does not allow padded tokens, i.e. `$$ \\alpha $$` does not render but `$$\\alpha$$` does.
-  * `<OSF https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
+   * `<StackEdit https://stackedit.io/>`'s default implementation matches the usage and features here. 
+   * `<Typora https://typora.io/>`'s default math renderer is exclusively '$$' math blocks. There is no support for inline spans.
+   * `<dillinger.io https://dillinger.io/>`'s default math implementation:
+      * does not recognize the $..$ math span at all.
+      * renders $$..$$ as an inline math span.
+      * does not allow padded tokens, i.e. `$$ \\alpha $$` does not render but `$$\\alpha$$` does.
+   * `<OSF https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
 
 AST Rendering
 -------------
@@ -92,8 +94,8 @@ The Math HTML renderer wraps the detected math html in the following way:
 
 * The math signifier tokens ($/$$) are removed from the output.
 * Both inline and block math are given class "mathexpr". They are given the same class to simplify identification and processing, and the html tag type is used to enforce the inline/block distinction:
-  * Inline math ($..$) is rendered as `<span class="mathexpr">..</span>`
-  * Math blocks ($$..$$) are rendered as `<div class="mathexpr">..</div>` 
+   * Inline math ($..$) is rendered as `<span class="mathexpr">..</span>`
+   * Math blocks ($$..$$) are rendered as `<div class="mathexpr">..</div>` 
 * If the user wishes to render $$ as inline (as dillinger.io does), they can add a ``display=inline`` CSS rule for ``div.mathexpr``
 
 Refer to the `mathblock.txt` and `mathspan.txt` in `tests/fixtures/` to see nunaces for how mathblocks and mathspans html is rendered based on different markdown syntax.
@@ -199,26 +201,25 @@ As all of the mathexpr identified blocks are given the css class "mathexpr", you
 The HTML structure for the above code would look like this:
 
 .. code-block:: html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <script type="text/javascript" async
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
 
-<!DOCTYPE html>
-<html>
-    <head>
-        <script type="text/javascript" async
-        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
-
-        MathJax.Hub.Config({
-            tex2jax: {
-                ignoreClass: "content",
-                processClass: "mathexpr",
-            }
-        });
-        </script>
-    </head>
- 
-    <body class="content">
-    ... html with mistune generated elements ...
-    </body>
-</html>
+            MathJax.Hub.Config({
+                tex2jax: {
+                    ignoreClass: "content",
+                    processClass: "mathexpr",
+                }
+            });
+            </script>
+        </head>
+    
+        <body class="content">
+        ... html with mistune generated elements ...
+        </body>
+    </html>
 
 
 

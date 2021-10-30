@@ -51,13 +51,14 @@ Features and Implementation Notes
    * `dillinger.io <https://dillinger.io/>`'s default math implementation:
       * does not recognize the $..$ math span at all.
       * renders $$..$$ as an inline math span.
-      * does not allow padded tokens, i.e. `$$ \\alpha $$` does not render but `$$\\alpha$$` does.
+      * does not allow padded tokens, i.e. ``$$ \\alpha $$`` does not render but ``$$\\alpha$$`` does.
    * `OSF <https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
 
 AST Rendering
 -------------
 
 The mathtex plugin renders AST as two distinct types:
+
 * 'mathblock' for $$..$$ blocks
 * 'mathspan' for inline $..$ notation 
 
@@ -146,6 +147,7 @@ If you are using mistune to generate html with KaTeX, you will need to include t
 You do also need to include the KaTeX javascript libraries and stylesheet.  At the time of writing, the following additions included the libraries and also call ``renderMistuneKaTex`` when the page is loaded, which will need to be included or referenced in your page as well.
 
 .. code-block:: html
+
     <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/katex.min.css" integrity="sha384-4Y/XYS9mD9HJ+dIEpYViUGob3atehZCmTPqyUCOLZHfe1iKgH/3tCGDCIDx+WNZc" crossorigin="anonymous">
 
@@ -191,6 +193,7 @@ MathJax via CSS Classes
 As all of the mathexpr identified blocks are given the css class "mathexpr", you can you limit MathJax if you also have a class assigned to your body or an outermost content div.  Note that the *processClass* option is only for elements within blocks that are not rendered due to *ignoreClass*, and anything outside the ``ignoredClass`` blocks will still be processed. 
 
 .. code-block:: javascript
+
       MathJax.Hub.Config({
         tex2jax: {
             ignoreClass: "content",
@@ -201,6 +204,7 @@ As all of the mathexpr identified blocks are given the css class "mathexpr", you
 The HTML structure for the above code would look like this:
 
 .. code-block:: html
+
     <!DOCTYPE html>
     <html>
         <head>

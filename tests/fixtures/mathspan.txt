@@ -182,3 +182,31 @@ have $10.
 <p>I have $5 and you
 have $10.</p>
 ````````````````````````````````
+
+```````````````````````````````` example
+Unbalanced text should not render Math : 
+
+$$\\alpha\\beta*2^{3i}$ 
+
+Buffer Text.
+.
+<p>Unbalanced text should not render Math :</p>
+<p>$$\alpha\beta*2^{3i}$</p>
+<p>Buffer Text.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+Unbalanced text should render Math : $\\alpha\\beta*2^{3i}$$ 
+Buffer text 
+.
+<p>Unbalanced text should render Math : <span class="mathexpr">\\alpha\\beta*2^{3i}</span>$ 
+Buffer text</p>
+````````````````````````````````
+
+```````````````````````````````` example
+To create an stub inline math entity : $_$ 
+Buffer text 
+.
+<p>To create an stub inline math entity : <span class="mathexpr">_</span> 
+Buffer text</p>
+````````````````````````````````

@@ -1,5 +1,5 @@
 """
-Mistune Math Plugin.
+Mistune Math Plugin. See documentation in mathplugn.rst file.
 
 Copyright (c) 2021, Kevin Crouse. All rights reserved.
 
@@ -15,41 +15,6 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-"""
-# Mistune Math Plugin.
-
-This plugin supports the very common $..$ and $$..$$ extended syntax for latex math inclusion in markdown. Certain pacakage parameters are modifiable to reflect specific markdown parser flavors.
-
-## Features
-
-- The plugin supports three distinct plugin names: 
-    - 'mathblock', which represents the $$..$$ math syntax that usually is rendered as a block display.
-    - 'mathspan', which represents the $..$ math syntax that usually is rendered as an inline display.
-    - 'math' will call the plugin_allmath function, which simply includes both $..$ as mathspan and $$..$$ as mathblock.
-- The plugin allows for the mathblock $$ token to be space-padded, e.g. $$ \\alpha $$. 
-- mathspan $ tokens may not be space padded as it creates syntax conflict with currency usage (and no major parser supports this).
-- The plugin supports multiline equations so long as each consecutive line between the open and close tokens have text. Multiline support does not cross paragraph breaks.
-- In cases of uneven start and end tokens, $$..$ and $..$$ will both be rendered as math spans with an extra $ token.
-
-
-## Usage 
-
-The following package variables may be altered to modify the plugin operation:
-- ALLOW_SPACE_PADDING: If True, allows math blocks to be space padded, i.e. $$ x**2 $$ in addition to $$x**2$$ . Default is True.
-- MATHSPAN_DOUBLE_TOKEN: If True, the mathspan plugin looks for the double dollar sign for its token, which we see in dillinger.io's implementation. Note that in this case the mathblock plugin should not be used at all as they will conflict.
-
-
-## Comparison by Major Parsers
-
-- StackEdit's KaTeX implementation matches the full set of usage and features provided. 
-- Typora's math is exclusively '$$' math blocks. There is no support for inline spans.
-- dillinger.io's math implementation:
-    - does not recognize the $..$ math span at all.
-    - renders $$..$$ the same as an inline math span.
-    - does not allow padded tokens, i.e. $$ \alpha $$ does not render but $$\alpha$$ does.
-
- 
-"""
 import re 
 
 # the parsers are needed to separte return types 
@@ -100,10 +65,8 @@ def plugin_mathblock(md):
     if ALLOW_SPACE_PADDING:
         # $${math expression}$$ or $$ {math expression} $$ 
         # - these seem to work
-        math_pattern = r'(\s*)\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$'
-        inline_mathblock = re.compile(math_pattern) 
-
-        mathblock_re = re.compile(math_pattern + r'(.*?)', re.DOTALL) 
+        math_pattern = r'\n*\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$\n*'
+        mathblock_re = re.compile(r'(.*?)' + math_pattern + r'(.*)\n?')  
     else:
         raise Exception("Not tested yet")
         mathblock_pattern = re.compile(r'([^\n]*)\$\$([^\$\s][^\$]*?)(?<!\s)\$\$([^\n]*)') 
@@ -115,23 +78,16 @@ def plugin_mathblock(md):
         """ This takes in the match from the registered pattern and returns a data structure. The data structure must have a 'type' field and then one of several others: 'text' will be re-evaluated by the parser, 'raw' is passed on to the renderer as is, and children will each be individually processed. Note that the 'type' field is the type of rendered to use, not the final type.  """
         # so here the rematch is the result of the pattern.
         # we return the top-level blocks, which depend a bit on the result
-        #prolog = rematch.group(1).strip()
-        #mathexpr = rematch.group(2).strip()
-        #epilog = rematch.group(4).strip()
-        groups = rematch.groups()
-        mathexpr = groups[1]
 
+        groups = rematch.groups()
         if isinstance(parser, inline_parser.InlineParser):
             # inline parsers are expected to return a tuple of the render function name and the matched parameters.  
-            return(('mathblock_renderer', mathexpr))
-
-
+            return(('mathblock_renderer', groups[0].strip()))
+        
         prolog = groups[0].strip()
+        mathexpr = groups[1].strip()
         epilog = groups[-1].strip()
 
-        #import pdb ; pdb.set_trace()
-
-        #
         # In contrast, block parsers are expected to have a dict with at least a type value. It will fail if it does not have another key as well. In this case, we use 'raw' because then it passes the math expression directly to the renderer
 
         mathblock = {
@@ -147,18 +103,17 @@ def plugin_mathblock(md):
         children = []
         if prolog:
             children.append({
-                'type': 'text', 
+                'type': 'paragraph', 
                 'text': prolog,
             })
         
         children.append(mathblock)
-        #import pdb ; pdb.set_trace()
         if epilog:
             children.append({
-                'type': 'text', 
+                'type': 'paragraph', 
                 'text': epilog,
             })
-
+        return(children)
         return({
             'type': 'paragraph',    
             'children': children,
@@ -167,7 +122,6 @@ def plugin_mathblock(md):
     # register the rule with the parser
     md.block.register_rule(
         'mathblock_parser', 
-        #mathblock_pattern, 
         mathblock_re, 
         parse_mathblock,
     )
@@ -176,12 +130,12 @@ def plugin_mathblock(md):
 
     # register the rule with the parser
     md.inline.register_rule(
-        'mathspan_parser', 
+        'mathblock_inline_parser', 
         math_pattern,
         parse_mathblock,
     )
     # add the rule to the list of rules
-    md.inline.rules.append('mathspan_parser')
+    md.inline.rules.append('mathblock_inline_parser')
 
     # register the renderers
     if md.renderer.NAME == 'html':

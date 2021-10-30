@@ -24,26 +24,26 @@ The mathtex plugin actually creates three plugin options:
 
 For the AST renderer:
 
-* Block math is rendered as `{'type': 'mathblock', 'expression': '..'}`
-* Inline math is rendered as `{'type': 'mathspan', 'expression': '..'}`
+* Block math is rendered as ``{'type': 'mathblock', 'expression': '..'}``
+* Inline math is rendered as ``{'type': 'mathspan', 'expression': '..'}``
 * The expression will have the '$$' removed and will be stripped of any preceeding/following space.
 
 For the HTML renderer:
 
-* Block math is rendered as `<div class="mathexpr">..</div>`
-* Inline math is rendered as `<span class="mathexpr">..</span>`
+* Block math is rendered as ``<div class="mathexpr">..</div>``
+* Inline math is rendered as ``<span class="mathexpr">..</span>``
 * The expression will have the '$' removed and will be stripped of any preceeding/following space.
 
 Features and Implementation Notes 
 ---------------------------------
 
-* block $$..$$ tokens may be space-padded by exacltly one space, e.g. `$$ \\alpha $$`, which is often supported by not universally (dillinger.io does not support it). There are examples of the $$ token being able to be on a line by itself, but this does not appear common and since it can lead to over-identification, it is not supported here.
+* block $$..$$ tokens may be space-padded by exacltly one space, e.g. ``$$ \\alpha $$``, which is often supported by not universally (dillinger.io does not support it). There are examples of the $$ token being able to be on a line by itself, but this does not appear common and since it can lead to over-identification, it is not supported here.
 * inline $..$ tokens **may not** be space padded as it creates syntax conflicts too readily with currency usage (and no surveyed parser supports this).
 * The plugin supports multiline equations so long as each consecutive line between the open and close tokens have text. Multiline support does not cross full paragraph breaks.
 * In cases of uneven start and end tokens:
    *  $..$$ is rendered as inline math with the extra $ beginning the following text (i.e., the $..$ is rendered).
    *  $$..$ does not render at all. Technically, $$ could be perceived as an empty inline block, leaving the closing $ by itself, but this would be weird and almost definitely unintended. 
-* There is no way to create an explicitly blank math entity to fill in later, because any attempt of doing so (e.g., `$$$$` or `$ $`) would potentially conflict with written text. Alternatives for the user might include a single character (e.g., `$.$`, `$$_$$`) or, for silent html, an empty tag (`$$< />$$`).   
+* There is no way to create an explicitly blank math entity to fill in later, because any attempt of doing so (e.g., ``$$$$`` or ``$ $``) would potentially conflict with written text. Alternatives for the user might include a single character (e.g., ``$.$``, ``$$_$$``) or, for silent html, an empty tag (``$$< />$$``).   
 * The KaTex and MathJax javascript renderers were surveyed and cookbook examples appear below.
 * In developing the plugin, StackEdit, dillinger.io, Typora, and OSF were surveyed to see how they handle Math Syntax in markdown. Some notes about the what was observed follow:
    * `StackEdit <https://stackedit.io/>`'s default implementation matches the usage and features here. 
@@ -67,7 +67,7 @@ Math blocks written inline in markdown create separate paragraphs for text befor
 
 For HTML renderers, inline math markdown creates one paragraph with the mathexpr span inside. In AST, the inline math markdown creates an outer paragraph object with the preceeding and following text as separate "text" elements at the same level in the paragraph's children. 
 
-Refer to the `mathblock.json` and `mathspan.json` in `tests/fixtures/json` to see nunaces for how mathblocks and mathspans AST structures may render based on different markdown syntax.
+Refer to the ``mathblock.json`` and ``mathspan.json`` in ``tests/fixtures/json`` to see nunaces for how mathblocks and mathspans AST structures may render based on different markdown syntax.
 
 Example
 ^^^^^^^
@@ -94,11 +94,11 @@ The Math HTML renderer wraps the detected math html in the following way:
 
 * The math signifier tokens ($/$$) are removed from the output.
 * Both inline and block math are given class "mathexpr". They are given the same class to simplify identification and processing, and the html tag type is used to enforce the inline/block distinction:
-   * Inline math ($..$) is rendered as `<span class="mathexpr">..</span>`
-   * Math blocks ($$..$$) are rendered as `<div class="mathexpr">..</div>` 
+   * Inline math ($..$) is rendered as ``<span class="mathexpr">..</span>``
+   * Math blocks ($$..$$) are rendered as ``<div class="mathexpr">..</div>`` 
 * If the user wishes to render $$ as inline (as dillinger.io does), they can add a ``display=inline`` CSS rule for ``div.mathexpr``
 
-Refer to the `mathblock.txt` and `mathspan.txt` in `tests/fixtures/` to see nunaces for how mathblocks and mathspans html is rendered based on different markdown syntax.
+Refer to the ``mathblock.txt`` and ``mathspan.txt`` in ``tests/fixtures/`` to see nunaces for how mathblocks and mathspans html is rendered based on different markdown syntax.
 
 
 Example
@@ -188,7 +188,7 @@ You can also specify the elements to be rendered if they are available during co
 MathJax via CSS Classes
 #######################
 
-As all of the mathexpr identified blocks are given the css class "mathexpr", you can you limit MathJax if you also have a class assigned to your body or an outermost content div.  Note that the *processClass* option is only for elements within blocks that are not rendered due to *ignoreClass*, and anything outside the `ignoredClass` blocks will still be processed. 
+As all of the mathexpr identified blocks are given the css class "mathexpr", you can you limit MathJax if you also have a class assigned to your body or an outermost content div.  Note that the *processClass* option is only for elements within blocks that are not rendered due to *ignoreClass*, and anything outside the ``ignoredClass`` blocks will still be processed. 
 
 .. code-block:: javascript
       MathJax.Hub.Config({

@@ -89,8 +89,8 @@ def plugin_mathblock(md):
             # a standalone mathblock.  Just return
             return(mathblock)
 
-        # here the math block is inline in the raw markdown text.
-        # So we return a pargaraph with the mathblock in the middle and the rest of the text sent along for additional parsing.
+        # here the math block is inline in the raw markdown text - but there may or may not be preceeding or following text. So we return any text, if it exists, in paragraphs, and the mathblock at an equal level positions accordingly.
+        
         children = []
         if prolog:
             children.append({
@@ -99,18 +99,15 @@ def plugin_mathblock(md):
             })
         
         children.append(mathblock)
+
         if epilog:
             children.append({
                 'type': 'paragraph', 
                 'text': epilog,
             })
         return(children)
-        return({
-            'type': 'paragraph',    
-            'children': children,
-        })
 
-    # register the rule with the parser
+    # register the rule with the block parser
     md.block.register_rule(
         'mathblock_parser', 
         mathblock_re, 
@@ -119,19 +116,26 @@ def plugin_mathblock(md):
     # add the rule to the list of rules
     md.block.rules.append('mathblock_parser')
 
-    # register the rule with the parser
+    # Not to be confused with the mathspan plugin, we need to 
+    # register the $$..$$ mathblock as an inline rule as well, 
+    # because it is not uncommon in examples around the web to see it written 
+    # inline and rendered as a block, and block-only parsing fails to catch it.
+    # 
+    # use the 'mathblock_inline_..' notation to distinguish it from the mathspan
+    # inline parser in the next plugin.
+    # But parse_mathblock() is generalized to take the input from either the 
+    # true block or inline block notation.
     md.inline.register_rule(
         'mathblock_inline_parser', 
         math_pattern,
         parse_mathblock,
     )
-    # add the rule to the list of rules
+    # add the inline-block rule to the list of rules
     md.inline.rules.append('mathblock_inline_parser')
 
     # register the renderers
     if md.renderer.NAME == 'html':
         md.renderer.register('mathblock_renderer', render_html_mathblock)
-
     elif md.renderer.NAME == 'ast':
         md.renderer.register('mathblock_renderer', render_ast_mathblock)
     else:
@@ -140,6 +144,7 @@ def plugin_mathblock(md):
 
 def plugin_mathspan(md):
     """ This processes $...$, which creates an inline span for the math equation. It should also process formulas that cross multiple lines of successive text; no renderer tested processed multiline math blocks that contained entirely blank lines. """
+    # compared to mathblock, this is soo much easier to manage.
 
     #
     # Define the regex
@@ -164,7 +169,6 @@ def plugin_mathspan(md):
 
     # add the rule to the list of rules
     md.inline.rules.append('mathspan_parser')
-
 
     # register the renderers
     if md.renderer.NAME == 'html':

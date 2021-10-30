@@ -42,8 +42,15 @@ Features and Implementation Notes
   *  $..$$ is rendered as inline math with the extra $ beginning the following text (i.e., the $..$ is rendered).
   *  $$..$ does not render at all. Technically, $$ could be perceived as an empty inline block, leaving the closing $ by itself, but this would be weird and almost definitely unintended. 
 * There is no way to create an explicitly blank math entity to fill in later, because any attempt of doing so (e.g., `$$$$` or `$ $`) would potentially conflict with written text. Alternatives for the user might include a single character (e.g., `$.$`, `$$_$$`) or, for silent html, an empty tag (`$$< />$$`).   
-* In developing the plugin, StackEdit, dillinger.io, Typora, and OSF were surveyed to see how they handle Math Syntax in markdown.
 * The KaTex and MathJax javascript renderers were surveyed and cookbook examples appear below.
+* In developing the plugin, StackEdit, dillinger.io, Typora, and OSF were surveyed to see how they handle Math Syntax in markdown. Some notes about the what was observed follow:
+  * `<StackEdit https://stackedit.io/>`'s default implementation matches the usage and features here. 
+  * `<Typora https://typora.io/>`'s default math renderer is exclusively '$$' math blocks. There is no support for inline spans.
+  * `<dillinger.io https://dillinger.io/>`'s default math implementation:
+    * does not recognize the $..$ math span at all.
+    * renders $$..$$ as an inline math span.
+    * does not allow padded tokens, i.e. `$$ \\alpha $$` does not render but `$$\\alpha$$` does.
+  * `<OSF https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
 
 AST Rendering
 -------------
@@ -58,7 +65,7 @@ Math blocks written inline in markdown create separate paragraphs for text befor
 
 For HTML renderers, inline math markdown creates one paragraph with the mathexpr span inside. In AST, the inline math markdown creates an outer paragraph object with the preceeding and following text as separate "text" elements at the same level in the paragraph's children. 
 
-Refer to the `mathblock.json` and `mathspan.json` in `tests/fixtures/` to see nunaces for how mathblocks and mathspans may render in different markdown configurations.
+Refer to the `mathblock.json` and `mathspan.json` in `tests/fixtures/json` to see nunaces for how mathblocks and mathspans AST structures may render based on different markdown syntax.
 
 Example
 ^^^^^^^
@@ -87,8 +94,10 @@ The Math HTML renderer wraps the detected math html in the following way:
 * Both inline and block math are given class "mathexpr". They are given the same class to simplify identification and processing, and the html tag type is used to enforce the inline/block distinction:
   * Inline math ($..$) is rendered as `<span class="mathexpr">..</span>`
   * Math blocks ($$..$$) are rendered as `<div class="mathexpr">..</div>` 
-* Due to collisions between the Inline and Block parsers in Mistune, some math blocks may render as `<p><div class="mathexpr"></div></p>`, but they are guaranteed to not be spans.
 * If the user wishes to render $$ as inline (as dillinger.io does), they can add a ``display=inline`` CSS rule for ``div.mathexpr``
+
+Refer to the `mathblock.txt` and `mathspan.txt` in `tests/fixtures/` to see nunaces for how mathblocks and mathspans html is rendered based on different markdown syntax.
+
 
 Example
 ^^^^^^^
@@ -117,7 +126,7 @@ Using KaTex with the mathexpr plugin
 
 See more about `KaTeX at their website <https://katex.org/>`
 
-If you are using mistune to generate html with KaTeX, you will need to include the KaTeX javascript library in your header and code to identify and render the identified blocks. The following javascript example will render all of the generated blocks in your output, provided your mistune-generated markdown is static html and you need only call it on page load. If you retrieve mistune generated html dynamically, you will need to customize the function to handle the newly created elements.
+If you are using mistune to generate html with KaTeX, you will need to include the KaTeX javascript library in your header and code to identify and render the identified blocks. The following javascript example will render all of the generated blocks in your output, provided your mistune-generated markdown is static html and you need only call it once. If you retrieve mistune generated html dynamically, you will need to customize the function to handle the newly created elements.
 
 .. code-block:: javascript
 
@@ -135,18 +144,20 @@ If you are using mistune to generate html with KaTeX, you will need to include t
 You do also need to include the KaTeX javascript libraries and stylesheet.  At the time of writing, the following additions included the libraries and also call ``renderMistuneKaTex`` when the page is loaded, which will need to be included or referenced in your page as well.
 
 .. code-block:: html
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/katex.min.css" integrity="sha384-4Y/XYS9mD9HJ+dIEpYViUGob3atehZCmTPqyUCOLZHfe1iKgH/3tCGDCIDx+WNZc" crossorigin="anonymous">
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/katex.min.css" integrity="sha384-4Y/XYS9mD9HJ+dIEpYViUGob3atehZCmTPqyUCOLZHfe1iKgH/3tCGDCIDx+WNZc" crossorigin="anonymous">
 
-    <!-- The loading of KaTeX is deferred to speed up page rendering -->
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/katex.min.js" integrity="sha384-YT8NmKMJkaFK5r+P/VDFRWM8rjcA0BdmAc0fH8+gbzCiRgmxOZf9ws29ixle0N5w" crossorigin="anonymous"></script>
+        <!-- The loading of KaTeX is deferred to speed up page rendering -->
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/katex.min.js" integrity="sha384-YT8NmKMJkaFK5r+P/VDFRWM8rjcA0BdmAc0fH8+gbzCiRgmxOZf9ws29ixle0N5w" crossorigin="anonymous"></script>
 
-    <!-- To automatically render math in text elements, include the auto-render extension: -->
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
-        onload="renderMistuneKaTex();"></script>
-
+        <!-- To automatically render math in text elements, include the auto-render extension: -->
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.21/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+            onload="renderMistuneKaTex();"></script>
+        ...
+    </head>
 
 Using MathJax with the mathexpr plugin
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In contrast to KaTeX, MathJax is more of a greedy math processor as it assumes you want all of the math in a webpage automatically renders and it will attempt to do so. In many instances, if you generate html with mistune and the math plugin, simply including the MathJax javscript library will automatically find and resolve your math. There are many customizations available in the `MathJax (link) <https://docs.mathjax.org/>` if you have specific math dialects or additional customization needs.
 
@@ -175,7 +186,7 @@ You can also specify the elements to be rendered if they are available during co
 MathJax via CSS Classes
 #######################
 
-As all of the mathexpr identified blocks are given the css class "mathexpr", you can you limit MathJax if you also have a class assigned to your body or an outermost content div.  Note that the *processClass* option is only for elements blocked by *ignoreClass*, and anything outside the an ignoredClass will still be processed. 
+As all of the mathexpr identified blocks are given the css class "mathexpr", you can you limit MathJax if you also have a class assigned to your body or an outermost content div.  Note that the *processClass* option is only for elements within blocks that are not rendered due to *ignoreClass*, and anything outside the `ignoredClass` blocks will still be processed. 
 
 .. code-block:: javascript
       MathJax.Hub.Config({
@@ -210,15 +221,6 @@ The HTML structure for the above code would look like this:
 </html>
 
 
-Comparison by Major Parsers
----------------------------
-
-* StackEdit's KaTeX implementation matches the full set of usage and features provided. 
-* Typora's math is exclusively '$$' math blocks. There is no support for inline spans.
-* dillinger.io's math implementation:
-    - does not recognize the $..$ math span at all.
-    - renders $$..$$ the same as an inline math span.
-    - does not allow padded tokens, i.e. $$ \alpha $$ does not render but $$\alpha$$ does.
 
 Author
 -------

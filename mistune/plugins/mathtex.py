@@ -28,9 +28,6 @@ __all__ = [
     'plugin_allmath',
 ]
 
-ALLOW_SPACE_PADDING = True
-MATHSPAN_DOUBLE_TOKEN = False
-
 # Define the renderers 
 
 # define the HTML renderer for math block
@@ -62,14 +59,8 @@ def plugin_allmath(md):
 def plugin_mathblock(md):
     """ This processes $$...$$, which creates a separate block/paragraph for the math equation. Based on several existing renderers, this should support math blocks that begin on a new line as well as blocks that begin in the middle of other text. In cases in which it is in other text, it should still be rendered as a separate block/paragraph. It should also process formulas that cross multiple lines of successive text; no renderer tested processed multiline math blocks that contained entirely blank lines. """
     
-    if ALLOW_SPACE_PADDING:
-        # $${math expression}$$ or $$ {math expression} $$ 
-        # - these seem to work
-        math_pattern = r'\n*\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$\n*'
-        mathblock_re = re.compile(r'(.*?)' + math_pattern + r'(.*)\n?')  
-    else:
-        raise Exception("Not tested yet")
-        mathblock_pattern = re.compile(r'([^\n]*)\$\$([^\$\s][^\$]*?)(?<!\s)\$\$([^\n]*)') 
+    math_pattern = r'\n*\$\$\s?(?!\s)([^\$\n]([^\$\n]|(?<!\n)\n(?!\n))*)(?<!\s)\s?\$\$\n*'
+    mathblock_re = re.compile(r'(.*?)' + math_pattern + r'(.*)\n?')  
 
     #
     # define how to parse matched item
@@ -153,12 +144,7 @@ def plugin_mathspan(md):
     #
     # Define the regex
     #
-    if not MATHSPAN_DOUBLE_TOKEN:
-        mathspan_re = r'(?<!\$)\$([^\$\s][^\$]*?)(?<!\s)\$'
-    elif ALLOW_SPACE_PADDING:
-        mathspan_re = r'(?<!\$)\$\$\s*([^\$\s][^\$]*?)\s*\$\$'
-    else:
-        mathspan_re = r'(?<!\$)\$\$([^\$\s][^\$]*?)(?<!\s)\$\$'
+    mathspan_re = r'(?<!\$)\$([^\$\s][^\$]*?)(?<!\s)\$'
     
     #
     # define how to parse matched item

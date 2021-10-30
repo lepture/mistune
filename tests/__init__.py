@@ -28,6 +28,6 @@ class BaseTestCase(TestCase):
         try:
             self.assertEqual(result.strip(), html.strip())
         except AssertionError as ae:
-            #import pdb ; pdb.set_trace()
-            print(f"\n\nFailed to match case {name}\n\n--------------\nResult:\n{result}\n\nExpected:\n{html.strip()}\n--------------")
+            # Print out more details during when calling `pytest -v -s`. This prints out what was returned vs expected, so a test developer can start with a case and copy the often long and complicated structured output (if it resolves correctly). 
+            print(f"\n\n\tFailed to match `"+text.strip().replace("\n","\n\t\t")+"`\n\n\tResult:\n\t\t"+result.strip().replace("\n","\n\t\t")+"\n\n\tExpected:\n\t\t"+html.strip().replace("\n","\n\t\t")+"\n")
             raise

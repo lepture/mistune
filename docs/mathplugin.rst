@@ -46,13 +46,13 @@ Features and Implementation Notes
 * There is no way to create an explicitly blank math entity to fill in later, because any attempt of doing so (e.g., `$$$$` or `$ $`) would potentially conflict with written text. Alternatives for the user might include a single character (e.g., `$.$`, `$$_$$`) or, for silent html, an empty tag (`$$< />$$`).   
 * The KaTex and MathJax javascript renderers were surveyed and cookbook examples appear below.
 * In developing the plugin, StackEdit, dillinger.io, Typora, and OSF were surveyed to see how they handle Math Syntax in markdown. Some notes about the what was observed follow:
-   * `<StackEdit https://stackedit.io/>`'s default implementation matches the usage and features here. 
-   * `<Typora https://typora.io/>`'s default math renderer is exclusively '$$' math blocks. There is no support for inline spans.
-   * `<dillinger.io https://dillinger.io/>`'s default math implementation:
+   * `StackEdit <https://stackedit.io/>`'s default implementation matches the usage and features here. 
+   * `Typora <https://typora.io/>`'s default math renderer is exclusively '$$' math blocks. There is no support for inline spans.
+   * `dillinger.io <https://dillinger.io/>`'s default math implementation:
       * does not recognize the $..$ math span at all.
       * renders $$..$$ as an inline math span.
       * does not allow padded tokens, i.e. `$$ \\alpha $$` does not render but `$$\\alpha$$` does.
-   * `<OSF https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
+   * `OSF <https://osf.io>` is not a general markdown editor, but uses markdown with math for its wikis. It's implementation matches the usage and features here.
 
 AST Rendering
 -------------
@@ -161,7 +161,7 @@ You do also need to include the KaTeX javascript libraries and stylesheet.  At t
 Using MathJax with the mathexpr plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In contrast to KaTeX, MathJax is more of a greedy math processor as it assumes you want all of the math in a webpage automatically renders and it will attempt to do so. In many instances, if you generate html with mistune and the math plugin, simply including the MathJax javscript library will automatically find and resolve your math. There are many customizations available in the `MathJax (link) <https://docs.mathjax.org/>` if you have specific math dialects or additional customization needs.
+In contrast to KaTeX, MathJax is more of a greedy math processor as it assumes you want all of the math in a webpage automatically renders and it will attempt to do so. In many instances, if you generate html with mistune and the math plugin, simply including the MathJax javscript library will automatically find and resolve your math. There are many customizations available in the `MathJax <https://docs.mathjax.org/>` if you have specific math dialects or additional customization needs.
 
 If you do want to limit the MathJax to only look inside the generated "mathexpr" blocks, here are two ways to do it. 
 
@@ -226,4 +226,4 @@ The HTML structure for the above code would look like this:
 Author
 -------
 
-The mathexpr plugin was written by Kevin Crouse, 2021. 
+The mathexpr plugin is open source and distributed under the BSD-3 Clause License. Its initial version was written by Kevin Crouse, 2021. All rights reserved.  

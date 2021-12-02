@@ -115,3 +115,59 @@ Get more examples in ``mistune/plugins``.
 
 Write directives
 ----------------
+
+Mistune has some built-in directives that have been presented in
+the directives part of the documentation. These are defined in the
+``mistune/directives``, and these can help writing a new directive.
+
+Let's try to write a "spoiler" directive, which takes a hint::
+
+    from .base import Directive
+
+
+    class Spoiler(Directive):
+        def parse(self, block, m, state):
+            options = self.parse_options(m)
+            if options:
+                return {
+                    'type': 'block_error',
+                    'raw': 'Spoiler has no options'
+                }
+            hint = m.group('value')
+            text = self.parse_text(m)
+
+            rules = list(block.rules)
+            rules.remove('directive')
+            children = block.parse(text, state, rules)
+            return {
+                'type': 'spoiler',
+                'children': children,
+                'params': (hint,)
+            }
+
+        def __call__(self, md):
+            self.register_directive(md, 'spoiler')
+
+            if md.renderer.NAME == 'html':
+                md.renderer.register('spoiler', render_html_spoiler)
+            elif md.renderer.NAME == 'ast':
+                md.renderer.register('spoiler', render_ast_spoiler)
+
+
+    def render_html_spoiler(text, name, hint="Spoiler"):
+        html = '<section class="spoiler">\n'
+        html += '<p class="spoiler-hint">' + hint + '</p>\n'
+        if text:
+            html += '<div class="spoiler-text">' + text + '</div>\n'
+        return html + '</section>\n'
+
+
+    def render_ast_spoiler(children, hint="Spoiler"):
+        return {
+            'type': 'spoiler',
+            'children': children,
+            'hint': hint,
+        }
+
+Some design functionalities would be required to make the
+HTML rendering actually output a spoiler block.

@@ -138,7 +138,7 @@ class InlineParser(ScannerParser):
             title = ESCAPE_CHAR.sub(r'\1', title[1:-1])
 
         if line[0] == '!':
-            return 'image', link, text, title
+            return 'image', escape_url(link), text, title
 
         return self.tokenize_link(line, link, text, title, state)
 
@@ -156,7 +156,7 @@ class InlineParser(ScannerParser):
             title = ESCAPE_CHAR.sub(r'\1', title)
 
         if line[0] == '!':
-            return 'image', link, text, title
+            return 'image', escape_url(link), text, title
 
         return self.tokenize_link(line, link, text, title, state)
 

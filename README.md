@@ -29,10 +29,10 @@ Using old Mistune? Checkout docs: <https://mistune.readthedocs.io/en/v0.8.4/>
 
 ## Install
 
-To install v2 of mistune:
+To install mistune:
 
 ```
-$ pip install mistune==2.0.0rc1
+$ pip install mistune
 ```
 
 ## Overview

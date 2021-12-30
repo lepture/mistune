@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune v2.
 
+Version 2.0.1
+~~~~~~~~~~~~~
+
+Released on Dec 30, 2021
+
+XSS fix for image link syntax.
+
 Version 2.0.0
 ~~~~~~~~~~~~~
 

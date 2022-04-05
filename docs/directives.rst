@@ -75,6 +75,17 @@ TOC plugin::
         plugins=[DirectiveToc()]
     )
 
+If **TOC** directive is enabled, the ``heading`` method of renderer will accept
+one more paramter::
+
+    def heading(self, text, level):
+        # without TOC directive
+        return ''
+
+    def heading(self, text, level, tid):
+        # with TOC directive
+        return ''
+
 Include
 -------
 

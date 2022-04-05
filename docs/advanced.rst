@@ -37,6 +37,7 @@ Here is a a list of available renderer functions::
     # block level
     paragraph(self, text)
     heading(self, text, level)
+    heading(self, text, level, tid)  # when TOC directive is enabled
     thematic_break(self)
     block_text(self, text)
     block_code(self, code, info=None)

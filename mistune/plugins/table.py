@@ -95,6 +95,15 @@ def _process_row(row, aligns):
                 'text': text,
                 'params': (aligns[i], False)
             })
+
+    if len(cells) < len(aligns):
+        for align in aligns[len(cells):]:
+            cells.append({
+                'type': 'table_cell',
+                'text': '',
+                'params': (align, False),
+            })
+
     return {'type': 'table_row', 'children': cells}
 
 

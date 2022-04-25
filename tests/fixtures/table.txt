@@ -280,3 +280,30 @@ a | b
 </tbody>
 </table>
 ````````````````````````````````
+
+
+```````````````````````````````` example
+| Foo | Bar |
+|-----|-----|
+| boo | baz |
+| faz |     |
+.
+<table>
+<thead>
+<tr>
+  <th>Foo</th>
+  <th>Bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>boo</td>
+  <td>baz</td>
+</tr>
+<tr>
+  <td>faz</td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````

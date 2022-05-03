@@ -6,7 +6,7 @@ from unittest import TestCase
 class TestAstRenderer(TestCase):
     @classmethod
     def load_fixtures(cls, case_file):
-        cases = fixtures.load_json(case_file)
+        cases = fixtures.load_ast(case_file)
 
         def attach_case(n, data):
 

@@ -44,7 +44,7 @@ class TestPluginTocAst(BaseTestCase):
             renderer='ast',
             plugins=[DirectiveToc()]
         )
-        data = fixtures.load_json('toc.json')
+        data = fixtures.load_ast('toc.json')
         self.assertEqual(md(data['text']), data['tokens'])
 
 

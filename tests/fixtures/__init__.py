@@ -12,16 +12,29 @@ EXAMPLE_PATTERN = re.compile(
 )
 
 
+def load_ast(filename):
+    with open(os.path.join(ROOT, 'ast', filename)) as f:
+        return json.load(f)
+
+
 def load_json(filename):
-    with open(os.path.join(ROOT, 'json', filename)) as f:
+    with open(os.path.join(ROOT, filename)) as f:
         return json.load(f)
 
 
 def load_examples(filename):
-    with open(os.path.join(ROOT, filename), 'rb') as f:
-        content = f.read()
-        s = content.decode('utf-8')
-        return parse_examples(s)
+    if not filename.endswith('.json'):
+        with open(os.path.join(ROOT, filename), 'rb') as f:
+            content = f.read()
+            s = content.decode('utf-8')
+            return parse_examples(s)
+
+    data = load_json(filename)
+    for item in data:
+        section = item['section'].lower().replace(' ', '_')
+        n = '%s_%03d' % (section, item['example'])
+        yield n, item['markdown'], item['html']
+
 
 
 def parse_examples(text):

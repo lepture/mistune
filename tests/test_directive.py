@@ -54,7 +54,7 @@ class TestPluginAdmonition(TestCase):
         self.assertNotIn('<p class="admonition-title">Note</p>', html)
 
     def test_ast_admonition(self):
-        data = fixtures.load_json('admonition.json')
+        data = fixtures.load_ast('admonition.json')
         md = create_markdown(renderer='ast', plugins=[Admonition()])
         # Use JSON to fix the differences between tuple and list
         tokens = json.loads(json.dumps(md(data['text'])))

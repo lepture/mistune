@@ -92,19 +92,6 @@ INSANE_CASES = {
     'links_084',
 }
 
-if html is None:
-    PY2_IGNORES = {
-        'entity_and_numeric_character_references_001',
-        'entity_and_numeric_character_references_002',
-        'entity_and_numeric_character_references_003',
-        'entity_and_numeric_character_references_008',
-        'entity_and_numeric_character_references_009',
-        'entity_and_numeric_character_references_010',
-        'links_016', 'links_019',
-    }
-else:
-    PY2_IGNORES = []
-
 DIFFERENCES = {
     'tabs_005': lambda s: s.replace('<code>  ', '<code>'),
     'tabs_006': lambda s: s.replace('<code>  ', '<code>'),
@@ -112,25 +99,10 @@ DIFFERENCES = {
 }
 
 
-PASSED = {
-    'tabs', 'thematic', 'atx',
-    'setext', 'indented', 'fenced',
-    'html_blocks', 'link_ref',
-    'paragraphs', 'blank_lines',
-    'block_quotes', 'list_items', 'lists',
-    'backslash', 'entity', 'code_spans',
-    # emphasis
-    'links', 'images', 'autolinks', 'raw_html',
-    'hard_line', 'soft_line', 'textual',
-}
-
-
 class TestCommonMark(BaseTestCase):
     @classmethod
     def ignore_case(cls, n):
         if n.startswith('emphasis'):
-            return True
-        if PY2_IGNORES and n in PY2_IGNORES:
             return True
         return (n in IGNORE_CASES) or (n in INSANE_CASES)
 
@@ -148,4 +120,4 @@ class TestCommonMark(BaseTestCase):
         self.assertEqual(result, expect)
 
 
-TestCommonMark.load_fixtures('commonmark.txt')
+TestCommonMark.load_fixtures('commonmark.json')

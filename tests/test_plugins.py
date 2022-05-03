@@ -10,7 +10,7 @@ def load_plugin(plugin_name, ast=False):
 
     def test_ast_renderer(self):
         md = Markdown(renderer=AstRenderer(), plugins=[_plugin])
-        data = fixtures.load_json(plugin_name + ".json")
+        data = fixtures.load_ast(plugin_name + ".json")
         self.assertEqual(md(data["text"]), data["tokens"])
 
     if ast:

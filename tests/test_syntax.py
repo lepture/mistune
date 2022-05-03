@@ -8,5 +8,5 @@ class TestSyntax(BaseTestCase):
         self.assertEqual(result, html)
 
 
-TestSyntax.load_fixtures('syntax.md')
-TestSyntax.load_fixtures('non-commonmark.txt')
+TestSyntax.load_fixtures('fix-commonmark.txt')
+TestSyntax.load_fixtures('diff-commonmark.txt')

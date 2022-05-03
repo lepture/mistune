@@ -23,17 +23,17 @@ def load_json(filename):
 
 
 def load_examples(filename):
-    if not filename.endswith('.json'):
+    if filename.endswith('.json'):
+        data = load_json(filename)
+        for item in data:
+            section = item['section'].lower().replace(' ', '_')
+            n = '%s_%03d' % (section, item['example'])
+            yield n, item['markdown'], item['html']
+    else:
         with open(os.path.join(ROOT, filename), 'rb') as f:
             content = f.read()
             s = content.decode('utf-8')
-            return parse_examples(s)
-
-    data = load_json(filename)
-    for item in data:
-        section = item['section'].lower().replace(' ', '_')
-        n = '%s_%03d' % (section, item['example'])
-        yield n, item['markdown'], item['html']
+            yield from parse_examples(s)
 
 
 

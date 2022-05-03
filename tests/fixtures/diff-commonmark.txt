@@ -1,4 +1,7 @@
-# Links
+Results different than commonmark.
+
+
+## Links
 
 ```````````````````````````````` example
 [**foo**]
@@ -100,14 +103,6 @@
 **[hello](/)**
 .
 <p><strong><a href="/">hello</a></strong></p>
-````````````````````````````````
-
-Links can't contain links.
-
-```````````````````````````````` example
-[<https://example.com>](/foo)
-.
-<p><a href="/foo">&lt;https://example.com&gt;</a></p>
 ````````````````````````````````
 
 Harmful link protection:

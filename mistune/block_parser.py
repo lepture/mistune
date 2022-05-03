@@ -253,7 +253,8 @@ class BlockParser(ScannerParser):
 
     def parse_text(self, text, state):
         list_tights = state.get('list_tights')
-        if list_tights and list_tights[-1]:
+
+        if list_tights and list_tights[-1] and not state.get('block_quote_depth'):
             return {'type': 'block_text', 'text': text.strip()}
 
         tokens = []

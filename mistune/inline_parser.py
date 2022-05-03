@@ -1,15 +1,21 @@
 import re
 from .scanner import ScannerParser
-from .util import PUNCTUATION, ESCAPE_TEXT, escape, escape_url, unikey
+from .util import (
+    PUNCTUATION,
+    ESCAPE_TEXT,
+    ESCAPE_CHAR,
+    LINK_TEXT,
+    LINK_LABEL,
+    escape,
+    escape_url,
+    unikey,
+)
 
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
     r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
-ESCAPE_CHAR = re.compile(r'\\([' + PUNCTUATION + r'])')
-LINK_TEXT = r'(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?'
-LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE_TEXT + r'){0,1000}'
 
 
 class InlineParser(ScannerParser):

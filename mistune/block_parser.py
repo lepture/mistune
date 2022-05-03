@@ -1,7 +1,5 @@
 import re
-from .scanner import ScannerParser, Matcher
-from .inline_parser import ESCAPE_CHAR, LINK_LABEL
-from .util import unikey
+from .util import unikey, ESCAPE_CHAR, LINK_LABEL
 
 _NEW_LINES = re.compile(r'\r\n|\r')
 _BLANK_LINES = re.compile(r'^ +$', re.M)
@@ -41,39 +39,55 @@ _PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 
-class BlockParser(ScannerParser):
-    scanner_cls = Matcher
+class State:
+    def __init__(self):
+        self.lines = []
+        self.tokens = []
 
-    NEWLINE = re.compile(r'\n+')
-    DEF_LINK = re.compile(
-        r' {0,3}\[(' + LINK_LABEL + r')\]:(?:[ \t]*\n)?[ \t]*'
-        r'<?([^\s>]+)>?(?:[ \t]*\n)?'
-        r'(?: +["(]([^\n]+)[")])? *\n+'
-    )
+        self.cursor_root = 0
+        self.cursor_start = 0
+        self.cursor_end = 0
 
-    AXT_HEADING = re.compile(
-        r' {0,3}(#{1,6})(?!#+)(?: *\n+|'
-        r'\s+([^\n]*?)(?:\n+|\s+?#+\s*\n+))'
-    )
-    SETEX_HEADING = re.compile(r'([^\n]+)\n *(=|-){2,}[ \t]*\n+')
+        # for saving def references
+        self.def_links = {}
+        self.def_footnotes = {}
+        self.footnotes = {}
+
+        # for list and block quote chain
+        self.in_block = None
+        self.parent = None
+
+    def add_token(self, token, start_line, end_line):
+        token['start_line'] = start_line + self.cursor_root
+        token['end_line'] = end_line + self.cursor_root
+        self.tokens.append(token)
+
+    def depth(self):
+        d = 0
+        parent = self.parent
+        while parent:
+            d += 1
+            parent = parent.parent
+        return d
+
+
+class BlockParser:
+
+    BLANK_LINE = re.compile(r'^\s*$')
+    AXT_HEADING = re.compile(r'^ {0,3}(#{1,6})(?!#+)(.*)')
+    SETEX_HEADING = re.compile(r'^ *(=|-){2,}[ \t]*$')
     THEMATIC_BREAK = re.compile(
-        r' {0,3}((?:-[ \t]*){3,}|'
-        r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
+        r'^ {0,3}((?:-[ \t]*){3,}|'
+        r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$'
     )
 
-    INDENT_CODE = re.compile(r'(?:\n*)(?:(?: {4}| *\t)[^\n]+\n*)+')
+    INDENT_CODE = re.compile(r'^(?: {4}| *\t).+$')
+    FENCED_CODE = re.compile(r'^( {0,3})(`{3,}|~{3,})([^`]*)$')
 
-    FENCED_CODE = re.compile(
-        r'( {0,3})(`{3,}|~{3,})([^`\n]*)\n'
-        r'(?:|([\s\S]*?)\n)'
-        r'(?: {0,3}\2[~`]* *\n+|$)'
-    )
-    BLOCK_QUOTE = re.compile(
-        r'(?: {0,3}>[^\n]*\n)+'
-    )
-    LIST_START = re.compile(
-        r'( {0,3})([\*\+-]|\d{1,9}[.)])(?:[ \t]*|[ \t][^\n]+)\n+'
-    )
+    DEF_LINK = re.compile(r'^ {0,3}\[((?:[^\\[\]]|\.){0,1000})\]:')
+
+    BLOCK_QUOTE = re.compile(r'^( {0,3})>(.*)')
+    LIST = re.compile(r'^( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)$')
 
     BLOCK_HTML = re.compile((
         r' {0,3}(?:'
@@ -85,65 +99,139 @@ class BlockParser(ScannerParser):
         r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
     ), re.I)
 
-    LIST_MAX_DEPTH = 6
-    BLOCK_QUOTE_MAX_DEPTH = 6
     RULE_NAMES = (
-        'newline', 'thematic_break',
-        'fenced_code', 'indent_code',
-        'block_quote', 'block_html',
-        'list_start',
-        'axt_heading', 'setex_heading',
-        'def_link',
+        'newline',
+        'axt_heading',
+        'setex_heading',
+        'fenced_code',
+        'thematic_break',
+        'indent_code',
+        'block_quote',
+        # 'list',
+        # 'def_link',
+        # 'block_html',
     )
 
-    def __init__(self):
-        super(BlockParser, self).__init__()
-        self.block_quote_rules = list(self.RULE_NAMES)
-        self.list_rules = list(self.RULE_NAMES)
+    def __init__(self, rules=None, block_quote_rules=None, list_rules=None, max_block_depth=6):
+        if rules is None:
+            rules = list(self.RULE_NAMES)
 
-    def parse_newline(self, m, state):
-        return {'type': 'newline', 'blank': True}
+        if block_quote_rules is None:
+            block_quote_rules = list(self.RULE_NAMES)
 
-    def parse_thematic_break(self, m, state):
-        return {'type': 'thematic_break', 'blank': True}
+        if list_rules is None:
+            list_rules = list(self.RULE_NAMES)
 
-    def parse_indent_code(self, m, state):
-        text = expand_leading_tab(m.group(0))
-        code = _INDENT_CODE_TRIM.sub('', text)
-        code = code.lstrip('\n')
-        return self.tokenize_block_code(code, None, state)
+        self.rules = rules
+        self.block_quote_rules = block_quote_rules
+        self.list_rules = list_rules
+        self.max_block_depth = max_block_depth
 
-    def parse_fenced_code(self, m, state):
-        info = ESCAPE_CHAR.sub(r'\1', m.group(3))
+        self.__methods = {
+            name: getattr(self, 'parse_' + name) for name in self.RULE_NAMES
+        }
+
+    def register_rule(self, name, func):
+        self.__methods[name] = lambda state, cursor: func(self, state, cursor)
+
+    def parse_newline(self, line, cursor, state):
+        if self.BLANK_LINE.match(line):
+            state.add_token({'type': 'newline'}, cursor, cursor)
+            return cursor + 1
+
+    def parse_thematic_break(self, line, cursor, state):
+        if self.THEMATIC_BREAK.match(line):
+            state.add_token({'type': 'thematic_break'}, cursor, cursor)
+            return cursor + 1
+
+    def parse_indent_code(self, line, cursor, state):
+        if not self.INDENT_CODE.match(line):
+            return
+
+        start_line = cursor
+        code = line
+
+        while cursor < state.cursor_end:
+            cursor += 1
+            line = state.lines[cursor]
+            if self.INDENT_CODE.match(line) or self.BLANK_LINE.match(line):
+                code += '\n' + line
+            else:
+                cursor = cursor - 1
+                break
+
+        code = expand_leading_tab(code)
+        code = _INDENT_CODE_TRIM.sub('', code)
+        state.add_token({'type': 'block_code', 'raw': code}, start_line, cursor)
+        return cursor + 1
+
+    def parse_fenced_code(self, line, cursor, state):
+        m = self.FENCED_CODE.match(line)
+        if not m:
+            return
+
+        start_line = cursor
         spaces = m.group(1)
-        code = m.group(4) or ''
+        marker = m.group(2)
+        info = ESCAPE_CHAR.sub(r'\1', m.group(3))
+        _end = re.compile('^ {0,3}' + marker[0] + '{' + str(len(marker)) + r',}\s*$')
+
+        code = ''
+        while cursor < state.cursor_end:
+            cursor += 1
+            line = state.lines[cursor]
+            if _end.match(line):
+                break
+            code += line + '\n'
+
         if spaces and code:
             _trim_pattern = re.compile('^' + spaces, re.M)
             code = _trim_pattern.sub('', code)
-        return self.tokenize_block_code(code + '\n', info, state)
 
-    def tokenize_block_code(self, code, info, state):
         token = {'type': 'block_code', 'raw': code}
         if info:
-            token['params'] = (info, )
-        return token
+            token['attrs'] = {'info': info}
 
-    def parse_axt_heading(self, m, state):
-        level = len(m.group(1))
-        text = m.group(2) or ''
-        text = text.strip()
-        if set(text) == {'#'}:
-            text = ''
-        return self.tokenize_heading(text, level, state)
+        state.add_token(token, start_line, cursor)
+        return cursor + 1
 
-    def parse_setex_heading(self, m, state):
-        level = 1 if m.group(2) == '=' else 2
-        text = m.group(1)
-        text = text.strip()
-        return self.tokenize_heading(text, level, state)
+    def parse_axt_heading(self, line, cursor, state):
+        m = self.AXT_HEADING.match(line)
+        if m:
+            level = len(m.group(1))
+            text = m.group(2) or ''
+            text = text.strip()
+            if set(text) == {'#'}:
+                text = ''
 
-    def tokenize_heading(self, text, level, state):
-        return {'type': 'heading', 'text': text, 'params': (level,)}
+            token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
+            state.add_token(token, cursor, cursor)
+            return cursor + 1
+
+    def parse_setex_heading(self, line, cursor, state):
+        if state.tokens:
+            m = self.SETEX_HEADING.match(line)
+            if m:
+                prev_token = state.tokens[-1]
+                if prev_token['type'] == 'paragraph':
+                    level = 1 if m.group(2) == '=' else 2
+                    prev_token['type'] = 'heading'
+                    prev_token['attrs'] = {'level': level}
+                    prev_token['end_line'] = cursor + state.cursor_root
+                    return cursor + 1
+
+    def parse_def_link(self, line, cursor, state):
+        m = self.DEF_LINK.match(line)
+        if not m:
+            return
+        # TODO
+        text = line[m.end()]
+        key = unikey(m.group(1))
+        link = ''
+        title = ''
+        if key not in state.def_links:
+            state.def_links[key] = (link, title)
+        return cursor + 1
 
     def get_block_quote_rules(self, depth):
         if depth > self.BLOCK_QUOTE_MAX_DEPTH - 1:
@@ -152,20 +240,76 @@ class BlockParser(ScannerParser):
             return rules
         return self.block_quote_rules
 
-    def parse_block_quote(self, m, state):
-        depth = state.get('block_quote_depth', 0) + 1
-        state['block_quote_depth'] = depth
+    def parse_block_quote(self, line, cursor, state):
+        m = self.BLOCK_QUOTE.match(line)
+        if not m:
+            return
 
-        # normalize block quote text
-        text = _BLOCK_QUOTE_LEADING.sub('', m.group(0))
+        start_line = cursor
+
+        # cleanup at first to detect if it is code block
+        text = _BLOCK_QUOTE_LEADING.sub('', line)
         text = expand_leading_tab(text)
         text = _BLOCK_QUOTE_TRIM.sub('', text)
-        text = cleanup_lines(text)
 
-        rules = self.get_block_quote_rules(depth)
-        children = self.parse(text, state, rules)
-        state['block_quote_depth'] = depth - 1
-        return {'type': 'block_quote', 'children': children}
+        require_marker = bool(
+            self.BLANK_LINE.match(text)
+            or self.INDENT_CODE.match(text)
+            or self.FENCED_CODE.match(text)
+        )
+
+        cursor_next = None
+        while cursor < state.cursor_end:
+            cursor += 1
+            line = state.lines[cursor]
+
+            if require_marker and not self.BLOCK_QUOTE.match(line):
+                cursor = cursor - 1
+                break
+
+            # blank line break block quote
+            cursor_next = self.parse_newline(line, cursor, state)
+            if cursor_next:
+                break
+
+            # hr break block quote
+            cursor_next = self.parse_thematic_break(line, cursor, state)
+            if cursor_next:
+                break
+            # TODO: list
+
+            text += '\n' + line
+
+        text = _BLOCK_QUOTE_LEADING.sub('', text)
+        text = expand_leading_tab(text)
+        text = _BLOCK_QUOTE_TRIM.sub('', text)
+
+        # scan children state
+        lines = text.splitlines()
+        child = State()
+        child.cursor_root = start_line
+        child.in_block = 'block_quote'
+        child.parent = state
+        child.lines = lines
+        child.cursor_end = len(lines) - 1
+
+        if state.depth() >= self.max_block_depth:
+            rules = list(self.block_quote_rules)
+            rules.remove('block_quote')
+        else:
+            rules = self.block_quote_rules
+
+        self.scan(child.cursor_start, child, rules)
+        token = {'type': 'block_quote', 'children': child.tokens}
+
+        if cursor_next:
+            last_token = state.tokens.pop()
+            state.add_token(token, start_line, cursor - 1)
+            state.tokens.append(last_token)
+            return cursor_next
+
+        state.add_token(token, start_line, cursor)
+        return cursor + 1
 
     def get_list_rules(self, depth):
         if depth > self.LIST_MAX_DEPTH - 1:
@@ -244,31 +388,36 @@ class BlockParser(ScannerParser):
         html = m.group(0).rstrip()
         return {'type': 'block_html', 'raw': html}
 
-    def parse_def_link(self, m, state):
-        key = unikey(m.group(1))
-        link = m.group(2)
-        title = m.group(3)
-        if key not in state['def_links']:
-            state['def_links'][key] = (link, title)
+    def parse_paragraph(self, line, cursor, state):
+        if state.tokens:
+            prev_token = state.tokens[-1]
+            if prev_token['type'] == 'paragraph':
+                prev_token['text'] += '\n' + line
+                prev_token['end_line'] = cursor + state.cursor_root
+                return cursor + 1
 
-    def parse_text(self, text, state):
-        list_tights = state.get('list_tights')
+        state.add_token({'type': 'paragraph', 'text': line}, cursor, cursor)
+        return cursor + 1
 
-        if list_tights and list_tights[-1] and not state.get('block_quote_depth'):
-            return {'type': 'block_text', 'text': text.strip()}
+    def parse(self, state):
+        self.scan(state.cursor_start, state, self.rules)
 
-        tokens = []
-        for s in _PARAGRAPH_SPLIT.split(text):
-            s = s.strip()
-            if s:
-                tokens.append({'type': 'paragraph', 'text': s})
-        return tokens
+    def scan(self, cursor, state, rules):
+        while cursor <= state.cursor_end:
+            cursor = self._scan_rules(cursor, state, rules)
 
-    def parse(self, s, state, rules=None):
-        if rules is None:
-            rules = self.rules
+    def _scan_rules(self, cursor, state, rules):
+        line = state.lines[cursor]
 
-        return list(self._scan(s, state, rules))
+        for name in rules:
+            func = self.__methods[name]
+            cursor_next = func(line, cursor, state)
+            if cursor_next:
+                return cursor_next
+
+        cursor_next = self.parse_paragraph(line, cursor, state)
+        return cursor_next
+
 
     def render(self, tokens, inline, state):
         data = self._iter_render(tokens, inline, state)
@@ -292,6 +441,7 @@ class BlockParser(ScannerParser):
                 yield method(children, *params)
             else:
                 yield method(children)
+
 
 
 def cleanup_lines(s):

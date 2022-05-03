@@ -1,3 +1,4 @@
+import re
 try:
     from urllib.parse import quote
     import html
@@ -8,6 +9,9 @@ except ImportError:
 
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE_TEXT = r'\\[' + PUNCTUATION + ']'
+LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE_TEXT + r'){0,1000}'
+LINK_TEXT = r'(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?'
+ESCAPE_CHAR = re.compile(r'\\([' + PUNCTUATION + r'])')
 
 
 def escape(s, quote=True):

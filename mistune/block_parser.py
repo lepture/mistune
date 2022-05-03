@@ -1,14 +1,13 @@
 import re
 from .util import unikey, ESCAPE_CHAR, LINK_LABEL
 
-_NEW_LINES = re.compile(r'\r\n|\r')
-_BLANK_LINES = re.compile(r'^ +$', re.M)
-
-_TRIM_4 = re.compile(r'^ {1,4}')
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
+_LIST_SPACE = re.compile(r'^( {0,4})\S')
+_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
+
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
     'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
@@ -35,9 +34,6 @@ _BLOCK_HTML_RULE7 = (
     r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
 )
 
-_PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
-_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
-
 
 class State:
     def __init__(self):
@@ -55,6 +51,7 @@ class State:
 
         # for list and block quote chain
         self.in_block = None
+        self.list_tight = False
         self.parent = None
 
     def add_token(self, token, start_line, end_line):
@@ -107,7 +104,7 @@ class BlockParser:
         'thematic_break',
         'indent_code',
         'block_quote',
-        # 'list',
+        'list',
         # 'def_link',
         # 'block_html',
     )
@@ -233,13 +230,6 @@ class BlockParser:
             state.def_links[key] = (link, title)
         return cursor + 1
 
-    def get_block_quote_rules(self, depth):
-        if depth > self.BLOCK_QUOTE_MAX_DEPTH - 1:
-            rules = list(self.block_quote_rules)
-            rules.remove('block_quote')
-            return rules
-        return self.block_quote_rules
-
     def parse_block_quote(self, line, cursor, state):
         m = self.BLOCK_QUOTE.match(line)
         if not m:
@@ -248,7 +238,7 @@ class BlockParser:
         start_line = cursor
 
         # cleanup at first to detect if it is code block
-        text = _BLOCK_QUOTE_LEADING.sub('', line)
+        text = m.group(2)
         text = expand_leading_tab(text)
         text = _BLOCK_QUOTE_TRIM.sub('', text)
 
@@ -311,92 +301,123 @@ class BlockParser:
         state.add_token(token, start_line, cursor)
         return cursor + 1
 
-    def get_list_rules(self, depth):
-        if depth > self.LIST_MAX_DEPTH - 1:
-            rules = list(self.list_rules)
-            rules.remove('list_start')
-            return rules
-        return self.list_rules
+    def parse_list(self, line, cursor, state):
+        m = self.LIST.match(line)
+        if not m:
+            return
 
-    def parse_list_start(self, m, state, string):
-        items = []
-        spaces = m.group(1)
+        start_line = cursor
         marker = m.group(2)
-        items, pos = _find_list_items(string, m.start(), spaces, marker)
-        tight = '\n\n' not in ''.join(items).strip()
+        text = m.group(3)
 
         ordered = len(marker) != 1
         if ordered:
+            leading_spaces = len(m.group(1)) + 2
+        else:
+            leading_spaces = len(m.group(1)) + 1
+
+        trim_space = r'^ {0,' + str(leading_spaces) + '}'
+        bullet = _get_list_bullet(marker)
+        trim_pattern = re.compile(trim_space)
+        next_pattern = re.compile(trim_space + bullet + r'([ \t]*|[ \t].+)$')
+
+        m2 = _LIST_SPACE.match(text)
+        if m2:
+            prev_blank_line = False
+            current_item = text[1:]
+            total_spaces = leading_spaces + len(m2.group(1))
+        else:
+            prev_blank_line = True
+            current_item = ''
+            total_spaces = leading_spaces + 1
+
+        child = State()
+        child.parent = state
+        child.in_block = 'list'
+        child.cursor_root = start_line
+
+        # same list item
+        continue_pattern = re.compile(r'^( {' + str(total_spaces) + '}) *\S')
+        list_loose = False
+        list_items = []
+
+        while cursor < state.cursor_end:
+            cursor += 1
+            line = state.lines[cursor]
+
+            m3 = next_pattern.match(line)
+            if m3:
+                list_items.append(current_item)
+                current_item = m3.group(1)
+                if _LIST_SPACE.match(current_item):
+                    current_item = current_item[1:]
+                else:
+                    current_item = ''
+                continue
+
+            m4 = continue_pattern.match(line)
+            if m4:
+                current_item += '\n' + line[len(m4.group(1)):]
+                continue
+            elif prev_blank_line:
+                cursor = cursor - 1
+                break
+
+            prev_blank_line = bool(self.BLANK_LINE.match(line))
+            if prev_blank_line and not list_loose:
+                list_loose = True
+            current_item += '\n' + trim_pattern.sub('', line)
+
+        list_items.append(current_item)
+        child.list_tight = not list_loose
+
+        depth = state.depth()
+        if depth >= self.max_block_depth:
+            rules = list(self.list_rules)
+            rules.remove('list')
+        else:
+            rules = self.list_rules
+
+        children = [self._parse_list_item(item, child, rules) for item in list_items]
+
+        attrs = {'depth': depth}
+        if ordered:
             start = int(marker[:-1])
-            if start == 1:
-                start = None
-        else:
-            start = None
+            if start != 1:
+                attrs['start'] = start
 
-        list_tights = state.get('list_tights', [])
-        list_tights.append(tight)
-        state['list_tights'] = list_tights
+        token = {'type': 'list', 'children': children, 'attrs': attrs}
+        state.add_token(token, start_line, cursor)
+        return cursor + 1
 
-        depth = len(list_tights)
-        rules = self.get_list_rules(depth)
-        children = [
-            self.parse_list_item(item, depth, state, rules)
-            for item in items
-        ]
-        list_tights.pop()
-        params = (ordered, depth, start)
-        token = {'type': 'list', 'children': children, 'params': params}
-        return token, pos
-
-    def parse_list_item(self, text, depth, state, rules):
-        text = self.normalize_list_item_text(text)
-        if not text:
-            children = [{'type': 'block_text', 'text': ''}]
-        else:
-            children = self.parse(text, state, rules)
-        return {
-            'type': 'list_item',
-            'params': (depth,),
-            'children': children,
-        }
-
-    @staticmethod
-    def normalize_list_item_text(text):
-        text_length = len(text)
-        text = _LIST_BULLET.sub('', text)
-
-        if not text.strip():
-            return ''
-
-        space = text_length - len(text)
-        text = expand_leading_tab(text)
-        if text.startswith('     '):
-            text = text[1:]
-            space += 1
-        else:
-            text_length = len(text)
-            text = _TRIM_4.sub('', text)
-            space += max(text_length - len(text), 1)
-
-        # outdent
-        if '\n ' in text:
-            pattern = re.compile(r'\n {1,' + str(space) + r'}')
-            text = pattern.sub(r'\n', text)
-        return text
+    def _parse_list_item(self, text, state, rules):
+        lines = text.splitlines()
+        state.tokens = []
+        state.lines = lines
+        state.cursor_end = len(lines) - 1
+        self.scan(state.cursor_start, state, rules)
+        # reset cursor root for counting
+        state.cursor_root += len(lines)
+        return {'type': 'list_item', 'children': state.tokens}
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
         return {'type': 'block_html', 'raw': html}
 
     def parse_paragraph(self, line, cursor, state):
+        if state.list_tight:
+            token_type = 'block_text'
+        else:
+            token_type = 'paragraph'
+
         if state.tokens:
             prev_token = state.tokens[-1]
-            if prev_token['type'] == 'paragraph':
+            if prev_token['type'] == token_type:
                 prev_token['text'] += '\n' + line
                 prev_token['end_line'] = cursor + state.cursor_root
                 return cursor + 1
 
-        state.add_token({'type': 'paragraph', 'text': line}, cursor, cursor)
+        state.add_token({'type': token_type, 'text': line}, cursor, cursor)
         return cursor + 1
 
     def parse(self, state):
@@ -444,12 +465,6 @@ class BlockParser:
 
 
 
-def cleanup_lines(s):
-    s = _NEW_LINES.sub('\n', s)
-    s = _BLANK_LINES.sub('', s)
-    return s
-
-
 def expand_leading_tab(text):
     return _EXPAND_TAB.sub(_expand_tab_repl, text)
 
@@ -457,6 +472,22 @@ def expand_leading_tab(text):
 def _expand_tab_repl(m):
     s = m.group(1)
     return s + ' ' * (4 - len(s))
+
+
+def _get_list_bullet(marker):
+    c = marker[-1]
+    if c == '.':
+        bullet = r'\d{0,9}\.'
+    elif c == ')':
+        bullet = r'\d{0,9}\)'
+    elif marker == '*':
+        bullet = r'\*'
+    elif marker == '+':
+        bullet = r'\+'
+    else:
+        bullet = '-'
+    return bullet
+
 
 
 def _create_list_item_pattern(spaces, marker):

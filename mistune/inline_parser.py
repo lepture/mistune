@@ -1,6 +1,6 @@
 import re
 from .scanner import ScannerParser
-from .util import PUNCTUATION, ESCAPE_TEXT, escape_url, unikey
+from .util import PUNCTUATION, ESCAPE_TEXT, escape, escape_url, unikey
 
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
@@ -124,7 +124,7 @@ class InlineParser(ScannerParser):
             link = 'mailto:' + text
         else:
             link = text
-        return 'link', escape_url(link), text
+        return 'link', escape_url(link), escape(text)
 
     def parse_std_link(self, m, state):
         line = m.group(0)

@@ -18,18 +18,49 @@ HTML_ATTRIBUTES = (
 )
 
 
-class InlineParser(ScannerParser):
+class InlineState:
+    def __init__(self, block_state):
+        self.tokens = []
+        self.block_state = block_state
+        self.in_link = False
+        self.in_emphasis = False
+        self.in_strong = False
+
+    def copy(self):
+        state = InlineState(self)
+        state.in_link = self.in_link
+        state.in_emphasis = self.in_emphasis
+        state.in_strong = self.in_strong
+        return state
+
+
+class InlineParser:
+    PREVENT_BACKSLASH = r'(?<!\\)(?P<_slash>(?:\\\\)*)'
+
+    AUTO_EMAIL = (
+        r'''<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]'''
+        r'(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+        r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>'
+    )
+
+    # we only need to find the start pattern of an inline token
+    SPECIFICATION = [
+        # `code, ```code
+        ('codespan', r'`{1,}'),
+
+        # *w, **w, _w, __w
+        ('emphasis', r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])'),
+
+        # [link], ![img]
+        ('link', r'!?\[' + LINK_TEXT + r'\]'),
+
+        # <https://example.com>. regex copied from commonmark.js
+        ('auto_link', r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>'),
+        ('auto_email', AUTO_EMAIL),
+    ]
+
     ESCAPE = ESCAPE_TEXT
 
-    #: link or email syntax::
-    #:
-    #: <https://example.com>
-    AUTO_LINK = (
-        r'(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:'
-        r"[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9]"
-        r'(?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?'
-        r'(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>'
-    )
 
     #: link or image syntax::
     #:
@@ -57,37 +88,11 @@ class InlineParser(ScannerParser):
         r'\[(' + LINK_LABEL + r')\]'
     )
 
-    #: Simple form of reference link::
-    #:
-    #:    [an example]
-    #:
-    #:    [an example]: https://example.com "optional title"
-    REF_LINK2 = r'!?\[(' + LINK_LABEL + r')\]'
-
-    #: emphasis and strong * or _::
-    #:
-    #:    *emphasis*  **strong**
-    #:    _emphasis_  __strong__
-    ASTERISK_EMPHASIS = (
-        r'(\*{1,2})(?=[^\s*])('
-        r'(?:\\[\\*]|[^*])*'
-        r'(?:' + ESCAPE_TEXT + r'|[^\s*]))\1'
-    )
-    UNDERSCORE_EMPHASIS = (
-        r'\b(_{1,2})(?=[^\s_])([\s\S]*?'
-        r'(?:' + ESCAPE_TEXT + r'|[^\s_]))\1'
-        r'(?!_|[^\s' + PUNCTUATION + r'])\b'
-    )
-
-    #: codespan with `::
-    #:
-    #:    `code`
-    CODESPAN = (
-        r'(?<!\\|`)(?:\\\\)*(`+)(?!`)([\s\S]+?)(?<!`)\1(?!`)'
-    )
-
     #: linebreak leaves two spaces at the end of line
-    LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
+    SOFT_LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
+
+    #: every new line becomes <br>
+    HARD_LINEBREAK = r' *\n(?!\s*$)'
 
     INLINE_HTML = (
         r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
@@ -98,39 +103,110 @@ class InlineParser(ScannerParser):
         r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
     )
 
-    RULE_NAMES = (
-        'escape', 'inline_html', 'auto_link',
-        'std_link', 'ref_link', 'ref_link2',
-        'asterisk_emphasis', 'underscore_emphasis',
-        'codespan', 'linebreak',
-    )
-
     def __init__(self, renderer, hard_wrap=False):
-        super(InlineParser, self).__init__()
-        if hard_wrap:
-            #: every new line becomes <br>
-            self.LINEBREAK = r' *\n(?!\s*$)'
         self.renderer = renderer
-        rules = list(self.RULE_NAMES)
-        rules.remove('ref_link')
-        rules.remove('ref_link2')
-        self.ref_link_rules = rules
+        self.specification = list(self.SPECIFICATION)
+        if hard_wrap:
+            self.specification.append(('linebreak', self.HARD_LINEBREAK))
+        else:
+            self.specification.append(('linebreak', self.SOFT_LINEBREAK))
+
+        self.__methods = {
+            name: getattr(self, 'parse_' + name) for name, _ in self.specification
+        }
+        self._sc = None
+
+    def _compile_sc(self):
+        regex = '|'.join('(?P<%s>%s)' % pair for pair in self.specification)
+        self._sc = re.compile(self.PREVENT_BACKSLASH + regex)
+
+    def register_rule(self, name, pattern, method):
+        self.specification.append((name, pattern))
+        self.__methods[name] = lambda s, pos, state: method(self, s, pos, state)
 
     def parse_escape(self, m, state):
         text = m.group(0)[1:]
         return 'text', text
 
-    def parse_auto_link(self, m, state):
-        if state.get('_in_link'):
-            return 'text', m.group(0)
+    def parse_link(self, m, state):
+        if state.in_link:
+            # link can not be in link
+            return
 
-        text = m.group(1)
-        schemes = ('mailto:', 'http://', 'https://')
-        if '@' in text and not text.lower().startswith(schemes):
+        pos = m.end()
+        marker = m.group('link')
+        def_links = state.block_state.def_links
+
+        if pos < len(m.string):
+            c = m.string[pos]
+            is_simple = c not in {'[', '('}
+        else:
+            c = ''
+            is_simple = True
+
+        if marker[0] == '!':
+            token_type = 'image'
+            text = marker[2:-1]
+        else:
+            token_type = 'link'
+            text = marker[1:-1]
+
+        #: Simple form of reference link::
+        #:
+        #:    [an example]
+        #:
+        #:    [an example]: https://example.com "optional title"
+        if is_simple:
+            key = unikey(text)
+            if key not in def_links:
+                return
+            new_state = state.copy()
+            new_state.in_link = True
+            token = {
+                'type': token_type,
+                'children': self.render(text, new_state),
+                'attrs': def_links[key],
+            }
+            state.tokens.append(token)
+            return pos
+
+        #: Get link from references. The syntax looks like::
+        #:
+        #:    [an example][id]
+        #:
+        #:    [id]: https://example.com "optional title"
+        if c == '[':
+            pass
+
+        #: Standard link or image syntax::
+        #:
+        #: [text](/link "title")
+        #: ![alt](/src "title")
+
+
+    def parse_auto_link(self, m, state):
+        return self._parse_auto_link(False, m, state)
+
+    def parse_auto_email(self, m, state):
+        return self._parse_auto_email(True, m, state)
+
+    def _parse_auto_link(self, is_email, m, state):
+        if state.in_link:
+            return
+
+        if is_email:
+            text = m.group('auto_email')[1:-1]
             link = 'mailto:' + text
         else:
+            text = m.group('auto_link')[1:-1]
             link = text
-        return 'link', escape_url(link), escape(text)
+
+        state.tokens.append({
+            'type': 'link',
+            'children': [{'type': 'text', 'raw': escape(text)}],
+            'attrs': {'link': escape_url(link)},
+        })
+        return m.end()
 
     def parse_std_link(self, m, state):
         line = m.group(0)
@@ -166,36 +242,67 @@ class InlineParser(ScannerParser):
 
         return self.tokenize_link(line, link, text, title, state)
 
-    def parse_ref_link2(self, m, state):
-        return self.parse_ref_link(m, state)
+    def parse_emphasis(self, m, state):
+        pos = m.end()
 
-    def tokenize_link(self, line, link, text, title, state):
-        if state.get('_in_link'):
-            return 'text', line
-        state['_in_link'] = True
-        text = self.render(text, state)
-        state['_in_link'] = False
-        return 'link', escape_url(link), text, title
+        marker = m.group('emphasis')
+        if len(marker) > 3:
+            if state.in_emphasis or state.in_strong:
+                return
 
-    def parse_asterisk_emphasis(self, m, state):
-        return self.tokenize_emphasis(m, state)
+            _slice = len(marker) - 3
+            hole = marker[:_slice]
+            marker = marker[_slice:]
+        else:
+            if len(marker) == 1 and state.in_emphasis:
+                return
+            elif len(marker) == 2 and state.in_strong:
+                return
+            hole = None
 
-    def parse_underscore_emphasis(self, m, state):
-        return self.tokenize_emphasis(m, state)
+        pattern = re.compile(r'(.+)(?<=[^\s])' + re.escape(marker), re.S)
+        m = pattern.match(m.string, pos)
+        if m:
+            if hole:
+                state.tokens.append({'type': 'text', 'raw': hole})
 
-    def tokenize_emphasis(self, m, state):
-        marker = m.group(1)
-        text = m.group(2)
-        if len(marker) == 1:
-            return 'emphasis', self.render(text, state)
-        return 'strong', self.render(text, state)
+            new_state = state.copy()
+            text = m.group(1)
+            if len(marker) == 1:
+                new_state.in_emphasis = True
+                children = self.render(text, new_state)
+                state.tokens.append({'type': 'emphasis', 'children': children})
+            elif len(marker) == 2:
+                new_state.in_strong = True
+                children = self.render(text, new_state)
+                state.tokens.append({'type': 'strong', 'children': children})
+            else:
+                new_state.in_emphasis = True
+                new_state.in_strong = True
+                children = self.render(text, new_state)
+                state.tokens.append({
+                    'type': 'emphasis',
+                    'children': [
+                        {'type': 'strong', 'children': children},
+                    ]
+                })
+            return m.end()
 
     def parse_codespan(self, m, state):
-        code = re.sub(r'[ \n]+', ' ', m.group(2).strip())
-        return 'codespan', code
+        marker = m.group('codespan')
+        # require same marker with same length at end
+        pattern = re.compile(r'(.+)(?<!`)' + marker + r'(?!`)', re.S)
+        pos = m.end()
+
+        m = pattern.match(m.string, pos)
+        if m:
+            code = m.group(1)
+            state.tokens.append({'type': 'codespan', 'raw': code})
+            return m.end()
 
     def parse_linebreak(self, m, state):
-        return 'linebreak',
+        state.tokens.append({'type': 'linebreak'})
+        return m.end()
 
     def parse_inline_html(self, m, state):
         html = m.group(0)
@@ -204,19 +311,43 @@ class InlineParser(ScannerParser):
     def parse_text(self, text, state):
         return 'text', text
 
-    def parse(self, s, state, rules=None):
-        if rules is None:
-            rules = self.rules
+    def parse(self, s, pos, state):
+        if not self._sc:
+            self._compile_sc()
 
-        tokens = (
-            self.renderer._get_method(t[0])(*t[1:])
-            for t in self._scan(s, state, rules)
-        )
-        return tokens
+        while pos < len(s):
+            m = self._sc.search(s, pos)
+            if not m:
+                break
 
-    def render(self, s, state, rules=None):
-        tokens = self.parse(s, state, rules)
-        return self.renderer.finalize(tokens)
+            end_pos = m.start()
+            slash = m.group('_slash')
+            if slash:
+                end_pos += len(slash)
+
+            if end_pos > pos:
+                hole = s[pos:end_pos]
+                state.tokens.append({'type': 'text', 'raw': hole})
+
+            token_type = m.lastgroup
+            func = self.__methods[token_type]
+            new_pos = func(m, state)
+            if not new_pos:
+                pos = end_pos
+                break
+            pos = new_pos
+
+        if pos < len(s):
+            hole = s[pos:]
+            state.tokens.append({'type': 'text', 'raw': hole})
+        return state.tokens
+
+    def render(self, s: str, state: InlineState):
+        self.parse(s, 0, state)
+        # return self.renderer.finalize(state.tokens)
+        return state.tokens
 
     def __call__(self, s, state):
-        return self.render(s, state)
+        tokens = self.render(s, InlineState(state))
+        print(tokens)
+        return tokens

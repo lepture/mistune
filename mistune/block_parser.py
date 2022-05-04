@@ -35,7 +35,7 @@ _BLOCK_HTML_RULE7 = (
 )
 
 
-class State:
+class BlockState:
     def __init__(self):
         self.lines = []
         self.tokens = []
@@ -46,8 +46,6 @@ class State:
 
         # for saving def references
         self.def_links = {}
-        self.def_footnotes = {}
-        self.footnotes = {}
 
         # for list and block quote chain
         self.in_block = None
@@ -281,7 +279,7 @@ class BlockParser:
 
         # scan children state
         lines = text.splitlines()
-        child = State()
+        child = BlockState()
         child.cursor_root = start_line
         child.in_block = 'block_quote'
         child.parent = state
@@ -320,7 +318,7 @@ class BlockParser:
         trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
         prev_blank_line = not bool(current)
 
-        child = State()
+        child = BlockState()
         child.parent = state
         child.in_block = 'list'
         child.cursor_root = start_line

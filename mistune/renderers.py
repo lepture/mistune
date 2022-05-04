@@ -205,7 +205,7 @@ class HTMLRenderer(BaseRenderer):
     def block_error(self, html):
         return '<div class="error">' + html + '</div>\n'
 
-    def list(self, text, ordered, level, start=None):
+    def list(self, text, ordered, start=None, depth=None):
         if ordered:
             html = '<ol'
             if start is not None:
@@ -213,7 +213,7 @@ class HTMLRenderer(BaseRenderer):
             return html + '>\n' + text + '</ol>\n'
         return '<ul>\n' + text + '</ul>\n'
 
-    def list_item(self, text, level):
+    def list_item(self, text, ordered=False, depth=None):
         return '<li>' + text + '</li>\n'
 
     def finalize(self, data):

@@ -24,11 +24,6 @@ class Markdown:
     def use(self, plugin):
         plugin(self)
 
-    def before_render(self, tokens, state):
-        for hook in self.before_render_hooks:
-            tokens = hook(self, tokens, state)
-        return tokens
-
     def after_render(self, result, state):
         for hook in self.after_render_hooks:
             result = hook(self, result, state)
@@ -52,21 +47,25 @@ class Markdown:
 
         self.block.parse(state)
 
-        print(state.tokens)
-        # tokens = self.before_render(tokens, state)
-        # result = self.block.render(tokens, self.inline, state)
-        # result = self.after_render(result, state)
-        return state
+        for hook in self.before_render_hooks:
+            hook(self, state)
 
-    def read(self, filepath, state=None):
+        result = self.block.render(state, self.inline, self.renderer)
+
+        for hook in self.after_render_hooks:
+            result = hook(self, result, state)
+
+        return result
+
+    def read(self, filepath, encoding='utf-8', state=None):
         if state is None:
-            state = {}
+            state = State()
 
-        state['__file__'] = filepath
+        state.filepath = filepath
         with open(filepath, 'rb') as f:
             s = f.read()
 
-        return self.parse(s.decode('utf-8'), state)
+        return self.parse(s.decode(encoding), state)
 
     def __call__(self, s):
         return self.parse(s)

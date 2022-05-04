@@ -5,7 +5,7 @@ _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
-_LIST_SPACE = re.compile(r'^( {0,4})\S')
+_LIST_HAS_TEXT = re.compile(r'^( {0,})\S')
 _LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 _BLOCK_TAGS = {
@@ -130,6 +130,9 @@ class BlockParser:
 
     def register_rule(self, name, func):
         self.__methods[name] = lambda state, cursor: func(self, state, cursor)
+
+    def parse(self, state):
+        self.scan(state.cursor_start, state, self.rules)
 
     def parse_newline(self, line, cursor, state):
         if self.BLANK_LINE.match(line):
@@ -266,8 +269,10 @@ class BlockParser:
             cursor_next = self.parse_thematic_break(line, cursor, state)
             if cursor_next:
                 break
-            # TODO: list
 
+            cursor_next = self.parse_list(line, cursor, state)
+            if cursor_next:
+                break
             text += '\n' + line
 
         text = _BLOCK_QUOTE_LEADING.sub('', text)
@@ -302,42 +307,24 @@ class BlockParser:
         return cursor + 1
 
     def parse_list(self, line, cursor, state):
-        m = self.LIST.match(line)
-        if not m:
+        m1 = self.LIST.match(line)
+        if not m1:
             return
 
         start_line = cursor
-        marker = m.group(2)
-        text = m.group(3)
 
-        ordered = len(marker) != 1
-        if ordered:
-            leading_spaces = len(m.group(1)) + 2
-        else:
-            leading_spaces = len(m.group(1)) + 1
-
-        trim_space = r'^ {0,' + str(leading_spaces) + '}'
+        marker = m1.group(2)
         bullet = _get_list_bullet(marker)
-        trim_pattern = re.compile(trim_space)
-        next_pattern = re.compile(trim_space + bullet + r'([ \t]*|[ \t].+)$')
 
-        m2 = _LIST_SPACE.match(text)
-        if m2:
-            prev_blank_line = False
-            current_item = text[1:]
-            total_spaces = leading_spaces + len(m2.group(1))
-        else:
-            prev_blank_line = True
-            current_item = ''
-            total_spaces = leading_spaces + 1
+        current = []
+        trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
+        prev_blank_line = not bool(current)
 
         child = State()
         child.parent = state
         child.in_block = 'list'
         child.cursor_root = start_line
 
-        # same list item
-        continue_pattern = re.compile(r'^( {' + str(total_spaces) + '}) *\S')
         list_loose = False
         list_items = []
 
@@ -345,30 +332,34 @@ class BlockParser:
             cursor += 1
             line = state.lines[cursor]
 
-            m3 = next_pattern.match(line)
+            m3 = continue_re.match(line)
             if m3:
-                list_items.append(current_item)
-                current_item = m3.group(1)
-                if _LIST_SPACE.match(current_item):
-                    current_item = current_item[1:]
-                else:
-                    current_item = ''
+                _process_continue_line(current, line, trim)
                 continue
 
-            m4 = continue_pattern.match(line)
-            if m4:
-                current_item += '\n' + line[len(m4.group(1)):]
+            m1 = next_re.match(line)
+            if m1:
+                list_items.append(current)
+                current = []
+                trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
+                prev_blank_line = not bool(current)
                 continue
-            elif prev_blank_line:
+
+            if prev_blank_line and not m3:
+                cursor = cursor - 1
+                break
+
+            if self.LIST.match(line):
                 cursor = cursor - 1
                 break
 
             prev_blank_line = bool(self.BLANK_LINE.match(line))
             if prev_blank_line and not list_loose:
                 list_loose = True
-            current_item += '\n' + trim_pattern.sub('', line)
 
-        list_items.append(current_item)
+            _process_continue_line(current, line, trim)
+
+        list_items.append(current)
         child.list_tight = not list_loose
 
         depth = state.depth()
@@ -378,27 +369,33 @@ class BlockParser:
         else:
             rules = self.list_rules
 
-        children = [self._parse_list_item(item, child, rules) for item in list_items]
+        ordered = len(marker) != 1
+        attrs = {'depth': depth, 'ordered': ordered}
 
-        attrs = {'depth': depth}
+        children = [
+            self._parse_list_item(item, child, rules, attrs)
+            for item in list_items
+        ]
+
         if ordered:
             start = int(marker[:-1])
             if start != 1:
+                # copy, because _parse_list_item is using it
+                attrs = dict(attrs)
                 attrs['start'] = start
 
         token = {'type': 'list', 'children': children, 'attrs': attrs}
         state.add_token(token, start_line, cursor)
         return cursor + 1
 
-    def _parse_list_item(self, text, state, rules):
-        lines = text.splitlines()
+    def _parse_list_item(self, lines, state, rules, attrs):
         state.tokens = []
         state.lines = lines
         state.cursor_end = len(lines) - 1
         self.scan(state.cursor_start, state, rules)
         # reset cursor root for counting
         state.cursor_root += len(lines)
-        return {'type': 'list_item', 'children': state.tokens}
+        return {'type': 'list_item', 'children': state.tokens, 'attrs': attrs}
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
@@ -420,9 +417,6 @@ class BlockParser:
         state.add_token({'type': token_type, 'text': line}, cursor, cursor)
         return cursor + 1
 
-    def parse(self, state):
-        self.scan(state.cursor_start, state, self.rules)
-
     def scan(self, cursor, state, rules):
         while cursor <= state.cursor_end:
             cursor = self._scan_rules(cursor, state, rules)
@@ -439,30 +433,45 @@ class BlockParser:
         cursor_next = self.parse_paragraph(line, cursor, state)
         return cursor_next
 
+    def render(self, state, inline, renderer=None):
+        return self._call_render(state.tokens, state, inline, renderer)
 
-    def render(self, tokens, inline, state):
-        data = self._iter_render(tokens, inline, state)
-        return inline.renderer.finalize(data)
+    def _call_render(self, tokens, state, inline, renderer):
+        data = self._iter_render(tokens, state, inline, renderer)
+        if not renderer:
+            return list(data)
+        return renderer.finalize(data)
 
-    def _iter_render(self, tokens, inline, state):
+    def _iter_render(self, tokens, state, inline, renderer):
         for tok in tokens:
-            method = inline.renderer._get_method(tok['type'])
-            if 'blank' in tok:
-                yield method()
-                continue
-
             if 'children' in tok:
-                children = self.render(tok['children'], inline, state)
+                children = self._call_render(tok['children'], state, inline, renderer)
             elif 'raw' in tok:
                 children = tok['raw']
-            else:
+            elif 'text' in tok:
                 children = inline(tok['text'], state)
-            params = tok.get('params')
-            if params:
-                yield method(children, *params)
             else:
-                yield method(children)
+                if renderer:
+                    func = renderer._get_method(tok['type'])
+                    yield func()
+                else:
+                    yield tok
+                continue
 
+            if not renderer:
+                # update children
+                if isinstance(children, list):
+                    tok['children'] = children
+
+                yield tok
+                continue
+
+            func = renderer._get_method(tok['type'])
+            attrs = tok.get('attrs')
+            if attrs:
+                yield func(children, **attrs)
+            else:
+                yield func(children)
 
 
 def expand_leading_tab(text):
@@ -489,60 +498,47 @@ def _get_list_bullet(marker):
     return bullet
 
 
-
-def _create_list_item_pattern(spaces, marker):
-    prefix = r'( {0,' + str(len(spaces) + len(marker)) + r'})'
-
-    if len(marker) > 1:
-        if marker[-1] == '.':
-            prefix = prefix + r'\d{0,9}\.'
-        else:
-            prefix = prefix + r'\d{0,9}\)'
+def _process_continue_line(current, line, trim):
+    if not current:
+        current.append(line)
+    elif line.startswith(trim):
+        line = line.replace(trim, '', 1)
+        current.append(line)
     else:
-        if marker == '*':
-            prefix = prefix + r'\*'
-        elif marker == '+':
-            prefix = prefix + r'\+'
-        else:
-            prefix = prefix + r'-'
+        current[-1] += '\n' + line.lstrip()
 
-    s1 = ' {' + str(len(marker) + 1) + ',}'
-    if len(marker) > 4:
-        s2 = ' {' + str(len(marker) - 4) + r',}\t'
+
+def _prepare_list_patterns(current, m1, bullet):
+    text = m1.group(3)
+    m2 = _LIST_HAS_TEXT.match(text)
+    if m2:
+        # indent code
+        if text.startswith('     '):
+            space_width = 1
+        else:
+            space_width = len(m2.group(1))
+
+        text = text[space_width:]
+        current.append(text)
     else:
-        s2 = r' *\t'
-    return re.compile(
-        prefix + r'(?:[ \t]*|[ \t]+[^\n]+)\n+'
-        r'(?:\1(?:' + s1 + '|' + s2 + ')'
-        r'[^\n]+\n+)*'
+        space_width = 1
+
+    # space and marker
+    leading_width = len(m1.group(1)) + len(m1.group(2))
+
+    # check if line is new list item
+    next_re = re.compile(
+        r'^( {0,' + str(leading_width) + '})'
+        r'(' + bullet + ')'
+        r'([ \t]*|[ \t].+)$'
     )
+    continue_width = leading_width + space_width
+    trim = ' ' * continue_width
 
+    # same list item
+    if continue_width > 4:
+        continue_width = 4
 
-def _find_list_items(string, pos, spaces, marker):
-    items = []
-
-    if marker in {'*', '-'}:
-        is_hr = re.compile(
-            r' *((?:-[ \t]*){3,}|(?:\*[ \t]*){3,})\n+'
-        )
-    else:
-        is_hr = None
-
-    pattern = _create_list_item_pattern(spaces, marker)
-    while 1:
-        m = pattern.match(string, pos)
-        if not m:
-            break
-
-        text = m.group(0)
-        if is_hr and is_hr.match(text):
-            break
-
-        new_spaces = m.group(1)
-        if new_spaces != spaces:
-            spaces = new_spaces
-            pattern = _create_list_item_pattern(spaces, marker)
-
-        items.append(text)
-        pos = m.end()
-    return items, pos
+    continue_spaces = ' ' * continue_width
+    continue_re = re.compile(r'^' + continue_spaces + ' *\S')
+    return trim, next_re, continue_re

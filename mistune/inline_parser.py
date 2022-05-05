@@ -75,6 +75,8 @@ class InlineParser:
         # <https://example.com>. regex copied from commonmark.js
         ('auto_link', r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>'),
         ('auto_email', AUTO_EMAIL),
+
+        ('inline_html', INLINE_HTML),
     ]
 
     #: linebreak leaves two spaces at the end of line
@@ -356,8 +358,9 @@ class InlineParser:
         return m.end()
 
     def parse_inline_html(self, m, state):
-        html = m.group(0)
-        return 'inline_html', html
+        html = m.group('inline_html')
+        state.tokens.append({'type': 'inline_html', 'raw': html})
+        return m.end()
 
     def parse(self, s, pos, state):
         if not self._sc:
@@ -384,9 +387,11 @@ class InlineParser:
             else:
                 pos = new_pos
 
-        if pos < len(s):
-            hole = s[pos:]
-            state.tokens.append({'type': 'text', 'raw': hole})
+        if pos == 0:
+            # special case, just pure text
+            state.tokens.append({'type': 'text', 'raw': s})
+        elif pos < len(s):
+            state.tokens.append({'type': 'text', 'raw': s[pos:]})
         return state.tokens
 
     def record_text(self, pos, text, state):

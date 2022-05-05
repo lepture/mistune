@@ -6,7 +6,6 @@ _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _LIST_HAS_TEXT = re.compile(r'^( {0,})\S')
-_LIST_BULLET = re.compile(r'^ *([\*\+-]|\d+[.)])')
 
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',

@@ -46,6 +46,7 @@ def create_markdown(escape=True, hard_wrap=False, renderer=None, plugins=None):
 html = create_markdown(
     escape=False,
     renderer='html',
+    # renderer='ast',
     # plugins=['strikethrough', 'footnotes', 'table'],
 )
 

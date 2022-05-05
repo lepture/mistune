@@ -12,15 +12,17 @@ PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE_CHAR_RE = re.compile(r'\\([' + PUNCTUATION + r'])')
 
-LINK_LABEL = r'\[(?:[^\\\[\]|\\.]){0,500}\]'
-LINK_TITLE = (
+LINK_LABEL = r'\[(?:[^\\\[\]]|\\.){0,500}\]'
+
+# regex copied from commonmark.js
+LINK_TITLE_RE = re.compile(
     r'(?:'
     r'"(?:\\[' + PUNCTUATION + ']|[^"\x00])*"|'  # "title"
     r"'(?:\\[" + PUNCTUATION + "]|[^'\x00])*'|"  # 'title'
     r'\((?:\\[' + PUNCTUATION + ']|[^()\x00])*"'  # (title)
     r')'
 )
-LINK_BRACKET_HREF = r'<(?:[^<>\n\\\x00]|\\.)*>'
+LINK_BRACKET_RE = re.compile(r'<(?:[^<>\n\\\x00]|\\.)*>')
 
 
 def escape(s, quote=True):

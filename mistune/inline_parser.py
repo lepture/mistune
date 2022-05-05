@@ -2,8 +2,8 @@ import re
 from .util import (
     PUNCTUATION,
     LINK_LABEL,
-    LINK_TITLE,
-    LINK_BRACKET_HREF,
+    LINK_TITLE_RE,
+    LINK_BRACKET_RE,
     PREVENT_BACKSLASH,
     ESCAPE_CHAR_RE,
 
@@ -12,19 +12,32 @@ from .util import (
     unikey,
 )
 
+LINK_LABEL_RE = re.compile(LINK_LABEL)
+LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + '\))')
+
+PAREN_START_RE = re.compile(r'\(\s*')
+PAREN_END_RE = re.compile(r'\s*' + PREVENT_BACKSLASH + r'\)')
+
+AUTO_EMAIL = (
+    r'''<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]'''
+    r'(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+    r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>'
+)
+
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
     r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
+INLINE_HTML = (
+    r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
+    r'(?<!\\)</' + HTML_TAGNAME + r'\s*>|'  # close tag
+    r'(?<!\\)<!--(?!>|->)(?:(?!--)[\s\S])+?(?<!-)-->|'  # comment
+    r'(?<!\\)<\?[\s\S]+?\?>|'
+    r'(?<!\\)<![A-Z][\s\S]+?>|'  # doctype
+    r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
+)
 
-LINK_LABEL_RE = re.compile(LINK_LABEL)
-LINK_HREF_RE = re.compile(LINK_BRACKET_HREF)
-LINK_TITLE_RE = re.compile(LINK_TITLE)
-LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + '\))')
-
-PAREN_START_RE = re.compile(r'\(\s*')
-PAREN_END_RE = re.compile(r'\s*' + PREVENT_BACKSLASH + r'\)')
 
 
 class InlineState:
@@ -44,13 +57,6 @@ class InlineState:
 
 
 class InlineParser:
-    # PREVENT_BACKSLASH = r'(?<!\\)(?P<_slash>(?:\\\\)*)'
-
-    AUTO_EMAIL = (
-        r'''<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]'''
-        r'(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
-        r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>'
-    )
 
     # we only need to find the start pattern of an inline token
     SPECIFICATION = [
@@ -77,14 +83,6 @@ class InlineParser:
     #: every new line becomes <br>
     HARD_LINEBREAK = r' *\n(?!\s*$)'
 
-    INLINE_HTML = (
-        r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
-        r'(?<!\\)</' + HTML_TAGNAME + r'\s*>|'  # close tag
-        r'(?<!\\)<!--(?!>|->)(?:(?!--)[\s\S])+?(?<!-)-->|'  # comment
-        r'(?<!\\)<\?[\s\S]+?\?>|'
-        r'(?<!\\)<![A-Z][\s\S]+?>|'  # doctype
-        r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
-    )
 
     def __init__(self, renderer, hard_wrap=False):
         self.renderer = renderer
@@ -117,12 +115,13 @@ class InlineParser:
         return m.end()
 
     def parse_link(self, m, state):
-        if state.in_link:
-            # link can not be in link
-            return
-
         pos = m.end()
         marker = m.group('link')
+
+        if state.in_link:
+            # link can not be in link
+            state.tokens.append({'type': 'text', 'raw': marker})
+            return pos
 
         if marker[0] == '!':
             token_type = 'image'
@@ -134,14 +133,18 @@ class InlineParser:
         if pos < len(m.string):
             c = m.string[pos]
             if c == '[':
-                return self._parse_std_ref_link(m, token_type, text, state)
+                new_pos = self._parse_std_ref_link(m, token_type, text, state)
             elif c == '(':
-                return self._parse_std_link(m, token_type, text, state)
+                new_pos = self._parse_std_link(m, token_type, text, state)
             else:
-                return self._parse_simple_ref_link(pos, token_type, text, state)
-        return self._parse_simple_ref_link(pos, token_type, text, state)
+                new_pos = self._parse_simple_ref_link(pos, token_type, text, state)
+        else:
+            new_pos = self._parse_simple_ref_link(pos, token_type, text, state)
 
-    def _parse_simple_ref_link(pos, token_type, text, state):
+        if new_pos:
+            return new_pos
+
+    def _parse_simple_ref_link(self, pos, token_type, text, state):
         """A simple form of reference link::
         
             [an example]
@@ -157,13 +160,13 @@ class InlineParser:
         new_state.in_link = True
         token = {
             'type': token_type,
-            'children': self.render(text, new_state),
+            'children': self.render_text(text, new_state),
             'attrs': def_links[key],
         }
         state.tokens.append(token)
         return pos
 
-    def _parse_std_ref_link(m, token_type, text, state):
+    def _parse_std_ref_link(self, m, token_type, text, state):
         """Get link from references. The syntax looks like::
 
             [an example][id]
@@ -187,7 +190,7 @@ class InlineParser:
             new_state.in_link = True
             token = {
                 'type': token_type,
-                'children': self.render(text, new_state),
+                'children': self.render_text(text, new_state),
                 'attrs': def_links[key],
             }
             state.tokens.append(token)
@@ -195,7 +198,7 @@ class InlineParser:
         # fallback to simple ref link
         return self._parse_simple_ref_link(pos, token_type, text, state)
 
-    def _parse_std_link(m, token_type, text, state):
+    def _parse_std_link(self, m, token_type, text, state):
         """A standard link or image syntax::
 
             [text](/link "title")
@@ -214,7 +217,7 @@ class InlineParser:
             url = ESCAPE_CHAR_RE.sub(r'\1', url)
             state.tokens.append({
                 'type': token_type,
-                'children': self.render(text, new_state),
+                'children': self.render_text(text, new_state),
                 'attrs': {'url': escape_url(url)},
             })
             return pos1
@@ -231,7 +234,7 @@ class InlineParser:
                     url = ESCAPE_CHAR_RE.sub(r'\1', url)
                     state.tokens.append({
                         'type': token_type,
-                        'children': self.render(text, new_state),
+                        'children': self.render_text(text, new_state),
                         'attrs': {
                             'url': escape_url(url),
                             'title': title,
@@ -240,12 +243,12 @@ class InlineParser:
                     return m3.end()
         return self._parse_simple_ref_link(pos, token_type, text, state)
 
-    def _parse_link_href(text, pos):
+    def _parse_link_href(self, text, pos):
         m1 = PAREN_START_RE.match(text, pos)
         start_pos = m1.end()
 
         # </link-in-brackets>
-        m2 = LINK_HREF_RE.match(text, start_pos)
+        m2 = LINK_BRACKET_RE.match(text, start_pos)
         if m2:
             url = m2.group(0)[1:-1]
             m3 = LINK_HREF_END_RE.search(text, m2.end())
@@ -258,29 +261,33 @@ class InlineParser:
         return url, m3.end()
 
     def parse_auto_link(self, m, state):
-        return self._parse_auto_link(False, m, state)
+        text = m.group('auto_link')
+        pos = m.end()
+        if state.in_link:
+            return self.record_text(pos, text, state)
+
+        text = text[1:-1]
+        self._parse_auto_link(text, text, state)
+        return pos
 
     def parse_auto_email(self, m, state):
-        return self._parse_auto_email(True, m, state)
-
-    def _parse_auto_link(self, is_email, m, state):
+        text = m.group('auto_email')
+        pos = m.end()
         if state.in_link:
-            return
+            return self.record_text(pos, text, state)
 
-        if is_email:
-            text = m.group('auto_email')[1:-1]
-            url = 'mailto:' + text
-        else:
-            text = m.group('auto_link')[1:-1]
-            url = text
+        text = text[1:-1]
+        url = 'mailto:' + text
+        self._parse_auto_email(url, text, state)
+        return pos
 
-        children = self._call_render([{'type': 'text', 'raw': escape(text)}])
+    def _parse_auto_link(self, url, text, state):
+        children = self.render_tokens([{'type': 'text', 'raw': escape(text)}])
         state.tokens.append({
             'type': 'link',
             'children': children,
             'attrs': {'url': escape_url(url)},
         })
-        return m.end()
 
     def parse_emphasis(self, m, state):
         pos = m.end()
@@ -288,19 +295,19 @@ class InlineParser:
         marker = m.group('emphasis')
         if len(marker) > 3:
             if state.in_emphasis or state.in_strong:
-                return
+                return self.record_text(pos, marker, state)
 
             _slice = len(marker) - 3
             hole = marker[:_slice]
             marker = marker[_slice:]
         else:
             if len(marker) == 1 and state.in_emphasis:
-                return
+                return self.record_text(pos, marker, state)
             elif len(marker) == 2 and state.in_strong:
-                return
+                return self.record_text(pos, marker, state)
             hole = None
 
-        pattern = re.compile(r'(.+)(?<=[^\s])' + re.escape(marker), re.S)
+        pattern = re.compile(r'(.+?)(?<=[^\s])' + re.escape(marker), re.S)
         m = pattern.match(m.string, pos)
         if m:
             if hole:
@@ -310,25 +317,26 @@ class InlineParser:
             text = m.group(1)
             if len(marker) == 1:
                 new_state.in_emphasis = True
-                children = self.render(text, new_state)
+                children = self.render_text(text, new_state)
                 state.tokens.append({'type': 'emphasis', 'children': children})
             elif len(marker) == 2:
                 new_state.in_strong = True
-                children = self.render(text, new_state)
+                children = self.render_text(text, new_state)
                 state.tokens.append({'type': 'strong', 'children': children})
             else:
                 new_state.in_emphasis = True
                 new_state.in_strong = True
 
-                children = self._call_render([{
+                children = self.render_tokens([{
                     'type': 'strong',
-                    'children': self.render(text, new_state)
+                    'children': self.render_text(text, new_state)
                 }])
                 state.tokens.append({
                     'type': 'emphasis',
                     'children': children,
                 })
             return m.end()
+        return self.record_text(pos, marker, state)
 
     def parse_codespan(self, m, state):
         marker = m.group('codespan')
@@ -341,6 +349,7 @@ class InlineParser:
             code = m.group(1)
             state.tokens.append({'type': 'codespan', 'raw': code})
             return m.end()
+        return self.record_text(pos, marker, state)
 
     def parse_linebreak(self, m, state):
         state.tokens.append({'type': 'linebreak'})
@@ -368,23 +377,30 @@ class InlineParser:
             func = self.__methods[token_type]
             new_pos = func(m, state)
             if not new_pos:
-                pos = end_pos
-                break
-            pos = new_pos
+                # move cursor 1 character forward
+                pos = end_pos + 1
+                hole = s[end_pos:pos]
+                state.tokens.append({'type': 'text', 'raw': hole})
+            else:
+                pos = new_pos
 
         if pos < len(s):
             hole = s[pos:]
             state.tokens.append({'type': 'text', 'raw': hole})
         return state.tokens
 
-    def render(self, s: str, state: InlineState):
+    def record_text(self, pos, text, state):
+        state.tokens.append({'type': 'text', 'raw': text})
+        return pos
+
+    def render_text(self, s: str, state: InlineState):
         self.parse(s, 0, state)
-        return self._call_render(state.tokens)
+        return self.render_tokens(state.tokens)
 
-    def __call__(self, s, state):
-        return self.render(s, InlineState(state))
-
-    def _call_render(self, tokens):
+    def render_tokens(self, tokens):
         if self.renderer:
             return self.renderer.finalize(tokens)
-        return list(data)
+        return list(tokens)
+
+    def __call__(self, s, state):
+        return self.render_text(s, InlineState(state))

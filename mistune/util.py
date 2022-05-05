@@ -7,11 +7,20 @@ except ImportError:
     html = None
 
 
+PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
+
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
-ESCAPE_TEXT = r'\\[' + PUNCTUATION + ']'
-LINK_LABEL = r'(?:[^\\\[\]]|' + ESCAPE_TEXT + r'){0,1000}'
-LINK_TEXT = r'(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?'
-ESCAPE_CHAR = re.compile(r'\\([' + PUNCTUATION + r'])')
+ESCAPE_CHAR_RE = re.compile(r'\\([' + PUNCTUATION + r'])')
+
+LINK_LABEL = r'\[(?:[^\\\[\]|\\.]){0,500}\]'
+LINK_TITLE = (
+    r'(?:'
+    r'"(?:\\[' + PUNCTUATION + ']|[^"\x00])*"|'  # "title"
+    r"'(?:\\[" + PUNCTUATION + "]|[^'\x00])*'|"  # 'title'
+    r'\((?:\\[' + PUNCTUATION + ']|[^()\x00])*"'  # (title)
+    r')'
+)
+LINK_BRACKET_HREF = r'<(?:[^<>\n\\\x00]|\\.)*>'
 
 
 def escape(s, quote=True):

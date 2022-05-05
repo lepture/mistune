@@ -1,5 +1,5 @@
 import re
-from .util import unikey, ESCAPE_CHAR, LINK_LABEL
+from .util import unikey, ESCAPE_CHAR_RE, LINK_LABEL
 
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
@@ -46,6 +46,7 @@ class BlockState:
 
         # for saving def references
         self.def_links = {}
+        self.def_footnotes = {}
 
         # for list and block quote chain
         self.in_block = None
@@ -79,10 +80,10 @@ class BlockParser:
     INDENT_CODE = re.compile(r'^(?: {4}| *\t).+$')
     FENCED_CODE = re.compile(r'^( {0,3})(`{3,}|~{3,})([^`]*)$')
 
-    DEF_LINK = re.compile(r'^ {0,3}\[((?:[^\\[\]]|\.){0,1000})\]:')
-
     BLOCK_QUOTE = re.compile(r'^( {0,3})>(.*)')
     LIST = re.compile(r'^( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)$')
+
+    DEF_LINK = re.compile(r'^ {0,3}' + LINK_LABEL + ':')
 
     BLOCK_HTML = re.compile((
         r' {0,3}(?:'
@@ -95,7 +96,7 @@ class BlockParser:
     ), re.I)
 
     RULE_NAMES = (
-        'newline',
+        'blank_line',
         'axt_heading',
         'setex_heading',
         'fenced_code',
@@ -103,7 +104,7 @@ class BlockParser:
         'indent_code',
         'block_quote',
         'list',
-        # 'def_link',
+        'def_link',
         # 'block_html',
     )
 
@@ -129,12 +130,9 @@ class BlockParser:
     def register_rule(self, name, func):
         self.__methods[name] = lambda state, cursor: func(self, state, cursor)
 
-    def parse(self, state):
-        self.scan(state.cursor_start, state, self.rules)
-
-    def parse_newline(self, line, cursor, state):
+    def parse_blank_line(self, line, cursor, state):
         if self.BLANK_LINE.match(line):
-            state.add_token({'type': 'newline'}, cursor, cursor)
+            state.add_token({'type': 'blank_line'}, cursor, cursor)
             return cursor + 1
 
     def parse_thematic_break(self, line, cursor, state):
@@ -171,7 +169,7 @@ class BlockParser:
         start_line = cursor
         spaces = m.group(1)
         marker = m.group(2)
-        info = ESCAPE_CHAR.sub(r'\1', m.group(3))
+        info = ESCAPE_CHAR_RE.sub(r'\1', m.group(3))
         _end = re.compile('^ {0,3}' + marker[0] + '{' + str(len(marker)) + r',}\s*$')
 
         code = ''
@@ -259,7 +257,7 @@ class BlockParser:
                 break
 
             # blank line break block quote
-            cursor_next = self.parse_newline(line, cursor, state)
+            cursor_next = self.parse_blank_line(line, cursor, state)
             if cursor_next:
                 break
 
@@ -292,7 +290,7 @@ class BlockParser:
         else:
             rules = self.block_quote_rules
 
-        self.scan(child.cursor_start, child, rules)
+        self.parse(child.cursor_start, child, rules)
         token = {'type': 'block_quote', 'children': child.tokens}
 
         if cursor_next:
@@ -390,7 +388,7 @@ class BlockParser:
         state.tokens = []
         state.lines = lines
         state.cursor_end = len(lines) - 1
-        self.scan(state.cursor_start, state, rules)
+        self.parse(state.cursor_start, state, rules)
         # reset cursor root for counting
         state.cursor_root += len(lines)
         return {'type': 'list_item', 'children': state.tokens, 'attrs': attrs}
@@ -415,7 +413,7 @@ class BlockParser:
         state.add_token({'type': token_type, 'text': line}, cursor, cursor)
         return cursor + 1
 
-    def scan(self, cursor, state, rules):
+    def parse(self, cursor, state, rules):
         while cursor <= state.cursor_end:
             cursor = self._scan_rules(cursor, state, rules)
 
@@ -431,45 +429,25 @@ class BlockParser:
         cursor_next = self.parse_paragraph(line, cursor, state)
         return cursor_next
 
-    def render(self, state, inline, renderer=None):
-        return self._call_render(state.tokens, state, inline, renderer)
+    def render(self, state, inline):
+        return self._call_render(state.tokens, state, inline)
 
-    def _call_render(self, tokens, state, inline, renderer):
-        data = self._iter_render(tokens, state, inline, renderer)
-        if not renderer:
-            return list(data)
-        return renderer.finalize(data)
+    def _call_render(self, tokens, state, inline):
+        data = self._iter_render(tokens, state, inline)
+        if inline.renderer:
+            return inline.renderer.finalize(data)
+        return list(data)
 
-    def _iter_render(self, tokens, state, inline, renderer):
+    def _iter_render(self, tokens, state, inline):
         for tok in tokens:
             if 'children' in tok:
-                children = self._call_render(tok['children'], state, inline, renderer)
-            elif 'raw' in tok:
-                children = tok['raw']
+                children = self._call_render(tok['children'], state, inline)
+                tok['children'] = children
             elif 'text' in tok:
-                children = inline(tok['text'], state)
-            else:
-                if renderer:
-                    func = renderer._get_method(tok['type'])
-                    yield func()
-                else:
-                    yield tok
-                continue
-
-            if not renderer:
-                # update children
-                if isinstance(children, list):
-                    tok['children'] = children
-
-                yield tok
-                continue
-
-            func = renderer._get_method(tok['type'])
-            attrs = tok.get('attrs')
-            if attrs:
-                yield func(children, **attrs)
-            else:
-                yield func(children)
+                text = tok.pop('text')
+                children = inline(text, state)
+                tok['children'] = children
+            yield tok
 
 
 def expand_leading_tab(text):
@@ -497,6 +475,7 @@ def _get_list_bullet(marker):
 
 
 def _process_continue_line(current, line, trim):
+    line = expand_leading_tab(line)
     if not current:
         current.append(line)
     elif line.startswith(trim):
@@ -507,7 +486,7 @@ def _process_continue_line(current, line, trim):
 
 
 def _prepare_list_patterns(current, m1, bullet):
-    text = m1.group(3)
+    text = expand_leading_tab(m1.group(3))
     m2 = _LIST_HAS_TEXT.match(text)
     if m2:
         # indent code

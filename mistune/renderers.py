@@ -19,85 +19,24 @@ class BaseRenderer(object):
                 raise AttributeError('No renderer "{!r}"'.format(name))
             return method
 
-    def finalize(self, data):
-        raise NotImplementedError(
-            'The renderer needs to implement the finalize method.')
+    def _iter_tokens(self, tokens):
+        for tok in tokens:
+            func = self._get_method(tok['type'])
+            if 'raw' in tok:
+                yield func(tok['raw'])
+            elif 'children' in tok:
+                children = tok['children']
+                attrs = tok.get('attrs')
+                if attrs:
+                    yield func(children, **attrs)
+                else:
+                    yield func(children)
+            else:
+                yield func()
 
+    def finalize(self, tokens):
+        return ''.join(self._iter_tokens(tokens))
 
-class AstRenderer(BaseRenderer):
-    NAME = 'ast'
-
-    def text(self, text):
-        return {'type': 'text', 'text': text}
-
-    def link(self, link, children=None, title=None):
-        if isinstance(children, str):
-            children = [{'type': 'text', 'text': children}]
-        return {
-            'type': 'link',
-            'link': link,
-            'children': children,
-            'title': title,
-        }
-
-    def image(self, src, alt="", title=None):
-        return {'type': 'image', 'src': src, 'alt': alt, 'title': title}
-
-    def codespan(self, text):
-        return {'type': 'codespan', 'text': text}
-
-    def linebreak(self):
-        return {'type': 'linebreak'}
-
-    def inline_html(self, html):
-        return {'type': 'inline_html', 'text': html}
-
-    def heading(self, children, level):
-        return {'type': 'heading', 'children': children, 'level': level}
-
-    def newline(self):
-        return {'type': 'newline'}
-
-    def thematic_break(self):
-        return {'type': 'thematic_break'}
-
-    def block_code(self, children, info=None):
-        return {
-            'type': 'block_code',
-            'text': children,
-            'info': info
-        }
-
-    def block_html(self, children):
-        return {'type': 'block_html', 'text': children}
-
-    def list(self, children, ordered, level, start=None):
-        token = {
-            'type': 'list',
-            'children': children,
-            'ordered': ordered,
-            'level': level,
-        }
-        if start is not None:
-            token['start'] = start
-        return token
-
-    def list_item(self, children, level):
-        return {'type': 'list_item', 'children': children, 'level': level}
-
-    def _create_default_method(self, name):
-        def __ast(children):
-            return {'type': name, 'children': children}
-        return __ast
-
-    def _get_method(self, name):
-        try:
-            return super(AstRenderer, self)._get_method(name)
-        except AttributeError:
-            return self._create_default_method(name)
-
-    def finalize(self, data):
-        return list(data)
 
 
 class HTMLRenderer(BaseRenderer):
@@ -134,11 +73,8 @@ class HTMLRenderer(BaseRenderer):
             return escape(text)
         return escape_html(text)
 
-    def link(self, link, text=None, title=None):
-        if text is None:
-            text = link
-
-        s = '<a href="' + self._safe_url(link) + '"'
+    def link(self, text, url, title=None):
+        s = '<a href="' + self._safe_url(url) + '"'
         if title:
             s += ' title="' + escape_html(title) + '"'
         return s + '>' + text + '</a>'
@@ -175,7 +111,7 @@ class HTMLRenderer(BaseRenderer):
         tag = 'h' + str(level)
         return '<' + tag + '>' + text + '</' + tag + '>\n'
 
-    def newline(self):
+    def blank_line(self):
         return ''
 
     def thematic_break(self):
@@ -215,6 +151,3 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text, ordered=False, depth=None):
         return '<li>' + text + '</li>\n'
-
-    def finalize(self, data):
-        return ''.join(data)

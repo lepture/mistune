@@ -1,8 +1,8 @@
 from .markdown import Markdown
 from .block_parser import BlockParser
 from .inline_parser import InlineParser
-from .renderers import AstRenderer, HTMLRenderer
-from .plugins import PLUGINS
+from .renderers import HTMLRenderer
+# from .plugins import PLUGINS
 from .util import escape, escape_url, escape_html, unikey
 
 
@@ -27,18 +27,20 @@ def create_markdown(escape=True, hard_wrap=False, renderer=None, plugins=None):
     if renderer is None or renderer == 'html':
         renderer = HTMLRenderer(escape=escape)
     elif renderer == 'ast':
-        renderer = AstRenderer()
+        renderer = None
 
     if plugins:
         _plugins = []
         for p in plugins:
             if isinstance(p, str):
-                _plugins.append(PLUGINS[p])
+                pass
+                # _plugins.append(PLUGINS[p])
             else:
                 _plugins.append(p)
         plugins = _plugins
 
-    return Markdown(renderer, inline=InlineParser(renderer, hard_wrap=hard_wrap), plugins=plugins)
+    inline = InlineParser(renderer, hard_wrap=hard_wrap)
+    return Markdown(renderer, inline=inline, plugins=plugins)
 
 
 html = create_markdown(
@@ -48,13 +50,22 @@ html = create_markdown(
 )
 
 
+__cached_parsers = {}
+
+
 def markdown(text, escape=True, renderer=None, plugins=None):
+    key = (escape, renderer, plugins)
+    if key in __cached_parsers:
+        return __cached_parsers[key](text)
+
     md = create_markdown(escape=escape, renderer=renderer, plugins=plugins)
+    # improve the speed for markdown parser creation
+    __cached_parsers[key] = md
     return md(text)
 
 
 __all__ = [
-    'Markdown', 'AstRenderer', 'HTMLRenderer',
+    'Markdown', 'HTMLRenderer',
     'BlockParser', 'InlineParser',
     'escape', 'escape_url', 'escape_html', 'unikey',
     'html', 'create_markdown', 'markdown',

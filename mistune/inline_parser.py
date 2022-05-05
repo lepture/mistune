@@ -2,10 +2,12 @@ import re
 from .scanner import ScannerParser
 from .util import (
     PUNCTUATION,
-    ESCAPE_TEXT,
-    ESCAPE_CHAR,
-    LINK_TEXT,
     LINK_LABEL,
+    LINK_TITLE,
+    LINK_BRACKET_HREF,
+    PREVENT_BACKSLASH,
+    ESCAPE_CHAR_RE,
+
     escape,
     escape_url,
     unikey,
@@ -16,6 +18,14 @@ HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
     r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
+
+LINK_LABEL_RE = re.compile(LINK_LABEL)
+LINK_HREF_RE = re.compile(LINK_BRACKET_HREF)
+LINK_TITLE_RE = re.compile(LINK_TITLE)
+LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + '\))')
+
+PAREN_START_RE = re.compile(r'\(\s*')
+PAREN_END_RE = re.compile(r'\s*' + PREVENT_BACKSLASH + r'\)')
 
 
 class InlineState:
@@ -35,7 +45,7 @@ class InlineState:
 
 
 class InlineParser:
-    PREVENT_BACKSLASH = r'(?<!\\)(?P<_slash>(?:\\\\)*)'
+    # PREVENT_BACKSLASH = r'(?<!\\)(?P<_slash>(?:\\\\)*)'
 
     AUTO_EMAIL = (
         r'''<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]'''
@@ -45,6 +55,9 @@ class InlineParser:
 
     # we only need to find the start pattern of an inline token
     SPECIFICATION = [
+        # e.g. \`, \$
+        ('escape', r'(?:\\[' + PUNCTUATION + '])+'),
+
         # `code, ```code
         ('codespan', r'`{1,}'),
 
@@ -52,41 +65,12 @@ class InlineParser:
         ('emphasis', r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])'),
 
         # [link], ![img]
-        ('link', r'!?\[' + LINK_TEXT + r'\]'),
+        ('link', r'!?' + LINK_LABEL),
 
         # <https://example.com>. regex copied from commonmark.js
         ('auto_link', r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>'),
         ('auto_email', AUTO_EMAIL),
     ]
-
-    ESCAPE = ESCAPE_TEXT
-
-
-    #: link or image syntax::
-    #:
-    #: [text](/link "title")
-    #: ![alt](/src "title")
-    STD_LINK = (
-        r'!?\[(' + LINK_TEXT + r')\]\(\s*'
-
-        r'(<(?:\\[<>]?|[^\s<>\\])*>|'
-        r'(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)'
-
-        r'(?:\s+('
-        r'''"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)'''
-        r'))?\s*\)'
-    )
-
-    #: Get link from references. References are defined in DEF_LINK in blocks.
-    #: The syntax looks like::
-    #:
-    #:    [an example][id]
-    #:
-    #:    [id]: https://example.com "optional title"
-    REF_LINK = (
-        r'!?\[(' + LINK_TEXT + r')\]'
-        r'\[(' + LINK_LABEL + r')\]'
-    )
 
     #: linebreak leaves two spaces at the end of line
     SOFT_LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
@@ -118,15 +102,20 @@ class InlineParser:
 
     def _compile_sc(self):
         regex = '|'.join('(?P<%s>%s)' % pair for pair in self.specification)
-        self._sc = re.compile(self.PREVENT_BACKSLASH + regex)
+        self._sc = re.compile(regex)
 
     def register_rule(self, name, pattern, method):
         self.specification.append((name, pattern))
         self.__methods[name] = lambda s, pos, state: method(self, s, pos, state)
 
     def parse_escape(self, m, state):
-        text = m.group(0)[1:]
-        return 'text', text
+        text = m.group('escape')
+        text = ESCAPE_CHAR_RE.sub(r'\1', text)
+        state.tokens.append({
+            'type': 'text',
+            'raw': text,
+        })
+        return m.end()
 
     def parse_link(self, m, state):
         if state.in_link:
@@ -135,14 +124,6 @@ class InlineParser:
 
         pos = m.end()
         marker = m.group('link')
-        def_links = state.block_state.def_links
-
-        if pos < len(m.string):
-            c = m.string[pos]
-            is_simple = c not in {'[', '('}
-        else:
-            c = ''
-            is_simple = True
 
         if marker[0] == '!':
             token_type = 'image'
@@ -151,15 +132,58 @@ class InlineParser:
             token_type = 'link'
             text = marker[1:-1]
 
-        #: Simple form of reference link::
-        #:
-        #:    [an example]
-        #:
-        #:    [an example]: https://example.com "optional title"
-        if is_simple:
+        if pos < len(m.string):
+            c = m.string[pos]
+            if c == '[':
+                return self._parse_std_ref_link(m, token_type, text, state)
+            elif c == '(':
+                return self._parse_std_link(m, token_type, text, state)
+            else:
+                return self._parse_simple_ref_link(pos, token_type, text, state)
+        return self._parse_simple_ref_link(pos, token_type, text, state)
+
+    def _parse_simple_ref_link(pos, token_type, text, state):
+        """A simple form of reference link::
+        
+            [an example]
+            [an example]: https://example.com "optional title"
+        """
+        def_links = state.block_state.def_links
+
+        key = unikey(text)
+        if key not in def_links:
+            return
+
+        new_state = state.copy()
+        new_state.in_link = True
+        token = {
+            'type': token_type,
+            'children': self.render(text, new_state),
+            'attrs': def_links[key],
+        }
+        state.tokens.append(token)
+        return pos
+
+    def _parse_std_ref_link(m, token_type, text, state):
+        """Get link from references. The syntax looks like::
+
+            [an example][id]
+
+            [id]: https://example.com "optional title"
+        """
+        pos = m.end()
+        m2 = LINK_LABEL_RE.match(m.string, pos)
+        if m2:
+            def_links = state.block_state.def_links
+            key = m2.group(0)[1:-1]
+            if not key:
+                # [foo][]
+                key = text
+
             key = unikey(text)
             if key not in def_links:
                 return
+
             new_state = state.copy()
             new_state.in_link = True
             token = {
@@ -168,21 +192,71 @@ class InlineParser:
                 'attrs': def_links[key],
             }
             state.tokens.append(token)
-            return pos
+            return m2.end()
+        # fallback to simple ref link
+        return self._parse_simple_ref_link(pos, token_type, text, state)
 
-        #: Get link from references. The syntax looks like::
-        #:
-        #:    [an example][id]
-        #:
-        #:    [id]: https://example.com "optional title"
-        if c == '[':
-            pass
+    def _parse_std_link(m, token_type, text, state):
+        """A standard link or image syntax::
 
-        #: Standard link or image syntax::
-        #:
-        #: [text](/link "title")
-        #: ![alt](/src "title")
+            [text](/link "title")
 
+            ![alt](/src "title")
+        """
+        pos = m.end()
+        url, pos1 = self._parse_link_href(m.string, pos)
+
+        marker = m.string[pos1 - 1]
+        if marker == ')':
+            # [text](<url>)
+            # end without title
+            new_state = state.copy()
+            new_state.in_link = True
+            url = ESCAPE_CHAR_RE.sub(r'\1', url)
+            state.tokens.append({
+                'type': token_type,
+                'children': self.render(text, new_state),
+                'attrs': {'url': escape_url(url)},
+            })
+            return pos1
+
+        elif marker in ('"', '"'):
+            m2 = LINK_TITLE_RE.match(m.string, pos1)
+            if m2:
+                m3 = PAREN_END_RE.match(m.string, m2.end())
+                if m3:
+                    new_state = state.copy()
+                    new_state.in_link = True
+                    title = m2.group(0)[1:-1]
+                    title = ESCAPE_CHAR_RE.sub(r'\1', title)
+                    url = ESCAPE_CHAR_RE.sub(r'\1', url)
+                    state.tokens.append({
+                        'type': token_type,
+                        'children': self.render(text, new_state),
+                        'attrs': {
+                            'url': escape_url(url),
+                            'title': title,
+                        },
+                    })
+                    return m3.end()
+        return self._parse_simple_ref_link(pos, token_type, text, state)
+
+    def _parse_link_href(text, pos):
+        m1 = PAREN_START_RE.match(text, pos)
+        start_pos = m1.end()
+
+        # </link-in-brackets>
+        m2 = LINK_HREF_RE.match(text, start_pos)
+        if m2:
+            url = m2.group(0)[1:-1]
+            m3 = LINK_HREF_END_RE.search(text, m2.end())
+            return url, m3.end()
+
+        # link not in brackets
+        m3 = LINK_HREF_END_RE.search(text, start_pos)
+        end_pos = m3.start()
+        url = text[start_pos:end_pos]
+        return url, m3.end()
 
     def parse_auto_link(self, m, state):
         return self._parse_auto_link(False, m, state)
@@ -196,51 +270,18 @@ class InlineParser:
 
         if is_email:
             text = m.group('auto_email')[1:-1]
-            link = 'mailto:' + text
+            url = 'mailto:' + text
         else:
             text = m.group('auto_link')[1:-1]
-            link = text
+            url = text
 
+        children = self._call_render([{'type': 'text', 'raw': escape(text)}])
         state.tokens.append({
             'type': 'link',
-            'children': [{'type': 'text', 'raw': escape(text)}],
-            'attrs': {'link': escape_url(link)},
+            'children': children,
+            'attrs': {'url': escape_url(url)},
         })
         return m.end()
-
-    def parse_std_link(self, m, state):
-        line = m.group(0)
-        text = m.group(1)
-        link = ESCAPE_CHAR.sub(r'\1', m.group(2))
-        if link.startswith('<') and link.endswith('>'):
-            link = link[1:-1]
-
-        title = m.group(3)
-        if title:
-            title = ESCAPE_CHAR.sub(r'\1', title[1:-1])
-
-        if line[0] == '!':
-            return 'image', escape_url(link), text, title
-
-        return self.tokenize_link(line, link, text, title, state)
-
-    def parse_ref_link(self, m, state):
-        line = m.group(0)
-        text = m.group(1)
-        key = unikey(m.group(2) or text)
-        def_links = state.get('def_links')
-        if not def_links or key not in def_links:
-            return list(self._scan(line, state, self.ref_link_rules))
-
-        link, title = def_links.get(key)
-        link = ESCAPE_CHAR.sub(r'\1', link)
-        if title:
-            title = ESCAPE_CHAR.sub(r'\1', title)
-
-        if line[0] == '!':
-            return 'image', escape_url(link), text, title
-
-        return self.tokenize_link(line, link, text, title, state)
 
     def parse_emphasis(self, m, state):
         pos = m.end()
@@ -279,12 +320,14 @@ class InlineParser:
             else:
                 new_state.in_emphasis = True
                 new_state.in_strong = True
-                children = self.render(text, new_state)
+
+                children = self._call_render([{
+                    'type': 'strong',
+                    'children': self.render(text, new_state)
+                }])
                 state.tokens.append({
                     'type': 'emphasis',
-                    'children': [
-                        {'type': 'strong', 'children': children},
-                    ]
+                    'children': children,
                 })
             return m.end()
 
@@ -308,9 +351,6 @@ class InlineParser:
         html = m.group(0)
         return 'inline_html', html
 
-    def parse_text(self, text, state):
-        return 'text', text
-
     def parse(self, s, pos, state):
         if not self._sc:
             self._compile_sc()
@@ -321,10 +361,6 @@ class InlineParser:
                 break
 
             end_pos = m.start()
-            slash = m.group('_slash')
-            if slash:
-                end_pos += len(slash)
-
             if end_pos > pos:
                 hole = s[pos:end_pos]
                 state.tokens.append({'type': 'text', 'raw': hole})
@@ -344,10 +380,12 @@ class InlineParser:
 
     def render(self, s: str, state: InlineState):
         self.parse(s, 0, state)
-        # return self.renderer.finalize(state.tokens)
-        return state.tokens
+        return self._call_render(state.tokens)
 
     def __call__(self, s, state):
-        tokens = self.render(s, InlineState(state))
-        print(tokens)
-        return tokens
+        return self.render(s, InlineState(state))
+
+    def _call_render(self, tokens):
+        if self.renderer:
+            return self.renderer.finalize(tokens)
+        return list(data)

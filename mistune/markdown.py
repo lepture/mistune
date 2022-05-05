@@ -33,11 +33,6 @@ class Markdown:
         if state is None:
             state = BlockState()
 
-        if s is None:
-            s = '\n'
-        else:
-            s = expand_leading_tab(s)
-
         lines = s.splitlines()
         state.lines = lines
         state.cursor_end = len(lines) - 1
@@ -45,12 +40,12 @@ class Markdown:
         for hook in self.before_parse_hooks:
             hook(self, s, state)
 
-        self.block.parse(state)
+        self.block.parse(state.cursor_start, state, self.block.rules)
 
         for hook in self.before_render_hooks:
             hook(self, state)
 
-        result = self.block.render(state, self.inline, self.renderer)
+        result = self.block.render(state, self.inline)
 
         for hook in self.after_render_hooks:
             result = hook(self, result, state)
@@ -68,4 +63,8 @@ class Markdown:
         return self.parse(s.decode(encoding), state)
 
     def __call__(self, s):
+        if s is None:
+            s = '\n'
+        else:
+            s = expand_leading_tab(s)
         return self.parse(s)

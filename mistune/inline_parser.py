@@ -1,5 +1,4 @@
 import re
-from .scanner import ScannerParser
 from .util import (
     PUNCTUATION,
     LINK_LABEL,

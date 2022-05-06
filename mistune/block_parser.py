@@ -1,6 +1,7 @@
 import re
 from .util import (
     unikey,
+    escape_url,
     ESCAPE_CHAR_RE,
     LINK_LABEL,
     LINK_BRACKET_RE,
@@ -33,7 +34,7 @@ _CLOSE_TAG_END = re.compile(r'\s*>\s*$')
 
 
 class BlockState:
-    def __init__(self):
+    def __init__(self, parent=None):
         self.lines = []
         self.tokens = []
 
@@ -41,14 +42,18 @@ class BlockState:
         self.cursor_start = 0
         self.cursor_end = 0
 
-        # for saving def references
-        self.def_links = {}
-        self.def_footnotes = {}
-
         # for list and block quote chain
         self.in_block = None
         self.list_tight = True
-        self.parent = None
+        self.parent = parent
+
+        # for saving def references
+        if parent:
+            self.def_links = parent.def_links
+            self.def_footnotes = parent.def_footnotes
+        else:
+            self.def_links = {}
+            self.def_footnotes = {}
 
     def prev_token(self):
         if self.tokens:
@@ -248,6 +253,10 @@ class BlockParser:
         if not m:
             return
 
+        cursor_next = state.add_to_paragraph(line, cursor)
+        if cursor_next:
+            return cursor_next
+
         key = unikey(m.group(1)[1:-1])
         if not key:
             return
@@ -265,7 +274,7 @@ class BlockParser:
                 return
             url, title_pos = _parse_def_link_url(m2.end() - 1, line)
 
-        if not url:
+        if url is None:
             # caused by invalid bracket url
             return
 
@@ -275,8 +284,7 @@ class BlockParser:
             return
 
         if key not in state.def_links:
-            url = ESCAPE_CHAR_RE.sub(r'\1', url)
-            attrs = {'url': url}
+            attrs = {'url': escape_url(url)}
             if title:
                 title = ESCAPE_CHAR_RE.sub(r'\1', title)
                 attrs['title'] = title
@@ -352,10 +360,9 @@ class BlockParser:
 
         # scan children state
         lines = text.splitlines()
-        child = self.state_cls()
+        child = self.state_cls(state)
         child.cursor_root = start_line
         child.in_block = 'block_quote'
-        child.parent = state
         child.lines = lines
         child.cursor_end = len(lines) - 1
 
@@ -408,8 +415,7 @@ class BlockParser:
                 return cursor_next
 
         start_line = cursor
-        child_state = self.state_cls()
-        child_state.parent = state
+        child_state = self.state_cls(state)
         child_state.in_block = 'list'
         child_state.cursor_root = start_line
 
@@ -712,6 +718,7 @@ def _parse_def_link_url(pos, line):
 
     m2 = _DEF_LINK_URL_END.search(line, pos)
     url = line[pos:m2.start()]
+    url = ESCAPE_CHAR_RE.sub(r'\1', url)
     return url, m2.end()
 
 
@@ -781,7 +788,7 @@ def _parse_def_link_continue_title(m, line, cursor, state):
         if m3:
             title += '\n' + line[:m3.start()]
             return title, cursor
-        rv += '\n' + line
+        title += '\n' + line
     return None, None
 
 

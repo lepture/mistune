@@ -12,6 +12,8 @@ DIFF_CASES = {
 }
 
 IGNORE_CASES = {
+    'link_reference_definitions_208',  # we don't support it
+
     'code_spans_341',  # no higher precedence
     'code_spans_342',
 

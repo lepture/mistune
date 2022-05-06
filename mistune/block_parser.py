@@ -8,6 +8,7 @@ from .util import (
 
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
+_AXT_HEADING_TRIM = re.compile(r'\s+#+\s*$')
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _LINE_HAS_TEXT = re.compile(r'(\s*)\S')
@@ -64,6 +65,10 @@ class BlockState:
         self.list_tight = False
         self.parent = None
 
+    def prev_token(self):
+        if self.tokens:
+            return self.tokens[-1]
+
     def add_token(self, token, start_line, end_line):
         token['start_line'] = start_line + self.cursor_root
         token['end_line'] = end_line + self.cursor_root
@@ -82,7 +87,7 @@ class BlockParser:
     state_cls = BlockState
 
     BLANK_LINE = re.compile(r'^\s*$')
-    AXT_HEADING = re.compile(r'^ {0,3}(#{1,6})(?!#+)(.*)')
+    AXT_HEADING = re.compile(r'^( {0,3})(#{1,6})(?!#+)(?: *$|\s+\S)')
     SETEX_HEADING = re.compile(r'^ *(=|-){2,}[ \t]*$')
     THEMATIC_BREAK = re.compile(
         r'^ {0,3}((?:-[ \t]*){3,}|'
@@ -158,6 +163,13 @@ class BlockParser:
         if not self.INDENT_CODE.match(line):
             return
 
+        # it is a part of the paragraph
+        prev_token = state.prev_token()
+        if prev_token and prev_token['type'] == 'paragraph':
+            prev_token['text'] += '\n' + line
+            prev_token['end_line'] = cursor + state.cursor_root
+            return cursor + 1
+
         start_line = cursor
         code = line
 
@@ -207,28 +219,30 @@ class BlockParser:
 
     def parse_axt_heading(self, line, cursor, state):
         m = self.AXT_HEADING.match(line)
-        if m:
-            level = len(m.group(1))
-            text = m.group(2) or ''
-            text = text.strip()
-            if set(text) == {'#'}:
-                text = ''
+        if not m:
+            return
 
-            token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
-            state.add_token(token, cursor, cursor)
-            return cursor + 1
+        spaces = len(m.group(1))
+        level = len(m.group(2))
+        text = line[spaces + level:]
+
+        # remove last #
+        text = _AXT_HEADING_TRIM.sub('', text).strip()
+
+        token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
+        state.add_token(token, cursor, cursor)
+        return cursor + 1
 
     def parse_setex_heading(self, line, cursor, state):
-        if state.tokens:
+        prev_token = state.prev_token()
+        if prev_token and prev_token['type'] == 'paragraph':
             m = self.SETEX_HEADING.match(line)
             if m:
-                prev_token = state.tokens[-1]
-                if prev_token['type'] == 'paragraph':
-                    level = 1 if m.group(1) == '=' else 2
-                    prev_token['type'] = 'heading'
-                    prev_token['attrs'] = {'level': level}
-                    prev_token['end_line'] = cursor + state.cursor_root
-                    return cursor + 1
+                level = 1 if m.group(1) == '=' else 2
+                prev_token['type'] = 'heading'
+                prev_token['attrs'] = {'level': level}
+                prev_token['end_line'] = cursor + state.cursor_root
+                return cursor + 1
 
     def parse_def_link(self, line, cursor, state):
         m = self.DEF_LINK.match(line)
@@ -432,12 +446,11 @@ class BlockParser:
         else:
             token_type = 'paragraph'
 
-        if state.tokens:
-            prev_token = state.tokens[-1]
-            if prev_token['type'] == token_type:
-                prev_token['text'] += '\n' + line
-                prev_token['end_line'] = cursor + state.cursor_root
-                return cursor + 1
+        prev_token = state.prev_token()
+        if prev_token and prev_token['type'] == token_type:
+            prev_token['text'] += '\n' + line
+            prev_token['end_line'] = cursor + state.cursor_root
+            return cursor + 1
 
         state.add_token({'type': token_type, 'text': line}, cursor, cursor)
         return cursor + 1

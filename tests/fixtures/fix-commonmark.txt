@@ -11,16 +11,6 @@ Links can't contain links.
 <p><a href="/foo">&lt;https://example.com&gt;</a></p>
 ````````````````````````````````
 
-## Codespan
-
-Codespan can escape grave accent (`).
-
-```````````````````````````````` example
-`\`\`\`lang` is fenced code
-.
-<p><code>```lang</code> is fenced code</p>
-````````````````````````````````
-
 ## Emphasis
 
 `<em>` doesn't contain `<em>`, `<strong>` doesn't contain `<strong>`.

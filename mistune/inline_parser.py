@@ -34,7 +34,7 @@ INLINE_HTML = (
     r'<![A-Z][\s\S]+?>|'  # doctype
     r'<!\[CDATA[\s\S]+?\]\]>'  # cdata
 )
-_ESCAPE_BACKTICK = re.compile(r'\\([\\`])')
+_CODESPAN_TRIM_RE = re.compile(r'^ ?(\s*?[^\s]+\s*?) $')
 
 
 
@@ -354,7 +354,9 @@ class InlineParser:
         m = pattern.match(m.string, pos)
         if m:
             code = m.group(1)
-            code = _ESCAPE_BACKTICK.sub(r'\1', code)
+            m2 = _CODESPAN_TRIM_RE.match(code)
+            if m2:
+                code = m2.group(1)
             state.tokens.append({'type': 'codespan', 'raw': code})
             return m.end()
         return self.record_text(pos, marker, state)

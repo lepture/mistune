@@ -248,6 +248,10 @@ class BlockParser:
         if not m:
             return
 
+        key = unikey(m.group(1)[1:-1])
+        if not key:
+            return
+
         # step 1, parse url
         m1 = _LINE_HAS_TEXT.match(line, m.end())
         if m1:
@@ -267,10 +271,9 @@ class BlockParser:
 
         # step 2, parse title
         title, cursor = _parse_def_link_title(title_pos, line, cursor, state)
-        if not cursor:
+        if cursor is None:
             return
 
-        key = unikey(m.group(1)[1:-1])
         if key not in state.def_links:
             url = ESCAPE_CHAR_RE.sub(r'\1', url)
             attrs = {'url': url}

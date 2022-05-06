@@ -53,4 +53,5 @@ def escape_html(s):
 
 
 def unikey(s):
-    return ' '.join(s.split()).lower()
+    key = ' '.join(s.split()).strip()
+    return key.lower().upper()

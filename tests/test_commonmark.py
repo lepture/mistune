@@ -13,11 +13,26 @@ DIFF_CASES = {
 
 IGNORE_CASES = {
     'links_504',  # we don't support link title in (title)
+
+    'links_515',  # please see emphasis issues
+    'links_520',  # we return early, no forward/backward
+    'links_523',
+    'links_524',
+    'links_525',
+    'links_527',
+    'links_529',
+    'links_532',
+    'links_533',
+    'links_535',
+    'links_536',
+    'links_537',
+    'links_563',
+
+    'links_540',  # we don't support this
 }
 
 INSANE_CASES = {
     'links_511',  # please use escape
-    'links_515',  # please see emphasis issues
 }
 
 

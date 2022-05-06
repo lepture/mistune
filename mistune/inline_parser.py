@@ -191,7 +191,7 @@ class InlineParser:
                 # [foo][]
                 key = text
 
-            key = unikey(text)
+            key = unikey(key)
             if key not in def_links:
                 return
 

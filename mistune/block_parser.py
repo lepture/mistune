@@ -15,7 +15,7 @@ _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _LINE_HAS_TEXT = re.compile(r'(\s*)\S')
 _DEF_LINK_URL_END = re.compile(r'(\s+|$)')
-_DEF_LINK_TITLE_START = re.compile(r'''\s*("|'|\()''')
+_DEF_LINK_TITLE_START = re.compile(r'''\s*("|')''')
 
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
@@ -261,6 +261,10 @@ class BlockParser:
                 return
             url, title_pos = _parse_def_link_url(m2.end() - 1, line)
 
+        if not url:
+            # caused by invalid bracket url
+            return
+
         # step 2, parse title
         title, cursor = _parse_def_link_title(title_pos, line, cursor, state)
         if not cursor:
@@ -268,8 +272,10 @@ class BlockParser:
 
         key = unikey(m.group(1)[1:-1])
         if key not in state.def_links:
+            url = ESCAPE_CHAR_RE.sub(r'\1', url)
             attrs = {'url': url}
             if title:
+                title = ESCAPE_CHAR_RE.sub(r'\1', title)
                 attrs['title'] = title
             state.def_links[key] = attrs
         return cursor + 1
@@ -694,10 +700,12 @@ def _is_loose_list(tokens):
 
 
 def _parse_def_link_url(pos, line):
-    m1 = LINK_BRACKET_RE.match(line, pos)
-    if m1:
-        url = m1.group(0)[1:-1]
-        return url, m1.end()
+    if line[pos] == '<':
+        m1 = LINK_BRACKET_RE.match(line, pos)
+        if m1:
+            url = m1.group(0)[1:-1]
+            return url, m1.end()
+        return None, None
 
     m2 = _DEF_LINK_URL_END.search(line, pos)
     url = line[pos:m2.start()]
@@ -717,7 +725,7 @@ _BREAK_PATTERN = re.compile(r'|'.join([
 
 def _parse_def_link_title(pos, line, cursor, state):
     if _LINE_HAS_TEXT.match(line, pos):
-        m = _DEF_LINK_TITLE_START.match(line)
+        m = _DEF_LINK_TITLE_START.match(line, pos)
         if not m:
             # case 1: [ref]: /url non-title
             return None, None

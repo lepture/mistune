@@ -2,7 +2,6 @@ import re
 from .util import (
     PUNCTUATION,
     LINK_LABEL,
-    LINK_TITLE_RE,
     LINK_BRACKET_RE,
     HTML_TAGNAME,
     HTML_ATTRIBUTES,
@@ -15,7 +14,16 @@ from .util import (
 )
 
 LINK_LABEL_RE = re.compile(LINK_LABEL)
-LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + r'\))')
+LINK_HREF_END_RE = re.compile(
+    r'''[ \t\n]+(?=[^ \t\n])|(?:''' + PREVENT_BACKSLASH + r'\))')
+
+# regex copied from commonmark.js
+LINK_TITLE_RE = re.compile(
+    r'(?:'
+    r'"(?:\\[' + PUNCTUATION + ']|[^"\x00])*"|'  # "title"
+    r"'(?:\\[" + PUNCTUATION + "]|[^'\x00])*'"  # 'title'
+    r')'
+)
 
 PAREN_START_RE = re.compile(r'\(\s*')
 PAREN_END_RE = re.compile(r'\s*' + PREVENT_BACKSLASH + r'\)')
@@ -209,22 +217,23 @@ class InlineParser:
         pos = m.end()
         url, pos1 = self._parse_link_href(m.string, pos)
 
+        if not pos1:
+            return
+
         marker = m.string[pos1 - 1]
         if marker == ')':
             # [text](<url>)
             # end without title
             new_state = state.copy()
             new_state.in_link = True
-            url = ESCAPE_CHAR_RE.sub(r'\1', url)
             state.tokens.append({
                 'type': token_type,
                 'children': self.render_text(text, new_state),
                 'attrs': {'url': escape_url(url)},
             })
             return pos1
-
-        elif marker in ('"', '"'):
-            m2 = LINK_TITLE_RE.match(m.string, pos1)
+        elif marker in ('"', "'"):
+            m2 = LINK_TITLE_RE.match(m.string, pos1 - 1)
             if m2:
                 m3 = PAREN_END_RE.match(m.string, m2.end())
                 if m3:
@@ -232,7 +241,6 @@ class InlineParser:
                     new_state.in_link = True
                     title = m2.group(0)[1:-1]
                     title = ESCAPE_CHAR_RE.sub(r'\1', title)
-                    url = ESCAPE_CHAR_RE.sub(r'\1', url)
                     state.tokens.append({
                         'type': token_type,
                         'children': self.render_text(text, new_state),
@@ -247,19 +255,31 @@ class InlineParser:
     def _parse_link_href(self, text, pos):
         m1 = PAREN_START_RE.match(text, pos)
         start_pos = m1.end()
+        if start_pos > len(text) - 1:
+            return None, None
 
         # </link-in-brackets>
-        m2 = LINK_BRACKET_RE.match(text, start_pos)
-        if m2:
+        if text[start_pos] == '<':
+            m2 = LINK_BRACKET_RE.match(text, start_pos)
+            if not m2:
+                return None, None
             url = m2.group(0)[1:-1]
-            m3 = LINK_HREF_END_RE.search(text, m2.end())
-            return url, m3.end()
+            m3 = LINK_HREF_END_RE.match(text, m2.end())
+        else:
+            # link not in brackets
+            m3 = LINK_HREF_END_RE.search(text, start_pos)
+            if m3:
+                end_pos = m3.start()
+                url = text[start_pos:end_pos]
+                url = ESCAPE_CHAR_RE.sub(r'\1', url)
 
-        # link not in brackets
-        m3 = LINK_HREF_END_RE.search(text, start_pos)
-        end_pos = m3.start()
-        url = text[start_pos:end_pos]
-        return url, m3.end()
+        if not m3:
+            return None, None
+
+        _last = m3.group(0)[-1]
+        if _last == ')':
+            return url, m3.end()
+        return url, m3.end() + 1
 
     def parse_auto_link(self, m, state):
         text = m.group('auto_link')

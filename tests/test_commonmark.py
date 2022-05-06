@@ -6,12 +6,18 @@ from tests import BaseTestCase, normalize_html
 DIFF_CASES = {
     'setext_headings_093',
     'list_items_300',
+
+    'links_495',  # return early
+    'links_496',
 }
 
 IGNORE_CASES = {
+    'links_504',  # we don't support link title in (title)
 }
 
 INSANE_CASES = {
+    'links_511',  # please use escape
+    'links_515',  # please see emphasis issues
 }
 
 

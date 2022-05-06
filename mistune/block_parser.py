@@ -1,11 +1,18 @@
 import re
-from .util import unikey, ESCAPE_CHAR_RE, LINK_LABEL
+from .util import (
+    unikey,
+    ESCAPE_CHAR_RE,
+    LINK_LABEL,
+    LINK_BRACKET_RE,
+)
 
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
-_LIST_HAS_TEXT = re.compile(r'^( {0,})\S')
+_LINE_HAS_TEXT = re.compile(r'(\s*)\S')
+_DEF_LINK_URL_END = re.compile(r'(\s+|$)')
+_DEF_LINK_TITLE_START = re.compile(r'''\s*("|'|\()''')
 
 _BLOCK_TAGS = {
     'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
@@ -88,7 +95,7 @@ class BlockParser:
     BLOCK_QUOTE = re.compile(r'^( {0,3})>(.*)')
     LIST = re.compile(r'^( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)$')
 
-    DEF_LINK = re.compile(r'^ {0,3}' + LINK_LABEL + ':')
+    DEF_LINK = re.compile(r'^ {0,3}(' + LINK_LABEL + '):')
 
     BLOCK_HTML = re.compile((
         r' {0,3}(?:'
@@ -217,7 +224,7 @@ class BlockParser:
             if m:
                 prev_token = state.tokens[-1]
                 if prev_token['type'] == 'paragraph':
-                    level = 1 if m.group(2) == '=' else 2
+                    level = 1 if m.group(1) == '=' else 2
                     prev_token['type'] = 'heading'
                     prev_token['attrs'] = {'level': level}
                     prev_token['end_line'] = cursor + state.cursor_root
@@ -227,13 +234,28 @@ class BlockParser:
         m = self.DEF_LINK.match(line)
         if not m:
             return
-        # TODO
-        text = line[m.end()]
-        key = unikey(m.group(1))
-        link = ''
-        title = ''
+
+        # step 1, parse url
+        m1 = _LINE_HAS_TEXT.match(line, m.end())
+        if m1:
+            url, title_pos = _parse_def_link_url(m1.end() - 1, line)
+        else:
+            cursor += 1
+            line = state.lines[cursor]
+            m2 = _LINE_HAS_TEXT.match(next_line)
+            if not m2:
+                # no url at all
+                return
+            url, title_pos = _parse_def_link_url(m2.end() - 1, line)
+
+        # step 2, parse title
+        title, cursor = _parse_def_link_title(title_pos, line, cursor, state)
+        if not title:
+            return
+
+        key = unikey(m.group(1)[1:-1])
         if key not in state.def_links:
-            state.def_links[key] = (link, title)
+            state.def_links[key] = {'url': url, 'title': title}
         return cursor + 1
 
     def parse_block_quote(self, line, cursor, state):
@@ -498,7 +520,7 @@ def _process_continue_line(current, line, trim):
 
 def _prepare_list_patterns(current, m1, bullet):
     text = expand_leading_tab(m1.group(3))
-    m2 = _LIST_HAS_TEXT.match(text)
+    m2 = _LINE_HAS_TEXT.match(text)
     if m2:
         # indent code
         if text.startswith('     '):
@@ -530,3 +552,62 @@ def _prepare_list_patterns(current, m1, bullet):
     continue_spaces = ' ' * continue_width
     continue_re = re.compile(r'^' + continue_spaces + ' *\S')
     return trim, next_re, continue_re
+
+
+def _parse_def_link_url(pos, line):
+    m1 = LINK_BRACKET_RE.match(line, pos)
+    if m1:
+        url = m1.group(0)[1:-1]
+        return url, m1.end()
+
+    m2 = _DEF_LINK_URL_END.search(line, pos)
+    url = line[pos:m2.start()]
+    return url, m2.end()
+
+
+_BREAK_PATTERN = re.compile(r'|'.join([
+    BlockParser.BLANK_LINE.pattern,
+    BlockParser.SETEX_HEADING.pattern,
+    BlockParser.AXT_HEADING.pattern,
+    BlockParser.THEMATIC_BREAK.pattern,
+    BlockParser.FENCED_CODE.pattern,
+    BlockParser.BLOCK_QUOTE.pattern,
+    BlockParser.LIST.pattern,
+]))
+
+
+def _parse_def_link_title(pos, line, cursor, state):
+    if not _LINE_HAS_TEXT.match(line, pos):
+        if cursor >= state.cursor_end:
+            return None, cursor
+
+        cursor += 1
+        line = state.lines[cursor]
+        pos = 0
+
+    m = _DEF_LINK_TITLE_START.match(line, pos)
+    if not m:
+        return None, cursor
+
+    start_pos = m.end()
+    marker = m.group(1)
+    end_pattern = re.compile(re.escape(marker) + r'\s*$')
+
+    m2 = end_pattern.search(line, start_pos)
+    if m2:
+        title = line[start_pos:m2.start()]
+        return title, cursor
+
+    rv = line[start_pos:]
+    while cursor < state.cursor_end:
+        cursor += 1
+        line = state.lines[cursor]
+        if _BREAK_PATTERN.match(line):
+            return None, cursor
+
+        m3 = end_pattern.search(line)
+        if m3:
+            rv += '\n' + line[:m3.start()]
+            return rv, cursor
+        rv += '\n' + line
+    return None, cursor

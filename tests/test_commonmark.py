@@ -5,6 +5,7 @@ from tests import BaseTestCase
 
 
 DIFF_CASES = {
+    'setext_headings_093',
 }
 
 IGNORE_CASES = {

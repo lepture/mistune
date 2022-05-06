@@ -50,6 +50,8 @@ class Markdown:
         for hook in self.after_render_hooks:
             result = hook(self, result, state)
 
+        if self.renderer:
+            result = self.renderer.finalize(result, state)
         return result
 
     def read(self, filepath, encoding='utf-8', state=None):

@@ -1,176 +1,21 @@
+# Differences
+
 Results different than commonmark.
 
 
-## Links
+## Setext headings
 
-`[` and `]` must be escaped in link label. e.g
 
-```
-[link \[foo \[bar\]\]](/uri)
-```
-
-Unlike CommomMark, below text will not be a link.
-
-```````````````````````````````` example
-[link [foo [bar]]](/uri)
-.
-<p>[link [foo [bar]]](/uri)</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[link *foo **bar** `#`*](/uri)
-.
-<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo [bar](/uri)](/uri)
-.
-<p><a href="/uri">foo [bar](/uri)</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-*[foo*](/uri)
-.
-<p><em>[foo</em>](/uri)</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo <bar attr="](baz)">
-.
-<p><a href="baz">foo &lt;bar attr=&quot;</a>&quot;&gt;</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo`](/uri)`
-.
-<p>[foo`](/uri)`</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo<http://example.com/?search=](uri)>
-.
-<p><a href="uri">foo&lt;http://example.com/?search=</a>&gt;</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[link *foo **bar** `#`*][ref]
-
-[ref]: /uri
-.
-<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo [bar](/uri)][ref]
-
-[ref]: /uri
-.
-<p><a href="/uri">foo [bar](/uri)</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-*[foo*][ref]
-
-[ref]: /uri
-.
-<p><em>[foo</em>]<a href="/uri">ref</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo *bar][ref]
-
-[ref]: /uri
-.
-<p><a href="/uri">foo *bar</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo <bar attr="][ref]">
-
-[ref]: /uri
-.
-<p><a href="/uri">foo &lt;bar attr=&quot;</a>&quot;&gt;</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[foo<http://example.com/?search=][ref]>
-
-[ref]: /uri
-.
-<p><a href="/uri">foo&lt;http://example.com/?search=</a>&gt;</p>
-````````````````````````````````
-
-```````````````````````````````` example
-**[hello](/)**
-.
-<p><strong><a href="/">hello</a></strong></p>
-````````````````````````````````
-
-Harmful link protection:
-
-```````````````````````````````` example
-<javascript:alert(0)>
-.
-<p><a href="#harmful-link">javascript:alert(0)</a></p>
-````````````````````````````````
-
-## Lists
-
-```````````````````````````````` example
-- foo
-  - baz
-- baz
-.
-<ul>
-<li>foo<ul>
-<li>baz</li>
-</ul>
-</li>
-<li>baz</li>
-</ul>
-````````````````````````````````
-
-```````````````````````````````` example
-- a
-  - b
-    - c
-      - d
-        - e
-          - f
-            - g
-.
-<ul>
-<li>a<ul>
-<li>b<ul>
-<li>c<ul>
-<li>d<ul>
-<li>e<ul>
-<li>f
-- g</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-````````````````````````````````
+Example: 93
 
 
 ```````````````````````````````` example
-* test
-    ```
-    print()
-    ```
+> foo
+bar
+===
 .
-<ul>
-<li>test<pre><code>print()
-</code></pre>
-</li>
-</ul>
+<blockquote>
+<h1>foo
+bar</h1>
+</blockquote>
 ````````````````````````````````

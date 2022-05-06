@@ -62,7 +62,7 @@ class BlockState:
 
         # for list and block quote chain
         self.in_block = None
-        self.list_tight = False
+        self.list_tight = True
         self.parent = None
 
     def prev_token(self):
@@ -88,14 +88,14 @@ class BlockParser:
 
     BLANK_LINE = re.compile(r'^\s*$')
     AXT_HEADING = re.compile(r'^( {0,3})(#{1,6})(?!#+)(?: *$|\s+\S)')
-    SETEX_HEADING = re.compile(r'^ *(=|-){2,}[ \t]*$')
+    SETEX_HEADING = re.compile(r'^ *(=|-){1,}[ \t]*$')
     THEMATIC_BREAK = re.compile(
         r'^ {0,3}((?:-[ \t]*){3,}|'
         r'(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$'
     )
 
     INDENT_CODE = re.compile(r'^(?: {4}| *\t).+$')
-    FENCED_CODE = re.compile(r'^( {0,3})(`{3,}|~{3,})([^`]*)$')
+    FENCED_CODE = re.compile(r'^( {0,3})(`{3,}|~{3,})')
 
     BLOCK_QUOTE = re.compile(r'^( {0,3})>(.*)')
     LIST = re.compile(r'^( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)$')
@@ -114,11 +114,11 @@ class BlockParser:
 
     RULE_NAMES = (
         'blank_line',
+        'fenced_code',
+        'indent_code',
         'axt_heading',
         'setex_heading',
-        'fenced_code',
         'thematic_break',
-        'indent_code',
         'block_quote',
         'list',
         'def_link',
@@ -137,8 +137,8 @@ class BlockParser:
 
         self.rules = rules
 
-        self.block_quote_rules = _filter_def_rules(block_quote_rules)
-        self.list_rules = _filter_def_rules(list_rules)
+        self.block_quote_rules = block_quote_rules
+        self.list_rules = list_rules
         self.max_block_depth = max_block_depth
 
         # register default parse methods
@@ -195,7 +195,16 @@ class BlockParser:
         start_line = cursor
         spaces = m.group(1)
         marker = m.group(2)
-        info = ESCAPE_CHAR_RE.sub(r'\1', m.group(3))
+        info = line[len(spaces) + len(marker):]
+
+        _c = marker[0]
+        if _c == '`':
+            # CommonMark Example 145
+            # Info strings for backtick code blocks cannot contain backticks
+            if info.find(_c) != -1:
+                return
+
+        info = ESCAPE_CHAR_RE.sub(r'\1', info)
         _end = re.compile('^ {0,3}' + marker[0] + '{' + str(len(marker)) + r',}\s*$')
 
         code = ''
@@ -212,7 +221,7 @@ class BlockParser:
 
         token = {'type': 'block_code', 'raw': code}
         if info:
-            token['attrs'] = {'info': info}
+            token['attrs'] = {'info': info.strip()}
 
         state.add_token(token, start_line, cursor)
         return cursor + 1
@@ -227,7 +236,7 @@ class BlockParser:
         text = line[spaces + level:]
 
         # remove last #
-        text = _AXT_HEADING_TRIM.sub('', text).strip()
+        text = _AXT_HEADING_TRIM.sub('', text)
 
         token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
         state.add_token(token, cursor, cursor)
@@ -256,7 +265,7 @@ class BlockParser:
         else:
             cursor += 1
             line = state.lines[cursor]
-            m2 = _LINE_HAS_TEXT.match(next_line)
+            m2 = _LINE_HAS_TEXT.match(line)
             if not m2:
                 # no url at all
                 return
@@ -264,12 +273,15 @@ class BlockParser:
 
         # step 2, parse title
         title, cursor = _parse_def_link_title(title_pos, line, cursor, state)
-        if not title:
+        if not cursor:
             return
 
         key = unikey(m.group(1)[1:-1])
         if key not in state.def_links:
-            state.def_links[key] = {'url': url, 'title': title}
+            attrs = {'url': url}
+            if title:
+                attrs['title'] = title
+            state.def_links[key] = attrs
         return cursor + 1
 
     def parse_block_quote(self, line, cursor, state):
@@ -281,7 +293,7 @@ class BlockParser:
 
         # cleanup at first to detect if it is code block
         text = m.group(2)
-        text = expand_leading_tab(text)
+        text = expand_leading_tab(text, 3)
         text = _BLOCK_QUOTE_TRIM.sub('', text)
 
         require_marker = bool(
@@ -290,6 +302,7 @@ class BlockParser:
             or self.FENCED_CODE.match(text)
         )
 
+        prev_blank_line = False
         cursor_next = None
         while cursor < state.cursor_end:
             cursor += 1
@@ -309,14 +322,34 @@ class BlockParser:
             if cursor_next:
                 break
 
+            # fenced code brean block quote
+            cursor_next = self.parse_fenced_code(line, cursor, state)
+            if cursor_next:
+                break
+
             cursor_next = self.parse_list(line, cursor, state)
             if cursor_next:
                 break
+
+            if _BLOCK_QUOTE_LEADING.match(line):
+                line = _BLOCK_QUOTE_LEADING.sub('', line)
+                line = expand_leading_tab(line, 3)
+                line = _BLOCK_QUOTE_TRIM.sub('', line)
+                prev_blank_line = bool(self.BLANK_LINE.match(line))
+            elif prev_blank_line:
+                # CommonMark Example 249
+                # because of laziness, a blank line is needed between
+                # a block quote and a following paragraph
+                cursor = cursor - 1
+                break
+            else:
+                # lazy continuation line
+                line = expand_leading_tab(line, 3)
             text += '\n' + line
 
-        text = _BLOCK_QUOTE_LEADING.sub('', text)
-        text = expand_leading_tab(text)
-        text = _BLOCK_QUOTE_TRIM.sub('', text)
+        # according to CommonMark Example 6, the second tab should be
+        # treated as 4 spaces
+        text = _EXPAND_TAB.sub(r'\1    ', text)
 
         # scan children state
         lines = text.splitlines()
@@ -350,32 +383,58 @@ class BlockParser:
         if not m1:
             return
 
-        start_line = cursor
-
         marker = m1.group(2)
+        ordered = len(marker) != 1
+
+        attrs = {'ordered': ordered}
+        if ordered:
+            start = int(marker[:-1])
+            if start != 1:
+                # Example 304
+                # we allow only lists starting with 1 to interrupt paragraphs
+                prev_token = state.prev_token()
+                if prev_token and prev_token['type'] == 'paragraph':
+                    prev_token['text'] += '\n' + line
+                    prev_token['end_line'] = cursor + state.cursor_root
+                    return cursor + 1
+
+                attrs['start'] = start
+
+        start_line = cursor
         bullet = _get_list_bullet(marker)
 
         current = []
         trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
         prev_blank_line = not bool(current)
 
-        child = self.state_cls()
-        child.parent = state
-        child.in_block = 'list'
-        child.cursor_root = start_line
+        child_state = self.state_cls()
+        child_state.parent = state
+        child_state.in_block = 'list'
+        child_state.cursor_root = start_line
 
-        list_loose = False
         list_items = []
 
+        cursor_next = None
         while cursor < state.cursor_end:
             cursor += 1
             line = state.lines[cursor]
 
-            m3 = continue_re.match(line)
-            if m3:
-                _process_continue_line(current, line, trim)
+            # hr break at first
+            cursor_next = self.parse_thematic_break(line, cursor, state)
+            if cursor_next:
+                break
+
+            # this is a blank line, continue
+            is_blank_line = bool(self.BLANK_LINE.match(line))
+            if is_blank_line:
+                current.append('')
+                prev_blank_line = True
                 continue
 
+            # expand tab for next_re and continue_re
+            line = expand_leading_tab(line)
+
+            # a new list item
             m1 = next_re.match(line)
             if m1:
                 list_items.append(current)
@@ -384,22 +443,24 @@ class BlockParser:
                 prev_blank_line = not bool(current)
                 continue
 
-            if prev_blank_line and not m3:
+            # next line contains enough white space
+            cm = continue_re.match(line)
+            if cm:
+                _process_continue_line(current, line, trim)
+                prev_blank_line = False
+                continue
+            elif prev_blank_line:
                 cursor = cursor - 1
                 break
 
             if self.LIST.match(line):
                 cursor = cursor - 1
                 break
-
-            prev_blank_line = bool(self.BLANK_LINE.match(line))
-            if prev_blank_line and not list_loose:
-                list_loose = True
-
+            # lazy continue
             _process_continue_line(current, line, trim)
 
+        # add the last list item into group
         list_items.append(current)
-        child.list_tight = not list_loose
 
         depth = state.depth()
         if depth >= self.max_block_depth:
@@ -408,51 +469,48 @@ class BlockParser:
         else:
             rules = self.list_rules
 
-        ordered = len(marker) != 1
-        attrs = {'depth': depth, 'ordered': ordered}
-
         children = [
-            self._parse_list_item(item, child, rules, attrs)
-            for item in list_items
+            self._parse_list_item(item, child_state, rules)
+            for item in list_items if item
         ]
 
-        if ordered:
-            start = int(marker[:-1])
-            if start != 1:
-                # copy, because _parse_list_item is using it
-                attrs = dict(attrs)
-                attrs['start'] = start
-
+        attrs['depth'] = depth
+        attrs['tight'] = child_state.list_tight
         token = {'type': 'list', 'children': children, 'attrs': attrs}
+        if cursor_next:
+            last_token = state.tokens.pop()
+            state.add_token(token, start_line, cursor - 1)
+            state.tokens.append(last_token)
+            return cursor_next
+
         state.add_token(token, start_line, cursor)
         return cursor + 1
 
-    def _parse_list_item(self, lines, state, rules, attrs):
+    def _parse_list_item(self, lines, state, rules):
         state.tokens = []
         state.lines = lines
         state.cursor_end = len(lines) - 1
+
         self.parse(state.cursor_start, state, rules)
+        if state.list_tight and _is_loose_list(state.tokens):
+            state.list_tight = False
+
         # reset cursor root for counting
         state.cursor_root += len(lines)
-        return {'type': 'list_item', 'children': state.tokens, 'attrs': attrs}
+        return {'type': 'list_item', 'children': state.tokens}
 
     def parse_block_html(self, m, state):
         html = m.group(0).rstrip()
         return {'type': 'block_html', 'raw': html}
 
     def parse_paragraph(self, line, cursor, state):
-        if state.list_tight:
-            token_type = 'block_text'
-        else:
-            token_type = 'paragraph'
-
         prev_token = state.prev_token()
-        if prev_token and prev_token['type'] == token_type:
+        if prev_token and prev_token['type'] == 'paragraph':
             prev_token['text'] += '\n' + line
             prev_token['end_line'] = cursor + state.cursor_root
             return cursor + 1
 
-        state.add_token({'type': token_type, 'text': line}, cursor, cursor)
+        state.add_token({'type': 'paragraph', 'text': line}, cursor, cursor)
         return cursor + 1
 
     def parse(self, cursor, state, rules):
@@ -474,35 +532,38 @@ class BlockParser:
     def render(self, state, inline):
         return self._call_render(state.tokens, state, inline)
 
-    def _call_render(self, tokens, state, inline):
-        data = self._iter_render(tokens, state, inline)
+    def _call_render(self, tokens, state, inline, is_tight=False):
+        data = self._iter_render(tokens, state, inline, is_tight)
         if inline.renderer:
-            return inline.renderer.finalize(data)
+            return inline.renderer(data)
         return list(data)
 
-    def _iter_render(self, tokens, state, inline):
+    def _iter_render(self, tokens, state, inline, is_tight):
         for tok in tokens:
             if 'children' in tok:
-                children = self._call_render(tok['children'], state, inline)
+                children = tok['children']
+                if tok['type'] == 'list':
+                    _tight = tok['attrs']['tight']
+                    children = self._call_render(children, state, inline, _tight)
+                elif tok['type'] == 'list_item':
+                    children = self._call_render(children, state, inline, is_tight)
+                else:
+                    children = self._call_render(children, state, inline)
                 tok['children'] = children
             elif 'text' in tok:
                 text = tok.pop('text')
-                children = inline(text, state)
+                children = inline(text.strip(), state)
                 tok['children'] = children
+                if is_tight and tok['type'] == 'paragraph':
+                    tok['type'] = 'block_text'
             yield tok
 
 
-def expand_leading_tab(text):
+def expand_leading_tab(text, width=4):
+    def _expand_tab_repl(m):
+        s = m.group(1)
+        return s + ' ' * (width - len(s))
     return _EXPAND_TAB.sub(_expand_tab_repl, text)
-
-
-def _filter_def_rules(rules):
-    return [rule for rule in rules if not rule.startswith('def_')]
-
-
-def _expand_tab_repl(m):
-    s = m.group(1)
-    return s + ' ' * (4 - len(s))
 
 
 def _get_list_bullet(marker):
@@ -521,21 +582,26 @@ def _get_list_bullet(marker):
 
 
 def _process_continue_line(current, line, trim):
-    line = expand_leading_tab(line)
     if not current:
         current.append(line)
     elif line.startswith(trim):
         line = line.replace(trim, '', 1)
+        # according to CommonMark Example 5
+        # tab should be treated as 4 spaces
+        line = _EXPAND_TAB.sub(r'\1    ', line)
         current.append(line)
     else:
         current[-1] += '\n' + line.lstrip()
 
 
 def _prepare_list_patterns(current, m1, bullet):
-    text = expand_leading_tab(m1.group(3))
+    # according to Example 7, tab should be treated as 3 spaces
+    text = expand_leading_tab(m1.group(3), 3)
+    text = _EXPAND_TAB.sub(r'\1    ', text)
+
     m2 = _LINE_HAS_TEXT.match(text)
     if m2:
-        # indent code
+        # indent code, startswith 5 spaces
         if text.startswith('     '):
             space_width = 1
         else:
@@ -548,23 +614,28 @@ def _prepare_list_patterns(current, m1, bullet):
 
     # space and marker
     leading_width = len(m1.group(1)) + len(m1.group(2))
+    continue_width = leading_width + space_width
+
+    if leading_width > 3:
+        leading_width = 3
 
     # check if line is new list item
     next_re = re.compile(
-        r'^( {0,' + str(leading_width) + '})'
+        r'( {0,' + str(leading_width) + '})'
         r'(' + bullet + ')'
         r'([ \t]*|[ \t].+)$'
     )
-    continue_width = leading_width + space_width
+
     trim = ' ' * continue_width
-
-    # same list item
-    if continue_width > 4:
-        continue_width = 4
-
-    continue_spaces = ' ' * continue_width
-    continue_re = re.compile(r'^' + continue_spaces + ' *\S')
+    continue_re = re.compile(trim + r'\s*\S')
     return trim, next_re, continue_re
+
+
+def _is_loose_list(tokens):
+    for tok in tokens:
+        if tok['type'] == 'blank_line':
+            return True
+    return False
 
 
 def _parse_def_link_url(pos, line):
@@ -590,37 +661,59 @@ _BREAK_PATTERN = re.compile(r'|'.join([
 
 
 def _parse_def_link_title(pos, line, cursor, state):
-    if not _LINE_HAS_TEXT.match(line, pos):
-        if cursor >= state.cursor_end:
-            return None, cursor
+    if _LINE_HAS_TEXT.match(line, pos):
+        m = _DEF_LINK_TITLE_START.match(line)
+        if not m:
+            # case 1: [ref]: /url non-title
+            return None, None
 
-        cursor += 1
-        line = state.lines[cursor]
-        pos = 0
+        title, cursor_next = _parse_def_link_continue_title(m, line, cursor, state)
+        if title:
+            # case 2: [ref] /url "title"
+            # case 3: with multiple lines title
+            return title, cursor_next
+        return None, None
 
-    m = _DEF_LINK_TITLE_START.match(line, pos)
-    if not m:
+    # case 4: end of line, no title
+    if cursor >= state.cursor_end:
         return None, cursor
 
-    start_pos = m.end()
+    # case 5: title is in next line
+    cursor += 1
+    line = state.lines[cursor]
+    m = _DEF_LINK_TITLE_START.match(line)
+    if not m:
+        # next line is not title, but def link has url
+        return None, cursor - 1
+
+    title, cursor_next = _parse_def_link_continue_title(m, line, cursor, state)
+    if title:
+        return title, cursor_next
+    return None, cursor - 1
+
+
+def _parse_def_link_continue_title(m, line, cursor, state):
+    pos = m.end()
     marker = m.group(1)
     end_pattern = re.compile(re.escape(marker) + r'\s*$')
 
-    m2 = end_pattern.search(line, start_pos)
+    m2 = end_pattern.search(line, pos)
+    # title finished in one line
     if m2:
-        title = line[start_pos:m2.start()]
+        title = line[pos:m2.start()]
         return title, cursor
 
-    rv = line[start_pos:]
+    # title has multiple lines
+    title = line[pos:]
     while cursor < state.cursor_end:
         cursor += 1
         line = state.lines[cursor]
         if _BREAK_PATTERN.match(line):
-            return None, cursor
+            return None, None
 
         m3 = end_pattern.search(line)
         if m3:
-            rv += '\n' + line[:m3.start()]
-            return rv, cursor
+            title += '\n' + line[:m3.start()]
+            return title, cursor
         rv += '\n' + line
-    return None, cursor
+    return None, None

@@ -37,7 +37,7 @@ INLINE_HTML = (
     r'(?<!\\)<![A-Z][\s\S]+?>|'  # doctype
     r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
 )
-_ESCAPE_GRAVE_ACCENT = re.compile(r'\\([\\`])')
+_ESCAPE_BACKTICK = re.compile(r'\\([\\`])')
 
 
 
@@ -314,7 +314,7 @@ class InlineParser:
 
         _c = re.escape(marker[0])
         _regex = r'(.*?(?:[^\s' + _c + ']))' + re.escape(marker)
-        pattern1 = re.compile(_regex)
+        pattern1 = re.compile(_regex, re.S)
         m1 = pattern1.match(m.string, pos)
         if not m1:
             return self.record_text(pos, marker, state)
@@ -357,7 +357,7 @@ class InlineParser:
         m = pattern.match(m.string, pos)
         if m:
             code = m.group(1)
-            code = _ESCAPE_GRAVE_ACCENT.sub(r'\1', code)
+            code = _ESCAPE_BACKTICK.sub(r'\1', code)
             state.tokens.append({'type': 'codespan', 'raw': code})
             return m.end()
         return self.record_text(pos, marker, state)
@@ -413,7 +413,7 @@ class InlineParser:
 
     def render_tokens(self, tokens):
         if self.renderer:
-            return self.renderer.finalize(tokens)
+            return self.renderer(tokens)
         return list(tokens)
 
     def __call__(self, s, state):

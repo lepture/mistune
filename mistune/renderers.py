@@ -23,20 +23,26 @@ class BaseRenderer(object):
     def _iter_tokens(self, tokens):
         for tok in tokens:
             func = self._get_method(tok['type'])
+
             if 'raw' in tok:
-                yield func(tok['raw'])
+                children = tok['raw']
             elif 'children' in tok:
                 children = tok['children']
-                attrs = tok.get('attrs')
-                if attrs:
-                    yield func(children, **attrs)
-                else:
-                    yield func(children)
             else:
                 yield func()
+                continue
 
-    def finalize(self, tokens):
+            attrs = tok.get('attrs')
+            if attrs:
+                yield func(children, **attrs)
+            else:
+                yield func(children)
+
+    def __call__(self, tokens):
         return ''.join(self._iter_tokens(tokens))
+
+    def finalize(self, result, state):
+        return result.strip()
 
 
 
@@ -98,7 +104,7 @@ class HTMLRenderer(BaseRenderer):
         return '<code>' + escape(text) + '</code>'
 
     def linebreak(self):
-        return '<br />\n'
+        return '\n<br />'
 
     def inline_html(self, html):
         if self._escape:
@@ -106,49 +112,49 @@ class HTMLRenderer(BaseRenderer):
         return html
 
     def paragraph(self, text):
-        return '<p>' + text + '</p>\n'
+        return '\n<p>' + text + '</p>'
 
     def heading(self, text, level):
         tag = 'h' + str(level)
-        return '<' + tag + '>' + text + '</' + tag + '>\n'
+        return '\n<' + tag + '>' + text + '</' + tag + '>'
 
     def blank_line(self):
         return ''
 
     def thematic_break(self):
-        return '<hr />\n'
+        return '\n<hr />'
 
     def block_text(self, text):
         return text
 
     def block_code(self, code, info=None):
-        html = '<pre><code'
+        html = '\n<pre><code'
         if info is not None:
             info = info.strip()
         if info:
             lang = info.split(None, 1)[0]
             lang = escape_html(lang)
             html += ' class="language-' + lang + '"'
-        return html + '>' + escape(code) + '</code></pre>\n'
+        return html + '>' + escape(code) + '</code></pre>'
 
     def block_quote(self, text):
-        return '<blockquote>\n' + text + '</blockquote>\n'
+        return '\n<blockquote>' + text + '\n</blockquote>'
 
     def block_html(self, html):
         if not self._escape:
-            return html + '\n'
-        return '<p>' + escape(html) + '</p>\n'
+            return '\n' + html
+        return '\n<p>' + escape(html) + '</p>'
 
     def block_error(self, html):
         return '<div class="error">' + html + '</div>\n'
 
-    def list(self, text, ordered, start=None, depth=None):
+    def list(self, text, ordered, start=None, depth=None, tight=True):
         if ordered:
-            html = '<ol'
+            html = '\n<ol'
             if start is not None:
                 html += ' start="' + str(start) + '"'
-            return html + '>\n' + text + '</ol>\n'
-        return '<ul>\n' + text + '</ul>\n'
+            return html + '>' + text + '\n</ol>'
+        return '\n<ul>' + text + '\n</ul>'
 
-    def list_item(self, text, ordered=False, depth=None):
-        return '<li>' + text + '</li>\n'
+    def list_item(self, text):
+        return '\n<li>' + text + '</li>'

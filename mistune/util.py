@@ -24,6 +24,12 @@ LINK_TITLE_RE = re.compile(
 )
 LINK_BRACKET_RE = re.compile(r'<(?:[^<>\n\\\x00]|\\.)*>')
 
+HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
+HTML_ATTRIBUTES = (
+    r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
+    r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+)
+
 
 def escape(s, quote=True):
     s = s.replace("&", "&amp;")

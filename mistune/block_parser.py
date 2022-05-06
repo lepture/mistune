@@ -4,6 +4,8 @@ from .util import (
     ESCAPE_CHAR_RE,
     LINK_LABEL,
     LINK_BRACKET_RE,
+    HTML_TAGNAME,
+    HTML_ATTRIBUTES,
 )
 
 _EXPAND_TAB = re.compile(r'^( {0,3})\t', flags=re.M)
@@ -26,25 +28,8 @@ _BLOCK_TAGS = {
     'source', 'summary', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead',
     'title', 'tr', 'track', 'ul'
 }
-_BLOCK_HTML_RULE6 = (
-    r'</?(?:' + '|'.join(_BLOCK_TAGS) + r')'
-    r'(?: +|\n|/?>)[\s\S]*?'
-    r'(?:\n{2,}|\n*$)'
-)
-_BLOCK_HTML_RULE7 = (
-    # open tag
-    r'<(?!script|pre|style)([a-z][\w-]*)(?:'
-    r' +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"|'
-    r''' *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?'''
-    r')*? */?>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)|'
-    # close tag
-    r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
-)
-
-# aggressive block html: comments, pre, script, style
-_BLOCK_HTML_AGGRESSIVE = (
-    r'(?:<(script|pre|style)(?:\s|>)|<!--)'
-)
+_OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'\s*>\s*$')
+_CLOSE_TAG_END = re.compile(r'\s*>\s*$')
 
 
 class BlockState:
@@ -109,15 +94,15 @@ class BlockParser:
 
     DEF_LINK = re.compile(r'^ {0,3}(' + LINK_LABEL + '):')
 
-    BLOCK_HTML = re.compile((
-        r' {0,3}(?:'
-        r'<(script|pre|style)[\s>][\s\S]*?(?:</\1>[^\n]*\n+|$)|'
-        r'<!--(?!-?>)[\s\S]*?-->[^\n]*\n+|'
-        r'<\?[\s\S]*?\?>[^\n]*\n+|'
-        r'<![A-Z][\s\S]*?>[^\n]*\n+|'
-        r'<!\[CDATA\[[\s\S]*?\]\]>[^\n]*\n+'
-        r'|' + _BLOCK_HTML_RULE6 + '|' + _BLOCK_HTML_RULE7 + ')'
-    ), re.I)
+    BLOCK_HTML = re.compile(
+        r'( {0,3})(?:'
+        r'<(?P<open_tag>' + HTML_TAGNAME + r')|'  # open tag
+        r'</(?P<close_tag>' + HTML_TAGNAME + r')|'  # close tag
+        r'<!--|' # comment
+        r'<\?|'  # script
+        r'<![A-Z]|'
+        r'<!\[CDATA\[)'
+    )
 
     RULE_NAMES = (
         'blank_line',
@@ -129,7 +114,7 @@ class BlockParser:
         'block_quote',
         'list',
         'def_link',
-        # 'block_html',
+        'block_html',
     )
 
     def __init__(self, rules=None, block_quote_rules=None, list_rules=None, max_block_depth=6):
@@ -514,16 +499,69 @@ class BlockParser:
 
         self.parse(state.cursor_start, state, rules)
         if state.list_tight and _is_loose_list(state.tokens):
-            print(state.tokens)
             state.list_tight = False
 
         # reset cursor root for counting
         state.cursor_root += len(lines)
         return {'type': 'list_item', 'children': state.tokens}
 
-    def parse_block_html(self, m, state):
-        html = m.group(0).rstrip()
-        return {'type': 'block_html', 'raw': html}
+    def parse_block_html(self, line, cursor, state):
+        m = self.BLOCK_HTML.match(line)
+        if not m:
+            return
+
+        start_cursor = cursor
+        open_tag = m.group('open_tag')
+        close_tag = m.group('close_tag')
+
+        # rule 1
+        if open_tag in ('pre', 'script', 'style', 'textarea'):
+            end_tag = '</' + open_tag + '>'
+            return _parse_html_to_end(end_tag, line, cursor, state)
+
+        # rule 6
+        if open_tag in _BLOCK_TAGS or close_tag in _BLOCK_TAGS:
+            text = line
+            while cursor < state.cursor_end:
+                cursor += 1
+                line = state.lines[cursor]
+                if self.BLANK_LINE.match(line):
+                    break
+                text += '\n' + line
+            state.add_token({'type': 'block_html', 'raw': text}, start_cursor, cursor)
+            return cursor + 1
+
+        spaces = m.group(1)
+        # rule 2
+        if line.startswith(spaces + '<!--'):
+            return _parse_html_to_end('-->', line, cursor, state)
+
+        # rule 3
+        if line.startswith(spaces + '<?'):
+            return _parse_html_to_end('?>', line, cursor, state)
+
+        # rule 5
+        if line.startswith(spaces + '<![CDATA['):
+            return _parse_html_to_end(']]>', line, cursor, state)
+
+        # rule 4
+        if line.startswith(spaces + '<!'):
+            return _parse_html_to_end('>', line, cursor, state)
+
+        # Blocks of type 7 may not interrupt a paragraph.
+        cursor_next = state.add_to_paragraph(line, cursor)
+        if cursor_next:
+            return cursor_next
+
+        # rule 7
+        if open_tag:
+            pos = m.end()
+            if _OPEN_TAG_END.match(line, pos):
+                return _parse_html_to_newline(line, cursor, state)
+        elif close_tag:
+            pos = m.end()
+            if _CLOSE_TAG_END.match(line, pos):
+                return _parse_html_to_newline(line, cursor, state)
 
     def parse_paragraph(self, line, cursor, state):
         cursor_next = state.add_to_paragraph(line, cursor)
@@ -734,3 +772,28 @@ def _parse_def_link_continue_title(m, line, cursor, state):
             return title, cursor
         rv += '\n' + line
     return None, None
+
+
+def _parse_html_to_end(end, line, cursor, state):
+    start = cursor
+    text = line
+    while end not in line and cursor < state.cursor_end:
+        cursor += 1
+        line = state.lines[cursor]
+        text += '\n' + line
+
+    state.add_token({'type': 'block_html', 'raw': text}, start, cursor)
+    return cursor + 1
+
+
+def _parse_html_to_newline(line, cursor, state):
+    start = cursor
+    text = line
+    while cursor < state.cursor_end:
+        cursor += 1
+        line = state.lines[cursor]
+        if BlockParser.BLANK_LINE.match(line):
+            break
+        text += '\n' + line
+    state.add_token({'type': 'block_html', 'raw': text}, start, cursor)
+    return cursor + 1

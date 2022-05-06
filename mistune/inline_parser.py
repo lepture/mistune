@@ -4,6 +4,8 @@ from .util import (
     LINK_LABEL,
     LINK_TITLE_RE,
     LINK_BRACKET_RE,
+    HTML_TAGNAME,
+    HTML_ATTRIBUTES,
     PREVENT_BACKSLASH,
     ESCAPE_CHAR_RE,
 
@@ -24,18 +26,13 @@ AUTO_EMAIL = (
     r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>'
 )
 
-HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
-HTML_ATTRIBUTES = (
-    r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
-    r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
-)
 INLINE_HTML = (
-    r'(?<!\\)<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
-    r'(?<!\\)</' + HTML_TAGNAME + r'\s*>|'  # close tag
-    r'(?<!\\)<!--(?!>|->)(?:(?!--)[\s\S])+?(?<!-)-->|'  # comment
-    r'(?<!\\)<\?[\s\S]+?\?>|'
-    r'(?<!\\)<![A-Z][\s\S]+?>|'  # doctype
-    r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
+    r'<' + HTML_TAGNAME + HTML_ATTRIBUTES + r'\s*/?>|'  # open tag
+    r'</' + HTML_TAGNAME + r'\s*>|'  # close tag
+    r'<!--(?!>|->)(?:(?!--)[\s\S])+?(?<!-)-->|'  # comment
+    r'<\?[\s\S]+?\?>|'    # script like <?php?>
+    r'<![A-Z][\s\S]+?>|'  # doctype
+    r'<!\[CDATA[\s\S]+?\]\]>'  # cdata
 )
 _ESCAPE_BACKTICK = re.compile(r'\\([\\`])')
 

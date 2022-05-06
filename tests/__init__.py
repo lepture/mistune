@@ -33,4 +33,4 @@ def normalize_html(html):
     html = re.sub(r'\s*\n+\s*', '\n', html)
     html = re.sub(r'>\n', '>', html)
     html = re.sub(r'\n<', '<', html)
-    return html
+    return html.strip()

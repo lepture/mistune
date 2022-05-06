@@ -37,6 +37,7 @@ INLINE_HTML = (
     r'(?<!\\)<![A-Z][\s\S]+?>|'  # doctype
     r'(?<!\\)<!\[CDATA[\s\S]+?\]\]>'  # cdata
 )
+_ESCAPE_GRAVE_ACCENT = re.compile(r'\\([\\`])')
 
 
 
@@ -310,7 +311,10 @@ class InlineParser:
                 return self.record_text(pos, marker, state)
             hole = None
 
-        pattern = re.compile(r'(.+?)(?<=[^\s])' + re.escape(marker), re.S)
+
+        _c = re.escape(marker[0])
+        _leading = r'((?:\\' + _c + r'|[^' + _c + r'\x00])+)(?<=\S)'
+        pattern = re.compile(_leading + re.escape(marker))
         m = pattern.match(m.string, pos)
         if m:
             if hole:
@@ -344,12 +348,14 @@ class InlineParser:
     def parse_codespan(self, m, state):
         marker = m.group('codespan')
         # require same marker with same length at end
-        pattern = re.compile(r'(.+)(?<!`)' + marker + r'(?!`)', re.S)
+
         pos = m.end()
 
+        pattern = re.compile(r'((?:\\`|[^`\x00])+)' + marker + r'(?!`)')
         m = pattern.match(m.string, pos)
         if m:
             code = m.group(1)
+            code = _ESCAPE_GRAVE_ACCENT.sub(r'\1', code)
             state.tokens.append({'type': 'codespan', 'raw': code})
             return m.end()
         return self.record_text(pos, marker, state)

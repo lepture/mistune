@@ -282,7 +282,7 @@ class InlineParser:
 
         text = text[1:-1]
         url = 'mailto:' + text
-        self._parse_auto_email(url, text, state)
+        self._parse_auto_link(url, text, state)
         return pos
 
     def _parse_auto_link(self, url, text, state):

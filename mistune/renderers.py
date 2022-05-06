@@ -86,9 +86,9 @@ class HTMLRenderer(BaseRenderer):
             s += ' title="' + escape_html(title) + '"'
         return s + '>' + text + '</a>'
 
-    def image(self, src, alt="", title=None):
-        src = self._safe_url(src)
-        alt = escape_html(alt)
+    def image(self, text, url, title=None):
+        src = self._safe_url(url)
+        alt = escape_html(text)
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + escape_html(title) + '"'

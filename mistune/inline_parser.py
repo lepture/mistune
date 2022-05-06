@@ -49,7 +49,7 @@ class InlineState:
         self.in_strong = False
 
     def copy(self):
-        state = InlineState(self)
+        state = self.__class__(self)
         state.in_link = self.in_link
         state.in_emphasis = self.in_emphasis
         state.in_strong = self.in_strong
@@ -57,6 +57,7 @@ class InlineState:
 
 
 class InlineParser:
+    state_cls = InlineState
 
     # we only need to find the start pattern of an inline token
     SPECIFICATION = [
@@ -408,4 +409,4 @@ class InlineParser:
         return list(tokens)
 
     def __call__(self, s, state):
-        return self.render_text(s, InlineState(state))
+        return self.render_text(s, self.state_cls(state))

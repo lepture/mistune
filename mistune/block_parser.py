@@ -33,6 +33,11 @@ _BLOCK_HTML_RULE7 = (
     r'</(?!script|pre|style)[a-z][\w-]*\s*>(?=\s*\n)[\s\S]*?(?:\n{2,}|\n*$)'
 )
 
+# aggressive block html: comments, pre, script, style
+_BLOCK_HTML_AGGRESSIVE = (
+    r'(?:<(script|pre|style)(?:\s|>)|<!--)'
+)
+
 
 class BlockState:
     def __init__(self):
@@ -67,6 +72,7 @@ class BlockState:
 
 
 class BlockParser:
+    state_cls = BlockState
 
     BLANK_LINE = re.compile(r'^\s*$')
     AXT_HEADING = re.compile(r'^ {0,3}(#{1,6})(?!#+)(.*)')
@@ -276,7 +282,7 @@ class BlockParser:
 
         # scan children state
         lines = text.splitlines()
-        child = BlockState()
+        child = self.state_cls()
         child.cursor_root = start_line
         child.in_block = 'block_quote'
         child.parent = state
@@ -315,7 +321,7 @@ class BlockParser:
         trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
         prev_blank_line = not bool(current)
 
-        child = BlockState()
+        child = self.state_cls()
         child.parent = state
         child.in_block = 'list'
         child.cursor_root = start_line

@@ -1,4 +1,4 @@
-from .block_parser import BlockState, BlockParser, expand_leading_tab
+from .block_parser import BlockParser, expand_leading_tab
 from .inline_parser import InlineParser
 
 
@@ -31,7 +31,7 @@ class Markdown:
 
     def parse(self, s, state=None):
         if state is None:
-            state = BlockState()
+            state = self.block.state_cls()
 
         lines = s.splitlines()
         state.lines = lines
@@ -54,7 +54,7 @@ class Markdown:
 
     def read(self, filepath, encoding='utf-8', state=None):
         if state is None:
-            state = BlockState()
+            state = self.block.state_cls()
 
         state.filepath = filepath
         with open(filepath, 'rb') as f:

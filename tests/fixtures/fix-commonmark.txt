@@ -11,3 +11,83 @@ Links can't contain links.
 <p><a href="/foo">&lt;https://example.com&gt;</a></p>
 ````````````````````````````````
 
+## Codespan
+
+Codespan can escape grave accent (`).
+
+```````````````````````````````` example
+`\`\`\`lang` is fenced code
+.
+<p><code>```lang</code> is fenced code</p>
+````````````````````````````````
+
+## Emphasis
+
+`<em>` doesn't contain `<em>`, `<strong>` doesn't contain `<strong>`.
+
+```````````````````````````````` example
+*_em_* __**strong**__ ______m______
+.
+<p><em>_em_</em> <strong>**strong**</strong> ___<em><strong>m</strong></em>___</p>
+````````````````````````````````
+
+### Non aggressive emphasis
+
+```````````````````````````````` example
+*a **b c* d**
+.
+<p><em>a **b c</em> d**</p>
+````````````````````````````````
+
+While CommonMark would render it into:
+
+```
+<p><em>a <em><em>b c</em> d</em></em></p>
+```
+
+```````````````````````````````` example
+*a **b c* d**
+.
+<p><em>a **b c</em> d**</p>
+````````````````````````````````
+
+While CommonMark would render it into:
+
+```
+<p><em>a <em><em>b c</em> d</em></em></p>
+```
+
+What if the string is:
+
+```````````````````````````````` example
+*a **b c* d
+.
+<p><em>a **b c</em> d</p>
+````````````````````````````````
+
+CommonMark would still be a mess:
+
+```
+<p>*a *<em>b c</em> d</p>
+```
+
+There are so many insane cases for emphasis, people
+shouldn't write such text. There are cases CommonMark
+are bad at, and there are cases Mistune bad at.
+
+For example:
+
+```
+*a **b** d*
+```
+
+Because Mistune is not aggressive on emphasis parsing,
+it will find `b*` as the emphasis end, in this case,
+the final result would be:
+
+
+```````````````````````````````` example
+*a **b** d*
+.
+<p><em>a **b</em>* d*</p>
+````````````````````````````````

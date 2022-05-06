@@ -3,11 +3,13 @@ Results different than commonmark.
 
 ## Links
 
-```````````````````````````````` example
-[**foo**]
-.
-<p>[<strong>foo</strong>]</p>
-````````````````````````````````
+`[` and `]` must be escaped in link label. e.g
+
+```
+[link \[foo \[bar\]\]](/uri)
+```
+
+Unlike CommomMark, below text will not be a link.
 
 ```````````````````````````````` example
 [link [foo [bar]]](/uri)

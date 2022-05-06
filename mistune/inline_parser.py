@@ -13,7 +13,7 @@ from .util import (
 )
 
 LINK_LABEL_RE = re.compile(LINK_LABEL)
-LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + '\))')
+LINK_HREF_END_RE = re.compile(r'(?:\s+)|(?:' + PREVENT_BACKSLASH + r'\))')
 
 PAREN_START_RE = re.compile(r'\(\s*')
 PAREN_END_RE = re.compile(r'\s*' + PREVENT_BACKSLASH + r'\)')
@@ -313,37 +313,39 @@ class InlineParser:
 
 
         _c = re.escape(marker[0])
-        _leading = r'((?:\\' + _c + r'|[^' + _c + r'\x00])+)(?<=\S)'
-        pattern = re.compile(_leading + re.escape(marker))
-        m = pattern.match(m.string, pos)
-        if m:
-            if hole:
-                state.tokens.append({'type': 'text', 'raw': hole})
+        _regex = r'(.*?(?:[^\s' + _c + ']))' + re.escape(marker)
+        pattern1 = re.compile(_regex)
+        m1 = pattern1.match(m.string, pos)
+        if not m1:
+            return self.record_text(pos, marker, state)
 
-            new_state = state.copy()
-            text = m.group(1)
-            if len(marker) == 1:
-                new_state.in_emphasis = True
-                children = self.render_text(text, new_state)
-                state.tokens.append({'type': 'emphasis', 'children': children})
-            elif len(marker) == 2:
-                new_state.in_strong = True
-                children = self.render_text(text, new_state)
-                state.tokens.append({'type': 'strong', 'children': children})
-            else:
-                new_state.in_emphasis = True
-                new_state.in_strong = True
+        if hole:
+            state.tokens.append({'type': 'text', 'raw': hole})
 
-                children = self.render_tokens([{
-                    'type': 'strong',
-                    'children': self.render_text(text, new_state)
-                }])
-                state.tokens.append({
-                    'type': 'emphasis',
-                    'children': children,
-                })
-            return m.end()
-        return self.record_text(pos, marker, state)
+        new_state = state.copy()
+        text = m1.group(1)
+        end_pos = m1.end()
+        if len(marker) == 1:
+            new_state.in_emphasis = True
+            children = self.render_text(text, new_state)
+            state.tokens.append({'type': 'emphasis', 'children': children})
+        elif len(marker) == 2:
+            new_state.in_strong = True
+            children = self.render_text(text, new_state)
+            state.tokens.append({'type': 'strong', 'children': children})
+        else:
+            new_state.in_emphasis = True
+            new_state.in_strong = True
+
+            children = self.render_tokens([{
+                'type': 'strong',
+                'children': self.render_text(text, new_state)
+            }])
+            state.tokens.append({
+                'type': 'emphasis',
+                'children': children,
+            })
+        return end_pos
 
     def parse_codespan(self, m, state):
         marker = m.group('codespan')

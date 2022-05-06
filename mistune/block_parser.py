@@ -124,10 +124,12 @@ class BlockParser:
             list_rules = list(self.RULE_NAMES)
 
         self.rules = rules
-        self.block_quote_rules = block_quote_rules
-        self.list_rules = list_rules
+
+        self.block_quote_rules = _filter_def_rules(block_quote_rules)
+        self.list_rules = _filter_def_rules(list_rules)
         self.max_block_depth = max_block_depth
 
+        # register default parse methods
         self.__methods = {
             name: getattr(self, 'parse_' + name) for name in self.RULE_NAMES
         }
@@ -457,6 +459,10 @@ class BlockParser:
 
 def expand_leading_tab(text):
     return _EXPAND_TAB.sub(_expand_tab_repl, text)
+
+
+def _filter_def_rules(rules):
+    return [rule for rule in rules if not rule.startswith('def_')]
 
 
 def _expand_tab_repl(m):

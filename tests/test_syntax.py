@@ -9,4 +9,4 @@ class TestSyntax(BaseTestCase):
 
 
 TestSyntax.load_fixtures('fix-commonmark.txt')
-TestSyntax.load_fixtures('diff-commonmark.txt')
+# TestSyntax.load_fixtures('diff-commonmark.txt')

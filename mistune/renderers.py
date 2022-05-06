@@ -5,16 +5,17 @@ class BaseRenderer(object):
     NAME = 'base'
 
     def __init__(self):
-        self._methods = {}
+        self.__methods = {}
 
     def register(self, name, method):
-        self._methods[name] = method
+        # bind self into renderer method
+        self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
 
     def _get_method(self, name):
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
-            method = self._methods.get(name)
+            method = self.__methods.get(name)
             if not method:
                 raise AttributeError('No renderer "{!r}"'.format(name))
             return method

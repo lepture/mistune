@@ -403,17 +403,12 @@ class BlockParser:
         start_line = cursor
         bullet = _get_list_bullet(marker)
 
-        current = []
-        trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
-        prev_blank_line = not bool(current)
-
-        child_state = self.state_cls()
-        child_state.parent = state
-        child_state.in_block = 'list'
-        child_state.cursor_root = start_line
-
         list_items = []
 
+        current = []
+        trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
+
+        prev_blank_line = False
         cursor_next = None
         while cursor < state.cursor_end:
             cursor += 1
@@ -427,7 +422,6 @@ class BlockParser:
             # this is a blank line, continue
             is_blank_line = bool(self.BLANK_LINE.match(line))
             if is_blank_line:
-                current.append('')
                 prev_blank_line = True
                 continue
 
@@ -438,24 +432,33 @@ class BlockParser:
             m1 = next_re.match(line)
             if m1:
                 list_items.append(current)
-                current = []
+                if prev_blank_line:
+                    current = ['']
+                else:
+                    current = []
                 trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
-                prev_blank_line = not bool(current)
+                prev_blank_line = False
                 continue
 
             # next line contains enough white space
             cm = continue_re.match(line)
             if cm:
+                if prev_blank_line:
+                    current.append('')
+
                 _process_continue_line(current, line, trim)
                 prev_blank_line = False
                 continue
             elif prev_blank_line:
-                cursor = cursor - 1
+                # not a continue line, and previous line is blank
+                cursor = cursor - 2
                 break
 
+            # a new kind of list delemiter
             if self.LIST.match(line):
                 cursor = cursor - 1
                 break
+
             # lazy continue
             _process_continue_line(current, line, trim)
 
@@ -469,9 +472,14 @@ class BlockParser:
         else:
             rules = self.list_rules
 
+        child_state = self.state_cls()
+        child_state.parent = state
+        child_state.in_block = 'list'
+        child_state.cursor_root = start_line
+
         children = [
             self._parse_list_item(item, child_state, rules)
-            for item in list_items if item
+            for item in list_items
         ]
 
         attrs['depth'] = depth
@@ -493,6 +501,7 @@ class BlockParser:
 
         self.parse(state.cursor_start, state, rules)
         if state.list_tight and _is_loose_list(state.tokens):
+            print(state.tokens)
             state.list_tight = False
 
         # reset cursor root for counting
@@ -582,16 +591,14 @@ def _get_list_bullet(marker):
 
 
 def _process_continue_line(current, line, trim):
-    if not current:
-        current.append(line)
-    elif line.startswith(trim):
+    if line.startswith(trim):
         line = line.replace(trim, '', 1)
         # according to CommonMark Example 5
         # tab should be treated as 4 spaces
         line = _EXPAND_TAB.sub(r'\1    ', line)
         current.append(line)
     else:
-        current[-1] += '\n' + line.lstrip()
+        current.append(line)
 
 
 def _prepare_list_patterns(current, m1, bullet):

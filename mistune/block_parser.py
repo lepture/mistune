@@ -74,6 +74,13 @@ class BlockState:
         token['end_line'] = end_line + self.cursor_root
         self.tokens.append(token)
 
+    def add_to_paragraph(self, line, cursor):
+        prev_token = self.prev_token()
+        if prev_token and prev_token['type'] == 'paragraph':
+            prev_token['text'] += '\n' + line
+            prev_token['end_line'] = cursor + self.cursor_root
+            return cursor + 1
+
     def depth(self):
         d = 0
         parent = self.parent
@@ -164,11 +171,9 @@ class BlockParser:
             return
 
         # it is a part of the paragraph
-        prev_token = state.prev_token()
-        if prev_token and prev_token['type'] == 'paragraph':
-            prev_token['text'] += '\n' + line
-            prev_token['end_line'] = cursor + state.cursor_root
-            return cursor + 1
+        cursor_next = state.add_to_paragraph(line, cursor)
+        if cursor_next:
+            return cursor_next
 
         start_line = cursor
         code = line
@@ -392,22 +397,29 @@ class BlockParser:
             if start != 1:
                 # Example 304
                 # we allow only lists starting with 1 to interrupt paragraphs
-                prev_token = state.prev_token()
-                if prev_token and prev_token['type'] == 'paragraph':
-                    prev_token['text'] += '\n' + line
-                    prev_token['end_line'] = cursor + state.cursor_root
-                    return cursor + 1
+                cursor_next = state.add_to_paragraph(line, cursor)
+                if cursor_next:
+                    return cursor_next
 
                 attrs['start'] = start
 
-        start_line = cursor
         bullet = _get_list_bullet(marker)
-
-        list_items = []
-
         current = []
         trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
+        if not current:
+            # Example 285
+            # an empty list item cannot interrupt a paragraph
+            cursor_next = state.add_to_paragraph(line, cursor)
+            if cursor_next:
+                return cursor_next
 
+        start_line = cursor
+        child_state = self.state_cls()
+        child_state.parent = state
+        child_state.in_block = 'list'
+        child_state.cursor_root = start_line
+
+        list_items = []
         prev_blank_line = False
         cursor_next = None
         while cursor < state.cursor_end:
@@ -431,11 +443,11 @@ class BlockParser:
             # a new list item
             m1 = next_re.match(line)
             if m1:
-                list_items.append(current)
                 if prev_blank_line:
-                    current = ['']
-                else:
-                    current = []
+                    child_state.list_tight = False
+
+                list_items.append(current)
+                current = []  # reset, a new list item
                 trim, next_re, continue_re = _prepare_list_patterns(current, m1, bullet)
                 prev_blank_line = False
                 continue
@@ -444,6 +456,11 @@ class BlockParser:
             cm = continue_re.match(line)
             if cm:
                 if prev_blank_line:
+                    # Example 280
+                    # A list item can begin with at most one blank line
+                    if not current:
+                        cursor = cursor - 1
+                        break
                     current.append('')
 
                 _process_continue_line(current, line, trim)
@@ -472,10 +489,6 @@ class BlockParser:
         else:
             rules = self.list_rules
 
-        child_state = self.state_cls()
-        child_state.parent = state
-        child_state.in_block = 'list'
-        child_state.cursor_root = start_line
 
         children = [
             self._parse_list_item(item, child_state, rules)
@@ -513,12 +526,9 @@ class BlockParser:
         return {'type': 'block_html', 'raw': html}
 
     def parse_paragraph(self, line, cursor, state):
-        prev_token = state.prev_token()
-        if prev_token and prev_token['type'] == 'paragraph':
-            prev_token['text'] += '\n' + line
-            prev_token['end_line'] = cursor + state.cursor_root
-            return cursor + 1
-
+        cursor_next = state.add_to_paragraph(line, cursor)
+        if cursor_next:
+            return cursor_next
         state.add_token({'type': 'paragraph', 'text': line}, cursor, cursor)
         return cursor + 1
 

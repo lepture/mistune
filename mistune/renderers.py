@@ -104,7 +104,7 @@ class HTMLRenderer(BaseRenderer):
         return '<code>' + escape(text) + '</code>'
 
     def linebreak(self):
-        return '\n<br />'
+        return '<br />\n'
 
     def inline_html(self, html):
         if self._escape:
@@ -112,49 +112,49 @@ class HTMLRenderer(BaseRenderer):
         return html
 
     def paragraph(self, text):
-        return '\n<p>' + text + '</p>'
+        return '<p>' + text + '</p>\n'
 
     def heading(self, text, level):
         tag = 'h' + str(level)
-        return '\n<' + tag + '>' + text + '</' + tag + '>'
+        return '<' + tag + '>' + text + '</' + tag + '>\n'
 
     def blank_line(self):
         return ''
 
     def thematic_break(self):
-        return '\n<hr />'
+        return '<hr />\n'
 
     def block_text(self, text):
         return text
 
     def block_code(self, code, info=None):
-        html = '\n<pre><code'
+        html = '<pre><code'
         if info is not None:
             info = info.strip()
         if info:
             lang = info.split(None, 1)[0]
             lang = escape_html(lang)
             html += ' class="language-' + lang + '"'
-        return html + '>' + escape(code) + '</code></pre>'
+        return html + '>' + escape(code) + '</code></pre>\n'
 
     def block_quote(self, text):
-        return '\n<blockquote>' + text + '\n</blockquote>'
+        return '<blockquote>' + text + '\n</blockquote>\n'
 
     def block_html(self, html):
         if not self._escape:
-            return '\n' + html
-        return '\n<p>' + escape(html) + '</p>'
+            return html + '\n'
+        return '<p>' + escape(html) + '</p>\n'
 
     def block_error(self, html):
         return '<div class="error">' + html + '</div>\n'
 
     def list(self, text, ordered, start=None, depth=None, tight=True):
         if ordered:
-            html = '\n<ol'
+            html = '<ol'
             if start is not None:
                 html += ' start="' + str(start) + '"'
-            return html + '>' + text + '\n</ol>'
-        return '\n<ul>' + text + '\n</ul>'
+            return html + '>' + text + '\n</ol>\n'
+        return '<ul>\n' + text + '</ul>\n'
 
     def list_item(self, text):
-        return '\n<li>' + text + '</li>'
+        return '<li>' + text + '</li>\n'

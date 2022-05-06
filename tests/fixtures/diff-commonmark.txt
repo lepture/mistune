@@ -19,3 +19,44 @@ bar
 bar</h1>
 </blockquote>
 ````````````````````````````````
+
+Example: 300
+
+h2 setext headings is confusion, it is the same with `<hr>`. Because there
+is a logic for `<hr>` to interupt list, I would like to make it simpler:
+
+
+```````````````````````````````` example
+- # Foo
+- Bar
+  ---
+  baz
+.
+<ul>
+<li>
+<h1>Foo</h1>
+</li>
+<li>Bar</li>
+</ul>
+<hr />
+<p>baz</p>
+````````````````````````````````
+
+However, if the dash is less than 3, it is not a `<hr>`, in this case, it
+can be rendered into `<h2>`.
+
+```````````````````````````````` example
+- # Foo
+- Bar
+  --
+  baz
+.
+<ul>
+<li>
+<h1>Foo</h1>
+</li>
+<li>
+<h2>Bar</h2>
+baz</li>
+</ul>
+````````````````````````````````

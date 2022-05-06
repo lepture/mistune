@@ -1,3 +1,4 @@
+import re
 from tests import fixtures
 from unittest import TestCase
 
@@ -26,3 +27,10 @@ class BaseTestCase(TestCase):
     def assert_case(self, name, text, html):
         result = self.md(text)
         self.assertEqual(result, html)
+
+
+def normalize_html(html):
+    html = re.sub(r'\s*\n+\s*', '\n', html)
+    html = re.sub(r'>\n', '>', html)
+    html = re.sub(r'\n<', '<', html)
+    return html

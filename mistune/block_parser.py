@@ -179,6 +179,7 @@ class BlockParser:
 
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
+        code = code.strip('\n')
         state.add_token({'type': 'block_code', 'raw': code}, start_line, cursor)
         return cursor + 1
 
@@ -211,7 +212,7 @@ class BlockParser:
             code += line + '\n'
 
         if spaces and code:
-            _trim_pattern = re.compile('^' + spaces, re.M)
+            _trim_pattern = re.compile('^ {0,' + str(len(spaces)) + '}', re.M)
             code = _trim_pattern.sub('', code)
 
         token = {'type': 'block_code', 'raw': code}
@@ -434,6 +435,8 @@ class BlockParser:
             # this is a blank line, continue
             is_blank_line = bool(self.BLANK_LINE.match(line))
             if is_blank_line:
+                if prev_blank_line:
+                    current.append('')
                 prev_blank_line = True
                 continue
 

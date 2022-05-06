@@ -106,6 +106,9 @@ class HTMLRenderer(BaseRenderer):
     def linebreak(self):
         return '<br />\n'
 
+    def softbreak(self):
+        return '\n'
+
     def inline_html(self, html):
         if self._escape:
             return escape(html)
@@ -138,7 +141,7 @@ class HTMLRenderer(BaseRenderer):
         return html + '>' + escape(code) + '</code></pre>\n'
 
     def block_quote(self, text):
-        return '<blockquote>' + text + '\n</blockquote>\n'
+        return '<blockquote>' + text + '</blockquote>\n'
 
     def block_html(self, html):
         if not self._escape:

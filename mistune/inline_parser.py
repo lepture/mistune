@@ -85,10 +85,10 @@ class InlineParser:
     ]
 
     #: linebreak leaves two spaces at the end of line
-    SOFT_LINEBREAK = r'(?:\\| {2,})\n(?!\s*$)'
+    STD_LINEBREAK = r'(?:\\| {2,})\n\s*'
 
     #: every new line becomes <br>
-    HARD_LINEBREAK = r' *\n(?!\s*$)'
+    HARD_LINEBREAK = r' *\n\s*'
 
 
     def __init__(self, renderer, hard_wrap=False):
@@ -97,7 +97,8 @@ class InlineParser:
         if hard_wrap:
             self.specification.append(('linebreak', self.HARD_LINEBREAK))
         else:
-            self.specification.append(('linebreak', self.SOFT_LINEBREAK))
+            self.specification.append(('linebreak', self.STD_LINEBREAK))
+            self.specification.append(('softbreak', r' *\n\s*'))
 
         self.__methods = {
             name: getattr(self, 'parse_' + name) for name, _ in self.specification
@@ -383,6 +384,10 @@ class InlineParser:
 
     def parse_linebreak(self, m, state):
         state.tokens.append({'type': 'linebreak'})
+        return m.end()
+
+    def parse_softbreak(self, m, state):
+        state.tokens.append({'type': 'softbreak'})
         return m.end()
 
     def parse_inline_html(self, m, state):

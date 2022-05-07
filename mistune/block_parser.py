@@ -1,7 +1,9 @@
 import re
 from .util import (
     unikey,
+    escape,
     escape_url,
+    safe_entity,
     ESCAPE_CHAR_RE,
     LINK_LABEL,
     LINK_BRACKET_RE,
@@ -179,7 +181,7 @@ class BlockParser:
 
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
-        code = code.strip('\n')
+        code = escape(code.strip('\n'))
         state.add_token({'type': 'block_code', 'raw': code}, start_line, cursor)
         return cursor + 1
 
@@ -215,9 +217,9 @@ class BlockParser:
             _trim_pattern = re.compile('^ {0,' + str(len(spaces)) + '}', re.M)
             code = _trim_pattern.sub('', code)
 
-        token = {'type': 'block_code', 'raw': code}
+        token = {'type': 'block_code', 'raw': escape(code)}
         if info:
-            token['attrs'] = {'info': info.strip()}
+            token['attrs'] = {'info': safe_entity(info.strip())}
 
         state.add_token(token, start_line, cursor)
         return cursor + 1
@@ -288,7 +290,7 @@ class BlockParser:
             attrs = {'url': escape_url(url)}
             if title:
                 title = ESCAPE_CHAR_RE.sub(r'\1', title)
-                attrs['title'] = title
+                attrs['title'] = safe_entity(title)
             state.def_links[key] = attrs
         return cursor + 1
 

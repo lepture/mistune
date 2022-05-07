@@ -3,7 +3,7 @@ from .block_parser import BlockParser, BlockState
 from .inline_parser import InlineParser, InlineState
 from .renderers import HTMLRenderer
 # from .plugins import PLUGINS
-from .util import escape, escape_url, escape_html, unikey
+from .util import escape, escape_url, safe_entity, unikey
 
 
 def create_markdown(escape=True, hard_wrap=False, renderer=None, plugins=None):
@@ -69,7 +69,7 @@ __all__ = [
     'Markdown', 'HTMLRenderer',
     'BlockParser', 'BlockState',
     'InlineParser', 'InlineState',
-    'escape', 'escape_url', 'escape_html', 'unikey',
+    'escape', 'escape_url', 'safe_entity', 'unikey',
     'html', 'create_markdown', 'markdown',
 ]
 

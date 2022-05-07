@@ -1,4 +1,4 @@
-from .util import escape, escape_html
+from .util import escape
 
 
 class BaseRenderer(object):
@@ -78,20 +78,19 @@ class HTMLRenderer(BaseRenderer):
     def text(self, text):
         if self._escape:
             return escape(text)
-        return escape_html(text)
+        return text
 
     def link(self, text, url, title=None):
         s = '<a href="' + self._safe_url(url) + '"'
         if title:
-            s += ' title="' + escape_html(title) + '"'
+            s += ' title="' + title + '"'
         return s + '>' + text + '</a>'
 
     def image(self, text, url, title=None):
         src = self._safe_url(url)
-        alt = escape_html(text)
-        s = '<img src="' + src + '" alt="' + alt + '"'
+        s = '<img src="' + src + '" alt="' + escape(text) + '"'
         if title:
-            s += ' title="' + escape_html(title) + '"'
+            s += ' title="' + title + '"'
         return s + ' />'
 
     def emphasis(self, text):
@@ -101,7 +100,7 @@ class HTMLRenderer(BaseRenderer):
         return '<strong>' + text + '</strong>'
 
     def codespan(self, text):
-        return '<code>' + escape(text) + '</code>'
+        return '<code>' + text + '</code>'
 
     def linebreak(self):
         return '<br />\n'
@@ -136,9 +135,8 @@ class HTMLRenderer(BaseRenderer):
             info = info.strip()
         if info:
             lang = info.split(None, 1)[0]
-            lang = escape_html(lang)
             html += ' class="language-' + lang + '"'
-        return html + '>' + escape(code) + '</code></pre>\n'
+        return html + '>' + code + '</code></pre>\n'
 
     def block_quote(self, text):
         return '<blockquote>' + text + '</blockquote>\n'

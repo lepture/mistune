@@ -1,10 +1,13 @@
 import re
 try:
     from urllib.parse import quote
-    import html
 except ImportError:
     from urllib import quote
-    html = None
+
+try:
+    from html import _replace_charref
+except ImportError:
+    _replace_charref = None
 
 
 PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
@@ -21,8 +24,10 @@ LINK_BRACKET_RE = re.compile(
 HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
 HTML_ATTRIBUTES = (
     r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
-    r'(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+    r'(?:\s*=\s*(?:[^ !"\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 )
+
+
 
 
 def escape(s, quote=True):
@@ -40,18 +45,33 @@ def escape_url(link):
         '!$&()*+,;='      # sub-delims - "'" (rfc3986)
         '%'               # leave already-encoded octets alone
     )
-
-    if html is None:
-        return quote(link.encode('utf-8'), safe=safe)
-    return html.escape(quote(html.unescape(link), safe=safe))
+    return escape(quote(unescape(link), safe=safe))
 
 
-def escape_html(s):
-    if html is not None:
-        return html.escape(html.unescape(s)).replace('&#x27;', "'")
-    return escape(s)
+def safe_entity(s):
+    return escape(unescape(s))
 
 
 def unikey(s):
     key = ' '.join(s.split()).strip()
     return key.lower().upper()
+
+
+_charref = re.compile(
+    r'&(#[0-9]{1,7};'
+    r'|#[xX][0-9a-fA-F]+;'
+    r'|[^\t\n\f <&#;]{1,32};)'
+)
+
+
+def unescape(s):
+    """
+    Copy from `html.unescape`, but `_charref` is different. CommonMark
+    does not accept entity references without a trailing semicolon
+    """
+    if not _replace_charref:
+        return s
+
+    if '&' not in s:
+        return s
+    return _charref.sub(_replace_charref, s)

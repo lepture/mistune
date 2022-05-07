@@ -99,7 +99,7 @@ class BlockParser:
     BLOCK_QUOTE = re.compile(r'^( {0,3})>(.*)')
     LIST = re.compile(r'^( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)$')
 
-    DEF_LINK = re.compile(r'^ {0,3}(' + LINK_LABEL + '):')
+    DEF_LINK = re.compile(r'^ {0,3}\[(' + LINK_LABEL + ')\]:')
 
     BLOCK_HTML = re.compile(
         r'( {0,3})(?:'
@@ -145,8 +145,13 @@ class BlockParser:
             name: getattr(self, 'parse_' + name) for name in self.RULE_NAMES
         }
 
-    def register_rule(self, name, func):
+    def register_rule(self, name, func, before=None):
         self.__methods[name] = lambda state, cursor: func(self, state, cursor)
+        if before:
+            index = self.rules.index(before)
+            self.rules.insert(index, name)
+        else:
+            self.rules.append(name)
 
     def parse_blank_line(self, line, cursor, state):
         if self.BLANK_LINE.match(line):
@@ -260,7 +265,7 @@ class BlockParser:
         if cursor_next:
             return cursor_next
 
-        key = unikey(m.group(1)[1:-1])
+        key = unikey(m.group(1))
         if not key:
             return
 

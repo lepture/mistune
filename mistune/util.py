@@ -15,7 +15,7 @@ PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
 PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
 ESCAPE_CHAR_RE = re.compile(r'\\([' + PUNCTUATION + r'])')
 
-LINK_LABEL = r'\[(?:[^\\\[\]]|\\.){0,500}\]'
+LINK_LABEL = r'(?:[^\\\[\]]|\\.){0,500}'
 
 LINK_BRACKET_RE = re.compile(
     r'<(?:[^<>\n\\\x00]|\\.)*' + PREVENT_BACKSLASH + '>'

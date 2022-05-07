@@ -14,7 +14,7 @@ from .util import (
     unikey,
 )
 
-LINK_LABEL_RE = re.compile(LINK_LABEL)
+LINK_LABEL_RE = re.compile(r'\[' + LINK_LABEL + r'\]')
 LINK_HREF_END_RE = re.compile(
     r'''[ \t\n]+(?=[^ \t\n])|(?:''' + PREVENT_BACKSLASH + r'\))')
 
@@ -76,7 +76,7 @@ class InlineParser:
         ('emphasis', r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])'),
 
         # [link], ![img]
-        ('link', r'!?' + LINK_LABEL),
+        ('link', r'!?\[' + LINK_LABEL + r'\]'),
 
         # <https://example.com>. regex copied from commonmark.js
         ('auto_link', r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>'),
@@ -95,24 +95,30 @@ class InlineParser:
     def __init__(self, renderer, hard_wrap=False):
         self.renderer = renderer
         self.specification = list(self.SPECIFICATION)
-        if hard_wrap:
-            self.specification.append(('linebreak', self.HARD_LINEBREAK))
-        else:
-            self.specification.append(('linebreak', self.STD_LINEBREAK))
-            self.specification.append(('softbreak', r' *\n\s*'))
-
+        self.hard_wrap = hard_wrap
         self.__methods = {
             name: getattr(self, 'parse_' + name) for name, _ in self.specification
         }
         self._sc = None
 
     def _compile_sc(self):
+        # lazy add linebreak
+        if self.hard_wrap:
+            self.specification.append(('linebreak', self.HARD_LINEBREAK))
+        else:
+            self.specification.append(('linebreak', self.STD_LINEBREAK))
+            self.specification.append(('softbreak', self.HARD_LINEBREAK))
+
         regex = '|'.join('(?P<%s>%s)' % pair for pair in self.specification)
         self._sc = re.compile(regex)
 
-    def register_rule(self, name, pattern, method):
-        self.specification.append((name, pattern))
-        self.__methods[name] = lambda s, pos, state: method(self, s, pos, state)
+    def register_rule(self, name, pattern, func, before=None):
+        if before:
+            index = next(i for i, v in enumerate(self.specification) if v[0] == before)
+            self.specification.insert(index, (name, pattern))
+        else:
+            self.specification.append((name, pattern))
+        self.__methods[name] = lambda s, pos, state: func(self, s, pos, state)
 
     def parse_escape(self, m, state):
         text = m.group('escape')

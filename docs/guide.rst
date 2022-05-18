@@ -12,7 +12,7 @@ The ``.html()`` methods has enabled all the features you might want
 by default:
 
 * No escape of HTML tags
-* With **strikethough** plugin
+* With **strikethrough** plugin
 * With **table** plugin
 * With **footnote** plugin
 
@@ -46,7 +46,7 @@ Adding plugins::
     # ==>
     '<p>~~s~~</p>'
 
-    markdown = mistune.create_markdown(plugins=['strikethough'])
+    markdown = mistune.create_markdown(plugins=['strikethrough'])
     markdown('~~s~~')
     # ==>
     '<p><del>s</del></p>'

@@ -94,21 +94,22 @@ class InlineParser:
 
     def __init__(self, renderer, hard_wrap=False):
         self.renderer = renderer
-        self.specification = list(self.SPECIFICATION)
-        self.hard_wrap = hard_wrap
+
+        specification = list(self.SPECIFICATION)
+        # lazy add linebreak
+        if hard_wrap:
+            specification.append(('linebreak', self.HARD_LINEBREAK))
+        else:
+            specification.append(('linebreak', self.STD_LINEBREAK))
+            specification.append(('softbreak', self.HARD_LINEBREAK))
+
+        self.specification = specification
         self.__methods = {
-            name: getattr(self, 'parse_' + name) for name, _ in self.specification
+            name: getattr(self, 'parse_' + name) for name, _ in specification
         }
         self._sc = None
 
     def _compile_sc(self):
-        # lazy add linebreak
-        if self.hard_wrap:
-            self.specification.append(('linebreak', self.HARD_LINEBREAK))
-        else:
-            self.specification.append(('linebreak', self.STD_LINEBREAK))
-            self.specification.append(('softbreak', self.HARD_LINEBREAK))
-
         regex = '|'.join('(?P<%s>%s)' % pair for pair in self.specification)
         self._sc = re.compile(regex)
 

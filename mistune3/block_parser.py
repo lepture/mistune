@@ -20,7 +20,7 @@ from .helpers import (
 )
 
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
-_AXT_HEADING_TRIM = re.compile(r'\s+#+\s*$')
+_AXT_HEADING_TRIM = re.compile(r'(\s+|^)#+\s*$')
 _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 
@@ -44,14 +44,17 @@ _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 class BlockParser:
     state_cls = BlockState
 
-    BLANK_LINE = re.compile(r'(^\s*\n)+', re.M)
+    BLANK_LINE = re.compile(r'(^[ \t]*\n)+', re.M)
     AXT_HEADING = re.compile(r' {0,3}(#{1,6})(?!#+)([ \t]*|[ \t]+.*?)(?:\n|$)')
     SETEX_HEADING = re.compile(r' {0,3}(=|-){1,}[ \t]*(?:\n|$)')
     THEMATIC_BREAK = re.compile(
         r' {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n|$)'
     )
 
-    INDENT_CODE = re.compile(r'((?: {4}| *\t)[^\n]+(?:\n+|$))+')
+    INDENT_CODE = re.compile(
+        r'(?: {4}| *\t)[^\n]+(?:\n+|$)'
+        r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
+    )
     FENCED_CODE = re.compile(r'( {0,3})(`{3,}|~{3,})[ \t]*(.*?)(?:\n|$)')
 
     BLOCK_QUOTE = re.compile(r' {0,3}>(.*?(?:\n|$))')
@@ -161,15 +164,18 @@ class BlockParser:
             if info.find(c) != -1:
                 return
 
-        _end = re.compile(r'^ {0,3}' + c + '{' + str(len(marker)) + r',}\s*$', re.M)
+        _end = re.compile(
+            r'^ {0,3}' + c + '{' + str(len(marker)) + r',}[ \t]*(?:\n|$)', re.M)
         cursor_start = m.end()
 
         m2 = _end.search(state.src, cursor_start)
         if m2:
             code = state.src[cursor_start:m2.start()]
+            line_count = code.count('\n') + 2
             state.cursor = m2.end()
         else:
             code = state.src[cursor_start:]
+            line_count = code.count('\n') + 1
             state.cursor = state.cursor_max
 
         if spaces and code:
@@ -181,7 +187,6 @@ class BlockParser:
             info = ESCAPE_CHAR_RE.sub(r'\1', info)
             token['attrs'] = {'info': safe_entity(info.strip())}
 
-        line_count = code.count('\n') + 1
         state.add_token(token, line_count)
         return True
 
@@ -413,11 +418,14 @@ class BlockParser:
     def _parse_list_item(self, parent_state, match, children, rules):
         has_next = False
         line_root = parent_state.line
+        start_line = line_root + parent_state.line_root
 
         space_width = len(match.group(1))
         marker = match.group(2)
         leading_width = space_width + len(marker)
-        item_pattern = _compile_list_item_pattern(marker[-1], leading_width)
+
+        bullet = _get_list_bullet(marker[-1])
+        item_pattern = _compile_list_item_pattern(bullet, leading_width)
 
         pairs = [
             ('thematic_break', self.THEMATIC_BREAK.pattern),
@@ -425,13 +433,16 @@ class BlockParser:
             ('axt_heading', self.AXT_HEADING.pattern),
             ('block_quote', self.BLOCK_QUOTE.pattern),
             ('block_html', _BLOCK_HTML_BREAK.pattern),
-            ('break', r'[ \t]*\n {0,3}[ \t]*\S'),
+            ('list', self.LIST.pattern),
+            ('break', r'[ \t]*\n {0,3}(?!' + bullet + r')\S'),
         ]
         if leading_width < 3:
             _repl_w = str(leading_width)
             pairs = [(n, p.replace('3', _repl_w, 1)) for n, p in pairs]
 
-        pairs.append(('list_item', item_pattern))
+        pairs.insert(1, ('list_item', item_pattern))
+        # ('continue', r'')
+
         sc = re.compile('|'.join(r'(?P<%s>(?<=\n)%s)' % pair for pair in pairs))
         m = sc.search(parent_state.src, match.end())
         if m:
@@ -462,7 +473,6 @@ class BlockParser:
             if any((tok['type'] == 'blank_line' for tok in state.tokens)):
                 parent_state.list_tight = False
 
-        start_line = line_root + parent_state.line_root
         children.append({
             'type': 'list_item',
             'start_line':start_line,
@@ -579,7 +589,7 @@ class BlockParser:
             yield tok
 
 
-def _compile_list_item_pattern(c, leading_width):
+def _get_list_bullet(c):
     if c == '.':
         bullet = r'\d{0,9}\.'
     elif c == ')':
@@ -590,7 +600,10 @@ def _compile_list_item_pattern(c, leading_width):
         bullet = r'\+'
     else:
         bullet = '-'
+    return bullet
 
+
+def _compile_list_item_pattern(bullet, leading_width):
     if leading_width > 3:
         leading_width = 3
     return (

@@ -5,7 +5,6 @@ from tests import BaseTestCase, normalize_html
 
 DIFF_CASES = {
     'setext_headings_093',
-    'list_items_300',
 
     'links_495',  # return early
     'links_496',

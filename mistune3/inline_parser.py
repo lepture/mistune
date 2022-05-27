@@ -132,14 +132,14 @@ class InlineParser:
             c = m.string[end_pos]
             if c == '(':
                 # standard link [text](<url> "title")
-                attrs, pos2 = _parse_std_link(m.string, end_pos)
+                attrs, pos2 = _parse_std_link(m.string, end_pos + 1)
                 if pos2:
                     self._add_link_token(is_image, text, attrs, state)
                     return pos2
 
             elif c == '[':
                 # standard ref link [text][label]
-                label2, pos2 = parse_link_label(m.string, end_pos)
+                label2, pos2 = parse_link_label(m.string, end_pos + 1)
                 if pos2:
                     end_pos = pos2
                     if label2:
@@ -352,6 +352,7 @@ def _parse_std_link(src, pos):
     if not m:
         return None, None
 
+    href = ESCAPE_CHAR_RE.sub(r'\1', href)
     attrs = {'url': escape_url(href)}
     if title:
         attrs['title'] = safe_entity(title)

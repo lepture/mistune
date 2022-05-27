@@ -5,14 +5,13 @@ from tests import BaseTestCase, normalize_html
 
 DIFF_CASES = {
     'setext_headings_093',
+    'html_blocks_191',  # mistune keeps \n
 
     'links_495',  # return early
     'links_496',
 }
 
 IGNORE_CASES = {
-    'link_reference_definitions_208',  # we don't support it
-
     'code_spans_341',  # no higher precedence
     'code_spans_342',
 

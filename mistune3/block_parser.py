@@ -255,6 +255,7 @@ class BlockParser:
         state.line += text.count('\n')
 
         if key not in state.env['ref_links']:
+            href = ESCAPE_CHAR_RE.sub(r'\1', href)
             attrs = {'url': escape_url(href)}
             if title:
                 attrs['title'] = safe_entity(title)
@@ -511,13 +512,13 @@ class BlockParser:
         if marker == '<?':
             return _parse_html_to_end(state, '?>', m.end())
 
-        # rule 4
-        if marker == '<!':
-            return _parse_html_to_end(state, '>', m.end())
-
         # rule 5
         if marker == '<![CDATA[':
             return _parse_html_to_end(state, ']]>', m.end())
+
+        # rule 4
+        if marker.startswith('<!'):
+            return _parse_html_to_end(state, '>', m.end())
 
         close_tag = None
         open_tag = None

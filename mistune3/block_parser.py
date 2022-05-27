@@ -243,12 +243,26 @@ class BlockParser:
             max_pos = state.cursor_max
 
         title, title_pos = parse_link_title(state.src, href_pos, max_pos)
-        next_pos = title_pos or href_pos
-        m = _BLANK_TO_LINE.match(state.src, next_pos)
-        if not m:
+        if title_pos:
+            m = _BLANK_TO_LINE.match(state.src, title_pos)
+            if m:
+                title_pos = m.end()
+            else:
+                title_pos = None
+                title = None
+
+        if title_pos is None:
+            m = _BLANK_TO_LINE.match(state.src, href_pos)
+            if m:
+                href_pos = m.end()
+            else:
+                href_pos = None
+                href = None
+
+        end_pos = title_pos or href_pos
+        if not end_pos:
             return
 
-        end_pos = m.end()
         text = state.get_text(end_pos)
         state.cursor = end_pos
         state.line += text.count('\n')

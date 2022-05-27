@@ -16,7 +16,7 @@ LINK_HREF_INLINE_RE = re.compile(
 )
 
 LINK_TITLE_RE = re.compile(
-    r'(?:[ \t]*\n)?[ \t]+('
+    r'[ \t\n]+('
     r'"(?:\\[' + PUNCTUATION + r']|[^"\x00])*"|'  # "title"
     r"'(?:\\[" + PUNCTUATION + r"]|[^'\x00])*'"  # 'title'
     r')'

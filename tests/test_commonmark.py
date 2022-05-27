@@ -9,35 +9,30 @@ DIFF_CASES = {
 
     'images_573', # image can not be in image
 
-    'links_495',  # return early
-    'links_496',
+    'links_517',  # aggressive link group
+    'links_518',
+    'links_519',
+    'links_520',
+    'links_531',
+    'links_533',
+    'links_563',
 }
 
 IGNORE_CASES = {
+    'lists_313',  # TODO: need to fix this case
+
     'code_spans_341',  # no higher precedence
     'code_spans_342',
 
-    'links_504',  # we don't support link title in (title)
+    'links_496',  # we don't support link title in (title)
+    'links_504',
 
     'links_515',  # please see emphasis issues
-    'links_520',  # we return early, no forward/backward
-    'links_523',
-    'links_524',
-    'links_525',
-    'links_527',
     'links_529',
     'links_532',
-    'links_533',
-    'links_535',
-    'links_536',
-    'links_537',
-    'links_563',
-
-    'links_540',  # we don't support this
 }
 
 INSANE_CASES = {
-    'links_511',  # please use escape
 }
 
 

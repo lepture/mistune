@@ -89,11 +89,18 @@ class BlockState:
 class InlineState:
     def __init__(self, env):
         self.env = env
+        self.src = ''
         self.tokens = []
         self.in_image = False
         self.in_link = False
         self.in_emphasis = False
         self.in_strong = False
+
+    def insert_token(self, token):
+        self.tokens.insert(len(self.tokens) - 1, token)
+
+    def add_token(self, token):
+        self.tokens.append(token)
 
     def copy(self):
         state = self.__class__(self.env)

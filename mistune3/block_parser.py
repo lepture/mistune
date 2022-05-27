@@ -14,6 +14,7 @@ from .helpers import (
     PRE_TAGS,
     ESCAPE_CHAR_RE,
     EXPAND_TAB_RE,
+    strip_end,
     expand_leading_tab,
     parse_link_href,
     parse_link_title,
@@ -426,6 +427,7 @@ class BlockParser:
 
         bullet = _get_list_bullet(marker[-1])
         item_pattern = _compile_list_item_pattern(bullet, leading_width)
+        text, continue_width = _compile_continue_width(match.group(3), leading_width)
 
         pairs = [
             ('thematic_break', self.THEMATIC_BREAK.pattern),
@@ -434,14 +436,21 @@ class BlockParser:
             ('block_quote', self.BLOCK_QUOTE.pattern),
             ('block_html', _BLOCK_HTML_BREAK.pattern),
             ('list', self.LIST.pattern),
-            ('break', r'[ \t]*\n {0,3}(?!' + bullet + r')\S'),
         ]
         if leading_width < 3:
             _repl_w = str(leading_width)
             pairs = [(n, p.replace('3', _repl_w, 1)) for n, p in pairs]
 
         pairs.insert(1, ('list_item', item_pattern))
-        # ('continue', r'')
+        if text:
+            break_pattern = (
+                r'[ \t]*\n'
+                r' {0,' + str(continue_width - 1) + r'}(?!' + bullet + r')'
+                r'\S'
+            )
+        else:
+            break_pattern = r'[ \t]*\n( {0,3}(?!' + bullet + r')| {4,}| *\t)\S'
+        pairs.append(('break', break_pattern))
 
         sc = re.compile('|'.join(r'(?P<%s>(?<=\n)%s)' % pair for pair in pairs))
         m = sc.search(parent_state.src, match.end())
@@ -465,10 +474,14 @@ class BlockParser:
 
         state = self.state_cls(parent_state)
         state.line_root = line_root
-        text = _clean_list_item_text(src, match)
-        state.process(text)
+        text = _clean_list_item_text(src, text, continue_width)
 
+        if parent_state.list_tight and _LINE_BLANK_END.search(text):
+            parent_state.list_tight = False
+
+        state.process(strip_end(text))
         self.parse(state, rules)
+
         if parent_state.list_tight:
             if any((tok['type'] == 'blank_line' for tok in state.tokens)):
                 parent_state.list_tight = False
@@ -613,11 +626,9 @@ def _compile_list_item_pattern(bullet, leading_width):
     )
 
 
-def _clean_list_item_text(src, m):
-    # according to Example 7, tab should be treated as 3 spaces
-    text = expand_leading_tab(m.group(3), 3)
+def _compile_continue_width(text, leading_width):
+    text = expand_leading_tab(text, 3)
     text = EXPAND_TAB_RE.sub(r'\1    ', text)
-    rv = []
 
     m2 = _LINE_HAS_TEXT.match(text)
     if m2:
@@ -627,12 +638,23 @@ def _clean_list_item_text(src, m):
         else:
             space_width = len(m2.group(1))
 
-        rv.append(text[space_width:])
+        text = text[space_width:]
     else:
         space_width = 1
-        rv.append('')
+        text = ''
 
-    continue_width = len(m.group(1)) + len(m.group(2)) + space_width
+    continue_width = leading_width + space_width
+    return text, continue_width
+
+
+
+def _clean_list_item_text(src, text, continue_width):
+    # according to Example 7, tab should be treated as 3 spaces
+    if text:
+        rv = [text]
+    else:
+        rv = []
+
     trim_space = ' ' * continue_width
     lines = src.split('\n')
     for line in lines:
@@ -644,6 +666,7 @@ def _clean_list_item_text(src, m):
             rv.append(line)
         else:
             rv.append(line)
+
     return '\n'.join(rv)
 
 

@@ -33,9 +33,12 @@ class BlockState:
         self.src = src
         self.cursor_max = len(src)
 
-    def get_line(self):
+    def find_line_end(self):
         m = _LINE_END.search(self.src, self.cursor)
-        end_pos = m.end()
+        return m.end()
+
+    def get_line(self):
+        end_pos = self.find_line_end()
         text = self.get_text(end_pos)
         self.cursor = end_pos
         return text

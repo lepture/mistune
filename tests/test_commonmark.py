@@ -7,6 +7,8 @@ DIFF_CASES = {
     'setext_headings_093',
     'html_blocks_191',  # mistune keeps \n
 
+    'images_573', # image can not be in image
+
     'links_495',  # return early
     'links_496',
 }

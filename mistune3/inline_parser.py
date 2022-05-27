@@ -107,7 +107,8 @@ class InlineParser:
     def parse_link(self, m, state):
         pos = m.end()
 
-        is_image = m.group('link')[0] == '!'
+        marker = m.group('link')
+        is_image = marker[0] == '!'
         if is_image and state.in_image:
             state.tokens.append({'type': 'text', 'raw': marker})
             return pos

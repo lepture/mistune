@@ -30,7 +30,7 @@ def unikey(s):
     return key.lower().upper()
 
 
-_charref = re.compile(
+_charref_re = re.compile(
     r'&(#[0-9]{1,7};'
     r'|#[xX][0-9a-fA-F]+;'
     r'|[^\t\n\f <&#;]{1,32};)'
@@ -42,9 +42,13 @@ def unescape(s):
     Copy from `html.unescape`, but `_charref` is different. CommonMark
     does not accept entity references without a trailing semicolon
     """
-    if not _replace_charref:
-        return s
-
     if '&' not in s:
         return s
-    return _charref.sub(_replace_charref, s)
+    return _charref_re.sub(_replace_charref, s)
+
+
+_striptags_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
+
+
+def striptags(s):
+    return _striptags_re.sub('', s)

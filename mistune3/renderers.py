@@ -1,4 +1,4 @@
-from .util import escape
+from .util import escape, striptags
 
 
 class BaseRenderer(object):
@@ -88,7 +88,8 @@ class HTMLRenderer(BaseRenderer):
 
     def image(self, text, url, title=None):
         src = self._safe_url(url)
-        s = '<img src="' + src + '" alt="' + escape(text) + '"'
+        alt = escape(striptags(text))
+        s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + title + '"'
         return s + ' />'
@@ -112,19 +113,6 @@ class HTMLRenderer(BaseRenderer):
         if self._escape:
             return escape(html)
         return html
-
-    def picture(self, text, url, title=None):
-        if title is None:
-            alt = escape(text)
-        else:
-            alt = title
-
-        src = self._safe_url(url)
-        img = '<picture><img src="' + src + '" alt="' + alt + '" /></picture>'
-        return '<figure>' + img + '<figcaption>' + text + '</figcaption></figure>'
-
-    def block_image(self, text):
-        return '<div class="block-image">' + text + '</div>\n'
 
     def paragraph(self, text):
         return '<p>' + text + '</p>\n'

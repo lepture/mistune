@@ -41,7 +41,6 @@ _OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'[ \t]*>[ \t]*(?:\n|$)')
 _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 
 
-
 class BlockParser:
     state_cls = BlockState
 
@@ -523,12 +522,12 @@ class BlockParser:
         close_tag = None
         open_tag = None
         if marker.startswith('</'):
-            close_tag = marker[2:]
+            close_tag = marker[2:].lower()
             # rule 6
             if close_tag in BLOCK_TAGS:
                 return _parse_html_to_newline(state, self.BLANK_LINE)
         else:
-            open_tag = marker[1:]
+            open_tag = marker[1:].lower()
             # rule 1
             if open_tag in PRE_TAGS:
                 end_tag = '</' + open_tag + '>'
@@ -542,12 +541,12 @@ class BlockParser:
             return True
 
         # rule 7
-        if open_tag:
-            if _OPEN_TAG_END.match(state.src, m.end()):
-                return _parse_html_to_newline(state, self.BLANK_LINE)
-        elif close_tag:
-            if _CLOSE_TAG_END.match(state.src, m.end()):
-                return _parse_html_to_newline(state, self.BLANK_LINE)
+        start_pos = m.end()
+        end_pos = state.find_line_end()
+        text = state.get_text(end_pos)
+        if (open_tag and _OPEN_TAG_END.match(state.src, start_pos, end_pos)) or \
+           (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
+            return _parse_html_to_newline(state, self.BLANK_LINE)
 
     def parse_paragraph(self, state):
         if not state.append_paragraph():

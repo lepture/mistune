@@ -1,33 +1,6 @@
 import re
-try:
-    from urllib.parse import quote
-except ImportError:
-    from urllib import quote
-
-try:
-    from html import _replace_charref
-except ImportError:
-    _replace_charref = None
-
-
-PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
-
-PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
-ESCAPE_CHAR_RE = re.compile(r'\\([' + PUNCTUATION + r'])')
-
-LINK_LABEL = r'(?:[^\\\[\]]|\\.){0,500}'
-
-LINK_BRACKET_RE = re.compile(
-    r'<(?:[^<>\n\\\x00]|\\.)*' + PREVENT_BACKSLASH + '>'
-)
-
-HTML_TAGNAME = r'[A-Za-z][A-Za-z0-9-]*'
-HTML_ATTRIBUTES = (
-    r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*'
-    r'(?:\s*=\s*(?:[^ !"\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
-)
-
-
+from urllib.parse import quote
+from html import _replace_charref
 
 
 def escape(s, quote=True):

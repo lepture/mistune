@@ -33,14 +33,16 @@ class Markdown:
         if state is None:
             state = self.block.state_cls()
 
-        lines = s.splitlines()
-        state.lines = lines
-        state.cursor_end = len(lines) - 1
+        # normalize line separator
+        s = s.replace('\r\n', '\n')
+        s = s.replace('\r', '\n')
+
+        state.process(s)
 
         for hook in self.before_parse_hooks:
-            hook(self, s, state)
+            hook(self, state)
 
-        self.block.parse(state.cursor_start, state, self.block.rules)
+        self.block.parse(state, self.block.rules)
 
         for hook in self.before_render_hooks:
             hook(self, state)

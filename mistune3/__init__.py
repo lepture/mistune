@@ -2,7 +2,6 @@ from .markdown import Markdown
 from .block_parser import BlockParser, BlockState
 from .inline_parser import InlineParser, InlineState
 from .renderers import HTMLRenderer
-# from .plugins import PLUGINS
 from .util import escape, escape_url, safe_entity, unikey
 
 
@@ -73,4 +72,4 @@ __all__ = [
     'html', 'create_markdown', 'markdown',
 ]
 
-__version__ = '2.0.2'
+__version__ = '3.0.0'

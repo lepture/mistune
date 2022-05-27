@@ -1,5 +1,5 @@
 import re
-import mistune
+import mistune3 as mistune
 from tests import BaseTestCase, normalize_html
 
 

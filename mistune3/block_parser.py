@@ -86,7 +86,8 @@ class BlockParser:
         'block_html',
     )
 
-    def __init__(self, rules=None, block_quote_rules=None, list_rules=None, max_block_depth=6):
+    def __init__(self, rules=None, block_quote_rules=None, list_rules=None,
+                 max_nested_level=6):
         if rules is None:
             rules = list(self.RULE_NAMES)
 
@@ -100,7 +101,7 @@ class BlockParser:
 
         self.block_quote_rules = block_quote_rules
         self.list_rules = list_rules
-        self.max_block_depth = max_block_depth
+        self.max_nested_level = max_nested_level
 
         # register default parse methods
         self.__methods = {
@@ -369,7 +370,7 @@ class BlockParser:
         child.in_block = 'block_quote'
         child.process(text)
 
-        if state.depth() >= self.max_block_depth:
+        if state.depth() >= self.max_nested_level:
             rules = list(self.block_quote_rules)
             rules.remove('block_quote')
         else:
@@ -405,7 +406,7 @@ class BlockParser:
                 attrs['start'] = start
 
         depth = state.depth()
-        if depth >= self.max_block_depth:
+        if depth >= self.max_nested_level:
             rules = list(self.list_rules)
             rules.remove('list')
         else:

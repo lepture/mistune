@@ -102,27 +102,6 @@ class InlineState:
     def add_token(self, token):
         self.tokens.append(token)
 
-    def scan_delims(self, start, split_marker):
-        left_franking = True
-        right_franking = True
-        if start > 0:
-            prev_char = self.src[start - 1]
-        else:
-            prev_char = ' '
-        marker = self.src[start]
-
-        pos = start + 1
-        pos_max = len(self.src)
-        while pos < pos_max and this.src[pos] == marker:
-            pos += 1
-
-        marker_count = pos - start
-        if pos < pos_max:
-            pos_char = this.src[pos]
-        else:
-            pos_char = ' '
-
-
     def copy(self):
         state = self.__class__(self.env)
         state.in_image = self.in_image

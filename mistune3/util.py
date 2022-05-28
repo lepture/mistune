@@ -3,6 +3,21 @@ from urllib.parse import quote
 from html import _replace_charref
 
 
+_expand_tab_re = re.compile(r'^( {0,3})\t', flags=re.M)
+
+
+def expand_leading_tab(text, width=4):
+    def repl(m):
+        s = m.group(1)
+        return s + ' ' * (width - len(s))
+    return _expand_tab_re.sub(repl, text)
+
+
+def expand_tab(text, space='    '):
+    repl = r'\1' + space
+    return _expand_tab_re.sub(repl, text)
+
+
 def escape(s, quote=True):
     s = s.replace("&", "&amp;")
     s = s.replace("<", "&lt;")
@@ -52,3 +67,10 @@ _striptags_re = re.compile(r'(<!--.*?-->|<[^>]*>)')
 
 def striptags(s):
     return _striptags_re.sub('', s)
+
+
+_strip_end_re = re.compile(r'\n\s+$')
+
+
+def strip_end(src):
+    return _strip_end_re.sub('\n', src)

@@ -1,8 +1,8 @@
 import re
+import string
 
 PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
-PUNCTUATION = r'''\\!"#$%&'()*+,./:;<=>?@\[\]^`{}|_~-'''
-ESCAPE_CHAR_RE = re.compile(r'\\([' + PUNCTUATION + r'])')
+PUNCTUATION = r'[' + re.escape(string.punctuation) + r']'
 
 LINK_LABEL = r'(?:[^\\\[\]]|\\.){0,500}'
 
@@ -16,8 +16,8 @@ LINK_HREF_INLINE_RE = re.compile(
 
 LINK_TITLE_RE = re.compile(
     r'[ \t\n]+('
-    r'"(?:\\[' + PUNCTUATION + r']|[^"\x00])*"|'  # "title"
-    r"'(?:\\[" + PUNCTUATION + r"]|[^'\x00])*'"  # 'title'
+    r'"(?:\\' + PUNCTUATION + r'|[^"\x00])*"|'  # "title"
+    r"'(?:\\" + PUNCTUATION + r"|[^'\x00])*'"  # 'title'
     r')'
 )
 
@@ -39,22 +39,14 @@ BLOCK_TAGS = (
     'title', 'tr', 'track', 'ul'
 )
 PRE_TAGS = ('pre', 'script', 'style', 'textarea')
-EXPAND_TAB_RE = re.compile(r'^( {0,3})\t', flags=re.M)
 
-_STRIP_END_RE = re.compile(r'\n\s+$')
 _INLINE_LINK_LABEL_RE = re.compile(LINK_LABEL + r'\]')
 _INLINE_SQUARE_BRACKET_RE = re.compile(PREVENT_BACKSLASH + r'[\[\]]')
+_ESCAPE_CHAR_RE = re.compile(r'\\(' + PUNCTUATION + r')')
 
 
-def expand_leading_tab(text, width=4):
-    def _expand_tab_repl(m):
-        s = m.group(1)
-        return s + ' ' * (width - len(s))
-    return EXPAND_TAB_RE.sub(_expand_tab_repl, text)
-
-
-def strip_end(src):
-    return _STRIP_END_RE.sub('\n', src)
+def unescape_char(text):
+    return _ESCAPE_CHAR_RE.sub(r'\1', text)
 
 
 def parse_link_text(src, pos):
@@ -120,6 +112,6 @@ def parse_link_title(src, start_pos, max_pos):
     m = LINK_TITLE_RE.match(src, start_pos, max_pos)
     if m:
         title = m.group(1)[1:-1]
-        title = ESCAPE_CHAR_RE.sub(r'\1', title)
+        title = unescape_char(title)
         return title, m.end()
     return None, None

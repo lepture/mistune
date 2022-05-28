@@ -10,7 +10,7 @@ from .helpers import (
     PUNCTUATION,
     HTML_TAGNAME,
     HTML_ATTRIBUTES,
-    ESCAPE_CHAR_RE,
+    unescape_char,
     parse_link_label,
     parse_link_text,
     parse_link_href,
@@ -41,7 +41,7 @@ class InlineParser:
     # we only need to find the start pattern of an inline token
     SPECIFICATION = [
         # e.g. \`, \$
-        ('escape', r'(?:\\[' + PUNCTUATION + '])+'),
+        ('escape', r'(?:\\' + PUNCTUATION + ')+'),
 
         # `code, ```code
         ('codespan', r'`{1,}'),
@@ -106,7 +106,7 @@ class InlineParser:
 
     def parse_escape(self, m, state):
         text = m.group('escape')
-        text = ESCAPE_CHAR_RE.sub(r'\1', text)
+        text = unescape_char(text)
         state.add_token({
             'type': 'text',
             'raw': safe_entity(text),
@@ -408,7 +408,7 @@ def _parse_std_link(src, pos):
     if not m:
         return None, None
 
-    href = ESCAPE_CHAR_RE.sub(r'\1', href)
+    href = unescape_char(href)
     attrs = {'url': escape_url(href)}
     if title:
         attrs['title'] = safe_entity(title)

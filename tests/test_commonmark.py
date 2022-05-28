@@ -32,15 +32,11 @@ IGNORE_CASES = {
     'links_532',
 }
 
-INSANE_CASES = {
-}
-
-
 
 class TestCommonMark(BaseTestCase):
     @classmethod
     def ignore_case(cls, n):
-        return n in IGNORE_CASES or n in DIFF_CASES or n in INSANE_CASES
+        return n in IGNORE_CASES or n in DIFF_CASES
 
     def assert_case(self, n, text, html):
         result = mistune.html(text)

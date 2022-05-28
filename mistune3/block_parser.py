@@ -4,6 +4,9 @@ from .util import (
     escape,
     escape_url,
     safe_entity,
+    strip_end,
+    expand_tab,
+    expand_leading_tab,
 )
 from .state import BlockState
 from .helpers import (
@@ -12,10 +15,7 @@ from .helpers import (
     HTML_ATTRIBUTES,
     BLOCK_TAGS,
     PRE_TAGS,
-    ESCAPE_CHAR_RE,
-    EXPAND_TAB_RE,
-    strip_end,
-    expand_leading_tab,
+    unescape_char,
     parse_link_href,
     parse_link_title,
 )
@@ -184,7 +184,7 @@ class BlockParser:
 
         token = {'type': 'block_code', 'raw': escape(code), 'fenced': True}
         if info:
-            info = ESCAPE_CHAR_RE.sub(r'\1', info)
+            info = unescape_char(info)
             token['attrs'] = {'info': safe_entity(info.strip())}
 
         state.add_token(token, line_count)
@@ -268,7 +268,7 @@ class BlockParser:
         state.line += text.count('\n')
 
         if key not in state.env['ref_links']:
-            href = ESCAPE_CHAR_RE.sub(r'\1', href)
+            href = unescape_char(href)
             attrs = {'url': escape_url(href)}
             if title:
                 attrs['title'] = safe_entity(title)
@@ -360,7 +360,7 @@ class BlockParser:
 
         # according to CommonMark Example 6, the second tab should be
         # treated as 4 spaces
-        text = EXPAND_TAB_RE.sub(r'\1    ', text)
+        text = expand_tab(text)
         line_count = text.count('\n')
 
         # scan children state
@@ -642,7 +642,7 @@ def _compile_list_item_pattern(bullet, leading_width):
 
 def _compile_continue_width(text, leading_width):
     text = expand_leading_tab(text, 3)
-    text = EXPAND_TAB_RE.sub(r'\1    ', text)
+    text = expand_tab(text)
 
     m2 = _LINE_HAS_TEXT.match(text)
     if m2:
@@ -676,7 +676,7 @@ def _clean_list_item_text(src, text, continue_width):
             line = line.replace(trim_space, '', 1)
             # according to CommonMark Example 5
             # tab should be treated as 4 spaces
-            line = EXPAND_TAB_RE.sub(r'\1    ', line)
+            line = expand_tab(line)
             rv.append(line)
         else:
             rv.append(line)

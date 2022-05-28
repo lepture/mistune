@@ -5,49 +5,31 @@ from .renderers import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
 
 
-def create_markdown(escape=True, hard_wrap=False, renderer=None, plugins=None):
+def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None):
     """Create a Markdown instance based on the given condition.
 
     :param escape: Boolean. If using html renderer, escape html.
     :param hard_wrap: Boolean. Break every new line into ``<br>``.
-    :param renderer: renderer instance or string of ``html`` and ``ast``.
-    :param plugins: List of plugins, string or callable.
+    :param renderer: renderer instance, default is HTMLRenderer.
+    :param plugins: List of plugins.
 
     This method is used when you want to re-use a Markdown instance::
 
         markdown = create_markdown(
             escape=False,
-            renderer='html',
-            plugins=['url', 'strikethrough', 'footnotes', 'table'],
+            hard_wrap=True,
         )
         # re-use markdown function
         markdown('.... your text ...')
     """
-    if renderer is None or renderer == 'html':
+    if renderer == 'html':
         renderer = HTMLRenderer(escape=escape)
-    elif renderer == 'ast':
-        renderer = None
-
-    if plugins:
-        _plugins = []
-        for p in plugins:
-            if isinstance(p, str):
-                pass
-                # _plugins.append(PLUGINS[p])
-            else:
-                _plugins.append(p)
-        plugins = _plugins
 
     inline = InlineParser(renderer, hard_wrap=hard_wrap)
     return Markdown(renderer, inline=inline, plugins=plugins)
 
 
-html = create_markdown(
-    escape=False,
-    renderer='html',
-    # renderer='ast',
-    # plugins=['strikethrough', 'footnotes', 'table'],
-)
+html = create_markdown(escape=False)
 
 
 __cached_parsers = {}

@@ -414,21 +414,25 @@ class BlockParser:
 
         start_line = state.line
         children = []
-        list_match = m
-        while list_match:
-            list_match = self._parse_list_item(state, list_match, children, rules)
+        while m:
+            m = self._parse_list_item(state, m, children, rules)
 
         end_line = children[-1]['end_line']
         line_count = end_line - start_line - state.line_root
 
         attrs['depth'] = depth
         attrs['tight'] = state.list_tight
+        for tok in children:
+            tok['attrs'] = {'depth': depth, 'tight': state.list_tight}
+
         token = {
             'type': 'list',
             'children': children,
             'attrs': attrs,
         }
         state.add_token(token, line_count, start_line)
+        # reset list_tight
+        state.list_tight = True
         return True
 
     def _parse_list_item(self, parent_state, match, children, rules):
@@ -569,11 +573,12 @@ class BlockParser:
             state.add_token({'type': 'paragraph', 'text': line}, 1)
         return True
 
-    def postprocess_paragraph(self, token, is_tight):
+    def postprocess_paragraph(self, token, parent):
         """A method to post process paragraph token. Developers CAN
         subclass BlockParser and rewrite this method to update the
         common paragraph token."""
-        if is_tight:
+        attrs = parent.get('attrs')
+        if attrs and attrs.get('tight'):
             token['type'] = 'block_text'
 
     def parse(self, state, rules):
@@ -590,30 +595,23 @@ class BlockParser:
                 return
         self.parse_paragraph(state)
 
-    def _call_render(self, tokens, state, inline, is_tight=False):
-        data = self._iter_render(tokens, state, inline, is_tight)
+    def _call_render(self, tokens, state, inline, parent=None):
+        data = self._iter_render(tokens, state, inline, parent)
         if inline.renderer:
             return inline.renderer(data)
         return list(data)
 
-    def _iter_render(self, tokens, state, inline, is_tight):
+    def _iter_render(self, tokens, state, inline, parent):
         for tok in tokens:
             if 'children' in tok:
-                children = tok['children']
-                if tok['type'] == 'list':
-                    _tight = tok['attrs']['tight']
-                    children = self._call_render(children, state, inline, _tight)
-                elif tok['type'] == 'list_item':
-                    children = self._call_render(children, state, inline, is_tight)
-                else:
-                    children = self._call_render(children, state, inline)
+                children = self._call_render(tok['children'], state, inline, tok)
                 tok['children'] = children
             elif 'text' in tok:
                 text = tok.pop('text')
                 children = inline(text.strip(), state.env)
                 tok['children'] = children
-                if tok['type'] == 'paragraph':
-                    self.postprocess_paragraph(tok, is_tight)
+                if tok['type'] == 'paragraph' and parent:
+                    self.postprocess_paragraph(tok, parent)
             yield tok
 
 

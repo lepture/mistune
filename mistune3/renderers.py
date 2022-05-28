@@ -42,7 +42,7 @@ class BaseRenderer(object):
         return ''.join(self._iter_tokens(tokens))
 
     def finalize(self, result, state):
-        return result.strip()
+        return result
 
 
 
@@ -140,7 +140,7 @@ class HTMLRenderer(BaseRenderer):
         return html + '>' + code + '</code></pre>\n'
 
     def block_quote(self, text):
-        return '<blockquote>' + text + '</blockquote>\n'
+        return '<blockquote>\n' + text + '</blockquote>\n'
 
     def block_html(self, html):
         if not self._escape:
@@ -155,8 +155,8 @@ class HTMLRenderer(BaseRenderer):
             html = '<ol'
             if start is not None:
                 html += ' start="' + str(start) + '"'
-            return html + '>' + text + '\n</ol>\n'
+            return html + '>\n' + text + '</ol>\n'
         return '<ul>\n' + text + '</ul>\n'
 
-    def list_item(self, text):
+    def list_item(self, text, depth=None, tight=True):
         return '<li>' + text + '</li>\n'

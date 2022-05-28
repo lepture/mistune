@@ -1,19 +1,19 @@
-from mistune import Markdown, AstRenderer, HTMLRenderer, plugins
+from mistune3 import create_markdown
+from mistune3.plugins.task_lists import task_lists
 from tests import BaseTestCase, fixtures
 
 
-def load_plugin(plugin_name, ast=False):
-    _plugin = getattr(plugins, "plugin_{}".format(plugin_name))
+def load_plugin(plugin_name, plugin_func, test_ast=False):
 
     class TestPlugin(BaseTestCase):
-        md = Markdown(renderer=HTMLRenderer(escape=False), plugins=[_plugin])
+        md = create_markdown(escape=False, plugins=[plugin_func])
 
     def test_ast_renderer(self):
-        md = Markdown(renderer=AstRenderer(), plugins=[_plugin])
+        md = create_markdown(escape=False, plugins=[plugin_func], renderer=None)
         data = fixtures.load_ast(plugin_name + ".json")
         self.assertEqual(md(data["text"]), data["tokens"])
 
-    if ast:
+    if test_ast:
         test_ast_renderer.__doc__ = "Run {} ast renderer".format(plugin_name)
         setattr(TestPlugin, "test_ast_renderer", test_ast_renderer)
 
@@ -21,10 +21,4 @@ def load_plugin(plugin_name, ast=False):
     globals()["TestPlugin_" + plugin_name] = TestPlugin
 
 
-load_plugin("url")
-load_plugin("strikethrough")
-load_plugin("footnotes", True)
-load_plugin("table", True)
-load_plugin("task_lists", True)
-load_plugin("def_list", True)
-load_plugin("abbr", True)
+load_plugin("task_lists", task_lists)

@@ -24,15 +24,18 @@ class BaseRenderer(object):
         for tok in tokens:
             func = self._get_method(tok['type'])
 
+            attrs = tok.get('attrs')
             if 'raw' in tok:
                 children = tok['raw']
             elif 'children' in tok:
                 children = tok['children']
             else:
-                yield func()
+                if attrs:
+                    yield func(**attrs)
+                else:
+                    yield func()
                 continue
 
-            attrs = tok.get('attrs')
             if attrs:
                 yield func(children, **attrs)
             else:
@@ -117,9 +120,12 @@ class HTMLRenderer(BaseRenderer):
     def paragraph(self, text):
         return '<p>' + text + '</p>\n'
 
-    def heading(self, text, level):
+    def heading(self, text, level, id=None):
         tag = 'h' + str(level)
-        return '<' + tag + '>' + text + '</' + tag + '>\n'
+        html = '<' + tag
+        if id is not None:
+            html += ' id="' + id + '"'
+        return html + '>' + text + '</' + tag + '>\n'
 
     def blank_line(self):
         return ''

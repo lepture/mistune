@@ -60,7 +60,7 @@ class Markdown:
         if state is None:
             state = self.block.state_cls()
 
-        state.filepath = filepath
+        state.env['__file__'] = filepath
         with open(filepath, 'rb') as f:
             s = f.read()
 

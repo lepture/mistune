@@ -209,14 +209,14 @@ class BlockParser:
         return True
 
     def parse_setex_heading(self, state):
-        prev_token = state.prev_token()
-        if prev_token and prev_token['type'] == 'paragraph':
+        last_token = state.last_token()
+        if last_token and last_token['type'] == 'paragraph':
             m = state.match(self.SETEX_HEADING)
             if m:
                 level = 1 if m.group(1) == '=' else 2
-                prev_token['type'] = 'heading'
-                prev_token['attrs'] = {'level': level}
-                prev_token['end_line'] += 1
+                last_token['type'] = 'heading'
+                last_token['attrs'] = {'level': level}
+                last_token['end_line'] += 1
                 state.cursor = m.end()
                 state.line += 1
                 return True
@@ -581,7 +581,9 @@ class BlockParser:
         if attrs and attrs.get('tight'):
             token['type'] = 'block_text'
 
-    def parse(self, state, rules):
+    def parse(self, state, rules=None):
+        if rules is None:
+            rules = self.rules
         while state.cursor < state.cursor_max:
             self._scan_rules(state, rules)
 

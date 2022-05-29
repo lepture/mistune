@@ -49,7 +49,7 @@ class BlockState:
     def match(self, regex):
         return regex.match(self.src, self.cursor)
 
-    def prev_token(self):
+    def last_token(self):
         if self.tokens:
             return self.tokens[-1]
 
@@ -70,10 +70,10 @@ class BlockState:
             self.line = end_line
 
     def append_paragraph(self):
-        prev_token = self.prev_token()
-        if prev_token and prev_token['type'] == 'paragraph':
-            prev_token['text'] += self.get_line()
-            prev_token['end_line'] =+ 1
+        last_token = self.last_token()
+        if last_token and last_token['type'] == 'paragraph':
+            last_token['text'] += self.get_line()
+            last_token['end_line'] =+ 1
             self.line += 1
             return True
 

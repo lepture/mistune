@@ -42,7 +42,7 @@ class Markdown:
         for hook in self.before_parse_hooks:
             hook(self, state)
 
-        self.block.parse(state, self.block.rules)
+        self.block.parse(state)
 
         for hook in self.before_render_hooks:
             hook(self, state)

@@ -29,6 +29,7 @@ _LINE_BLANK_END = re.compile(r'\n[ \t]*\n$')
 _LINE_HAS_TEXT = re.compile(r'( *)\S')
 _BLANK_TO_LINE = re.compile(r'[ \t]*\n')
 
+_BLOCK_TAGS_PATTERN = '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS)
 _BLOCK_HTML_BREAK = re.compile(
     r' {0,3}(?:'
     r'(?:</?' + '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS) + r'(?:[ \t]+|\n|$))'
@@ -44,34 +45,56 @@ _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 class BlockParser:
     state_cls = BlockState
 
-    BLANK_LINE = re.compile(r'(^[ \t]*\n)+', re.M)
-    AXT_HEADING = re.compile(r' {0,3}(#{1,6})(?!#+)([ \t]*|[ \t]+.*?)(?:\n|$)')
-    SETEX_HEADING = re.compile(r' {0,3}(=|-){1,}[ \t]*(?:\n|$)')
-    THEMATIC_BREAK = re.compile(
-        r' {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n|$)'
+    BLANK_LINE = re.compile(r'(^[ \t\v\f]*\n)+', re.M)
+    STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
+
+    LIST = (
+        r'^(?P<list_1> {0,3})'
+        r'(?P<list_2>[\*\+-]|\d{1,9}[.)])'
+        r'(?P<list_3>[ \t]*|[ \t].+)$'
     )
 
-    INDENT_CODE = re.compile(
+    INDENT_CODE = (
         r'(?: {4}| *\t)[^\n]+(?:\n+|$)'
         r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
     )
-    FENCED_CODE = re.compile(r'( {0,3})(`{3,}|~{3,})[ \t]*(.*?)(?:\n|$)')
 
-    BLOCK_QUOTE = re.compile(r' {0,3}>(.*?(?:\n|$))')
-    STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
+    FENCED_CODE = (
+        r'^(?P<fenced_1> {0,3})(?P<fenced_2>`{3,}|~{3,})'
+        r'[ \t]*(?P<fenced_3>.*?)$'
+    )
 
-    LIST = re.compile(r'( {0,3})([\*\+-]|\d{1,9}[.)])([ \t]*|[ \t].+)(?:\n|$)')
-
-    REF_LINK = re.compile(r' {0,3}\[(' + LINK_LABEL + r')\]:')
-
-    BLOCK_HTML = re.compile(
-        r' {0,3}('
+    RAW_HTML = (
+        r'^ {0,3}('
         r'</?' + HTML_TAGNAME + r'|'
         r'<!--|' # comment
         r'<\?|'  # script
         r'<![A-Z]|'
         r'<!\[CDATA\[)'
     )
+
+    BLOCK_HTML = (
+        r'^ {0,3}(?:'
+        r'(?:</?' + _BLOCK_TAGS_PATTERN + r'(?:[ \t]+|\n|$))'
+        r'|<!--' # comment
+        r'|<\?'  # script
+        r'|<![A-Z]'
+        r'|<!\[CDATA\[)'
+    )
+
+    SPECIFICATION = {
+        'blank_line': r'(^[ \t\v\f]*\n)+',
+        'axt_heading': r'^ {0,3}(?P<axt_1>#{1,6})(?!#+)(?P<axt_2>[ \t]*|[ \t]+.*?)$',
+        'setex_heading': r'^ {0,3}(?P<setext_1>=|-){1,}[ \t]*$',
+        'fenced_code': FENCED_CODE,
+        'indent_code': INDENT_CODE,
+        'thematic_break': r'^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$',
+        'ref_link': r'^ {0,3}\[(?P<link_1>' + LINK_LABEL + r')\]:',
+        'block_quote': r' {0,3}>(?P<quote_1>.*?)$',
+        'list': LIST,
+        'block_html': BLOCK_HTML,
+        'raw_html': RAW_HTML,
+    }
 
     RULE_NAMES = (
         'blank_line',
@@ -81,13 +104,15 @@ class BlockParser:
         'setex_heading',
         'thematic_break',
         'block_quote',
-        'list',
+        # 'list',
         'ref_link',
-        'block_html',
+        'raw_html',
     )
 
     def __init__(self, rules=None, block_quote_rules=None, list_rules=None,
                  max_nested_level=6):
+        self.specification = self.SPECIFICATION.copy()
+
         if rules is None:
             rules = list(self.RULE_NAMES)
 
@@ -103,10 +128,27 @@ class BlockParser:
         self.list_rules = list_rules
         self.max_nested_level = max_nested_level
 
+        self.__sc = {}
         # register default parse methods
         self.__methods = {
             name: getattr(self, 'parse_' + name) for name in self.RULE_NAMES
         }
+
+    def compile_sc(self, rules):
+        if rules is None:
+            key = '$'
+            rules = self.rules
+        else:
+            key = '|'.join(rules)
+
+        sc = self.__sc.get(key)
+        if sc:
+            return sc
+
+        regex = '|'.join(r'(?P<%s>%s)' % (k, self.specification[k]) for k in rules)
+        sc = re.compile(regex, re.M)
+        self.__sc[key] = sc
+        return sc
 
     def register_rule(self, name, func, before=None):
         self.__methods[name] = lambda state: func(self, state)
@@ -116,47 +158,37 @@ class BlockParser:
         else:
             self.rules.append(name)
 
-    def parse_blank_line(self, state):
-        m = state.match(self.BLANK_LINE)
-        if m:
-            line_count = m.group(0).count('\n')
-            state.add_token({'type': 'blank_line'}, line_count)
-            state.cursor = m.end()
-            return True
+    def parse_method(self, m, state):
+        func = self.__methods[m.lastgroup]
+        return func(m, state)
 
-    def parse_thematic_break(self, state):
-        m = state.match(self.THEMATIC_BREAK)
-        if m:
-            state.add_token({'type': 'thematic_break'}, 1)
-            state.cursor = m.end()
-            return True
+    def parse_blank_line(self, m, state):
+        state.append_token({'type': 'blank_line'})
+        return m.end()
 
-    def parse_indent_code(self, state):
-        m = state.match(self.INDENT_CODE)
-        if not m:
-            return
+    def parse_thematic_break(self, m, state):
+        state.append_token({'type': 'thematic_break'})
+        # $ does not count '\n'
+        return m.end() + 1
 
+    def parse_indent_code(self, m, state):
         # it is a part of the paragraph
-        if state.append_paragraph():
-            return True
+        end_pos = state.append_paragraph()
+        if end_pos:
+            return end_pos
 
-        code = m.group(0)
+        code = m.group('indent_code')
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
         line_count = code.count('\n')
         code = escape(code.strip('\n'))
-        state.add_token({'type': 'block_code', 'raw': code}, line_count)
-        state.cursor = m.end()
-        return True
+        state.append_token({'type': 'block_code', 'raw': code})
+        return m.end()
 
-    def parse_fenced_code(self, state):
-        m = state.match(self.FENCED_CODE)
-        if not m:
-            return
-
-        spaces = m.group(1)
-        marker = m.group(2)
-        info = m.group(3)
+    def parse_fenced_code(self, m, state):
+        spaces = m.group('fenced_1')
+        marker = m.group('fenced_2')
+        info = m.group('fenced_3')
 
         c = marker[0]
         if info and c == '`':
@@ -172,12 +204,10 @@ class BlockParser:
         m2 = _end.search(state.src, cursor_start)
         if m2:
             code = state.src[cursor_start:m2.start()]
-            line_count = code.count('\n') + 2
-            state.cursor = m2.end()
+            end_pos = m2.end()
         else:
             code = state.src[cursor_start:]
-            line_count = code.count('\n') + 1
-            state.cursor = state.cursor_max
+            end_pos = state.cursor_max
 
         if spaces and code:
             _trim_pattern = re.compile('^ {0,' + str(len(spaces)) + '}', re.M)
@@ -188,48 +218,34 @@ class BlockParser:
             info = unescape_char(info)
             token['attrs'] = {'info': safe_entity(info.strip())}
 
-        state.add_token(token, line_count)
-        return True
+        state.append_token(token)
+        return end_pos
 
-    def parse_axt_heading(self, state):
-        m = state.match(self.AXT_HEADING)
-        if not m:
-            return
-
-        level = len(m.group(1))
-        text = m.group(2).strip()
-
+    def parse_axt_heading(self, m, state):
+        level = len(m.group('axt_1'))
+        text = m.group('axt_2').strip()
         # remove last #
         if text:
             text = _AXT_HEADING_TRIM.sub('', text)
 
         token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
-        state.add_token(token, 1)
-        state.cursor = m.end()
-        return True
+        state.append_token(token)
+        return m.end() + 1
 
-    def parse_setex_heading(self, state):
+    def parse_setex_heading(self, m, state):
         last_token = state.last_token()
         if last_token and last_token['type'] == 'paragraph':
-            m = state.match(self.SETEX_HEADING)
-            if m:
-                level = 1 if m.group(1) == '=' else 2
-                last_token['type'] = 'heading'
-                last_token['attrs'] = {'level': level}
-                last_token['end_line'] += 1
-                state.cursor = m.end()
-                state.line += 1
-                return True
+            level = 1 if m.group('setext_1') == '=' else 2
+            last_token['type'] = 'heading'
+            last_token['attrs'] = {'level': level}
+            return m.end() + 1
 
-    def parse_ref_link(self, state):
-        m = state.match(self.REF_LINK)
-        if not m:
-            return
+    def parse_ref_link(self, m, state):
+        end_pos = state.append_paragraph()
+        if end_pos:
+            return end_pos
 
-        if state.append_paragraph():
-            return True
-
-        key = unikey(m.group(1))
+        key = unikey(m.group('link_1'))
         if not key:
             return
 
@@ -264,40 +280,26 @@ class BlockParser:
         if not end_pos:
             return
 
-        text = state.get_text(end_pos)
-        state.cursor = end_pos
-        state.line += text.count('\n')
-
         if key not in state.env['ref_links']:
             href = unescape_char(href)
             attrs = {'url': escape_url(href)}
             if title:
                 attrs['title'] = safe_entity(title)
             state.env['ref_links'][key] = attrs
-        return True
+        return end_pos
 
-    def parse_block_quote(self, state):
-        m = state.match(self.BLOCK_QUOTE)
-        if not m:
-            return
-
-        start_line = state.line
-
+    def parse_block_quote(self, m, state):
         # cleanup at first to detect if it is code block
-        text = m.group(1)
+        text = m.group('quote_1') + '\n'
         text = expand_leading_tab(text, 3)
         text = _BLOCK_QUOTE_TRIM.sub('', text)
 
-        require_marker = bool(
-            self.BLANK_LINE.match(text)
-            or self.INDENT_CODE.match(text)
-            or self.FENCED_CODE.match(text)
-        )
+        sc = self.compile_sc(['blank_line', 'indent_code', 'fenced_code'])
+        require_marker = bool(sc.match(text))
 
-        cursor = m.end()
-        state.cursor = cursor
-        state.line += 1
+        state.cursor = m.end() + 1
 
+        end_pos = None
         if require_marker:
             m = state.match(self.STRICT_BLOCK_QUOTE)
             if m:
@@ -309,6 +311,13 @@ class BlockParser:
                 state.cursor = m.end()
         else:
             prev_blank_line = False
+
+            # break_rules = ['blank_line', 'thematic_break', 'fenced_code', 'list']
+            break_rules = ['blank_line', 'thematic_break', 'fenced_code']
+            break_sc = self.compile_sc([
+                'blank_line', 'thematic_break', 'fenced_code', # 'list',
+                'block_html',
+            ])
             while state.cursor < state.cursor_max:
                 m = state.match(self.STRICT_BLOCK_QUOTE)
                 if m:
@@ -318,8 +327,6 @@ class BlockParser:
                     quote = _BLOCK_QUOTE_TRIM.sub('', quote)
                     text += quote
                     state.cursor = m.end()
-                    state.line += quote.count('\n')
-
                     if not quote.strip():
                         prev_blank_line = True
                     else:
@@ -332,41 +339,24 @@ class BlockParser:
                     # a block quote and a following paragraph
                     break
 
-                # blank line break block quote
-                if self.parse_blank_line(state):
-                    break
-
-                # hr break block quote
-                if self.parse_thematic_break(state):
-                    break
-
-                # fenced code break block quote
-                if self.parse_fenced_code(state):
-                    break
-
-                # list break block quote
-                if self.parse_list(state):
-                    break
-
-                # block html break block quote (except rule 7)
-                if state.match(_BLOCK_HTML_BREAK):
-                    self.parse_block_html(state)
+                m = state.match(break_sc)
+                end_pos = self.parse_method(m, state)
+                if end_pos:
                     break
 
                 # lazy continuation line
-                line = state.get_line()
+                pos = self.find_line_end()
+                line = self.get_text(pos)
                 line = expand_leading_tab(line, 3)
                 text += line
-                state.line += 1
+                state.cursor = pos
 
         # according to CommonMark Example 6, the second tab should be
         # treated as 4 spaces
         text = expand_tab(text)
-        line_count = text.count('\n')
 
         # scan children state
         child = self.state_cls(state)
-        child.line_root = start_line
         child.in_block = 'block_quote'
         child.process(text)
 
@@ -378,22 +368,22 @@ class BlockParser:
 
         self.parse(child, rules)
         token = {'type': 'block_quote', 'children': child.tokens}
-        state.add_token(token, line_count, start_line)
-        return True
+        if end_pos:
+            state.prepend_token(token)
+            return end_pos
+        state.append_token(token)
+        return state.cursor
 
-    def parse_list(self, state):
-        m = state.match(self.LIST)
-        if not m:
-            return
-
-        text = m.group(3)
+    def parse_list(self, m, state):
+        text = m.group('list_3')
         if not text.strip():
             # Example 285
             # an empty list item cannot interrupt a paragraph
-            if state.append_paragraph():
-                return True
+            end_pos = state.append_paragraph()
+            if end_pos:
+                return end_pos
 
-        marker = m.group(2)
+        marker = m.group('list_2')
         ordered = len(marker) > 1
         attrs = {'ordered': ordered}
         if ordered:
@@ -401,8 +391,9 @@ class BlockParser:
             if start != 1:
                 # Example 304
                 # we allow only lists starting with 1 to interrupt paragraphs
-                if state.append_paragraph():
-                    return True
+                end_pos = state.append_paragraph()
+                if end_pos:
+                    return end_pos
                 attrs['start'] = start
 
         depth = state.depth()
@@ -412,13 +403,9 @@ class BlockParser:
         else:
             rules = self.list_rules
 
-        start_line = state.line
         children = []
         while m:
             m = self._parse_list_item(state, m, children, rules)
-
-        end_line = children[-1]['end_line']
-        line_count = end_line - start_line - state.line_root
 
         attrs['depth'] = depth
         attrs['tight'] = state.list_tight
@@ -430,7 +417,7 @@ class BlockParser:
             'children': children,
             'attrs': attrs,
         }
-        state.add_token(token, line_count, start_line)
+        state.add_token(token)
         # reset list_tight
         state.list_tight = True
         return True
@@ -515,12 +502,11 @@ class BlockParser:
             pattern = re.compile(item_pattern)
             return parent_state.match(pattern)
 
-    def parse_block_html(self, state):
-        m = state.match(self.BLOCK_HTML)
-        if not m:
-            return
+    def parse_block_html(self, m, state):
+        return self.parse_raw_html(m, state)
 
-        marker = m.group(1)
+    def parse_raw_html(self, m, state):
+        marker = m.group(m.lastgroup).strip()
 
         # rule 2
         if marker == '<!--':
@@ -556,8 +542,9 @@ class BlockParser:
                 return _parse_html_to_newline(state, self.BLANK_LINE)
 
         # Blocks of type 7 may not interrupt a paragraph.
-        if state.append_paragraph():
-            return True
+        end_pos = state.append_paragraph()
+        if end_pos:
+            return end_pos
 
         # rule 7
         start_pos = m.end()
@@ -582,10 +569,31 @@ class BlockParser:
             token['type'] = 'block_text'
 
     def parse(self, state, rules=None):
-        if rules is None:
-            rules = self.rules
+        sc = self.compile_sc(rules)
+
         while state.cursor < state.cursor_max:
-            self._scan_rules(state, rules)
+            m = sc.search(state.src, state.cursor)
+            if not m:
+                break
+
+            end_pos = m.start()
+            if end_pos > state.cursor:
+                text = state.get_text(end_pos)
+                state.add_paragraph(text)
+                state.cursor = end_pos
+
+            end_pos = self.parse_method(m, state)
+            if end_pos:
+                state.cursor = end_pos
+            else:
+                end_pos = state.find_line_end()
+                state.add_paragraph(state.get_text(pos))
+                state.cursor = end_pos
+
+        if state.cursor < state.cursor_max:
+            text = state.src[state.cursor:]
+            state.add_paragraph(text)
+            state.cursor = state.cursor_max
 
     def render(self, state, inline):
         return self._call_render(state.tokens, state, inline)
@@ -689,15 +697,15 @@ def _parse_html_to_end(state, end_marker, start_pos):
     marker_pos = state.src.find(end_marker, start_pos)
     if marker_pos == -1:
         text = state.src[state.cursor:]
-        state.cursor = state.cursor_max
+        end_pos = state.cursor_max
     else:
         text = state.get_text(marker_pos)
         state.cursor = marker_pos
-        text += state.get_line()
+        end_pos = state.find_line_end()
+        text += state.get_text(end_pos)
 
-    line_count = text.count('\n')
-    state.add_token({'type': 'block_html', 'raw': text}, line_count)
-    return True
+    state.append_token({'type': 'block_html', 'raw': text})
+    return end_pos
 
 
 def _parse_html_to_newline(state, newline):
@@ -705,11 +713,9 @@ def _parse_html_to_newline(state, newline):
     if m:
         end_pos = m.start()
         text = state.get_text(end_pos)
-        state.cursor = end_pos
     else:
         text = state.src[state.cursor:]
-        state.cursor = state.cursor_max
+        end_pos = state.cursor_max
 
-    line_count = text.count('\n')
-    state.add_token({'type': 'block_html', 'raw': text}, line_count)
-    return True
+    state.append_token({'type': 'block_html', 'raw': text})
+    return end_pos

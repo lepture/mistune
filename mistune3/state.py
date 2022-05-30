@@ -12,12 +12,6 @@ class BlockState:
         self.cursor = 0
         self.cursor_max = 0
 
-        # current cursor at line
-        self.line = 0
-
-        # nested state
-        self.line_root = 0
-
         # for list and block quote chain
         self.in_block = None
         self.list_tight = True
@@ -37,12 +31,6 @@ class BlockState:
         m = _LINE_END.search(self.src, self.cursor)
         return m.end()
 
-    def get_line(self):
-        end_pos = self.find_line_end()
-        text = self.get_text(end_pos)
-        self.cursor = end_pos
-        return text
-
     def get_text(self, end_pos):
         return self.src[self.cursor:end_pos]
 
@@ -53,29 +41,25 @@ class BlockState:
         if self.tokens:
             return self.tokens[-1]
 
-    def add_token(self, token, line_count, start_line=None):
-        if start_line is None:
-            start_line = self.line
+    def prepend_token(self, token):
+        self.tokens.insert(len(self.tokens) - 1, token)
 
-        end_line = start_line + line_count
-        token['start_line'] = self.line_root + start_line
-        token['end_line'] = self.line_root + end_line
+    def append_token(self, token):
+        self.tokens.append(token)
 
-        if end_line < self.line:
-            last_token = self.tokens.pop()
-            self.tokens.append(token)
-            self.tokens.append(last_token)
+    def add_paragraph(self, text):
+        last_token = self.last_token()
+        if last_token and last_token['type'] == 'paragraph':
+            last_token['text'] += text
         else:
-            self.tokens.append(token)
-            self.line = end_line
+            self.tokens.append({'type': 'paragraph', 'text': text})
 
     def append_paragraph(self):
         last_token = self.last_token()
         if last_token and last_token['type'] == 'paragraph':
-            last_token['text'] += self.get_line()
-            last_token['end_line'] =+ 1
-            self.line += 1
-            return True
+            pos = self.find_line_end()
+            last_token['text'] += self.get_text(pos)
+            return pos
 
     def depth(self):
         d = 0

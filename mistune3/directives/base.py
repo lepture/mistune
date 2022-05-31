@@ -52,7 +52,7 @@ class PluginDirective(object):
     def register_directive(self, name, fn):
         self._directives[name] = fn
 
-    def parse_block_directive(self, block, state):
+    def parse_block_directive(self, block, m, state):
         m = state.match(DIRECTIVE_PATTERN)
         if not m:
             return
@@ -69,14 +69,13 @@ class PluginDirective(object):
 
         end_pos = m.end()
         text = state.get_text(end_pos)
-        line_count = text.count('\n')
-        state.add_token(token, line_count)
-        state.cursor = end_pos
-        return True
+        state.append_token(token)
+        return end_pos
 
     def __call__(self, md):
         md._rst_directive = self
-        md.block.register_rule('directive', self.parse_block_directive)
+        pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
+        md.block.register_rule('directive', pattern, self.parse_block_directive)
 
 
 def parse_options(m):
@@ -101,18 +100,15 @@ def parse_children(block, m, state):
     text = m.group('text')
 
     pretext = full_content[:-len(text)]
-    start_line = state.line + pretext.count('\n')
 
     rules = list(block.rules)
     rules.remove('directive')
 
     # scan children state
-    child = block.state_cls(state)
-    child.line_root = start_line
-    child.in_block = 'directive'
-
     leading = len(m.group(1)) + 2
     text = '\n'.join(line[leading:] for line in text.splitlines()) + '\n'
+
+    child = block.state_cls(state)
     child.process(text)
 
     block.parse(child, rules)

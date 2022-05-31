@@ -131,7 +131,7 @@ class BlockParser:
         self.__sc = {}
         # register default parse methods
         self.__methods = {
-            name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
+            name: getattr(self, 'parse_' + name) for name in self.specification
         }
 
     def compile_sc(self, rules):
@@ -150,8 +150,9 @@ class BlockParser:
         self.__sc[key] = sc
         return sc
 
-    def register_rule(self, name, func, before=None):
-        self.__methods[name] = lambda state: func(self, state)
+    def register_rule(self, name, pattern, func, before=None):
+        self.specification[name] = pattern
+        self.__methods[name] = lambda m, state: func(self, m, state)
         if before:
             index = self.rules.index(before)
             self.rules.insert(index, name)

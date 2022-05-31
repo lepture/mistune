@@ -1,5 +1,6 @@
 from mistune3 import create_markdown
 from mistune3.plugins.task_lists import task_lists
+from mistune3.directives import Admonition
 from tests import BaseTestCase, fixtures
 
 
@@ -22,3 +23,4 @@ def load_plugin(plugin_name, plugin_func, test_ast=False):
 
 
 load_plugin("task_lists", task_lists)
+load_plugin("admonition", Admonition())

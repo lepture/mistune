@@ -19,8 +19,6 @@ DIFF_CASES = {
 }
 
 IGNORE_CASES = {
-    'lists_313',  # TODO: need to fix this case
-
     'code_spans_341',  # no higher precedence
     'code_spans_342',
 

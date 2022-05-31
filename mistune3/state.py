@@ -13,7 +13,6 @@ class BlockState:
         self.cursor_max = 0
 
         # for list and block quote chain
-        self.in_block = None
         self.list_tight = True
         self.parent = parent
 

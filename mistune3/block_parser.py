@@ -55,7 +55,7 @@ class BlockParser:
     )
 
     INDENT_CODE = (
-        r'(?: {4}| *\t)[^\n]+(?:\n+|$)'
+        r'^(?: {4}| *\t)[^\n]+(?:\n+|$)'
         r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
     )
 
@@ -90,7 +90,7 @@ class BlockParser:
         'indent_code': INDENT_CODE,
         'thematic_break': r'^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$',
         'ref_link': r'^ {0,3}\[(?P<link_1>' + LINK_LABEL + r')\]:',
-        'block_quote': r' {0,3}>(?P<quote_1>.*?)$',
+        'block_quote': r'^ {0,3}>(?P<quote_1>.*?)$',
         'list': LIST,
         'block_html': BLOCK_HTML,
         'raw_html': RAW_HTML,
@@ -104,7 +104,7 @@ class BlockParser:
         'setex_heading',
         'thematic_break',
         'block_quote',
-        # 'list',
+        'list',
         'ref_link',
         'raw_html',
     )
@@ -131,7 +131,7 @@ class BlockParser:
         self.__sc = {}
         # register default parse methods
         self.__methods = {
-            name: getattr(self, 'parse_' + name) for name in self.RULE_NAMES
+            name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
         }
 
     def compile_sc(self, rules):
@@ -240,6 +240,11 @@ class BlockParser:
             last_token['attrs'] = {'level': level}
             return m.end() + 1
 
+        sc = self.compile_sc(['thematic_break', 'list'])
+        m = state.match(sc)
+        if m:
+            return self.parse_method(m, state)
+
     def parse_ref_link(self, m, state):
         end_pos = state.append_paragraph()
         if end_pos:
@@ -311,12 +316,9 @@ class BlockParser:
                 state.cursor = m.end()
         else:
             prev_blank_line = False
-
-            # break_rules = ['blank_line', 'thematic_break', 'fenced_code', 'list']
-            break_rules = ['blank_line', 'thematic_break', 'fenced_code']
             break_sc = self.compile_sc([
-                'blank_line', 'thematic_break', 'fenced_code', # 'list',
-                'block_html',
+                'blank_line', 'thematic_break', 'fenced_code',
+                'list', 'block_html',
             ])
             while state.cursor < state.cursor_max:
                 m = state.match(self.STRICT_BLOCK_QUOTE)
@@ -340,13 +342,14 @@ class BlockParser:
                     break
 
                 m = state.match(break_sc)
-                end_pos = self.parse_method(m, state)
-                if end_pos:
-                    break
+                if m:
+                    end_pos = self.parse_method(m, state)
+                    if end_pos:
+                        break
 
                 # lazy continuation line
-                pos = self.find_line_end()
-                line = self.get_text(pos)
+                pos = state.find_line_end()
+                line = state.get_text(pos)
                 line = expand_leading_tab(line, 3)
                 text += line
                 state.cursor = pos
@@ -385,7 +388,7 @@ class BlockParser:
 
         marker = m.group('list_2')
         ordered = len(marker) > 1
-        attrs = {'ordered': ordered}
+        attrs = {'ordered': ordered, 'tight': True}
         if ordered:
             start = int(marker[:-1])
             if start != 1:
@@ -397,110 +400,134 @@ class BlockParser:
                 attrs['start'] = start
 
         depth = state.depth()
+        attrs['depth'] = depth
         if depth >= self.max_nested_level:
             rules = list(self.list_rules)
             rules.remove('list')
         else:
             rules = self.list_rules
 
-        children = []
-        while m:
-            m = self._parse_list_item(state, m, children, rules)
-
-        attrs['depth'] = depth
-        attrs['tight'] = state.list_tight
-        for tok in children:
-            tok['attrs'] = {'depth': depth, 'tight': state.list_tight}
-
         token = {
             'type': 'list',
-            'children': children,
+            'children': [],
             'attrs': attrs,
         }
-        state.add_token(token)
-        # reset list_tight
-        state.list_tight = True
-        return True
 
-    def _parse_list_item(self, parent_state, match, children, rules):
-        has_next = False
-        line_root = parent_state.line
-        start_line = line_root + parent_state.line_root
+        state.cursor = m.end() + 1
+        groups = (m.group('list_1'), marker, text)
+        while groups:
+            groups = self._parse_list_item(groups, token, state, rules)
 
-        space_width = len(match.group(1))
-        marker = match.group(2)
-        leading_width = space_width + len(marker)
+        for tok in token['children']:
+            tok['attrs'] = {'depth': depth, 'tight': attrs['tight']}
 
+        end_pos = token.pop('_end_pos', None)
+        if end_pos:
+            state.prepend_token(token)
+            return end_pos
+        state.append_token(token)
+        return state.cursor
+
+    def _parse_list_item(self, groups, token, state, rules):
+        spaces, marker, text = groups
+
+        leading_width = len(spaces) + len(marker)
         bullet = _get_list_bullet(marker[-1])
-        item_pattern = _compile_list_item_pattern(bullet, leading_width)
-        text, continue_width = _compile_continue_width(match.group(3), leading_width)
+        text, continue_width = _compile_continue_width(text, leading_width)
 
+        if not text:
+            # Example 285
+            # an empty list item cannot interrupt a paragraph
+            end_pos = state.append_paragraph()
+            if end_pos:
+                token['children'].append({'type': 'list_item', 'children': []})
+                token['_end_pos'] = end_pos
+                return
+
+        item_pattern = _compile_list_item_pattern(bullet, leading_width)
         pairs = [
-            ('thematic_break', self.THEMATIC_BREAK.pattern),
-            ('fenced_code', self.FENCED_CODE.pattern),
-            ('axt_heading', self.AXT_HEADING.pattern),
-            ('block_quote', self.BLOCK_QUOTE.pattern),
-            ('block_html', _BLOCK_HTML_BREAK.pattern),
-            ('list', self.LIST.pattern),
+            ('thematic_break', self.specification['thematic_break']),
+            ('fenced_code', self.specification['fenced_code']),
+            ('axt_heading', self.specification['axt_heading']),
+            ('block_quote', self.specification['block_quote']),
+            ('block_html', self.specification['block_html']),
+            ('list', self.specification['list']),
         ]
         if leading_width < 3:
             _repl_w = str(leading_width)
             pairs = [(n, p.replace('3', _repl_w, 1)) for n, p in pairs]
 
         pairs.insert(1, ('list_item', item_pattern))
-        if text:
-            break_pattern = (
-                r'[ \t]*\n'
-                r' {0,' + str(continue_width - 1) + r'}(?!' + bullet + r')'
-                r'\S'
-            )
-        else:
-            break_pattern = r'[ \t]*\n( {0,3}(?!' + bullet + r')| {4,}| *\t)\S'
-        pairs.append(('break', break_pattern))
+        regex = '|'.join(r'(?P<%s>(?<=\n)%s)' % pair for pair in pairs)
+        sc = re.compile(regex, re.M)
 
-        sc = re.compile('|'.join(r'(?P<%s>(?<=\n)%s)' % pair for pair in pairs))
-        m = sc.search(parent_state.src, match.end())
-        if m:
-            tok_type = m.lastgroup
-            cursor = m.start()
-            src = parent_state.src[match.end():cursor]
-            line_count = src.count('\n') + 1
-            parent_state.line += line_count
-            parent_state.cursor = cursor
-            if tok_type == 'list_item':
-                has_next = True
-            elif tok_type != 'break':
-                func = getattr(self, 'parse_' + tok_type)
-                func(parent_state)
-        else:
-            src = parent_state.src[match.end():]
-            line_count = src.count('\n') + 1
-            parent_state.line += line_count
-            parent_state.cursor = parent_state.cursor_max
+        src = ''
+        next_group = None
+        prev_blank_line = False
+        pos = state.cursor
 
-        state = self.state_cls(parent_state)
-        state.line_root = line_root
-        text = _clean_list_item_text(src, text, continue_width)
+        continue_space = ' ' * continue_width
+        while pos < state.cursor_max:
+            pos = state.find_line_end()
+            line = state.get_text(pos)
+            if self.BLANK_LINE.match(line):
+                src += '\n'
+                prev_blank_line = True
+                state.cursor = pos
+                continue
 
-        if parent_state.list_tight and _LINE_BLANK_END.search(text):
-            parent_state.list_tight = False
+            line = expand_leading_tab(line)
+            if line.startswith(continue_space):
+                if prev_blank_line and not text and not src.strip():
+                    # Example 280
+                    # A list item can begin with at most one blank line
+                    break
 
-        state.process(strip_end(text))
-        self.parse(state, rules)
+                src += line
+                prev_blank_line = False
+                state.cursor = pos
+                continue
 
-        if parent_state.list_tight:
-            if any((tok['type'] == 'blank_line' for tok in state.tokens)):
-                parent_state.list_tight = False
+            m = state.match(sc)
+            if m:
+                tok_type = m.lastgroup
+                if tok_type == 'list_item':
+                    if prev_blank_line:
+                        token['attrs']['tight'] = False
+                    next_group = (
+                        m.group('listitem_1'),
+                        m.group('listitem_2'),
+                        m.group('listitem_3')
+                    )
+                    state.cursor = m.end() + 1
+                    break
+                end_pos = self.parse_method(m, state)
+                if end_pos:
+                    token['_end_pos'] = end_pos
+                    break
 
-        children.append({
+            if prev_blank_line and not line.startswith(continue_space):
+                # not a continue line, and previous line is blank
+                break
+
+            src += line
+            state.cursor = pos
+
+        text += _clean_list_item_text(src, continue_width)
+        child = self.state_cls(state)
+        child.process(strip_end(text))
+
+        self.parse(child, rules)
+
+        if token['attrs']['tight'] and _is_loose_list(child.tokens):
+            token['attrs']['tight'] = False
+
+        token['children'].append({
             'type': 'list_item',
-            'start_line':start_line,
-            'end_line': start_line + line_count,
-            'children': state.tokens,
+            'children': child.tokens,
         })
-        if has_next:
-            pattern = re.compile(item_pattern)
-            return parent_state.match(pattern)
+        if next_group:
+            return next_group
 
     def parse_block_html(self, m, state):
         return self.parse_raw_html(m, state)
@@ -554,12 +581,6 @@ class BlockParser:
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)
 
-    def parse_paragraph(self, state):
-        if not state.append_paragraph():
-            line = state.get_line()
-            state.add_token({'type': 'paragraph', 'text': line}, 1)
-        return True
-
     def postprocess_paragraph(self, token, parent):
         """A method to post process paragraph token. Developers CAN
         subclass BlockParser and rewrite this method to update the
@@ -587,7 +608,7 @@ class BlockParser:
                 state.cursor = end_pos
             else:
                 end_pos = state.find_line_end()
-                state.add_paragraph(state.get_text(pos))
+                state.add_paragraph(state.get_text(end_pos))
                 state.cursor = end_pos
 
         if state.cursor < state.cursor_max:
@@ -597,13 +618,6 @@ class BlockParser:
 
     def render(self, state, inline):
         return self._call_render(state.tokens, state, inline)
-
-    def _scan_rules(self, state, rules):
-        for name in rules:
-            func = self.__methods[name]
-            if func(state):
-                return
-        self.parse_paragraph(state)
 
     def _call_render(self, tokens, state, inline, parent=None):
         data = self._iter_render(tokens, state, inline, parent)
@@ -643,9 +657,9 @@ def _compile_list_item_pattern(bullet, leading_width):
     if leading_width > 3:
         leading_width = 3
     return (
-        r'( {0,' + str(leading_width) + '})'
-        r'(' + bullet + ')'
-        r'([ \t]*|[ \t][^\n]+)(?:\n|$)'
+        r'^(?P<listitem_1> {0,' + str(leading_width) + '})'
+        r'(?P<listitem_2>' + bullet + ')'
+        r'(?P<listitem_3>[ \t]*|[ \t][^\n]+)$'
     )
 
 
@@ -661,7 +675,7 @@ def _compile_continue_width(text, leading_width):
         else:
             space_width = len(m2.group(1))
 
-        text = text[space_width:]
+        text = text[space_width:] + '\n'
     else:
         space_width = 1
         text = ''
@@ -670,14 +684,9 @@ def _compile_continue_width(text, leading_width):
     return text, continue_width
 
 
-
-def _clean_list_item_text(src, text, continue_width):
+def _clean_list_item_text(src, continue_width):
     # according to Example 7, tab should be treated as 3 spaces
-    if text:
-        rv = [text]
-    else:
-        rv = []
-
+    rv = []
     trim_space = ' ' * continue_width
     lines = src.split('\n')
     for line in lines:
@@ -691,6 +700,17 @@ def _clean_list_item_text(src, text, continue_width):
             rv.append(line)
 
     return '\n'.join(rv)
+
+
+def _is_loose_list(tokens):
+    paragraph_count = 0
+    for tok in tokens:
+        if tok['type'] == 'blank_line':
+            return True
+        if tok['type'] == 'paragraph':
+            paragraph_count += 1
+            if paragraph_count > 1:
+                return True
 
 
 def _parse_html_to_end(state, end_marker, start_pos):

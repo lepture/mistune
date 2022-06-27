@@ -3,6 +3,21 @@ Changelog
 
 Here is the full history of mistune v2.
 
+Version 2.0.3
+~~~~~~~~~~~~~
+
+Released on Jun 27, 2022
+
+* Fix ``table`` plugin
+* Security fix for CVE-2022-34749
+
+Version 2.0.2
+~~~~~~~~~~~~~
+
+Released on Jan 14, 2022
+
+Fix ``escape_url``
+
 Version 2.0.1
 ~~~~~~~~~~~~~
 

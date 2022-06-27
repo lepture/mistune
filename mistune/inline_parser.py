@@ -64,8 +64,8 @@ class InlineParser(ScannerParser):
     #:    _emphasis_  __strong__
     ASTERISK_EMPHASIS = (
         r'(\*{1,2})(?=[^\s*])('
-        r'(?:\\[\\*]|[^*])*'
-        r'(?:' + ESCAPE_TEXT + r'|[^\s*]))\1'
+        r'(?:(?:(?<!\\)(?:\\\\)*\*)|[^*])+'
+        r')(?<!\\)\1'
     )
     UNDERSCORE_EMPHASIS = (
         r'\b(_{1,2})(?=[^\s_])([\s\S]*?'

@@ -13,12 +13,6 @@
 ````````````````````````````````
 
 ```````````````````````````````` example
-[link *foo **bar** `#`*](/uri)
-.
-<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
-````````````````````````````````
-
-```````````````````````````````` example
 [foo [bar](/uri)](/uri)
 .
 <p><a href="/uri">foo [bar](/uri)</a></p>
@@ -46,14 +40,6 @@
 [foo<http://example.com/?search=](uri)>
 .
 <p><a href="uri">foo&lt;http://example.com/?search=</a>&gt;</p>
-````````````````````````````````
-
-```````````````````````````````` example
-[link *foo **bar** `#`*][ref]
-
-[ref]: /uri
-.
-<p><a href="/uri">link *foo <strong>bar</strong> <code>#</code>*</a></p>
 ````````````````````````````````
 
 ```````````````````````````````` example

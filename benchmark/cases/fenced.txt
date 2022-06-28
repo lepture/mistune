@@ -1,0 +1,30 @@
+```
+function foo() {
+  return 'foo'
+}
+```
+
+```js
+function foo() {
+  return 'foo'
+}
+```
+
+~~~python
+def foo():
+    return 'foo'
+~~~
+
+~~~python filename=foo.py
+def foo():
+    return 'foo'
+~~~
+
+
+````
+```
+function foo() {
+  return 'foo'
+}
+```
+````

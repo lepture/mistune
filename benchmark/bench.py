@@ -20,6 +20,9 @@ def load_case(filename):
 
 
 def run_case(method, content, count=100):
+    # ignore first trigger
+    method(content)
+
     start = time.time()
 
     while count > 0:
@@ -31,11 +34,21 @@ def run_case(method, content, count=100):
 
 
 def get_markdown_parsers():
-    import mistune
+    parsers = {}
 
-    return {
-        'mistune': mistune.html,
-    }
+    try:
+        import mistune3
+        parsers['mistune3'] = mistune3.html
+    except ImportError:
+        pass
+
+    try:
+        import mistune
+        parsers['mistune'] = mistune.html
+    except ImportError:
+        pass
+
+    return parsers
 
 
 def benchmarks(cases, count=100):
@@ -50,4 +63,13 @@ def benchmarks(cases, count=100):
 
 
 if __name__ == '__main__':
-    benchmarks(['elements'])
+    benchmarks([
+        'axt',
+        'setext',
+        'ul',
+        'ol',
+        'blockquote',
+        'fenced',
+        'elements',
+        'paragraph',
+    ])

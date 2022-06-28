@@ -38,13 +38,29 @@ def get_markdown_parsers():
 
     try:
         import mistune3
-        parsers['mistune3'] = mistune3.html
+        parsers[f'mistune ({mistune3.__version__})'] = mistune3.html
     except ImportError:
         pass
 
     try:
         import mistune
-        parsers['mistune'] = mistune.html
+        if hasattr(mistune, 'html'):
+            func = mistune.html
+        else:
+            func = mistune.markdown
+        parsers[f'mistune ({mistune.__version__})'] = func
+    except ImportError:
+        pass
+
+    try:
+        import markdown
+        parsers[f'markdown ({markdown.__version__})'] = markdown.markdown
+    except ImportError:
+        pass
+
+    try:
+        import mistletoe
+        parsers[f'mistletoe ({mistletoe.__version__})'] = mistletoe.markdown
     except ImportError:
         pass
 

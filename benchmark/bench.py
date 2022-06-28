@@ -82,8 +82,10 @@ if __name__ == '__main__':
     benchmarks([
         'axt',
         'setext',
-        'ul',
-        'ol',
+        'normal_ul',
+        'insane_ul',
+        'normal_ol',
+        'insane_ol',
         'blockquote',
         'fenced',
         'elements',

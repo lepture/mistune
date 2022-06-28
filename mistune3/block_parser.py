@@ -1,4 +1,5 @@
 import re
+import string
 from .util import (
     unikey,
     escape,
@@ -57,6 +58,13 @@ class BlockParser(Parser):
         r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
     )
 
+    # increase paragraph parsing for common cases
+    STRICT_PARAGRAPH = (
+        # start with none punctuation, not number, not whitespace
+        r'(?:^[^\s\d' + re.escape(string.punctuation) + r']'
+        r'[^\n]*\n)+'
+    )
+
     FENCED_CODE = (
         r'^(?P<fenced_1> {0,3})(?P<fenced_2>`{3,}|~{3,})'
         r'[ \t]*(?P<fenced_3>.*?)$'
@@ -92,6 +100,7 @@ class BlockParser(Parser):
         'list': LIST,
         'block_html': BLOCK_HTML,
         'raw_html': RAW_HTML,
+        'paragraph': STRICT_PARAGRAPH,
     }
 
     DEFAULT_RULES = (
@@ -105,6 +114,7 @@ class BlockParser(Parser):
         'list',
         'ref_link',
         'raw_html',
+        'paragraph',
     )
 
     def __init__(self, block_quote_rules=None, list_rules=None, max_nested_level=6):
@@ -126,6 +136,11 @@ class BlockParser(Parser):
 
     def parse_blank_line(self, m, state):
         state.append_token({'type': 'blank_line'})
+        return m.end()
+
+    def parse_paragraph(self, m, state):
+        text = m.group('paragraph')
+        state.add_paragraph(text)
         return m.end()
 
     def parse_thematic_break(self, m, state):
@@ -562,7 +577,7 @@ class BlockParser(Parser):
             end_pos = m.start()
             if end_pos > state.cursor:
                 text = state.get_text(end_pos)
-                state.tokens.append({'type': 'paragraph', 'text': text})
+                state.add_paragraph(text)
                 state.cursor = end_pos
 
             end_pos = self.parse_method(m, state)
@@ -571,7 +586,7 @@ class BlockParser(Parser):
             else:
                 end_pos = state.find_line_end()
                 text = state.get_text(end_pos)
-                state.tokens.append({'type': 'paragraph', 'text': text})
+                state.add_paragraph(text)
                 state.cursor = end_pos
 
         if state.cursor < state.cursor_max:

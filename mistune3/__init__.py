@@ -1,6 +1,7 @@
 from .markdown import Markdown
-from .block_parser import BlockParser, BlockState
-from .inline_parser import InlineParser, InlineState
+from .core import BlockState, InlineState
+from .block_parser import BlockParser
+from .inline_parser import InlineParser
 from .renderers import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
 

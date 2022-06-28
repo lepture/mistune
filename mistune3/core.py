@@ -92,3 +92,47 @@ class InlineState:
         state.in_emphasis = self.in_emphasis
         state.in_strong = self.in_strong
         return state
+
+
+class Parser:
+    sc_flag = re.M
+    state_cls = BlockState
+
+    SPECIFICATION = {}
+    DEFAULT_RULES = []
+
+    def __init__(self):
+        self.specification = self.SPECIFICATION.copy()
+        self.rules = list(self.DEFAULT_RULES)
+        self._methods = {}
+
+        self.__sc = {}
+
+    def compile_sc(self, rules=None):
+        if rules is None:
+            key = '$'
+            rules = self.rules
+        else:
+            key = '|'.join(rules)
+
+        sc = self.__sc.get(key)
+        if sc:
+            return sc
+
+        regex = '|'.join(r'(?P<%s>%s)' % (k, self.specification[k]) for k in rules)
+        sc = re.compile(regex, self.sc_flag)
+        self.__sc[key] = sc
+        return sc
+
+    def register_rule(self, name, pattern, func, before=None):
+        self.specification[name] = pattern
+        self._methods[name] = lambda m, state: func(self, m, state)
+        if before:
+            index = self.rules.index(before)
+            self.rules.insert(index, name)
+        else:
+            self.rules.append(name)
+
+    def parse_method(self, m, state):
+        func = self._methods[m.lastgroup]
+        return func(m, state)

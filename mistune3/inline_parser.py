@@ -1,5 +1,5 @@
 import re
-from .state import InlineState
+from .core import Parser, InlineState
 from .util import (
     escape,
     escape_url,
@@ -35,35 +35,43 @@ INLINE_HTML = (
 )
 
 
-class InlineParser:
+class InlineParser(Parser):
+    sc_flag = 0
     state_cls = InlineState
 
     # we only need to find the start pattern of an inline token
-    SPECIFICATION = [
+    SPECIFICATION = {
         # e.g. \`, \$
-        ('escape', r'(?:\\' + PUNCTUATION + ')+'),
+        'escape': r'(?:\\' + PUNCTUATION + ')+',
 
         # `code, ```code
-        ('codespan', r'`{1,}'),
+        'codespan': r'`{1,}',
 
         # *w, **w, _w, __w
-        ('emphasis', r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])'),
+        'emphasis': r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])',
 
         # [link], ![img]
-        ('link', r'!?\['),
+        'link': r'!?\[',
 
         # <https://example.com>. regex copied from commonmark.js
-        ('auto_link', r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>'),
-        ('auto_email', AUTO_EMAIL),
+        'auto_link': r'<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>',
+        'auto_email': AUTO_EMAIL,
 
-        ('inline_html', INLINE_HTML),
-    ]
+        'inline_html': INLINE_HTML,
 
-    PRECEDENCE_RULES = [
-        ('auto_link', r'<[A-Za-z][A-Za-z\d.+-]{1,31}:'),
-        ('codespan', r'`{1,}'),
-        ('inline_html', r'</?' + HTML_TAGNAME + r'|<!|<\?'),
-    ]
+        'prec_auto_link': r'<[A-Za-z][A-Za-z\d.+-]{1,31}:',
+        'prec_inline_html': r'</?' + HTML_TAGNAME + r'|<!|<\?',
+    }
+    DEFAULT_RULES = (
+        'escape',
+        'codespan',
+        'emphasis',
+        'link',
+        'auto_link',
+        'auto_email',
+        'inline_html',
+        'linebreak',
+    )
 
     #: linebreak leaves two spaces at the end of line
     STD_LINEBREAK = r'(?:\\| {2,})\n\s*'
@@ -73,36 +81,20 @@ class InlineParser:
 
 
     def __init__(self, renderer, hard_wrap=False):
-        self.renderer = renderer
+        super(InlineParser, self).__init__()
 
-        specification = list(self.SPECIFICATION)
+        self.renderer = renderer
         # lazy add linebreak
         if hard_wrap:
-            specification.append(('linebreak', self.HARD_LINEBREAK))
+            self.specification['linebreak'] = self.HARD_LINEBREAK
         else:
-            specification.append(('linebreak', self.STD_LINEBREAK))
-            specification.append(('softbreak', self.HARD_LINEBREAK))
+            self.specification['linebreak'] = self.STD_LINEBREAK
+            self.specification['softbreak'] = self.HARD_LINEBREAK
+            self.rules.append('softbreak')
 
-        self.specification = specification
-        self.__methods = {
-            name: getattr(self, 'parse_' + name) for name, _ in specification
+        self._methods = {
+            name: getattr(self, 'parse_' + name) for name in self.rules
         }
-        self._sc = None
-        self._prec_sc = None
-
-    def _compile_sc(self, pairs=None):
-        if pairs is None:
-            pairs = self.specification
-        regex = '|'.join('(?P<%s>%s)' % pair for pair in pairs)
-        return re.compile(regex)
-
-    def register_rule(self, name, pattern, func, before=None):
-        if before:
-            index = next(i for i, v in enumerate(self.specification) if v[0] == before)
-            self.specification.insert(index, (name, pattern))
-        else:
-            self.specification.append((name, pattern))
-        self.__methods[name] = lambda m, state: func(self, m, state)
 
     def parse_escape(self, m, state):
         text = m.group('escape')
@@ -326,12 +318,10 @@ class InlineParser:
         return end_pos
 
     def parse(self, src, pos, state):
-        if not self._sc:
-            self._sc = self._compile_sc()
-
+        sc = self.compile_sc()
         state.src = src
         while pos < len(src):
-            m = self._sc.search(src, pos)
+            m = sc.search(src, pos)
             if not m:
                 break
 
@@ -340,9 +330,7 @@ class InlineParser:
                 hole = safe_entity(src[pos:end_pos])
                 state.add_token({'type': 'text', 'raw': hole})
 
-            token_type = m.lastgroup
-            func = self.__methods[token_type]
-            new_pos = func(m, state)
+            new_pos = self.parse_method(m, state)
             if not new_pos:
                 # move cursor 1 character forward
                 pos = end_pos + 1
@@ -359,20 +347,20 @@ class InlineParser:
         return state.tokens
 
     def _precedence_scan(self, marker, text, pos, state):
-        if not self._prec_sc:
-            self._prec_sc = self._compile_sc(self.PRECEDENCE_RULES)
-
-        m = self._prec_sc.search(text)
+        sc = self.compile_sc(['codespan', 'prec_auto_link', 'prec_inline_html'])
+        m = sc.search(text)
         if not m:
             return
 
         start_pos = m.start()
         sc_pos = pos + start_pos
-        m = self._sc.match(state.src, sc_pos)
+
+        sc = self.compile_sc()
+        m = sc.match(state.src, sc_pos)
         if not m:
             return
 
-        func = self.__methods[m.lastgroup]
+        func = self._methods[m.lastgroup]
         end_pos = func(m, state, pos + len(text))
         if not end_pos:
             return

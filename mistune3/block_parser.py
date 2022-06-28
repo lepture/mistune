@@ -8,7 +8,7 @@ from .util import (
     expand_tab,
     expand_leading_tab,
 )
-from .state import BlockState
+from .core import Parser
 from .helpers import (
     LINK_LABEL,
     HTML_TAGNAME,
@@ -42,9 +42,7 @@ _OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'[ \t]*>[ \t]*(?:\n|$)')
 _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 
 
-class BlockParser:
-    state_cls = BlockState
-
+class BlockParser(Parser):
     BLANK_LINE = re.compile(r'(^[ \t\v\f]*\n)+', re.M)
     STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
 
@@ -96,7 +94,7 @@ class BlockParser:
         'raw_html': RAW_HTML,
     }
 
-    RULE_NAMES = (
+    DEFAULT_RULES = (
         'blank_line',
         'fenced_code',
         'indent_code',
@@ -109,59 +107,22 @@ class BlockParser:
         'raw_html',
     )
 
-    def __init__(self, rules=None, block_quote_rules=None, list_rules=None,
-                 max_nested_level=6):
-        self.specification = self.SPECIFICATION.copy()
-
-        if rules is None:
-            rules = list(self.RULE_NAMES)
+    def __init__(self, block_quote_rules=None, list_rules=None, max_nested_level=6):
+        super(BlockParser, self).__init__()
 
         if block_quote_rules is None:
-            block_quote_rules = list(self.RULE_NAMES)
+            block_quote_rules = list(self.DEFAULT_RULES)
 
         if list_rules is None:
-            list_rules = list(self.RULE_NAMES)
-
-        self.rules = rules
+            list_rules = list(self.DEFAULT_RULES)
 
         self.block_quote_rules = block_quote_rules
         self.list_rules = list_rules
         self.max_nested_level = max_nested_level
-
-        self.__sc = {}
         # register default parse methods
-        self.__methods = {
-            name: getattr(self, 'parse_' + name) for name in self.specification
+        self._methods = {
+            name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
         }
-
-    def compile_sc(self, rules):
-        if rules is None:
-            key = '$'
-            rules = self.rules
-        else:
-            key = '|'.join(rules)
-
-        sc = self.__sc.get(key)
-        if sc:
-            return sc
-
-        regex = '|'.join(r'(?P<%s>%s)' % (k, self.specification[k]) for k in rules)
-        sc = re.compile(regex, re.M)
-        self.__sc[key] = sc
-        return sc
-
-    def register_rule(self, name, pattern, func, before=None):
-        self.specification[name] = pattern
-        self.__methods[name] = lambda m, state: func(self, m, state)
-        if before:
-            index = self.rules.index(before)
-            self.rules.insert(index, name)
-        else:
-            self.rules.append(name)
-
-    def parse_method(self, m, state):
-        func = self.__methods[m.lastgroup]
-        return func(m, state)
 
     def parse_blank_line(self, m, state):
         state.append_token({'type': 'blank_line'})
@@ -601,7 +562,7 @@ class BlockParser:
             end_pos = m.start()
             if end_pos > state.cursor:
                 text = state.get_text(end_pos)
-                state.add_paragraph(text)
+                state.tokens.append({'type': 'paragraph', 'text': text})
                 state.cursor = end_pos
 
             end_pos = self.parse_method(m, state)
@@ -609,7 +570,8 @@ class BlockParser:
                 state.cursor = end_pos
             else:
                 end_pos = state.find_line_end()
-                state.add_paragraph(state.get_text(end_pos))
+                text = state.get_text(end_pos)
+                state.tokens.append({'type': 'paragraph', 'text': text})
                 state.cursor = end_pos
 
         if state.cursor < state.cursor_max:

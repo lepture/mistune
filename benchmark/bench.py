@@ -79,7 +79,8 @@ def benchmarks(cases, count=100):
 
 
 if __name__ == '__main__':
-    benchmarks([
+    cases = [
+        # block
         'axt',
         'setext',
         'normal_ul',
@@ -87,7 +88,19 @@ if __name__ == '__main__':
         'normal_ol',
         'insane_ol',
         'blockquote',
+        'blockhtml',
         'fenced',
-        'elements',
         'paragraph',
-    ])
+
+        # inline
+        'emphasis',
+        'auto_links',
+        'std_links',
+        'ref_links',
+
+        'elements',
+    ]
+    if len(sys.argv) > 1:
+        benchmarks(sys.argv[1:])
+    else:
+        benchmarks(cases)

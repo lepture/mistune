@@ -1,0 +1,1 @@
+case for emphasis: **bold** __bold__ *italic* _italic_, **bold and *italic***, **bold *italic* and __bold__**. ______________foo______________ and *********bar********* **__**__bold__**__**

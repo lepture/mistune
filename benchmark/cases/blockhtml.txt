@@ -1,0 +1,41 @@
+<div>foo
+**not bold**
+baz
+</div>
+
+<div>foo
+
+**is bold**
+baz
+</div>
+
+
+<pre>
+pre tag contains blank lines
+
+this is still in pre
+</pre>
+
+<!--
+
+comment **not bold**
+
+-->
+
+<![CDATA[
+
+**not bold**
+
+]]>
+
+<?php
+
+here is php code, **not bold**
+
+?>
+
+<!RUN
+
+code, **not bold**
+
+!>

@@ -31,14 +31,6 @@ _LINE_HAS_TEXT = re.compile(r'( *)\S')
 _BLANK_TO_LINE = re.compile(r'[ \t]*\n')
 
 _BLOCK_TAGS_PATTERN = '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS)
-_BLOCK_HTML_BREAK = re.compile(
-    r' {0,3}(?:'
-    r'(?:</?' + '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS) + r'(?:[ \t]+|\n|$))'
-    r'|<!--' # comment
-    r'|<\?'  # script
-    r'|<![A-Z]'
-    r'|<!\[CDATA\[)'
-)
 _OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'[ \t]*>[ \t]*(?:\n|$)')
 _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 
@@ -46,29 +38,6 @@ _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 class BlockParser(Parser):
     BLANK_LINE = re.compile(r'(^[ \t\v\f]*\n)+', re.M)
     STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
-
-    LIST = (
-        r'^(?P<list_1> {0,3})'
-        r'(?P<list_2>[\*\+-]|\d{1,9}[.)])'
-        r'(?P<list_3>[ \t]*|[ \t].+)$'
-    )
-
-    INDENT_CODE = (
-        r'^(?: {4}| *\t)[^\n]+(?:\n+|$)'
-        r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
-    )
-
-    # increase paragraph parsing for common cases
-    STRICT_PARAGRAPH = (
-        # start with none punctuation, not number, not whitespace
-        r'(?:^[^\s\d' + re.escape(string.punctuation) + r']'
-        r'[^\n]*\n)+'
-    )
-
-    FENCED_CODE = (
-        r'^(?P<fenced_1> {0,3})(?P<fenced_2>`{3,}|~{3,})'
-        r'[ \t]*(?P<fenced_3>.*?)$'
-    )
 
     RAW_HTML = (
         r'^ {0,3}('
@@ -92,15 +61,29 @@ class BlockParser(Parser):
         'blank_line': r'(^[ \t\v\f]*\n)+',
         'axt_heading': r'^ {0,3}(?P<axt_1>#{1,6})(?!#+)(?P<axt_2>[ \t]*|[ \t]+.*?)$',
         'setex_heading': r'^ {0,3}(?P<setext_1>=|-){1,}[ \t]*$',
-        'fenced_code': FENCED_CODE,
-        'indent_code': INDENT_CODE,
+        'fenced_code': (
+            r'^(?P<fenced_1> {0,3})(?P<fenced_2>`{3,}|~{3,})'
+            r'[ \t]*(?P<fenced_3>.*?)$'
+        ),
+        'indent_code': (
+            r'^(?: {4}| *\t)[^\n]+(?:\n+|$)'
+            r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
+        ),
         'thematic_break': r'^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$',
         'ref_link': r'^ {0,3}\[(?P<link_1>' + LINK_LABEL + r')\]:',
         'block_quote': r'^ {0,3}>(?P<quote_1>.*?)$',
-        'list': LIST,
+        'list': (
+            r'^(?P<list_1> {0,3})'
+            r'(?P<list_2>[\*\+-]|\d{1,9}[.)])'
+            r'(?P<list_3>[ \t]*|[ \t].+)$'
+        ),
         'block_html': BLOCK_HTML,
         'raw_html': RAW_HTML,
-        'paragraph': STRICT_PARAGRAPH,
+        'paragraph': (
+            # start with none punctuation, not number, not whitespace
+            r'(?:^[^\s\d' + re.escape(string.punctuation) + r']'
+            r'[^\n]*\n)+'
+        )
     }
 
     DEFAULT_RULES = (
@@ -157,7 +140,6 @@ class BlockParser(Parser):
         code = m.group('indent_code')
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
-        line_count = code.count('\n')
         code = escape(code.strip('\n'))
         state.append_token({'type': 'block_code', 'raw': code})
         return m.end()
@@ -553,7 +535,6 @@ class BlockParser(Parser):
         # rule 7
         start_pos = m.end()
         end_pos = state.find_line_end()
-        text = state.get_text(end_pos)
         if (open_tag and _OPEN_TAG_END.match(state.src, start_pos, end_pos)) or \
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)

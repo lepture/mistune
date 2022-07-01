@@ -30,7 +30,7 @@ def render_task_list_item(renderer, text, depth=None, tight=True, checked=False)
 
 def task_lists(md):
     md.before_render_hooks.append(task_lists_hook)
-    if md.renderer.NAME == 'html':
+    if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('task_list_item', render_task_list_item)
 
 

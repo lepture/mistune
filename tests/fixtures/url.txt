@@ -1,10 +1,22 @@
 # url plugin
 
 
-## autourl
-
 ```````````````````````````````` example
 visit https://lepture.com/
 .
 <p>visit <a href="https://lepture.com/">https://lepture.com/</a></p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+visit [https://lepture.com/](/foo)
+.
+<p>visit <a href="/foo">https://lepture.com/</a></p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+visit <a href="/foo">https://lepture.com/</a>
+.
+<p>visit <a href="/foo">https://lepture.com/</a></p>
 ````````````````````````````````

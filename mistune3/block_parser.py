@@ -122,7 +122,7 @@ class BlockParser(Parser):
         return m.end()
 
     def parse_paragraph(self, m, state):
-        text = m.group('paragraph')
+        text = m.group(0)
         state.add_paragraph(text)
         return m.end()
 
@@ -137,7 +137,7 @@ class BlockParser(Parser):
         if end_pos:
             return end_pos
 
-        code = m.group('indent_code')
+        code = m.group(0)
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
         code = escape(code.strip('\n'))
@@ -492,7 +492,7 @@ class BlockParser(Parser):
         return self.parse_raw_html(m, state)
 
     def parse_raw_html(self, m, state):
-        marker = m.group(m.lastgroup).strip()
+        marker = m.group(0).strip()
 
         # rule 2
         if marker == '<!--':

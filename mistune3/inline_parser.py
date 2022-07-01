@@ -97,7 +97,7 @@ class InlineParser(Parser):
         }
 
     def parse_escape(self, m, state):
-        text = m.group('escape')
+        text = m.group(0)
         text = unescape_char(text)
         state.add_token({
             'type': 'text',
@@ -108,7 +108,7 @@ class InlineParser(Parser):
     def parse_link(self, m, state):
         pos = m.end()
 
-        marker = m.group('link')
+        marker = m.group(0)
         is_image = marker[0] == '!'
         if is_image and state.in_image:
             state.add_token({'type': 'text', 'raw': marker})
@@ -180,7 +180,7 @@ class InlineParser(Parser):
         state.add_token(token)
 
     def parse_auto_link(self, m, state, prec_pos=None):
-        text = m.group('auto_link')
+        text = m.group(0)
         pos = m.end()
         if prec_pos and prec_pos > pos:
             return
@@ -193,7 +193,7 @@ class InlineParser(Parser):
         return pos
 
     def parse_auto_email(self, m, state):
-        text = m.group('auto_email')
+        text = m.group(0)
         pos = m.end()
         if state.in_link:
             return self.record_text(pos, text, state)
@@ -214,7 +214,7 @@ class InlineParser(Parser):
     def parse_emphasis(self, m, state):
         pos = m.end()
 
-        marker = m.group('emphasis')
+        marker = m.group(0)
         if len(marker) > 3:
             if state.in_emphasis or state.in_strong:
                 return self.record_text(pos, marker, state)
@@ -272,7 +272,7 @@ class InlineParser(Parser):
         return end_pos
 
     def parse_codespan(self, m, state, prec_pos=None):
-        marker = m.group('codespan')
+        marker = m.group(0)
         # require same marker with same length at end
 
         pattern = re.compile(r'(.*?(?:[^`]))' + marker + r'(?!`)', re.S)
@@ -309,7 +309,7 @@ class InlineParser(Parser):
         if prec_pos and prec_pos > end_pos:
             return
 
-        html = m.group('inline_html')
+        html = m.group(0)
         state.add_token({'type': 'inline_html', 'raw': html})
         if html.startswith(('<a ', '<a>', '<A ', '<A>')):
             state.in_link = True

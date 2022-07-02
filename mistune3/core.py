@@ -82,7 +82,7 @@ class InlineState:
     def insert_token(self, token):
         self.tokens.insert(len(self.tokens) - 1, token)
 
-    def add_token(self, token):
+    def append_token(self, token):
         self.tokens.append(token)
 
     def copy(self):
@@ -128,8 +128,11 @@ class Parser:
         self.specification[name] = pattern
         self._methods[name] = lambda m, state: func(self, m, state)
         if before:
-            index = self.rules.index(before)
-            self.rules.insert(index, name)
+            try:
+                index = self.rules.index(before)
+                self.rules.insert(index, name)
+            except ValueError:
+                self.rules.append(name)
         else:
             self.rules.append(name)
 

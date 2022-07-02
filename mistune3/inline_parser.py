@@ -99,7 +99,7 @@ class InlineParser(Parser):
     def parse_escape(self, m, state):
         text = m.group(0)
         text = unescape_char(text)
-        state.add_token({
+        state.append_token({
             'type': 'text',
             'raw': safe_entity(text),
         })
@@ -111,10 +111,10 @@ class InlineParser(Parser):
         marker = m.group(0)
         is_image = marker[0] == '!'
         if is_image and state.in_image:
-            state.add_token({'type': 'text', 'raw': marker})
+            state.append_token({'type': 'text', 'raw': marker})
             return pos
         elif not is_image and state.in_link:
-            state.add_token({'type': 'text', 'raw': marker})
+            state.append_token({'type': 'text', 'raw': marker})
             return pos
 
         text = None
@@ -177,7 +177,7 @@ class InlineParser(Parser):
                 'children': self.render_text(text, new_state),
                 'attrs': attrs,
             }
-        state.add_token(token)
+        state.append_token(token)
 
     def parse_auto_link(self, m, state, prec_pos=None):
         text = m.group(0)
@@ -205,7 +205,7 @@ class InlineParser(Parser):
 
     def _add_auto_link(self, url, text, state):
         children = self.render_tokens([{'type': 'text', 'raw': safe_entity(text)}])
-        state.add_token({
+        state.append_token({
             'type': 'link',
             'children': children,
             'attrs': {'url': escape_url(url)},
@@ -239,7 +239,7 @@ class InlineParser(Parser):
             return self.record_text(pos, marker, state)
 
         if hole:
-            state.add_token({'type': 'text', 'raw': safe_entity(hole)})
+            state.append_token({'type': 'text', 'raw': safe_entity(hole)})
 
         new_state = state.copy()
         text = m1.group(1)
@@ -252,11 +252,11 @@ class InlineParser(Parser):
         if len(marker) == 1:
             new_state.in_emphasis = True
             children = self.render_text(text, new_state)
-            state.add_token({'type': 'emphasis', 'children': children})
+            state.append_token({'type': 'emphasis', 'children': children})
         elif len(marker) == 2:
             new_state.in_strong = True
             children = self.render_text(text, new_state)
-            state.add_token({'type': 'strong', 'children': children})
+            state.append_token({'type': 'strong', 'children': children})
         else:
             new_state.in_emphasis = True
             new_state.in_strong = True
@@ -265,7 +265,7 @@ class InlineParser(Parser):
                 'type': 'strong',
                 'children': self.render_text(text, new_state)
             }])
-            state.add_token({
+            state.append_token({
                 'type': 'emphasis',
                 'children': children,
             })
@@ -290,18 +290,18 @@ class InlineParser(Parser):
             if len(code.strip()):
                 if code.startswith(' ') and code.endswith(' '):
                     code = code[1:-1]
-            state.add_token({'type': 'codespan', 'raw': escape(code)})
+            state.append_token({'type': 'codespan', 'raw': escape(code)})
             return end_pos
 
         if prec_pos is None:
             return self.record_text(pos, marker, state)
 
     def parse_linebreak(self, m, state):
-        state.add_token({'type': 'linebreak'})
+        state.append_token({'type': 'linebreak'})
         return m.end()
 
     def parse_softbreak(self, m, state):
-        state.add_token({'type': 'softbreak'})
+        state.append_token({'type': 'softbreak'})
         return m.end()
 
     def parse_inline_html(self, m, state, prec_pos=None):
@@ -310,7 +310,7 @@ class InlineParser(Parser):
             return
 
         html = m.group(0)
-        state.add_token({'type': 'inline_html', 'raw': html})
+        state.append_token({'type': 'inline_html', 'raw': html})
         if html.startswith(('<a ', '<a>', '<A ', '<A>')):
             state.in_link = True
         elif html.startswith(('</a ', '</a>', '</A ', '</A>')):
@@ -328,22 +328,22 @@ class InlineParser(Parser):
             end_pos = m.start()
             if end_pos > pos:
                 hole = safe_entity(src[pos:end_pos])
-                state.add_token({'type': 'text', 'raw': hole})
+                state.append_token({'type': 'text', 'raw': hole})
 
             new_pos = self.parse_method(m, state)
             if not new_pos:
                 # move cursor 1 character forward
                 pos = end_pos + 1
                 hole = safe_entity(src[end_pos:pos])
-                state.add_token({'type': 'text', 'raw': hole})
+                state.append_token({'type': 'text', 'raw': hole})
             else:
                 pos = new_pos
 
         if pos == 0:
             # special case, just pure text
-            state.add_token({'type': 'text', 'raw': safe_entity(src)})
+            state.append_token({'type': 'text', 'raw': safe_entity(src)})
         elif pos < len(src):
-            state.add_token({'type': 'text', 'raw': safe_entity(src[pos:])})
+            state.append_token({'type': 'text', 'raw': safe_entity(src[pos:])})
         return state.tokens
 
     def _precedence_scan(self, marker, text, pos, state):
@@ -369,7 +369,7 @@ class InlineParser(Parser):
         return end_pos
 
     def record_text(self, pos, text, state):
-        state.add_token({'type': 'text', 'raw': safe_entity(text)})
+        state.append_token({'type': 'text', 'raw': safe_entity(text)})
         return pos
 
     def render_text(self, s: str, state: InlineState):

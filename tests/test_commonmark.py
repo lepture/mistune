@@ -19,9 +19,6 @@ DIFF_CASES = {
 }
 
 IGNORE_CASES = {
-    'code_spans_341',  # no higher precedence
-    'code_spans_342',
-
     'links_496',  # we don't support link title in (title)
     'links_504',
 

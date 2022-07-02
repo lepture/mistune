@@ -167,14 +167,14 @@ class InlineParser(Parser):
             new_state.in_image = True
             token = {
                 'type': 'image',
-                'children': self.render_text(text, new_state),
+                'children': self.render(text, new_state),
                 'attrs': attrs,
             }
         else:
             new_state.in_link = True
             token = {
                 'type': 'link',
-                'children': self.render_text(text, new_state),
+                'children': self.render(text, new_state),
                 'attrs': attrs,
             }
         state.append_token(token)
@@ -257,11 +257,11 @@ class InlineParser(Parser):
 
         if len(marker) == 1:
             new_state.in_emphasis = True
-            children = self.render_text(text, new_state)
+            children = self.render(text, new_state)
             state.append_token({'type': 'emphasis', 'children': children})
         elif len(marker) == 2:
             new_state.in_strong = True
-            children = self.render_text(text, new_state)
+            children = self.render(text, new_state)
             state.append_token({'type': 'strong', 'children': children})
         else:
             new_state.in_emphasis = True
@@ -269,7 +269,7 @@ class InlineParser(Parser):
 
             children = self.render_tokens([{
                 'type': 'strong',
-                'children': self.render_text(text, new_state)
+                'children': self.render(text, new_state)
             }])
             state.append_token({
                 'type': 'emphasis',
@@ -379,7 +379,7 @@ class InlineParser(Parser):
         state.prepend_token({'type': 'text', 'raw': text})
         return end_pos
 
-    def render_text(self, s: str, state: InlineState):
+    def render(self, s: str, state: InlineState):
         self.parse(s, 0, state)
         return self.render_tokens(state.tokens)
 
@@ -389,7 +389,7 @@ class InlineParser(Parser):
         return list(tokens)
 
     def __call__(self, s, env):
-        return self.render_text(s, self.state_cls(env))
+        return self.render(s, self.state_cls(env))
 
 
 def _parse_std_link(src, pos):

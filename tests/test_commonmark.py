@@ -1,4 +1,3 @@
-import re
 import mistune3 as mistune
 from tests import BaseTestCase, normalize_html
 
@@ -12,10 +11,7 @@ DIFF_CASES = {
     'links_517',  # aggressive link group
     'links_518',
     'links_519',
-    'links_520',
     'links_531',
-    'links_533',
-    'links_563',
 }
 
 IGNORE_CASES = {

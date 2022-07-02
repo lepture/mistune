@@ -130,7 +130,8 @@ class InlineParser(Parser):
         if end_pos >= len(state.src) and label is None:
             return
 
-        prec_pos = self._precedence_scan(m, state, end_pos)
+        rules = ['codespan', 'prec_auto_link', 'prec_inline_html']
+        prec_pos = self._precedence_scan(m, state, end_pos, rules)
         if prec_pos:
             return prec_pos
 
@@ -348,7 +349,7 @@ class InlineParser(Parser):
 
     def _precedence_scan(self, m, state, end_pos, rules=None):
         if rules is None:
-            rules = ['codespan', 'prec_auto_link', 'prec_inline_html']
+            rules = ['codespan', 'link', 'prec_auto_link', 'prec_inline_html']
 
         mark_pos = m.end()
         sc = self.compile_sc(rules)

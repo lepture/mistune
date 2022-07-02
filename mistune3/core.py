@@ -79,7 +79,7 @@ class InlineState:
         self.in_emphasis = False
         self.in_strong = False
 
-    def insert_token(self, token):
+    def prepend_token(self, token):
         self.tokens.insert(len(self.tokens) - 1, token)
 
     def append_token(self, token):

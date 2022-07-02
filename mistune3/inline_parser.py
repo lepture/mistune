@@ -186,7 +186,8 @@ class InlineParser(Parser):
             return
 
         if state.in_link:
-            return self.record_text(pos, text, state)
+            self.process_text(text, state)
+            return pos
 
         text = text[1:-1]
         self._add_auto_link(text, text, state)
@@ -196,7 +197,8 @@ class InlineParser(Parser):
         text = m.group(0)
         pos = m.end()
         if state.in_link:
-            return self.record_text(pos, text, state)
+            self.process_text(text, state)
+            return pos
 
         text = text[1:-1]
         url = 'mailto:' + text
@@ -217,16 +219,19 @@ class InlineParser(Parser):
         marker = m.group(0)
         if len(marker) > 3:
             if state.in_emphasis or state.in_strong:
-                return self.record_text(pos, marker, state)
+                state.append_token({'type': 'text', 'raw': marker})
+                return pos
 
             _slice = len(marker) - 3
             hole = marker[:_slice]
             marker = marker[_slice:]
         else:
             if len(marker) == 1 and state.in_emphasis:
-                return self.record_text(pos, marker, state)
+                state.append_token({'type': 'text', 'raw': marker})
+                return pos
             elif len(marker) == 2 and state.in_strong:
-                return self.record_text(pos, marker, state)
+                state.append_token({'type': 'text', 'raw': marker})
+                return pos
             hole = None
 
         _c = marker[0]
@@ -236,10 +241,11 @@ class InlineParser(Parser):
         pattern1 = re.compile(_regex, re.S)
         m1 = pattern1.match(state.src, pos)
         if not m1:
-            return self.record_text(pos, marker, state)
+            state.append_token({'type': 'text', 'raw': marker})
+            return pos
 
         if hole:
-            state.append_token({'type': 'text', 'raw': safe_entity(hole)})
+            self.process_text(hole, state)
 
         new_state = state.copy()
         text = m1.group(1)
@@ -294,7 +300,8 @@ class InlineParser(Parser):
             return end_pos
 
         if prec_pos is None:
-            return self.record_text(pos, marker, state)
+            state.append_token({'type': 'text', 'raw': marker})
+            return pos
 
     def parse_linebreak(self, m, state):
         state.append_token({'type': 'linebreak'})
@@ -317,6 +324,9 @@ class InlineParser(Parser):
             state.in_link = False
         return end_pos
 
+    def process_text(self, text, state):
+        state.append_token({'type': 'text', 'raw': safe_entity(text)})
+
     def parse(self, src, pos, state):
         sc = self.compile_sc()
         state.src = src
@@ -327,23 +337,23 @@ class InlineParser(Parser):
 
             end_pos = m.start()
             if end_pos > pos:
-                hole = safe_entity(src[pos:end_pos])
-                state.append_token({'type': 'text', 'raw': hole})
+                hole = src[pos:end_pos]
+                self.process_text(hole, state)
 
             new_pos = self.parse_method(m, state)
             if not new_pos:
                 # move cursor 1 character forward
                 pos = end_pos + 1
-                hole = safe_entity(src[end_pos:pos])
-                state.append_token({'type': 'text', 'raw': hole})
+                hole = src[end_pos:pos]
+                self.process_text(hole, state)
             else:
                 pos = new_pos
 
         if pos == 0:
             # special case, just pure text
-            state.append_token({'type': 'text', 'raw': safe_entity(src)})
+            self.process_text(src, state)
         elif pos < len(src):
-            state.append_token({'type': 'text', 'raw': safe_entity(src[pos:])})
+            self.process_text(src[pos:], state)
         return state.tokens
 
     def _precedence_scan(self, marker, text, pos, state):
@@ -365,12 +375,9 @@ class InlineParser(Parser):
         if not end_pos:
             return
 
-        state.insert_token({'type': 'text', 'raw': marker + text[:start_pos]})
+        text = safe_entity(marker + text[:start_pos])
+        state.prepend_token({'type': 'text', 'raw': text})
         return end_pos
-
-    def record_text(self, pos, text, state):
-        state.append_token({'type': 'text', 'raw': safe_entity(text)})
-        return pos
 
     def render_text(self, s: str, state: InlineState):
         self.parse(s, 0, state)

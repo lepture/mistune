@@ -14,7 +14,8 @@ def parse_strikethrough(inline, m, state):
     pos = m.end()
     m1 = _STRIKE_END.match(state.src, pos)
     if not m1:
-        return inline.record_text(pos, m.group(0), state)
+        inline.process_text(m.group(0), state)
+        return pos
     text = m1.group(1)
     children = inline.render_text(text, state.copy())
     state.append_token({'type': 'strikethrough', 'children': children})

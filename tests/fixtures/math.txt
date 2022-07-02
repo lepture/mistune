@@ -1,0 +1,44 @@
+# Math
+
+## Block Math
+
+```````````````````````````````` example
+$$
+.
+<p>$$</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+$$
+\operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+$$
+.
+<div class="math">$$
+\operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+$$</div>
+````````````````````````````````
+
+```````````````````````````````` example
+$$
+foo
+$$
+bar
+.
+<div class="math">$$
+foo
+$$</div>
+<p>bar</p>
+````````````````````````````````
+
+## Inline Math
+
+```````````````````````````````` example
+The homomorphism $f$ is injective if and only if its kernel is only the
+singleton set $e_G$, because otherwise $\exists a,b\in G$
+with $a\neq b$ such that $f(a)=f(b)$.
+.
+<p>The homomorphism <span class="math">$f$</span> is injective if and only if its kernel is only the
+singleton set <span class="math">$e_G$</span>, because otherwise <span class="math">$\exists a,b\in G$</span>
+with <span class="math">$a\neq b$</span> such that <span class="math">$f(a)=f(b)$</span>.</p>
+````````````````````````````````

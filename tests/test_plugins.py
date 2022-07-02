@@ -5,6 +5,7 @@ from mistune3.plugins.task_lists import task_lists
 from mistune3.plugins.table import table
 from mistune3.plugins.footnotes import footnotes
 from mistune3.plugins.abbr import abbr
+from mistune3.plugins.math import math
 from mistune3.directives import Admonition
 from tests import BaseTestCase, fixtures
 
@@ -33,4 +34,5 @@ load_plugin("task_lists", task_lists)
 load_plugin("table", table)
 load_plugin("footnotes", footnotes)
 load_plugin("abbr", abbr)
+load_plugin("math", math)
 load_plugin("admonition", Admonition())

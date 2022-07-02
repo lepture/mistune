@@ -1,4 +1,4 @@
-import mistune
+import mistune3 as mistune
 from unittest import TestCase
 
 
@@ -7,20 +7,17 @@ class TestMiscCases(TestCase):
         self.assertEqual(mistune.html(None), '')
 
     def test_before_parse_hooks(self):
-        def _add_name(md, s, state):
-            state['name'] = 'test'
-            return s, state
+        def _add_name(md, state):
+            state.env['name'] = 'test'
 
         md = mistune.create_markdown()
         md.before_parse_hooks.append(_add_name)
-        state = {}
+        state = md.block.state_cls()
         md.parse('', state)
-        self.assertEqual(state['name'], 'test')
+        self.assertEqual(state.env['name'], 'test')
 
     def test_hard_wrap(self):
-        renderer = mistune.HTMLRenderer()
-        inline = mistune.InlineParser(renderer, hard_wrap=True)
-        md = mistune.Markdown(renderer, inline=inline)
+        md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md('foo\nbar')
         expected = '<p>foo<br />\nbar</p>'
         self.assertEqual(result.strip(), expected)
@@ -33,12 +30,6 @@ class TestMiscCases(TestCase):
 
         result = md('<em>1</em>')
         expected = '<p>&lt;em&gt;1&lt;/em&gt;</p>'
-        self.assertEqual(result.strip(), expected)
-
-    def test_emphasis(self):
-        md = mistune.create_markdown(escape=True)
-        result = md('_em_ **strong**')
-        expected = '<p><em>em</em> <strong>strong</strong></p>'
         self.assertEqual(result.strip(), expected)
 
     def test_harmful_links(self):
@@ -61,6 +52,6 @@ class TestMiscCases(TestCase):
         self.assertEqual(result.strip(), expected)
 
     def test_use_plugin(self):
-        from mistune.plugins import plugin_url
+        from mistune3.plugins.url import url
         md = mistune.Markdown(mistune.HTMLRenderer())
-        md.use(plugin_url)
+        md.use(url)

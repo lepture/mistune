@@ -381,8 +381,8 @@ class InlineParser(Parser):
             return self.renderer(tokens)
         return list(tokens)
 
-    def __call__(self, s, refs):
-        return self.render_text(s, self.state_cls(refs))
+    def __call__(self, s, env):
+        return self.render_text(s, self.state_cls(env))
 
 
 def _parse_std_link(src, pos):

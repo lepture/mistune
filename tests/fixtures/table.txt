@@ -139,26 +139,6 @@ Content Cell  | Content Cell
 ## Misc Table
 
 ```````````````````````````````` example
-| A |
-| - | - |
-| a | b |
-.
-<table>
-<thead>
-<tr>
-  <th>A</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>a</td>
-  <td>b</td>
-</tr>
-</tbody>
-</table>
-````````````````````````````````
-
-```````````````````````````````` example
 | A | |
 | - | |
 | a | b |
@@ -168,87 +148,6 @@ Content Cell  | Content Cell
 <tr>
   <th>A</th>
   <th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>a</td>
-  <td>b</td>
-</tr>
-</tbody>
-</table>
-````````````````````````````````
-
-```````````````````````````````` example
-| A | |
-| - |
-| a | b |
-.
-<table>
-<thead>
-<tr>
-  <th>A</th>
-  <th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>a</td>
-  <td>b</td>
-</tr>
-</tbody>
-</table>
-````````````````````````````````
-
-```````````````````````````````` example
-| A |
-| - |
-| a | b |
-.
-<table>
-<thead>
-<tr>
-  <th>A</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>a</td>
-  <td>b</td>
-</tr>
-</tbody>
-</table>
-````````````````````````````````
-
-```````````````````````````````` example
-| A |
-| - | - |
-| a | b |
-.
-<table>
-<thead>
-<tr>
-  <th>A</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td>a</td>
-  <td>b</td>
-</tr>
-</tbody>
-</table>
-````````````````````````````````
-
-```````````````````````````````` example
-| A |
-| - | |
-| a | b |
-.
-<table>
-<thead>
-<tr>
-  <th>A</th>
 </tr>
 </thead>
 <tbody>

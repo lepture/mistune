@@ -2,6 +2,7 @@ from mistune3 import create_markdown
 from mistune3.plugins.url import url
 from mistune3.plugins.strikethrough import strikethrough
 from mistune3.plugins.task_lists import task_lists
+from mistune3.plugins.table import table
 from mistune3.directives import Admonition
 from tests import BaseTestCase, fixtures
 
@@ -27,4 +28,5 @@ def load_plugin(plugin_name, plugin_func, test_ast=False):
 load_plugin("url", url)
 load_plugin("strikethrough", strikethrough)
 load_plugin("task_lists", task_lists)
+load_plugin("table", table)
 load_plugin("admonition", Admonition())

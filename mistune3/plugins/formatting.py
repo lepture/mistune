@@ -1,11 +1,12 @@
 import re
-from ..helpers import PREVENT_BACKSLASH
+from ..helpers import unescape_char, PREVENT_BACKSLASH
 
-__all__ = ["strikethrough", "mark", "insert"]
+__all__ = ["strikethrough", "mark", "insert", "subscript"]
 
 _STRIKE_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'~~', re.S)
 _MARK_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'==', re.S)
 _INSERT_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'\^\^', re.S)
+SUBSCRIPT_PATTERN = r'~(?:\S|\\ )+?~'
 
 
 def parse_strikethrough(inline, m, state):
@@ -32,12 +33,27 @@ def render_insert(renderer, text):
     return '<ins>' + text + '</ins>'
 
 
+def parse_subscript(inline, m, state):
+    text = m.group(0)
+    new_state = state.copy()
+    new_state.src = text[1:-1].replace('\\ ', ' ')
+    children = inline.render(new_state)
+    state.append_token({
+        'type': 'subscript',
+        'children': children
+    })
+    return m.end()
+
+
+def render_subscript(renderer, text):
+    return '<sub>' + text + '</sub>'
+
+
 def _parse_to_end(inline, m, state, tok_type, end_pattern):
     pos = m.end()
     m1 = end_pattern.match(state.src, pos)
     if not m1:
-        inline.process_text(m.group(0), state)
-        return pos
+        return
     text = m1.group(1)
     new_state = state.copy()
     new_state.src = text
@@ -77,3 +93,9 @@ def insert(md):
     )
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('insert', render_insert)
+
+
+def subscript(md):
+    md.inline.register('subscript', SUBSCRIPT_PATTERN, parse_subscript, before='linebreak')
+    if md.renderer and md.renderer.NAME == 'html':
+        md.renderer.register('subscript', render_subscript)

@@ -6,6 +6,7 @@ from ..helpers import LINK_LABEL
 __all__ = ['footnotes']
 
 _PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
+# https://michelf.ca/projects/php-markdown/extra/#footnotes
 REF_FOOTNOTE = (
   r'^(?P<footnote_lead> {0,3})'
   r'\[\^(?P<footnote_key>' + LINK_LABEL + r')]:[ \t]'

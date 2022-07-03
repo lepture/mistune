@@ -120,11 +120,12 @@ class HTMLRenderer(BaseRenderer):
     def paragraph(self, text):
         return '<p>' + text + '</p>\n'
 
-    def heading(self, text, level, id=None):
+    def heading(self, text, level, **attrs):
         tag = 'h' + str(level)
         html = '<' + tag
-        if id is not None:
-            html += ' id="' + id + '"'
+        _id = attrs.get('id')
+        if _id:
+            html += ' id="' + _id + '"'
         return html + '>' + text + '</' + tag + '>\n'
 
     def blank_line(self):
@@ -156,13 +157,14 @@ class HTMLRenderer(BaseRenderer):
     def block_error(self, html):
         return '<div class="error">' + html + '</div>\n'
 
-    def list(self, text, ordered, start=None, depth=None, tight=True):
+    def list(self, text, ordered, **attrs):
         if ordered:
             html = '<ol'
+            start = attrs.get('start')
             if start is not None:
                 html += ' start="' + str(start) + '"'
             return html + '>\n' + text + '</ol>\n'
         return '<ul>\n' + text + '</ul>\n'
 
-    def list_item(self, text, depth=None, tight=True):
+    def list_item(self, text, **attrs):
         return '<li>' + text + '</li>\n'

@@ -108,8 +108,6 @@ def parse_children(block, m, state):
     leading = len(m.group(1)) + 2
     text = '\n'.join(line[leading:] for line in text.splitlines()) + '\n'
 
-    child = block.state_cls(state)
-    child.process(text)
-
+    child = state.child_state(text)
     block.parse(child, rules)
     return child.tokens

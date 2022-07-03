@@ -4,6 +4,7 @@ from ..helpers import PREVENT_BACKSLASH
 
 __all__ = ['abbr']
 
+# https://michelf.ca/projects/php-markdown/extra/#abbr
 REF_ABBR = (
   r'^ {0,3}\*\[(?P<abbr_key>[^\]]+)'+ PREVENT_BACKSLASH + r'\]:'
   r'(?P<abbr_text>(?:[ \t]*\n(?: {3,}|\t)[^\n]+)|(?:[^\n]*))$'

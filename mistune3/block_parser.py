@@ -318,10 +318,7 @@ class BlockParser(Parser):
         text = expand_tab(text)
 
         # scan children state
-        child = self.state_cls(state)
-        child.in_block = 'block_quote'
-        child.process(text)
-
+        child = state.child_state(text)
         if state.depth() >= self.max_nested_level:
             rules = list(self.block_quote_rules)
             rules.remove('block_quote')
@@ -473,8 +470,7 @@ class BlockParser(Parser):
             state.cursor = pos
 
         text += _clean_list_item_text(src, continue_width)
-        child = self.state_cls(state)
-        child.process(strip_end(text))
+        child = state.child_state(strip_end(text))
 
         self.parse(child, rules)
 

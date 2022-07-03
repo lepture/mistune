@@ -22,6 +22,11 @@ class BlockState:
         else:
             self.env = {'ref_links': {}}
 
+    def child_state(self, src):
+        child = self.__class__(self)
+        child.process(src)
+        return child
+
     def process(self, src):
         self.src = src
         self.cursor_max = len(src)

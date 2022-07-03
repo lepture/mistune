@@ -175,18 +175,19 @@ class InlineParser(Parser):
 
     def _add_link_token(self, is_image, text, attrs, state):
         new_state = state.copy()
+        new_state.src = text
         if is_image:
             new_state.in_image = True
             token = {
                 'type': 'image',
-                'children': self.render(text, new_state),
+                'children': self.render(new_state),
                 'attrs': attrs,
             }
         else:
             new_state.in_link = True
             token = {
                 'type': 'link',
-                'children': self.render(text, new_state),
+                'children': self.render(new_state),
                 'attrs': attrs,
             }
         state.append_token(token)
@@ -252,7 +253,6 @@ class InlineParser(Parser):
         if hole:
             self.process_text(hole, state)
 
-        new_state = state.copy()
         text = state.src[pos:m1.start()]
         end_pos = m1.end()
 
@@ -260,13 +260,15 @@ class InlineParser(Parser):
         if prec_pos:
             return prec_pos
 
+        new_state = state.copy()
+        new_state.src = text
         if len(marker) == 1:
             new_state.in_emphasis = True
-            children = self.render(text, new_state)
+            children = self.render(new_state)
             state.append_token({'type': 'emphasis', 'children': children})
         elif len(marker) == 2:
             new_state.in_strong = True
-            children = self.render(text, new_state)
+            children = self.render(new_state)
             state.append_token({'type': 'strong', 'children': children})
         else:
             new_state.in_emphasis = True
@@ -274,7 +276,7 @@ class InlineParser(Parser):
 
             children = self.render_tokens([{
                 'type': 'strong',
-                'children': self.render(text, new_state)
+                'children': self.render(new_state)
             }])
             state.append_token({
                 'type': 'emphasis',
@@ -325,33 +327,33 @@ class InlineParser(Parser):
     def process_text(self, text, state):
         state.append_token({'type': 'text', 'raw': safe_entity(text)})
 
-    def parse(self, src, pos, state):
+    def parse(self, state):
+        pos = 0
         sc = self.compile_sc()
-        state.src = src
-        while pos < len(src):
-            m = sc.search(src, pos)
+        while pos < len(state.src):
+            m = sc.search(state.src, pos)
             if not m:
                 break
 
             end_pos = m.start()
             if end_pos > pos:
-                hole = src[pos:end_pos]
+                hole = state.src[pos:end_pos]
                 self.process_text(hole, state)
 
             new_pos = self.parse_method(m, state)
             if not new_pos:
                 # move cursor 1 character forward
                 pos = end_pos + 1
-                hole = src[end_pos:pos]
+                hole = state.src[end_pos:pos]
                 self.process_text(hole, state)
             else:
                 pos = new_pos
 
         if pos == 0:
             # special case, just pure text
-            self.process_text(src, state)
-        elif pos < len(src):
-            self.process_text(src[pos:], state)
+            self.process_text(state.src, state)
+        elif pos < len(state.src):
+            self.process_text(state.src[pos:], state)
         return state.tokens
 
     def _precedence_scan(self, m, state, end_pos, rules=None):
@@ -383,8 +385,8 @@ class InlineParser(Parser):
             state.append_token(token)
         return m2_pos
 
-    def render(self, s: str, state: InlineState):
-        self.parse(s, 0, state)
+    def render(self, state: InlineState):
+        self.parse(state)
         return self.render_tokens(state.tokens)
 
     def render_tokens(self, tokens):
@@ -393,7 +395,9 @@ class InlineParser(Parser):
         return list(tokens)
 
     def __call__(self, s, env):
-        return self.render(s, self.state_cls(env))
+        state = self.state_cls(env)
+        state.src = s
+        return self.render(state)
 
 
 def _parse_std_link(src, pos):

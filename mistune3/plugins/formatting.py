@@ -39,7 +39,9 @@ def _parse_to_end(inline, m, state, tok_type, end_pattern):
         inline.process_text(m.group(0), state)
         return pos
     text = m1.group(1)
-    children = inline.render(text, state.copy())
+    new_state = state.copy()
+    new_state.src = text
+    children = inline.render(new_state)
     state.append_token({'type': tok_type, 'children': children})
     return m1.end()
 

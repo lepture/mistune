@@ -129,17 +129,21 @@ class Parser:
         self.__sc[key] = sc
         return sc
 
-    def register_rule(self, name, pattern, func, before=None):
+    def register(self, name, pattern, func, before=None):
         self.specification[name] = pattern
         self._methods[name] = lambda m, state: func(self, m, state)
+        self.insert_rule(self.rules, name, before=before)
+
+    @staticmethod
+    def insert_rule(rules, name, before=None):
         if before:
             try:
-                index = self.rules.index(before)
-                self.rules.insert(index, name)
+                index = rules.index(before)
+                rules.insert(index, name)
             except ValueError:
-                self.rules.append(name)
+                rules.append(name)
         else:
-            self.rules.append(name)
+            rules.append(name)
 
     def parse_method(self, m, state):
         func = self._methods[m.lastgroup]

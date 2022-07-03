@@ -25,8 +25,10 @@ def render_inline_math(renderer, text):
 
 
 def math(md):
-    md.block.register_rule('block_math', BLOCK_MATH, parse_block_math, before='list')
-    md.inline.register_rule('inline_math', INLINE_MATH, parse_inline_math, before='link')
+    md.block.register('block_math', BLOCK_MATH, parse_block_math, before='list')
+    md.block.insert_rule(md.block.block_quote_rules, 'block_math', 'list')
+    md.block.insert_rule(md.block.list_rules, 'block_math', 'list')
+    md.inline.register('inline_math', INLINE_MATH, parse_inline_math, before='link')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('block_math', render_block_math)
         md.renderer.register('inline_math', render_inline_math)

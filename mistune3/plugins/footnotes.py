@@ -114,13 +114,13 @@ def render_footnote_item(renderer, text, key, index):
 
 
 def footnotes(md):
-    md.inline.register_rule(
+    md.inline.register(
         'footnote',
         INLINE_FOOTNOTE,
         parse_inline_footnote,
         before='link',
     )
-    md.block.register_rule(
+    md.block.register(
         'ref_footnote',
         REF_FOOTNOTE,
         parse_ref_footnote,

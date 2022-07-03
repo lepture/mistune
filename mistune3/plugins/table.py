@@ -140,8 +140,8 @@ def render_table_cell(renderer, text, align=None, head=False):
 
 
 def table(md):
-    md.block.register_rule('table', TABLE_PATTERN, parse_table, before='paragraph')
-    md.block.register_rule('nptable', NP_TABLE_PATTERN, parse_nptable, before='paragraph')
+    md.block.register('table', TABLE_PATTERN, parse_table, before='paragraph')
+    md.block.register('nptable', NP_TABLE_PATTERN, parse_nptable, before='paragraph')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('table', render_table)
         md.renderer.register('table_head', render_table_head)

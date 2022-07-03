@@ -13,4 +13,4 @@ def parse_emoji(inline, m, state):
 
 
 def emoji(md):
-    md.inline.register_rule('emoji', EMOJI, parse_emoji, before='link')
+    md.inline.register('emoji', EMOJI, parse_emoji, before='link')

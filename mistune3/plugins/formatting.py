@@ -47,7 +47,7 @@ def _parse_to_end(inline, m, state, tok_type, end_pattern):
 
 
 def strikethrough(md):
-    md.inline.register_rule(
+    md.inline.register(
         'strikethrough',
         r'~~(?=[^\s~])',
         parse_strikethrough,
@@ -58,7 +58,7 @@ def strikethrough(md):
 
 
 def mark(md):
-    md.inline.register_rule(
+    md.inline.register(
         'mark',
         r'==(?=[^\s=])',
         parse_mark,
@@ -69,7 +69,7 @@ def mark(md):
 
 
 def insert(md):
-    md.inline.register_rule(
+    md.inline.register(
         'insert',
         r'\^\^(?=[^\s\^])',
         parse_insert,

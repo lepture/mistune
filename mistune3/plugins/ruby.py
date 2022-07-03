@@ -81,6 +81,6 @@ def render_ruby(renderer, text, rt):
 
 
 def ruby(md):
-    md.inline.register_rule('ruby', RUBY_PATTERN, parse_ruby, before='link')
+    md.inline.register('ruby', RUBY_PATTERN, parse_ruby, before='link')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('ruby', render_ruby)

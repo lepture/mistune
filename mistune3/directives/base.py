@@ -75,7 +75,7 @@ class PluginDirective(object):
     def __call__(self, md):
         md._rst_directive = self
         pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
-        md.block.register_rule('directive', pattern, self.parse_block_directive)
+        md.block.register('directive', pattern, self.parse_block_directive)
 
 
 def parse_options(m):

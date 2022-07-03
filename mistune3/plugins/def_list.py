@@ -99,7 +99,7 @@ def render_def_list_item(renderer, text):
 
 
 def def_list(md):
-    md.block.register_rule('def_list', DEF_PATTERN, parse_def_list, before='paragraph')
+    md.block.register('def_list', DEF_PATTERN, parse_def_list, before='paragraph')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('def_list', render_def_list)
         md.renderer.register('def_list_head', render_def_list_head)

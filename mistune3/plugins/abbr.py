@@ -63,7 +63,7 @@ def render_abbr(renderer, text, title):
 
 
 def abbr(md):
-    md.block.register_rule('ref_abbr', REF_ABBR, parse_ref_abbr, before='paragraph')
+    md.block.register('ref_abbr', REF_ABBR, parse_ref_abbr, before='paragraph')
     # replace process_text
     md.inline.process_text = process_text
     if md.renderer and md.renderer.NAME == 'html':

@@ -34,6 +34,17 @@ INLINE_HTML = (
     r'<!\[CDATA[\s\S]+?\]\]>'  # cdata
 )
 
+EMPHASIS_END_RE = {
+    '*': re.compile(r'(?<![\s*])\*(?!\*)'),
+    '_': re.compile(r'(?<![\s_])_(?!_)\b'),
+
+    '**': re.compile(r'(?<![\s*])\*\*(?!\*)'),
+    '__': re.compile(r'(?<![\s_])__(?!_)\b'),
+
+    '***': re.compile(r'(?<![\s*])\*\*\*(?!\*)'),
+    '___': re.compile(r'(?<![\s_])___(?!_)\b'),
+}
+
 
 class InlineParser(Parser):
     sc_flag = 0
@@ -232,12 +243,8 @@ class InlineParser(Parser):
                 return pos
             hole = None
 
-        _c = marker[0]
-        _regex = r'(.*?(?:[^\s' + re.escape(_c) + ']))' + re.escape(marker)
-        if _c == '_':
-            _regex += r'\b'
-        _end_re = re.compile(_regex, re.S)
-        m1 = _end_re.match(state.src, pos)
+        _end_re = EMPHASIS_END_RE[marker]
+        m1 = _end_re.search(state.src, pos)
         if not m1:
             state.append_token({'type': 'text', 'raw': marker})
             return pos
@@ -246,7 +253,7 @@ class InlineParser(Parser):
             self.process_text(hole, state)
 
         new_state = state.copy()
-        text = m1.group(1)
+        text = state.src[pos:m1.start()]
         end_pos = m1.end()
 
         prec_pos = self._precedence_scan(m, state, end_pos)
@@ -353,8 +360,8 @@ class InlineParser(Parser):
 
         mark_pos = m.end()
         sc = self.compile_sc(rules)
-        m1 = sc.search(state.src, mark_pos)
-        if not m1 or m1.start() >= end_pos:
+        m1 = sc.search(state.src, mark_pos, end_pos)
+        if not m1:
             return
 
         rule_name = m1.lastgroup.replace('prec_', '')

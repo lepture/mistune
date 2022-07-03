@@ -5,7 +5,6 @@ from .util import (
     escape,
     escape_url,
     safe_entity,
-    strip_end,
     expand_tab,
     expand_leading_tab,
 )
@@ -20,6 +19,7 @@ from .helpers import (
     parse_link_href,
     parse_link_title,
 )
+from .list_parser import parse_list
 
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _AXT_HEADING_TRIM = re.compile(r'(\s+|^)#+\s*$')
@@ -27,7 +27,6 @@ _BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 
 _LINE_BLANK_END = re.compile(r'\n[ \t]*\n$')
-_LINE_HAS_TEXT = re.compile(r'( *)\S')
 _BLANK_TO_LINE = re.compile(r'[ \t]*\n')
 
 _BLOCK_TAGS_PATTERN = '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS)
@@ -355,134 +354,20 @@ class BlockParser(Parser):
                     return end_pos
                 attrs['start'] = start
 
-        depth = state.depth()
-        attrs['depth'] = depth
-        if depth >= self.max_nested_level:
-            rules = list(self.list_rules)
-            rules.remove('list')
-        else:
-            rules = self.list_rules
-
-        token = {
-            'type': 'list',
-            'children': [],
-            'attrs': attrs,
-        }
-
         state.cursor = m.end() + 1
         groups = (m.group('list_1'), marker, text)
-        while groups:
-            groups = self._parse_list_item(groups, token, state, rules)
-
+        token = parse_list(self, attrs, groups, state)
+        # add attrs to list item token
         for tok in token['children']:
-            tok['attrs'] = {'depth': depth, 'tight': attrs['tight']}
+            tok['attrs'] = {'depth': attrs['depth'], 'tight': attrs['tight']}
 
         end_pos = token.pop('_end_pos', None)
         if end_pos:
             state.prepend_token(token)
             return end_pos
+
         state.append_token(token)
         return state.cursor
-
-    def _parse_list_item(self, groups, token, state, rules):
-        spaces, marker, text = groups
-
-        leading_width = len(spaces) + len(marker)
-        bullet = _get_list_bullet(marker[-1])
-        text, continue_width = _compile_continue_width(text, leading_width)
-
-        if not text:
-            # Example 285
-            # an empty list item cannot interrupt a paragraph
-            end_pos = state.append_paragraph()
-            if end_pos:
-                token['children'].append({'type': 'list_item', 'children': []})
-                token['_end_pos'] = end_pos
-                return
-
-        item_pattern = _compile_list_item_pattern(bullet, leading_width)
-        pairs = [
-            ('thematic_break', self.specification['thematic_break']),
-            ('fenced_code', self.specification['fenced_code']),
-            ('axt_heading', self.specification['axt_heading']),
-            ('block_quote', self.specification['block_quote']),
-            ('block_html', self.specification['block_html']),
-            ('list', self.specification['list']),
-        ]
-        if leading_width < 3:
-            _repl_w = str(leading_width)
-            pairs = [(n, p.replace('3', _repl_w, 1)) for n, p in pairs]
-
-        pairs.insert(1, ('list_item', item_pattern))
-        regex = '|'.join(r'(?P<%s>(?<=\n)%s)' % pair for pair in pairs)
-        sc = re.compile(regex, re.M)
-
-        src = ''
-        next_group = None
-        prev_blank_line = False
-        pos = state.cursor
-
-        continue_space = ' ' * continue_width
-        while pos < state.cursor_max:
-            pos = state.find_line_end()
-            line = state.get_text(pos)
-            if self.BLANK_LINE.match(line):
-                src += '\n'
-                prev_blank_line = True
-                state.cursor = pos
-                continue
-
-            line = expand_leading_tab(line)
-            if line.startswith(continue_space):
-                if prev_blank_line and not text and not src.strip():
-                    # Example 280
-                    # A list item can begin with at most one blank line
-                    break
-
-                src += line
-                prev_blank_line = False
-                state.cursor = pos
-                continue
-
-            m = state.match(sc)
-            if m:
-                tok_type = m.lastgroup
-                if tok_type == 'list_item':
-                    if prev_blank_line:
-                        token['attrs']['tight'] = False
-                    next_group = (
-                        m.group('listitem_1'),
-                        m.group('listitem_2'),
-                        m.group('listitem_3')
-                    )
-                    state.cursor = m.end() + 1
-                    break
-                end_pos = self.parse_method(m, state)
-                if end_pos:
-                    token['_end_pos'] = end_pos
-                    break
-
-            if prev_blank_line and not line.startswith(continue_space):
-                # not a continue line, and previous line is blank
-                break
-
-            src += line
-            state.cursor = pos
-
-        text += _clean_list_item_text(src, continue_width)
-        child = state.child_state(strip_end(text))
-
-        self.parse(child, rules)
-
-        if token['attrs']['tight'] and _is_loose_list(child.tokens):
-            token['attrs']['tight'] = False
-
-        token['children'].append({
-            'type': 'list_item',
-            'children': child.tokens,
-        })
-        if next_group:
-            return next_group
 
     def parse_block_html(self, m, state):
         return self.parse_raw_html(m, state)
@@ -592,80 +477,6 @@ class BlockParser(Parser):
                 if tok['type'] == 'paragraph' and parent:
                     self.postprocess_paragraph(tok, parent)
             yield tok
-
-
-def _get_list_bullet(c):
-    if c == '.':
-        bullet = r'\d{0,9}\.'
-    elif c == ')':
-        bullet = r'\d{0,9}\)'
-    elif c == '*':
-        bullet = r'\*'
-    elif c == '+':
-        bullet = r'\+'
-    else:
-        bullet = '-'
-    return bullet
-
-
-def _compile_list_item_pattern(bullet, leading_width):
-    if leading_width > 3:
-        leading_width = 3
-    return (
-        r'^(?P<listitem_1> {0,' + str(leading_width) + '})'
-        r'(?P<listitem_2>' + bullet + ')'
-        r'(?P<listitem_3>[ \t]*|[ \t][^\n]+)$'
-    )
-
-
-def _compile_continue_width(text, leading_width):
-    text = expand_leading_tab(text, 3)
-    text = expand_tab(text)
-
-    m2 = _LINE_HAS_TEXT.match(text)
-    if m2:
-        # indent code, startswith 5 spaces
-        if text.startswith('     '):
-            space_width = 1
-        else:
-            space_width = len(m2.group(1))
-
-        text = text[space_width:] + '\n'
-    else:
-        space_width = 1
-        text = ''
-
-    continue_width = leading_width + space_width
-    return text, continue_width
-
-
-def _clean_list_item_text(src, continue_width):
-    # according to Example 7, tab should be treated as 3 spaces
-    rv = []
-    trim_space = ' ' * continue_width
-    lines = src.split('\n')
-    for line in lines:
-        if line.startswith(trim_space):
-            line = line.replace(trim_space, '', 1)
-            # according to CommonMark Example 5
-            # tab should be treated as 4 spaces
-            line = expand_tab(line)
-            rv.append(line)
-        else:
-            rv.append(line)
-
-    return '\n'.join(rv)
-
-
-def _is_loose_list(tokens):
-    paragraph_count = 0
-    for tok in tokens:
-        if tok['type'] == 'blank_line':
-            return True
-        if tok['type'] == 'paragraph':
-            paragraph_count += 1
-            if paragraph_count > 1:
-                return True
 
 
 def _parse_html_to_end(state, end_marker, start_pos):

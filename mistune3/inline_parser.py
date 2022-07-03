@@ -11,10 +11,9 @@ from .helpers import (
     HTML_TAGNAME,
     HTML_ATTRIBUTES,
     unescape_char,
+    parse_link,
     parse_link_label,
     parse_link_text,
-    parse_link_href,
-    parse_link_title,
 )
 
 PAREN_END_RE = re.compile(r'\s*\)')
@@ -150,7 +149,7 @@ class InlineParser(Parser):
             c = state.src[end_pos]
             if c == '(':
                 # standard link [text](<url> "title")
-                attrs, pos2 = _parse_std_link(state.src, end_pos + 1)
+                attrs, pos2 = parse_link(state.src, end_pos + 1)
                 if pos2:
                     self._add_link_token(is_image, text, attrs, state)
                     return pos2
@@ -398,21 +397,3 @@ class InlineParser(Parser):
         state = self.state_cls(env)
         state.src = s
         return self.render(state)
-
-
-def _parse_std_link(src, pos):
-    href, href_pos = parse_link_href(src, pos)
-    if href is None:
-        return None, None
-
-    title, title_pos = parse_link_title(src, href_pos, len(src))
-    next_pos = title_pos or href_pos
-    m = PAREN_END_RE.match(src, next_pos)
-    if not m:
-        return None, None
-
-    href = unescape_char(href)
-    attrs = {'url': escape_url(href)}
-    if title:
-        attrs['title'] = safe_entity(title)
-    return attrs, m.end()

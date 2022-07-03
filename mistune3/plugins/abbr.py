@@ -45,7 +45,7 @@ def process_text(text, state):
         state.append_token({
             'type': 'abbr',
             'raw': safe_entity(label),
-            'attrs': {'definition': ref[label]}
+            'attrs': {'title': ref[label]}
         })
         pos = m.end()
 
@@ -56,10 +56,10 @@ def process_text(text, state):
         state.append_token({'type': 'text', 'raw': safe_entity(text[pos:])})
 
 
-def render_abbr(renderer, key, definition):
-    if not definition:
-        return '<abbr>' + key + '</abbr>'
-    return '<abbr title="' + escape(definition) + '">' + key + '</abbr>'
+def render_abbr(renderer, text, title):
+    if not title:
+        return '<abbr>' + text + '</abbr>'
+    return '<abbr title="' + escape(title) + '">' + text + '</abbr>'
 
 
 def abbr(md):

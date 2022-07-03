@@ -77,7 +77,7 @@ paragraph
 ```````````````````````````````` example
 First Term
 : This is the definition of the first term.
-Second Term
+Not Second Term
 : This is one definition of the second term.
 : This is another definition of the second term.
 
@@ -85,10 +85,88 @@ paragraph
 .
 <dl>
 <dt>First Term</dt>
-<dd>This is the definition of the first term.</dd>
-<dt>Second Term</dt>
+<dd>This is the definition of the first term.
+Not Second Term</dd>
 <dd>This is one definition of the second term.</dd>
 <dd>This is another definition of the second term.</dd>
 </dl>
 <p>paragraph</p>
+````````````````````````````````
+
+## Definition with Multiple Lines
+
+```````````````````````````````` example
+Term
+
+: definition
+.
+<dl>
+<dt>Term</dt>
+<dd><p>definition</p>
+</dd>
+</dl>
+````````````````````````````````
+
+
+```````````````````````````````` example
+Term
+: foo
+
+  bar
+.
+<dl>
+<dt>Term</dt>
+<dd><p>foo</p>
+<p>bar</p>
+</dd>
+</dl>
+````````````````````````````````
+
+Leading 4 white spaces
+
+```````````````````````````````` example
+Term
+:   foo
+
+    bar
+.
+<dl>
+<dt>Term</dt>
+<dd><p>foo</p>
+<p>bar</p>
+</dd>
+</dl>
+````````````````````````````````
+
+
+```````````````````````````````` example
+Term
+:   foo
+
+        bar
+.
+<dl>
+<dt>Term</dt>
+<dd><p>foo</p>
+<pre><code>bar</code></pre>
+</dd>
+</dl>
+````````````````````````````````
+
+```````````````````````````````` example
+Term
+:   foo
+
+    - bar
+    - baz
+.
+<dl>
+<dt>Term</dt>
+<dd><p>foo</p>
+<ul>
+<li>bar</li>
+<li>baz</li>
+</ul>
+</dd>
+</dl>
 ````````````````````````````````

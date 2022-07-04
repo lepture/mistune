@@ -17,8 +17,15 @@ from ..util import striptags
 
 
 class DirectiveToc(Directive):
-    def __init__(self, depth=3):
+    def __init__(self, depth=3, heading_id=None):
         self.depth = depth
+
+        if callable(heading_id):
+            self.heading_id = heading_id
+        else:
+            def heading_id(token, index):
+                return 'toc_' + str(index + 1)
+            self.heading_id = heading_id
 
     def parse(self, block, m, state):
         title = m.group('value')
@@ -43,9 +50,6 @@ class DirectiveToc(Directive):
         attrs = {'title': title, 'depth': depth}
         return {'type': 'toc', 'raw': [], 'attrs': attrs}
 
-    def heading_id(self, token, index):
-        return 'hid-' + str(index + 1)
-
     def toc_hook(self, md, state):
         sections = []
         headings = []
@@ -65,22 +69,23 @@ class DirectiveToc(Directive):
 
             for sec in sections:
                 depth = sec['attrs']['depth']
-                sec['raw'] = [item for item in toc_items if item[0] <= depth]
+                toc = [item for item in toc_items if item[0] <= depth]
+                sec['raw'] = render_toc_ul(toc)
 
     def __call__(self, md):
-        if md.renderer.NAME == 'html':
+        if md.renderer and md.renderer.NAME == 'html':
             # only works with HTML renderer
             self.register_directive(md, 'toc')
             md.before_render_hooks.append(self.toc_hook)
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(self, items, title, depth):
-    html = '<details class="toc">\n'
-    if title:
-        html += '<summary>' + title + '</summary>\n'
+def render_html_toc(renderer, text, title, depth):
+    if not title:
+        title = 'Table of Contents'
 
-    return html + render_toc_ul(items) + '</details>\n'
+    html = '<details class="toc">\n<summary>' + title + '</summary>\n'
+    return html + text + '</details>\n'
 
 
 def cleanup_toc_item(md, tok):

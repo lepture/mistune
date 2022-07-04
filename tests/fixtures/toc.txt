@@ -12,8 +12,8 @@ none
 # H1
 ## H2
 .
-<h1 id="toc_1">H1</h1>
-<h2 id="toc_2">H2</h2>
+<h1>H1</h1>
+<h2>H2</h2>
 ````````````````````````````````
 
 
@@ -25,7 +25,8 @@ none
 # H1
 ## H2
 .
-<section class="toc">
+<details class="toc">
+<summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
 <ul>
@@ -33,7 +34,7 @@ none
 </ul>
 </li>
 </ul>
-</section>
+</details>
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>
 ````````````````````````````````
@@ -46,8 +47,8 @@ none
 .. toc::
    :depth: s
 .
-<h1 id="toc_1">H1</h1>
-<h2 id="toc_2">H2</h2>
+<h1>H1</h1>
+<h2>H2</h2>
 <div class="error">TOC depth MUST be integer</div>
 ````````````````````````````````
 
@@ -61,7 +62,7 @@ none
 # H1 B
 # H1 `C`
 
-.. toc:: Table of Contents
+.. toc:: Contents
    :depth: 3
 .
 <h1 id="toc_1">H1</h1>
@@ -70,8 +71,8 @@ none
 <h4 id="toc_4">H4</h4>
 <h1 id="toc_5">H1 B</h1>
 <h1 id="toc_6">H1 <code>C</code></h1>
-<section class="toc">
-<h1>Table of Contents</h1>
+<details class="toc">
+<summary>Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
 <ul>
@@ -85,7 +86,7 @@ none
 <li><a href="#toc_5">H1 B</a></li>
 <li><a href="#toc_6">H1 C</a></li>
 </ul>
-</section>
+</details>
 ````````````````````````````````
 
 ## Insane
@@ -105,7 +106,8 @@ none
 <h4 id="toc_4">H4</h4>
 <h3 id="toc_5">H3 B</h3>
 <h1 id="toc_6">H1 B</h1>
-<section class="toc">
+<details class="toc">
+<summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
 <ul>
@@ -119,7 +121,7 @@ none
 </li>
 <li><a href="#toc_6">H1 B</a></li>
 </ul>
-</section>
+</details>
 ````````````````````````````````
 
 ```````````````````````````````` example
@@ -131,13 +133,14 @@ none
 <h3 id="toc_1">H3</h3>
 <h2 id="toc_2">H2</h2>
 <h1 id="toc_3">H1</h1>
-<section class="toc">
+<details class="toc">
+<summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H3</a></li>
 <li><a href="#toc_2">H2</a></li>
 <li><a href="#toc_3">H1</a></li>
 </ul>
-</section>
+</details>
 ````````````````````````````````
 
 ## Link in Heading
@@ -148,11 +151,12 @@ none
 .. toc::
 .
 <h1 id="toc_1"><a href="/bar">foo</a></h1>
-<section class="toc">
+<details class="toc">
+<summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">foo</a></li>
 </ul>
-</section>
+</details>
 ````````````````````````````````
 
 ## HTML in Heading
@@ -162,9 +166,10 @@ none
 .. toc::
 .
 <h1 id="toc_1"><em>H1</em></h1>
-<section class="toc">
+<details class="toc">
+<summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a></li>
 </ul>
-</section>
+</details>
 ````````````````````````````````

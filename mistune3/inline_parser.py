@@ -58,7 +58,7 @@ class InlineParser(Parser):
         'codespan': r'`{1,}',
 
         # *w, **w, _w, __w
-        'emphasis': r'\*{1,3}(?=[^\s*])|\b_{1,}(?=[^\s_])',
+        'emphasis': r'\*{1,3}(?=[^\s*])|\b_{1,3}(?=[^\s_])',
 
         # [link], ![img]
         'link': r'!?\[',

@@ -18,7 +18,7 @@ Links can't contain links.
 ```````````````````````````````` example
 *_em_* __**strong**__ ______m______
 .
-<p><em>_em_</em> <strong>**strong**</strong> ___<em><strong>m</strong></em>___</p>
+<p><em>_em_</em> <strong>**strong**</strong> ______m______</p>
 ````````````````````````````````
 
 ### Non aggressive emphasis
@@ -60,24 +60,3 @@ CommonMark would still be a mess:
 ```
 <p>*a *<em>b c</em> d</p>
 ```
-
-There are so many insane cases for emphasis, people
-shouldn't write such text. There are cases CommonMark
-are bad at, and there are cases Mistune bad at.
-
-For example:
-
-```
-*a **b** d*
-```
-
-Because Mistune is not aggressive on emphasis parsing,
-it will find `b*` as the emphasis end, in this case,
-the final result would be:
-
-
-```````````````````````````````` example
-*a **b** d*
-.
-<p><em>a **b</em>* d*</p>
-````````````````````````````````

@@ -4,7 +4,7 @@ test:
 	@pytest -s
 
 coverage:
-	@pytest --cov=mistune
+	@pytest --cov=mistune3
 
 clean: clean-build clean-pyc clean-docs
 
@@ -15,7 +15,6 @@ clean-build:
 	@rm -fr build/
 	@rm -fr dist/
 	@rm -fr *.egg-info
-	@rm -f mistune.c
 	@rm -fr .coverage
 
 

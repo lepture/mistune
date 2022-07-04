@@ -24,11 +24,6 @@ class Markdown:
     def use(self, plugin):
         plugin(self)
 
-    def after_render(self, result, state):
-        for hook in self.after_render_hooks:
-            result = hook(self, result, state)
-        return result
-
     def parse(self, s, state=None):
         if state is None:
             state = self.block.state_cls()

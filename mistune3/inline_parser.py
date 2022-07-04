@@ -226,31 +226,18 @@ class InlineParser(Parser):
         pos = m.end()
 
         marker = m.group(0)
-        if len(marker) > 3:
-            if state.in_emphasis or state.in_strong:
-                state.append_token({'type': 'text', 'raw': marker})
-                return pos
-
-            _slice = len(marker) - 3
-            hole = marker[:_slice]
-            marker = marker[_slice:]
-        else:
-            if len(marker) == 1 and state.in_emphasis:
-                state.append_token({'type': 'text', 'raw': marker})
-                return pos
-            elif len(marker) == 2 and state.in_strong:
-                state.append_token({'type': 'text', 'raw': marker})
-                return pos
-            hole = None
+        if len(marker) == 1 and state.in_emphasis:
+            state.append_token({'type': 'text', 'raw': marker})
+            return pos
+        elif len(marker) == 2 and state.in_strong:
+            state.append_token({'type': 'text', 'raw': marker})
+            return pos
 
         _end_re = EMPHASIS_END_RE[marker]
         m1 = _end_re.search(state.src, pos)
         if not m1:
             state.append_token({'type': 'text', 'raw': marker})
             return pos
-
-        if hole:
-            self.process_text(hole, state)
 
         text = state.src[pos:m1.start()]
         end_pos = m1.end()

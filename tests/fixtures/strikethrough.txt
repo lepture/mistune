@@ -4,6 +4,12 @@
 ## strikethrough
 
 ```````````````````````````````` example
+~~delete me
+.
+<p>~~delete me</p>
+````````````````````````````````
+
+```````````````````````````````` example
 ~~delete me~~
 .
 <p><del>delete me</del></p>

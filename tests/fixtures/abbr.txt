@@ -4,6 +4,12 @@
 
 ```````````````````````````````` example
 HTML
+.
+<p>HTML</p>
+````````````````````````````````
+
+```````````````````````````````` example
+HTML
 *[HTML]: Hyper Text Markup Language
 .
 <p><abbr title="Hyper Text Markup Language">HTML</abbr></p>

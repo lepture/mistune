@@ -206,3 +206,53 @@ a | b
 </tbody>
 </table>
 ````````````````````````````````
+
+## Mismatch length
+
+```````````````````````````````` example
+| First Header  |
+| ------------- | ------------- |
+| Content Cell  |               |
+| Content Cell  | Content Cell  |
+.
+<p>| First Header  |
+| ------------- | ------------- |
+| Content Cell  |               |
+| Content Cell  | Content Cell  |</p>
+````````````````````````````````
+
+```````````````````````````````` example
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  |
+| Content Cell  | Content Cell  |
+.
+<p>| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  |
+| Content Cell  | Content Cell  |</p>
+````````````````````````````````
+
+```````````````````````````````` example
+A |
+- | - |
+a | b | c
+.
+<p>A |</p>
+<ul>
+<li>| - |
+a | b | c</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+A | B | C
+- | - | -
+a | b
+.
+<p>A | B | C</p>
+<ul>
+<li>| - | -
+a | b</li>
+</ul>
+````````````````````````````````

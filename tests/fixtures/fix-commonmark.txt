@@ -11,6 +11,12 @@ Links can't contain links.
 <p><a href="/foo">&lt;https://example.com&gt;</a></p>
 ````````````````````````````````
 
+```````````````````````````````` example
+[<name@example.com>](/foo)
+.
+<p><a href="/foo">&lt;name@example.com&gt;</a></p>
+````````````````````````````````
+
 ## Emphasis
 
 `<em>` doesn't contain `<em>`, `<strong>` doesn't contain `<strong>`.

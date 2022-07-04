@@ -64,7 +64,8 @@ class Markdown:
         with open(filepath, 'rb') as f:
             s = f.read()
 
-        return self.parse(s.decode(encoding), state)
+        s = expand_leading_tab(s.decode(encoding))
+        return self.parse(s, state)
 
     def __call__(self, s):
         if s is None:

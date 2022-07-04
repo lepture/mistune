@@ -48,7 +48,7 @@ class DirectiveToc(Directive):
             depth = self.depth
 
         attrs = {'title': title, 'depth': depth}
-        return {'type': 'toc', 'raw': [], 'attrs': attrs}
+        return {'type': 'toc', 'raw': '', 'attrs': attrs}
 
     def toc_hook(self, md, state):
         sections = []

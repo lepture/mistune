@@ -8,4 +8,4 @@
 
 .. include:: ./hello.md
 
-.. include:: ../toc.txt
+.. include:: ../directive_toc.txt

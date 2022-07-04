@@ -22,9 +22,9 @@ __all__ = ['Directive']
 
 
 DIRECTIVE_PATTERN = re.compile(
-    r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<value>[^\n]*)\n+'
+    r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<value>[^\n]*)(?:\n|$)'
     r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
-    r'(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
+    r'\n*(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
 )
 
 
@@ -67,10 +67,12 @@ class PluginDirective(object):
                 'raw': 'Unsupported directive: ' + name,
             }
 
-        end_pos = m.end()
-        text = state.get_text(end_pos)
-        state.append_token(token)
-        return end_pos
+        if isinstance(token, list):
+            for tok in token:
+                state.append_token(tok)
+        else:
+            state.append_token(token)
+        return m.end()
 
     def __call__(self, md):
         md._rst_directive = self

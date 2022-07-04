@@ -1,9 +1,12 @@
 from .base import Directive
 from .admonition import Admonition
-from .toc import DirectiveToc, render_toc_ul
+from .toc import DirectiveToc
+from .include import DirectiveInclude
 
 
 __all__ = [
-    'Directive', 'Admonition',
-    'DirectiveToc', 'render_toc_ul',
+    'Directive',
+    'Admonition',
+    'DirectiveToc',
+    'DirectiveInclude',
 ]

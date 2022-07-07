@@ -32,7 +32,7 @@ class TestDirectiveInclude(BaseTestCase):
     md = create_markdown(escape=False, plugins=[DirectiveInclude()])
 
     def test_html_include(self):
-        html = self.md.read(os.path.join(ROOT, 'include/text.md'))
+        html = self.md.read(os.path.join(ROOT, 'include/text.md'))[0]
         self.assertIn('Could not include self', html)
         self.assertIn('Could not find file', html)
         self.assertIn('<div>include html</div>', html)

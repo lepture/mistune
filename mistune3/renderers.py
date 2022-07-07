@@ -44,10 +44,6 @@ class BaseRenderer(object):
     def __call__(self, tokens):
         return ''.join(self._iter_tokens(tokens))
 
-    def finalize(self, result, state):
-        return result
-
-
 
 class HTMLRenderer(BaseRenderer):
     NAME = 'html'

@@ -46,10 +46,7 @@ class Markdown:
 
         for hook in self.after_render_hooks:
             result = hook(self, result, state)
-
-        if self.renderer:
-            result = self.renderer.finalize(result, state)
-        return result
+        return result, state
 
     def read(self, filepath, encoding='utf-8', state=None):
         if state is None:
@@ -67,4 +64,4 @@ class Markdown:
             s = '\n'
         else:
             s = expand_leading_tab(s)
-        return self.parse(s)
+        return self.parse(s)[0]

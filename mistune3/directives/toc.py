@@ -13,7 +13,7 @@
 """
 
 from .base import Directive, parse_options
-from ..util import striptags
+from ..toc import normalize_toc_item, render_toc_ul
 
 
 class DirectiveToc(Directive):
@@ -65,7 +65,7 @@ class DirectiveToc(Directive):
             # adding ID for each heading
             for i, tok in enumerate(headings):
                 tok['attrs']['id'] = self.heading_id(tok, i)
-                toc_items.append(cleanup_toc_item(md, tok))
+                toc_items.append(normalize_toc_item(md, tok))
 
             for sec in sections:
                 depth = sec['attrs']['depth']
@@ -86,69 +86,3 @@ def render_html_toc(renderer, text, title, depth):
 
     html = '<details class="toc">\n<summary>' + title + '</summary>\n'
     return html + text + '</details>\n'
-
-
-def cleanup_toc_item(md, tok):
-    text = tok['text']
-    html = md.inline(text, {})
-    text = striptags(html)
-    attrs = tok['attrs']
-    return attrs['level'], attrs['id'], text
-
-
-def render_toc_ul(toc):
-    """Render a <ul> table of content HTML. The param "toc" should
-    be formatted into this structure::
-
-        [
-          (level, id, text),
-        ]
-
-    For example::
-
-        [
-          (1, 'toc-intro', 'Introduction'),
-          (2, 'toc-install', 'Install'),
-          (2, 'toc-upgrade', 'Upgrade'),
-          (1, 'toc-license', 'License'),
-        ]
-    """
-    if not toc:
-        return ''
-
-    s = '<ul>\n'
-    levels = []
-    for level, k, text in toc:
-        item = '<a href="#{}">{}</a>'.format(k, text)
-        if not levels:
-            s += '<li>' + item
-            levels.append(level)
-        elif level == levels[-1]:
-            s += '</li>\n<li>' + item
-        elif level > levels[-1]:
-            s += '\n<ul>\n<li>' + item
-            levels.append(level)
-        else:
-            last_level = levels.pop()
-            while levels:
-                last_level = levels.pop()
-                if level == last_level:
-                    s += '</li>\n</ul>\n</li>\n<li>' + item
-                    levels.append(level)
-                    break
-                elif level > last_level:
-                    s += '</li>\n<li>' + item
-                    levels.append(last_level)
-                    levels.append(level)
-                    break
-                else:
-                    s += '</li>\n</ul>\n'
-            else:
-                levels.append(level)
-                s += '</li>\n<li>' + item
-
-    while len(levels) > 1:
-        s += '</li>\n</ul>\n'
-        levels.pop()
-
-    return s + '</li>\n</ul>\n'

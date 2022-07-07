@@ -55,3 +55,12 @@ class TestMiscCases(TestCase):
         from mistune3.plugins.url import url
         md = mistune.Markdown(mistune.HTMLRenderer())
         md.use(url)
+
+    def test_markdown_func(self):
+        result = mistune.markdown('**b**')
+        expected = '<p><strong>b</strong></p>\n'
+        self.assertEqual(result, expected)
+
+        # trigger to use cached parser
+        result = mistune.markdown('**b**')
+        self.assertEqual(result, expected)

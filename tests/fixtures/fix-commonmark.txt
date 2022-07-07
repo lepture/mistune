@@ -66,3 +66,58 @@ CommonMark would still be a mess:
 ```
 <p>*a *<em>b c</em> d</p>
 ```
+
+
+## Max depth
+
+
+```````````````````````````````` example
+> > > > > > > > b
+.
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>&gt; &gt; b</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+````````````````````````````````
+
+
+```````````````````````````````` example
+- a
+  - b
+    - c
+      - d
+        - e
+          - f
+            - g
+              - h
+.
+<ul>
+<li>a<ul>
+<li>b<ul>
+<li>c<ul>
+<li>d<ul>
+<li>e<ul>
+<li>f
+- g
+- h</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+````````````````````````````````

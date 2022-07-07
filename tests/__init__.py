@@ -25,7 +25,7 @@ class BaseTestCase(TestCase):
         return False
 
     def assert_case(self, name, text, html):
-        result = self.md(text)
+        result = self.parse(text)
         self.assertEqual(result, html)
 
 

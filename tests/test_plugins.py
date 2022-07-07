@@ -14,7 +14,7 @@ from tests import BaseTestCase, fixtures
 def load_plugin(plugin_name, plugin_func, test_ast=False):
 
     class TestPlugin(BaseTestCase):
-        md = create_markdown(escape=False, plugins=[plugin_func])
+        parse = create_markdown(escape=False, plugins=[plugin_func])
 
     def test_ast_renderer(self):
         md = create_markdown(escape=False, plugins=[plugin_func], renderer=None)

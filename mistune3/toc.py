@@ -27,7 +27,7 @@ def add_toc_hook(md, depth=3, heading_id=None):
 
         toc_items = []
         for i, tok in enumerate(headings):
-            tok['attrs']['id'] = self.heading_id(tok, i)
+            tok['attrs']['id'] = heading_id(tok, i)
             toc_items.append(normalize_toc_item(md, tok))
 
         # save items into state

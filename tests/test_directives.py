@@ -16,10 +16,6 @@ def load_directive_test(filename, directive):
             html = md(text)
             return html
 
-        def assert_case(self, name, text, html):
-            result = self.parse(text)
-            self.assertEqual(result, html)
-
     TestDirective.load_fixtures(filename + '.txt')
     globals()["TestDirective_" + filename] = TestDirective
 

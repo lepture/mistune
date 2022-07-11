@@ -2,18 +2,20 @@
 <img align="right" width="120" height="120" src="docs/_static/logo.svg">
 </a>
 
-# Mistune v2
+# Mistune v3
 
 A fast yet powerful Python Markdown parser with renderers and plugins.
 
-<a href="https://lepture.com/donate"><img src="https://badgen.net/badge/donate/lepture/ff69b4?icon=patreon" /></a>
 <a href="https://github.com/lepture/mistune/actions"><img src="https://github.com/lepture/mistune/workflows/tests/badge.svg" /></a>
 <a href="https://codecov.io/gh/lepture/mistune"><img src="https://badgen.net/codecov/c/github/lepture/mistune" alt="Coverage"></a>
 
 
-**NOTE: This is the re-designed v2 of mistune. Check `v1` branch for earlier code.**
+**NOTE: This is the re-designed v3 of mistune.**
 
-Using old Mistune? Checkout docs: <https://mistune.readthedocs.io/en/v0.8.4/>
+Looking for old Mistune? Switch branch to:
+
+- v1
+- v2
 
 ## Sponsors
 

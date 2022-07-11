@@ -8,25 +8,24 @@ from mistune3.plugins.def_list import def_list
 from mistune3.plugins.abbr import abbr
 from mistune3.plugins.math import math
 from mistune3.plugins.ruby import ruby
+from mistune3.plugins.speed import speed
 from tests import BaseTestCase, fixtures
 
 
-def load_plugin(plugin_name, plugin_func, test_ast=False):
+def load_plugin(plugin_name, plugin_func):
+    md1 = create_markdown(escape=False, plugins=[plugin_func])
+    md2 = create_markdown(escape=False, plugins=[plugin_func, speed])
 
-    class TestPlugin(BaseTestCase):
-        parse = create_markdown(escape=False, plugins=[plugin_func])
+    class TestPlugin1(BaseTestCase):
+        parse = md1
 
-    def test_ast_renderer(self):
-        md = create_markdown(escape=False, plugins=[plugin_func], renderer=None)
-        data = fixtures.load_ast(plugin_name + ".json")
-        self.assertEqual(md(data["text"]), data["tokens"])
+    class TestPlugin2(BaseTestCase):
+        parse = md2
 
-    if test_ast:
-        test_ast_renderer.__doc__ = "Run {} ast renderer".format(plugin_name)
-        setattr(TestPlugin, "test_ast_renderer", test_ast_renderer)
-
-    TestPlugin.load_fixtures(plugin_name + ".txt")
-    globals()["TestPlugin_" + plugin_name] = TestPlugin
+    TestPlugin1.load_fixtures(plugin_name + ".txt")
+    TestPlugin2.load_fixtures(plugin_name + ".txt")
+    globals()["TestPlugin1_" + plugin_name] = TestPlugin1
+    globals()["TestPlugin2_" + plugin_name] = TestPlugin2
 
 
 load_plugin("url", url)

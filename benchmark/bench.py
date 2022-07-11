@@ -10,7 +10,10 @@ CASES = {}
 
 
 def load_case(filename):
-    filepath = os.path.join(ROOT_DIR, 'cases', filename)
+    if filename == 'readme.txt':
+        filepath = os.path.join(ROOT_DIR, '../README.md')
+    else:
+        filepath = os.path.join(ROOT_DIR, 'cases', filename)
     with open(filepath, 'r') as f:
         content = f.read()
 
@@ -38,7 +41,31 @@ def get_markdown_parsers():
 
     try:
         import mistune3
+        from mistune3.plugins.speed import speed
+        from mistune3.plugins.url import url
+        from mistune3.plugins.formatting import strikethrough, mark, insert, subscript
+        from mistune3.plugins.task_lists import task_lists
+        from mistune3.plugins.table import table
+        from mistune3.plugins.footnotes import footnotes
+        from mistune3.plugins.def_list import def_list
+        from mistune3.plugins.abbr import abbr
+        from mistune3.plugins.math import math
+        from mistune3.plugins.ruby import ruby
+        from mistune3.directives import Admonition, DirectiveToc, DirectiveInclude
+
         parsers[f'mistune ({mistune3.__version__})'] = mistune3.html
+        parsers['mistune (speed)'] = mistune3.create_markdown(
+            escape=False,
+            plugins=[speed],
+        )
+        parsers['mistune (full)'] = mistune3.create_markdown(
+            escape=False,
+            plugins=[
+                url, strikethrough, mark, insert, subscript, task_lists,
+                table, footnotes, def_list, abbr, math, ruby,
+                Admonition(), DirectiveToc(), DirectiveInclude(),
+            ],
+        )
     except ImportError:
         pass
 
@@ -98,7 +125,7 @@ if __name__ == '__main__':
         'std_links',
         'ref_links',
 
-        'elements',
+        'readme',
     ]
     if len(sys.argv) > 1:
         benchmarks(sys.argv[1:])

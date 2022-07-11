@@ -64,3 +64,24 @@ class TestMiscCases(TestCase):
         # trigger to use cached parser
         result = mistune.markdown('**b**')
         self.assertEqual(result, expected)
+
+    def test_ast_output(self):
+        md = mistune.create_markdown(escape=False, renderer=None)
+        text = '# h1\n\nfoo **bar**'
+        result = md(text)
+        expected = [
+            {
+                'type': 'heading',
+                'children': [{'type': 'text', 'raw': 'h1'}],
+                'attrs': {'level': 1},
+            },
+            {'type': 'blank_line'},
+            {
+                'type': 'paragraph',
+                'children': [
+                    {'type': 'text', 'raw': 'foo '},
+                    {'type': 'strong', 'children': [{'type': 'text', 'raw': 'bar'}]}
+                ]
+            },
+        ]
+        self.assertEqual(result, expected)

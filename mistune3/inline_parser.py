@@ -94,6 +94,7 @@ class InlineParser(Parser):
         super(InlineParser, self).__init__()
 
         self.renderer = renderer
+        self.hard_wrap = hard_wrap
         # lazy add linebreak
         if hard_wrap:
             self.specification['linebreak'] = self.HARD_LINEBREAK

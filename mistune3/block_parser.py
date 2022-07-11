@@ -1,5 +1,4 @@
 import re
-import string
 from .util import (
     unikey,
     escape,
@@ -78,14 +77,9 @@ class BlockParser(Parser):
         ),
         'block_html': BLOCK_HTML,
         'raw_html': RAW_HTML,
-        'paragraph': (
-            # start with none punctuation, not number, not whitespace
-            r'(?:^[^\s\d' + re.escape(string.punctuation) + r'][^\n]*\n)+'
-        )
     }
 
     DEFAULT_RULES = (
-        'blank_line',
         'fenced_code',
         'indent_code',
         'axt_heading',
@@ -95,7 +89,7 @@ class BlockParser(Parser):
         'list',
         'ref_link',
         'raw_html',
-        'paragraph',
+        'blank_line',
     )
 
     def __init__(self, block_quote_rules=None, list_rules=None, max_nested_level=6):
@@ -117,11 +111,6 @@ class BlockParser(Parser):
 
     def parse_blank_line(self, m, state):
         state.append_token({'type': 'blank_line'})
-        return m.end()
-
-    def parse_paragraph(self, m, state):
-        text = m.group(0)
-        state.add_paragraph(text)
         return m.end()
 
     def parse_thematic_break(self, m, state):

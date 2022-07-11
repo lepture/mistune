@@ -3,7 +3,6 @@ from .core import Parser, InlineState
 from .util import (
     escape,
     escape_url,
-    safe_entity,
     unikey,
 )
 from .helpers import (
@@ -112,7 +111,7 @@ class InlineParser(Parser):
         text = unescape_char(text)
         state.append_token({
             'type': 'text',
-            'raw': safe_entity(text),
+            'raw': text,
         })
         return m.end()
 
@@ -216,7 +215,7 @@ class InlineParser(Parser):
         return pos
 
     def _add_auto_link(self, url, text, state):
-        children = self.render_tokens([{'type': 'text', 'raw': safe_entity(text)}])
+        children = self.render_tokens([{'type': 'text', 'raw': text}])
         state.append_token({
             'type': 'link',
             'children': children,
@@ -312,7 +311,7 @@ class InlineParser(Parser):
         return end_pos
 
     def process_text(self, text, state):
-        state.append_token({'type': 'text', 'raw': safe_entity(text)})
+        state.append_token({'type': 'text', 'raw': text})
 
     def parse(self, state):
         pos = 0
@@ -367,7 +366,7 @@ class InlineParser(Parser):
             return
 
         raw_text = state.src[m.start():m2.start()]
-        state.append_token({'type': 'text', 'raw': safe_entity(raw_text)})
+        state.append_token({'type': 'text', 'raw': raw_text})
         for token in new_state.tokens:
             state.append_token(token)
         return m2_pos

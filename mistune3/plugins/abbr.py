@@ -1,5 +1,6 @@
 import re
-from ..util import escape, safe_entity
+import types
+from ..util import escape
 from ..helpers import PREVENT_BACKSLASH
 
 __all__ = ['abbr']
@@ -24,10 +25,10 @@ def parse_ref_abbr(block, m, state):
     return m.end() + 1
 
 
-def process_text(text, state):
+def process_text(self, text, state):
     ref = state.env.get('ref_abbrs')
     if not ref:
-        return state.append_token({'type': 'text', 'raw': safe_entity(text)})
+        return state.append_token({'type': 'text', 'raw': text})
 
     pattern = re.compile(r'|'.join(re.escape(k) for k in ref.keys()))
     pos = 0
@@ -39,21 +40,21 @@ def process_text(text, state):
         end_pos = m.start()
         if end_pos > pos:
             hole = text[pos:end_pos]
-            state.append_token({'type': 'text', 'raw': safe_entity(hole)})
+            state.append_token({'type': 'text', 'raw': hole})
 
         label = m.group(0)
         state.append_token({
             'type': 'abbr',
-            'raw': safe_entity(label),
+            'children': self.render_tokens([{'type': 'text', 'raw': label}]),
             'attrs': {'title': ref[label]}
         })
         pos = m.end()
 
     if pos == 0:
         # special case, just pure text
-        state.append_token({'type': 'text', 'raw': safe_entity(text)})
+        state.append_token({'type': 'text', 'raw': text})
     elif pos < len(text):
-        state.append_token({'type': 'text', 'raw': safe_entity(text[pos:])})
+        state.append_token({'type': 'text', 'raw': text[pos:]})
 
 
 def render_abbr(renderer, text, title):
@@ -65,6 +66,6 @@ def render_abbr(renderer, text, title):
 def abbr(md):
     md.block.register('ref_abbr', REF_ABBR, parse_ref_abbr, before='paragraph')
     # replace process_text
-    md.inline.process_text = process_text
+    md.inline.process_text = types.MethodType(process_text, md.inline)
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('abbr', render_abbr)

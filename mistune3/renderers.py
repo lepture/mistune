@@ -1,4 +1,4 @@
-from .util import escape, striptags
+from .util import escape, striptags, safe_entity
 
 
 class BaseRenderer(object):
@@ -82,7 +82,7 @@ class HTMLRenderer(BaseRenderer):
     def text(self, text):
         if self._escape:
             return escape(text)
-        return text
+        return safe_entity(text)
 
     def link(self, text, url, title=None):
         s = '<a href="' + self._safe_url(url) + '"'

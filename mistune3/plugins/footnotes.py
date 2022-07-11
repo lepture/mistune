@@ -1,6 +1,6 @@
 import re
 from ..core import BlockState
-from ..util import unikey, safe_entity
+from ..util import unikey
 from ..helpers import LINK_LABEL
 
 __all__ = ['footnotes']
@@ -34,7 +34,7 @@ def parse_inline_footnote(inline, m, state):
           'attrs': {'index': footnotes.index(key) + 1}
         })
     else:
-        state.append_token({'type': 'text', 'raw': safe_entity(m.group(0))})
+        state.append_token({'type': 'text', 'raw': m.group(0)})
     return m.end()
 
 

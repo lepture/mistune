@@ -9,7 +9,7 @@
 - [漢字(ㄏㄢˋㄗˋ)](/url "title")
 """
 
-from ..util import safe_entity, unikey
+from ..util import unikey
 from ..helpers import parse_link, parse_link_label
 
 
@@ -66,7 +66,7 @@ def parse_ruby(inline, m, state):
                         state.append_token(tok)
                     state.append_token({
                         'type': 'text',
-                        'raw': safe_entity('[' + label + ']'),
+                        'raw': '[' + label + ']',
                     })
                 return pos2
 

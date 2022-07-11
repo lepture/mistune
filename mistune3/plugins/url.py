@@ -1,4 +1,4 @@
-from ..util import escape_url, safe_entity
+from ..util import escape_url
 
 __all__ = ['url']
 
@@ -11,7 +11,7 @@ def parse_url_link(inline, m, state):
     if state.in_link:
         inline.process_text(text, state)
         return pos
-    children = inline.render_tokens([{'type': 'text', 'raw': safe_entity(text)}])
+    children = inline.render_tokens([{'type': 'text', 'raw': text}])
     state.append_token({
         'type': 'link',
         'children': children,

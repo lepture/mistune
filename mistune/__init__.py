@@ -4,6 +4,7 @@ from .block_parser import BlockParser
 from .inline_parser import InlineParser
 from .renderers import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
+from .plugins import import_plugin
 
 
 def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None):
@@ -27,10 +28,15 @@ def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None)
         renderer = HTMLRenderer(escape=escape)
 
     inline = InlineParser(renderer, hard_wrap=hard_wrap)
+    if plugins is not None:
+        plugins = [import_plugin(n) for n in plugins]
     return Markdown(renderer, inline=inline, plugins=plugins)
 
 
-html = create_markdown(escape=False)
+html = create_markdown(
+    escape=False,
+    plugins=['strikethrough', 'footnotes', 'table', 'speedup']
+)
 
 
 __cached_parsers = {}

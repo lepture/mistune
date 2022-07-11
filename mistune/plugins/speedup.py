@@ -9,7 +9,7 @@ PARAGRAPH = (
     r'(?:^[^\s\d' + re.escape(string.punctuation) + r'][^\n]*\n)+'
 )
 
-__all__ = ['speed']
+__all__ = ['speedup']
 
 
 
@@ -26,7 +26,7 @@ def parse_paragraph(block, m, state):
     return m.end()
 
 
-def speed(md):
+def speedup(md):
     md.block.register('paragraph', PARAGRAPH, parse_paragraph)
 
     punc = r'\\<!\[_*`~'

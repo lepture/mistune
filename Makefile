@@ -4,7 +4,7 @@ test:
 	@pytest -s
 
 coverage:
-	@pytest --cov=mistune3
+	@pytest --cov=mistune
 
 clean: clean-build clean-pyc clean-docs
 

@@ -40,25 +40,25 @@ def get_markdown_parsers():
     parsers = {}
 
     try:
-        import mistune3
-        from mistune3.plugins.speed import speed
-        from mistune3.plugins.url import url
-        from mistune3.plugins.formatting import strikethrough, mark, insert, subscript
-        from mistune3.plugins.task_lists import task_lists
-        from mistune3.plugins.table import table
-        from mistune3.plugins.footnotes import footnotes
-        from mistune3.plugins.def_list import def_list
-        from mistune3.plugins.abbr import abbr
-        from mistune3.plugins.math import math
-        from mistune3.plugins.ruby import ruby
-        from mistune3.directives import Admonition, DirectiveToc, DirectiveInclude
+        import mistune
+        from mistune.plugins.speed import speed
+        from mistune.plugins.url import url
+        from mistune.plugins.formatting import strikethrough, mark, insert, subscript
+        from mistune.plugins.task_lists import task_lists
+        from mistune.plugins.table import table
+        from mistune.plugins.footnotes import footnotes
+        from mistune.plugins.def_list import def_list
+        from mistune.plugins.abbr import abbr
+        from mistune.plugins.math import math
+        from mistune.plugins.ruby import ruby
+        from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
 
-        parsers[f'mistune ({mistune3.__version__})'] = mistune3.html
-        parsers['mistune (speed)'] = mistune3.create_markdown(
+        parsers[f'mistune ({mistune.__version__})'] = mistune.html
+        parsers['mistune (speed)'] = mistune.create_markdown(
             escape=False,
             plugins=[speed],
         )
-        parsers['mistune (full)'] = mistune3.create_markdown(
+        parsers['mistune (full)'] = mistune.create_markdown(
             escape=False,
             plugins=[
                 url, strikethrough, mark, insert, subscript, task_lists,
@@ -70,12 +70,8 @@ def get_markdown_parsers():
         pass
 
     try:
-        import mistune
-        if hasattr(mistune, 'html'):
-            func = mistune.html
-        else:
-            func = mistune.markdown
-        parsers[f'mistune ({mistune.__version__})'] = func
+        import mistune_v1
+        parsers[f'mistune ({mistune_v1.__version__})'] = mistune_v1.markdown
     except ImportError:
         pass
 

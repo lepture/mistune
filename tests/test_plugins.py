@@ -1,14 +1,14 @@
-from mistune3 import create_markdown
-from mistune3.plugins.url import url
-from mistune3.plugins.formatting import strikethrough, mark, insert, subscript
-from mistune3.plugins.task_lists import task_lists
-from mistune3.plugins.table import table
-from mistune3.plugins.footnotes import footnotes
-from mistune3.plugins.def_list import def_list
-from mistune3.plugins.abbr import abbr
-from mistune3.plugins.math import math
-from mistune3.plugins.ruby import ruby
-from mistune3.plugins.speed import speed
+from mistune import create_markdown
+from mistune.plugins.url import url
+from mistune.plugins.formatting import strikethrough, mark, insert, subscript
+from mistune.plugins.task_lists import task_lists
+from mistune.plugins.table import table
+from mistune.plugins.footnotes import footnotes
+from mistune.plugins.def_list import def_list
+from mistune.plugins.abbr import abbr
+from mistune.plugins.math import math
+from mistune.plugins.ruby import ruby
+from mistune.plugins.speed import speed
 from tests import BaseTestCase, fixtures
 
 

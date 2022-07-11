@@ -4,10 +4,10 @@ from .util import striptags
 def add_toc_hook(md, depth=3, heading_id=None):
     """Add a hook to save toc items into ``state.env``::
 
-        import mistune3
-        from mistune3.toc import add_toc_hook, render_toc_ul
+        import mistune
+        from mistune.toc import add_toc_hook, render_toc_ul
 
-        md = mistune3.create_markdown(...)
+        md = mistune.create_markdown(...)
         add_toc_hook(md, depth, heading_id)
 
         html, state = md.parse(text)

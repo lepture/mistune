@@ -1,6 +1,6 @@
 import os
-from mistune3 import create_markdown
-from mistune3.toc import add_toc_hook, render_toc_ul
+from mistune import create_markdown
+from mistune.toc import add_toc_hook, render_toc_ul
 from tests import BaseTestCase
 
 

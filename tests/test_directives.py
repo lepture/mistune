@@ -1,6 +1,6 @@
 import os
-from mistune3 import create_markdown
-from mistune3.directives import Admonition, DirectiveToc, DirectiveInclude
+from mistune import create_markdown
+from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
 from tests import BaseTestCase
 from tests.fixtures import ROOT
 

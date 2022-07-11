@@ -1,4 +1,4 @@
-import mistune3 as mistune
+import mistune
 from unittest import TestCase
 
 
@@ -52,7 +52,7 @@ class TestMiscCases(TestCase):
         self.assertEqual(result.strip(), expected)
 
     def test_use_plugin(self):
-        from mistune3.plugins.url import url
+        from mistune.plugins.url import url
         md = mistune.Markdown(mistune.HTMLRenderer())
         md.use(url)
 

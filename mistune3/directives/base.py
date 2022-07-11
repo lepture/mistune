@@ -21,7 +21,7 @@ import re
 __all__ = ['Directive']
 
 
-DIRECTIVE_PATTERN = re.compile(
+_directive_re = re.compile(
     r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<value>[^\n]*)(?:\n|$)'
     r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
     r'\n*(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
@@ -53,7 +53,7 @@ class PluginDirective(object):
         self._directives[name] = fn
 
     def parse_block_directive(self, block, m, state):
-        m = state.match(DIRECTIVE_PATTERN)
+        m = _directive_re.match(state.src, state.cursor)
         if not m:
             return
 

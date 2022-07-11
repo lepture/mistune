@@ -47,31 +47,36 @@ class BaseRenderer(object):
 
 class HTMLRenderer(BaseRenderer):
     NAME = 'html'
-    HARMFUL_PROTOCOLS = {
+    HARMFUL_PROTOCOLS = (
         'javascript:',
         'vbscript:',
+        'file:',
         'data:',
-    }
+    )
+    GOOD_DATA_PROTOCOLS = (
+        'data:image/gif;',
+        'data:image/png;',
+        'data:image/jpeg;',
+        'data:image/webp;',
+    )
 
     def __init__(self, escape=True, allow_harmful_protocols=None):
         super(HTMLRenderer, self).__init__()
-        self._escape = escape
         self._allow_harmful_protocols = allow_harmful_protocols
+        self._escape = escape
 
     def _safe_url(self, url):
-        if self._allow_harmful_protocols is None:
-            schemes = self.HARMFUL_PROTOCOLS
-        elif self._allow_harmful_protocols is True:
-            schemes = None
-        else:
-            allowed = set(self._allow_harmful_protocols)
-            schemes = self.HARMFUL_PROTOCOLS - allowed
+        if self._allow_harmful_protocols is True:
+            return url
 
-        if schemes:
-            for s in schemes:
-                if url.lower().startswith(s):
-                    url = '#harmful-link'
-                    break
+        _url = url.lower()
+        if self._allow_harmful_protocols and \
+            _url.startswith(tuple(self._allow_harmful_protocols)):
+            return url
+
+        if _url.startswith(self.HARMFUL_PROTOCOLS) and \
+            not _url.startswith(self.GOOD_DATA_PROTOCOLS):
+            return '#harmful-link'
         return url
 
     def text(self, text):

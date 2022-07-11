@@ -80,8 +80,7 @@ class BlockParser(Parser):
         'raw_html': RAW_HTML,
         'paragraph': (
             # start with none punctuation, not number, not whitespace
-            r'(?:^[^\s\d' + re.escape(string.punctuation) + r']'
-            r'[^\n]*\n)+'
+            r'(?:^[^\s\d' + re.escape(string.punctuation) + r'][^\n]*\n)+'
         )
     }
 
@@ -199,7 +198,7 @@ class BlockParser(Parser):
             return m.end() + 1
 
         sc = self.compile_sc(['thematic_break', 'list'])
-        m = state.match(sc)
+        m = sc.match(state.src, state.cursor)
         if m:
             return self.parse_method(m, state)
 
@@ -264,7 +263,7 @@ class BlockParser(Parser):
 
         end_pos = None
         if require_marker:
-            m = state.match(self.STRICT_BLOCK_QUOTE)
+            m = self.STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
             if m:
                 quote = m.group(0)
                 quote = _BLOCK_QUOTE_LEADING.sub('', quote)
@@ -279,7 +278,7 @@ class BlockParser(Parser):
                 'list', 'block_html',
             ])
             while state.cursor < state.cursor_max:
-                m = state.match(self.STRICT_BLOCK_QUOTE)
+                m = self.STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
                 if m:
                     quote = m.group(0)
                     quote = _BLOCK_QUOTE_LEADING.sub('', quote)
@@ -299,7 +298,7 @@ class BlockParser(Parser):
                     # a block quote and a following paragraph
                     break
 
-                m = state.match(break_sc)
+                m = break_sc.match(state.src, state.cursor)
                 if m:
                     end_pos = self.parse_method(m, state)
                     if end_pos:

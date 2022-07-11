@@ -104,12 +104,7 @@ def render_footnotes(renderer, text):
 def render_footnote_item(renderer, text, key, index):
     i = str(index)
     back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
-
-    text = text.rstrip()
-    if text.endswith('</p>'):
-        text = text[:-4] + back + '</p>'
-    else:
-        text = text + back
+    text = text.rstrip()[:-4] + back + '</p>'
     return '<li id="fn-' + i + '">' + text + '</li>\n'
 
 

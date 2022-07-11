@@ -34,16 +34,6 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
 
     leading_width = len(spaces) + len(marker)
     text, continue_width = _compile_continue_width(text, leading_width)
-
-    if not text:
-        # Example 285
-        # an empty list item cannot interrupt a paragraph
-        end_pos = state.append_paragraph()
-        if end_pos:
-            token['children'].append({'type': 'list_item', 'children': []})
-            token['_end_pos'] = end_pos
-            return
-
     item_pattern = _compile_list_item_pattern(bullet, leading_width)
     pairs = [
         ('thematic_break', block.specification['thematic_break']),
@@ -88,7 +78,7 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
             state.cursor = pos
             continue
 
-        m = state.match(sc)
+        m = sc.match(state.src, state.cursor)
         if m:
             tok_type = m.lastgroup
             if tok_type == 'list_item':

@@ -38,9 +38,6 @@ class BlockState:
     def get_text(self, end_pos):
         return self.src[self.cursor:end_pos]
 
-    def match(self, regex):
-        return regex.match(self.src, self.cursor)
-
     def last_token(self):
         if self.tokens:
             return self.tokens[-1]

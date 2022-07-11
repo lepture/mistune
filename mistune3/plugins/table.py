@@ -1,6 +1,8 @@
 import re
 from ..helpers import PREVENT_BACKSLASH
 
+# https://michelf.ca/projects/php-markdown/extra/#table
+
 __all__ = ['table']
 
 
@@ -34,7 +36,7 @@ def parse_table(block, m, state):
     body = m.group('table_body')
     for text in body.splitlines():
         m = TABLE_CELL.match(text)
-        if not m:
+        if not m:  # pragma: no cover
             return
         row = _process_row(m.group(1), aligns)
         if not row:
@@ -142,6 +144,12 @@ def render_table_cell(renderer, text, align=None, head=False):
 def table(md):
     md.block.register('table', TABLE_PATTERN, parse_table, before='paragraph')
     md.block.register('nptable', NP_TABLE_PATTERN, parse_nptable, before='paragraph')
+
+    md.block.insert_rule(md.block.block_quote_rules, 'table', before='paragraph')
+    md.block.insert_rule(md.block.block_quote_rules, 'nptable', before='paragraph')
+    md.block.insert_rule(md.block.list_rules, 'table', before='paragraph')
+    md.block.insert_rule(md.block.list_rules, 'nptable', before='paragraph')
+
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('table', render_table)
         md.renderer.register('table_head', render_table_head)

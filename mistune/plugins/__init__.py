@@ -13,6 +13,7 @@ _plugins = {
     'math': 'mistune.plugins.math.math',
     'ruby': 'mistune.plugins.ruby.ruby',
     'task_lists': 'mistune.plugins.task_lists.task_lists',
+    'emoji': 'mistune.plugins.emoji.emoji',
     'speedup': 'mistune.plugins.speedup.speedup',
 }
 _cached_modules = {}
@@ -31,4 +32,6 @@ def import_plugin(name):
         module_path, func_name = name.rsplit(".", 1)
 
     module = import_module(module_path)
-    return getattr(module, func_name)
+    plugin = getattr(module, func_name)
+    _cached_modules[name] = plugin
+    return plugin

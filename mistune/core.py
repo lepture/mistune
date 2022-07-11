@@ -131,6 +131,9 @@ class Parser:
         self._methods[name] = lambda m, state: func(self, m, state)
         self.insert_rule(self.rules, name, before=before)
 
+    def register_rule(self, name, pattern, func):
+        raise DeprecationWarning('This plugin is not compatible with mistune v3.')
+
     @staticmethod
     def insert_rule(rules, name, before=None):
         if before:

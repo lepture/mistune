@@ -1,4 +1,4 @@
-from .block_parser import BlockParser, expand_leading_tab
+from .block_parser import BlockParser
 from .inline_parser import InlineParser
 
 
@@ -56,12 +56,10 @@ class Markdown:
         with open(filepath, 'rb') as f:
             s = f.read()
 
-        s = expand_leading_tab(s.decode(encoding))
+        s = s.decode(encoding)
         return self.parse(s, state)
 
     def __call__(self, s):
         if s is None:
             s = '\n'
-        else:
-            s = expand_leading_tab(s)
         return self.parse(s)[0]

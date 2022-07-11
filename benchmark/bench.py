@@ -39,33 +39,23 @@ def run_case(method, content, count=100):
 def get_markdown_parsers():
     parsers = {}
 
-    try:
-        import mistune
-        from mistune.plugins.url import url
-        from mistune.plugins.formatting import strikethrough, mark, insert, subscript
-        from mistune.plugins.task_lists import task_lists
-        from mistune.plugins.table import table
-        from mistune.plugins.footnotes import footnotes
-        from mistune.plugins.def_list import def_list
-        from mistune.plugins.abbr import abbr
-        from mistune.plugins.math import math
-        from mistune.plugins.ruby import ruby
-        from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
+    import mistune
+    from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
 
-        parsers[f'mistune ({mistune.__version__})'] = mistune.html
-        parsers[f'mistune (speed)'] = mistune.create_markdown(
-            escape=False, plugins=['speedup'])
-        parsers['mistune (full)'] = mistune.create_markdown(
-            escape=False,
-            plugins=[
-                url, strikethrough, mark, insert, subscript, task_lists,
-                table, footnotes, def_list, abbr, math, ruby,
-                Admonition(), DirectiveToc(), DirectiveInclude(),
-                'speedup',
-            ],
-        )
-    except ImportError:
-        pass
+    parsers[f'mistune ({mistune.__version__})'] = mistune.html
+    parsers[f'mistune (slow)'] = mistune.create_markdown(escape=False)
+    parsers[f'mistune (fast)'] = mistune.create_markdown(
+        escape=False, plugins=['speedup'])
+    parsers['mistune (full)'] = mistune.create_markdown(
+        escape=False,
+        plugins=[
+            'url', 'abbr', 'ruby',
+            'strikethrough', 'mark', 'insert', 'subscript',
+            'footnotes', 'def_list', 'math', 'table', 'task_lists',
+            Admonition(), DirectiveToc(), DirectiveInclude(),
+            'speedup',
+        ],
+    )
 
     try:
         import mistune_v1
@@ -82,6 +72,13 @@ def get_markdown_parsers():
     try:
         import mistletoe
         parsers[f'mistletoe ({mistletoe.__version__})'] = mistletoe.markdown
+    except ImportError:
+        pass
+
+    try:
+        from markdown_it import MarkdownIt
+        md = MarkdownIt()
+        parsers['markdown_it'] = md.render
     except ImportError:
         pass
 

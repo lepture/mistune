@@ -41,7 +41,6 @@ def get_markdown_parsers():
 
     try:
         import mistune
-        from mistune.plugins.speed import speed
         from mistune.plugins.url import url
         from mistune.plugins.formatting import strikethrough, mark, insert, subscript
         from mistune.plugins.task_lists import task_lists
@@ -54,16 +53,15 @@ def get_markdown_parsers():
         from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
 
         parsers[f'mistune ({mistune.__version__})'] = mistune.html
-        parsers['mistune (speed)'] = mistune.create_markdown(
-            escape=False,
-            plugins=[speed],
-        )
+        parsers[f'mistune (speed)'] = mistune.create_markdown(
+            escape=False, plugins=['speedup'])
         parsers['mistune (full)'] = mistune.create_markdown(
             escape=False,
             plugins=[
                 url, strikethrough, mark, insert, subscript, task_lists,
                 table, footnotes, def_list, abbr, math, ruby,
                 Admonition(), DirectiveToc(), DirectiveInclude(),
+                'speedup',
             ],
         )
     except ImportError:

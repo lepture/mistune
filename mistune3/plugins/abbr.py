@@ -30,10 +30,20 @@ def process_text(self, text, state):
     if not ref:
         return state.append_token({'type': 'text', 'raw': text})
 
-    pattern = re.compile(r'|'.join(re.escape(k) for k in ref.keys()))
+    if state.tokens:
+        last = state.tokens[-1]
+        if last['type'] == 'text':
+            state.tokens.pop()
+            text = last['raw'] + text
+
+    abbrs_re = state.env.get('abbrs_re')
+    if not abbrs_re:
+        abbrs_re = re.compile(r'|'.join(re.escape(k) for k in ref.keys()))
+        state.env['abbrs_re'] = abbrs_re
+
     pos = 0
     while pos < len(text):
-        m = pattern.search(text, pos)
+        m = abbrs_re.search(text, pos)
         if not m:
             break
 

@@ -12,9 +12,10 @@ The ``.html()`` methods has enabled all the features you might want
 by default:
 
 * No escape of HTML tags
-* With **strikethough** plugin
+* With **strikethrough** plugin
 * With **table** plugin
 * With **footnote** plugin
+
 
 Customize Mistune
 -----------------
@@ -46,12 +47,13 @@ Adding plugins::
     # ==>
     '<p>~~s~~</p>'
 
-    markdown = mistune.create_markdown(plugins=['strikethough'])
+    markdown = mistune.create_markdown(plugins=['strikethrough'])
     markdown('~~s~~')
     # ==>
     '<p><del>s</del></p>'
 
 Find out what plugins mistune has built-in in :ref:`plugins` sections.
+
 
 Customize Renderer
 ------------------
@@ -81,28 +83,27 @@ In this way, we can use Pygments to highlight the fenced code. Learn more
 at :ref:`renderers`.
 
 
-AstRenderer
------------
+AST
+---
 
-Mistune can produce AST by default with ``mistune.AstRenderer``::
+Mistune can produce AST by default without any renderer::
 
-    markdown = mistune.create_markdown(renderer=mistune.AstRenderer())
+    markdown = mistune.create_markdown(renderer=None)
 
 This ``markdown`` function will generate a list of tokens instead of HTML::
 
     text = 'hello **world**'
     markdown(text)
     # ==>
-    [{
-        'children': [
-            {'text': 'hello ', 'type': 'text'},
-            {
-                'children': [{'text': 'world', 'type': 'text'}],
-                'type': 'strong'
-            }
-        ],
-        'type': 'paragraph'
-    }]
+    [
+        {
+            'type': 'paragraph',
+            'children': [
+                {'type': 'text', 'raw': 'hello '},
+                {'type': 'strong', 'children': [{'type': 'text', 'raw': 'world'}]}
+            ]
+        }
+    ]
 
 It is also possible to pass ``renderer='ast'`` to create the markdown instance::
 

@@ -18,10 +18,10 @@ a markdown instance your own::
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_strikethrough
+    from mistune.plugins.formatting import strikethrough
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_strikethrough])
+    markdown = mistune.Markdown(renderer, plugins=[strikethrough])
 
 
 footnotes
@@ -41,10 +41,10 @@ a markdown instance your own::
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_footnotes
+    from mistune.plugins.footnotes import footnotes
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_footnotes])
+    markdown = mistune.Markdown(renderer, plugins=[footnotes])
 
 
 table
@@ -88,10 +88,10 @@ a markdown instance your own::
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_table
+    from mistune.plugins.table import table
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_table])
+    markdown = mistune.Markdown(renderer, plugins=[table])
 
 
 url
@@ -122,10 +122,10 @@ To enable **url** plugin with your own markdown instance::
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_url
+    from mistune.plugins.url import url
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_url])
+    markdown = mistune.Markdown(renderer, plugins=[url])
 
 task_lists
 ----------
@@ -154,10 +154,10 @@ This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_task_lists
+    from mistune.plugins.task_lists import task_lists
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_task_lists])
+    markdown = mistune.Markdown(renderer, plugins=[task_lists])
 
 def_list
 ----------
@@ -193,10 +193,10 @@ This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_def_list
+    from mistune.plugins.def_list import def_list
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_def_list])
+    markdown = mistune.Markdown(renderer, plugins=[def_list])
 
 abbr
 ----
@@ -205,7 +205,8 @@ abbr plugin enables creating abbreviations:
 
 .. code-block:: text
 
-    The HTML specification is maintained by the W3C.
+    The HTML specification
+    is maintained by the W3C.
 
     *[HTML]: Hyper Text Markup Language
     *[W3C]: World Wide Web Consortium
@@ -214,7 +215,8 @@ Will be converted into:
 
 .. code-block:: html
 
-    The <abbr title="Hyper Text Markup Language">HTML</abbr> specification is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.
+    The <abbr title="Hyper Text Markup Language">HTML</abbr> specification
+    is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.
 
 This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
 **abbr** plugin with your own markdown instance::
@@ -223,8 +225,36 @@ This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
 
 Another way to create your own Markdown instance::
 
-    from mistune.plugins import plugin_abbr
+    from mistune.plugins.abbr import abbr
 
     renderer = mistune.HTMLRenderer()
-    markdown = mistune.Markdown(renderer, plugins=[plugin_abbr])
+    markdown = mistune.Markdown(renderer, plugins=[abbr])
+
+
+mark
+----
+
+mark plugin adds the ability to insert ``<mark>`` tags. To mark some text, simply surround the text with ``==``:
+
+.. code-block:: text
+
+    ==mark me== ==mark with\=\=equal==
+
+Will be converted into:
+
+.. code-block:: html
+
+    <mark>mark me</mark> <mark>mark with==equal</mark>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**mark** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['mark'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.formatting import mark
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[mark])
 

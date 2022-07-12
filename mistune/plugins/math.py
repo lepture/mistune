@@ -1,6 +1,6 @@
 __all__ = ['math']
 
-BLOCK_MATH = r'\$\$[ \t]*\n(?P<math_text>.+?)\n\$\$[ \t]*$'
+BLOCK_MATH = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>.+?)\n\$\$[ \t]*$'
 INLINE_MATH = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'
 
 

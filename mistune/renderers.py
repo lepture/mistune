@@ -145,7 +145,7 @@ class HTMLRenderer(BaseRenderer):
         if info:
             lang = info.split(None, 1)[0]
             html += ' class="language-' + lang + '"'
-        return html + '>' + code + '</code></pre>\n'
+        return html + '>' + escape(code) + '</code></pre>\n'
 
     def block_quote(self, text):
         return '<blockquote>\n' + text + '</blockquote>\n'

@@ -1,7 +1,6 @@
 import re
 from .util import (
     unikey,
-    escape,
     escape_url,
     safe_entity,
     expand_tab,
@@ -127,7 +126,7 @@ class BlockParser(Parser):
         code = m.group(0)
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
-        code = escape(code.strip('\n'))
+        code = code.strip('\n')
         state.append_token({'type': 'block_code', 'raw': code})
         return m.end()
 
@@ -145,7 +144,7 @@ class BlockParser(Parser):
 
         _end = re.compile(
             r'^ {0,3}' + c + '{' + str(len(marker)) + r',}[ \t]*(?:\n|$)', re.M)
-        cursor_start = m.end()
+        cursor_start = m.end() + 1
 
         m2 = _end.search(state.src, cursor_start)
         if m2:
@@ -159,7 +158,7 @@ class BlockParser(Parser):
             _trim_pattern = re.compile('^ {0,' + str(len(spaces)) + '}', re.M)
             code = _trim_pattern.sub('', code)
 
-        token = {'type': 'block_code', 'raw': escape(code), 'fenced': True}
+        token = {'type': 'block_code', 'raw': code, 'fenced': True}
         if info:
             info = unescape_char(info)
             token['attrs'] = {'info': safe_entity(info.strip())}

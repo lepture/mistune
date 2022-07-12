@@ -10,7 +10,7 @@ def task_lists_hook(md, state):
     return _rewrite_all_list_items(state.tokens)
 
 
-def render_task_list_item(renderer, text, depth=None, tight=True, checked=False):
+def render_task_list_item(renderer, text, checked=False, **attrs):
     checkbox = (
         '<input class="task-list-item-checkbox" '
         'type="checkbox" disabled'

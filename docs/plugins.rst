@@ -160,7 +160,7 @@ Another way to create your own Markdown instance::
     markdown = mistune.Markdown(renderer, plugins=[task_lists])
 
 def_list
-----------
+--------
 
 def_list plugin enables creating html definition lists:
 
@@ -257,4 +257,38 @@ Another way to create your own Markdown instance::
 
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[mark])
+
+
+insert
+------
+
+insert plugin adds the ability to insert ``<ins>`` tags. To insert some text, simply surround the text with ``^^``:
+
+.. code-block:: text
+
+    ^^insert me^^ ^^insert\^\^me^^
+
+Will be converted into:
+
+.. code-block:: html
+
+    <ins>insert me</ins> <ins>insert^^me</ins>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**insert** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['insert'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.formatting import insert
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[insert])
+
+math
+----
+
+ruby
+----
 

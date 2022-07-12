@@ -6,6 +6,7 @@ from .util import (
     unikey,
 )
 from .helpers import (
+    PREVENT_BACKSLASH,
     PUNCTUATION,
     HTML_TAGNAME,
     HTML_ATTRIBUTES,
@@ -33,14 +34,14 @@ INLINE_HTML = (
 )
 
 EMPHASIS_END_RE = {
-    '*': re.compile(r'(?<![\s*])\*(?!\*)'),
-    '_': re.compile(r'(?<![\s_])_(?!_)\b'),
+    '*': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\*|[^\s*])\*(?!\*)'),
+    '_': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\_|[^\s_])_(?!_)\b'),
 
-    '**': re.compile(r'(?<![\s*])\*\*(?!\*)'),
-    '__': re.compile(r'(?<![\s_])__(?!_)\b'),
+    '**': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\*|[^\s*])\*\*(?!\*)'),
+    '__': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\_|[^\s_])__(?!_)\b'),
 
-    '***': re.compile(r'(?<![\s*])\*\*\*(?!\*)'),
-    '___': re.compile(r'(?<![\s_])___(?!_)\b'),
+    '***': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\*|[^\s*])\*\*\*(?!\*)'),
+    '___': re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\_|[^\s_])___(?!_)\b'),
 }
 
 
@@ -226,10 +227,11 @@ class InlineParser(Parser):
         pos = m.end()
 
         marker = m.group(0)
-        if len(marker) == 1 and state.in_emphasis:
+        mlen = len(marker)
+        if mlen == 1 and state.in_emphasis:
             state.append_token({'type': 'text', 'raw': marker})
             return pos
-        elif len(marker) == 2 and state.in_strong:
+        elif mlen == 2 and state.in_strong:
             state.append_token({'type': 'text', 'raw': marker})
             return pos
 
@@ -239,8 +241,8 @@ class InlineParser(Parser):
             state.append_token({'type': 'text', 'raw': marker})
             return pos
 
-        text = state.src[pos:m1.start()]
         end_pos = m1.end()
+        text = state.src[pos:end_pos-mlen]
 
         prec_pos = self._precedence_scan(m, state, end_pos)
         if prec_pos:
@@ -248,11 +250,11 @@ class InlineParser(Parser):
 
         new_state = state.copy()
         new_state.src = text
-        if len(marker) == 1:
+        if mlen == 1:
             new_state.in_emphasis = True
             children = self.render(new_state)
             state.append_token({'type': 'emphasis', 'children': children})
-        elif len(marker) == 2:
+        elif mlen == 2:
             new_state.in_strong = True
             children = self.render(new_state)
             state.append_token({'type': 'strong', 'children': children})

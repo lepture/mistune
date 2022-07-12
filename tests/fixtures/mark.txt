@@ -29,7 +29,7 @@ foo ==mark me==
 ```````````````````````````````` example
 ==mark me===
 .
-<p><mark>mark me</mark>=</p>
+<p>==mark me===</p>
 ````````````````````````````````
 
 ## escape mark

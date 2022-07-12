@@ -30,7 +30,7 @@ foo ^^insert me^^
 ```````````````````````````````` example
 ^^insert me^^^
 .
-<p><ins>insert me</ins>^</p>
+<p>^^insert me^^^</p>
 ````````````````````````````````
 
 ## escape insert

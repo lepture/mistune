@@ -3,9 +3,9 @@ from ..helpers import unescape_char, PREVENT_BACKSLASH
 
 __all__ = ["strikethrough", "mark", "insert", "subscript"]
 
-_STRIKE_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'~~', re.S)
-_MARK_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'==', re.S)
-_INSERT_END = re.compile(r'(.+?)' + PREVENT_BACKSLASH + r'\^\^', re.S)
+_STRIKE_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\~|[^\s~])~~(?!~)')
+_MARK_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\=|[^\s=])==(?!=)')
+_INSERT_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\^|[^\s^])\^\^(?!\^)')
 SUBSCRIPT_PATTERN = r'~(?:\S|\\ )+?~'
 
 
@@ -51,15 +51,16 @@ def render_subscript(renderer, text):
 
 def _parse_to_end(inline, m, state, tok_type, end_pattern):
     pos = m.end()
-    m1 = end_pattern.match(state.src, pos)
+    m1 = end_pattern.search(state.src, pos)
     if not m1:
         return
-    text = m1.group(1)
+    end_pos = m1.end()
+    text = state.src[pos:end_pos-2]
     new_state = state.copy()
     new_state.src = text
     children = inline.render(new_state)
     state.append_token({'type': tok_type, 'children': children})
-    return m1.end()
+    return end_pos
 
 
 def strikethrough(md):
@@ -74,6 +75,13 @@ def strikethrough(md):
 
 
 def mark(md):
+    """A mistune plugin to add ``<mark>`` tag. Spec defined at
+    https://facelessuser.github.io/pymdown-extensions/extensions/mark/::
+
+        ==mark me== ==mark \\=\\= equal==
+
+    :param md: Markdown instance
+    """
     md.inline.register(
         'mark',
         r'==(?=[^\s=])',

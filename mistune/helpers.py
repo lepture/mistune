@@ -11,7 +11,7 @@ LINK_BRACKET_START = re.compile(r'[ \t]*\n?[ \t]*<')
 LINK_BRACKET_RE = re.compile(r'<([^<>\n\\\x00]*)>')
 LINK_HREF_BLOCK_RE = re.compile(r'[ \t]*\n?[ \t]*([^\s]+)(?:\s|$)')
 LINK_HREF_INLINE_RE = re.compile(
-    r'[ \t]*\n?[ \t]*([^ \t\n]*)(?:\s|'
+    r'[ \t]*\n?[ \t]*([^ \t\n]*?)(?:[ \t\n]|'
     r'(?:' + PREVENT_BACKSLASH + r'\)))'
 )
 

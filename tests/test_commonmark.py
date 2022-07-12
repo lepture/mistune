@@ -8,6 +8,7 @@ DIFF_CASES = {
 
     'images_573', # image can not be in image
 
+    'links_495',
     'links_517',  # aggressive link group
     'links_518',
     'links_519',

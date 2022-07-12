@@ -5,6 +5,8 @@ Upgrade Guide
 Upgrade from v2 to v3
 ---------------------
 
+HTMLRenderer
+~~~~~~~~~~~~
 
 When customizing renderers, these methods' paramters are changed::
 
@@ -26,3 +28,24 @@ When customizing renderers, these methods' paramters are changed::
 
     -    table_cell(self, text, align=None, is_head=False)
     +    table_cell(self, text, align=None, head=False)
+
+AstRenderer
+~~~~~~~~~~~
+
+There is no ``AstRenderer`` in v3, just pass ``None`` to ``create_markdown``::
+
+    import mistune
+
+    md = mistune.create_markdown(renderer=None)
+    md('...markdown text...')
+
+Plugins
+~~~~~~~
+
+Please check the built-in plugins to find out how to write a mistune plugin.
+
+Directives
+~~~~~~~~~~
+
+Removed ``self.parse_options`` and ``self.parse_text`` methods on ``Directive``
+class. Please check the source code to find out how to create a directive.

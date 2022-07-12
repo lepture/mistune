@@ -21,7 +21,7 @@
             - List Item
 - List Item
   - Loose List Item
- 
+
     Loose paragraph
   - List Item
 

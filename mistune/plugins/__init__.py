@@ -13,7 +13,6 @@ _plugins = {
     'math': 'mistune.plugins.math.math',
     'ruby': 'mistune.plugins.ruby.ruby',
     'task_lists': 'mistune.plugins.task_lists.task_lists',
-    'emoji': 'mistune.plugins.emoji.emoji',
     'speedup': 'mistune.plugins.speedup.speedup',
 }
 _cached_modules = {}

@@ -48,3 +48,17 @@
 .
 <p><a href="/url"><ruby><rb>漢字</rb><rt>ㄏㄢˋㄗˋ</rt></ruby></a></p>
 ````````````````````````````````
+
+## ruby splits
+
+```````````````````````````````` example
+[漢(かん)][字(じ)]
+.
+<p><ruby><rb>漢</rb><rt>かん</rt></ruby><ruby><rb>字</rb><rt>じ</rt></ruby></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[[漢(かん)][字(じ)]](https://jisho.org/search/漢字)
+.
+<p><a href="https://jisho.org/search/%E6%BC%A2%E5%AD%97"><ruby><rb>漢</rb><rt>かん</rt></ruby><ruby><rb>字</rb><rt>じ</rt></ruby></a></p>
+````````````````````````````````

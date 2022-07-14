@@ -8,16 +8,13 @@
 - [漢字(ㄏㄢˋㄗˋ)][link]
 - [漢字(ㄏㄢˋㄗˋ)](/url "title")
 """
-
+import re
 from ..util import unikey
 from ..helpers import parse_link, parse_link_label
 
 
-RUBY_PATTERN = (
-  r'\['
-  r'(?:\w+\(\w+\))+'
-  r'\]'
-)
+RUBY_PATTERN = r'\[(?:\w+\(\w+\))+\]'
+_ruby_re = re.compile(RUBY_PATTERN)
 
 
 def parse_ruby(inline, m, state):
@@ -34,46 +31,57 @@ def parse_ruby(inline, m, state):
 
     end_pos = m.end()
 
+    next_match = _ruby_re.match(state.src, end_pos)
+    if next_match:
+        for tok in tokens:
+            state.append_token(tok)
+        return parse_ruby(inline, next_match, state)
+
     # repeat link logic
     if end_pos < len(state.src):
-        c = state.src[end_pos]
-        if c == '(':
-            # standard link [text](<url> "title")
-            attrs, pos2 = parse_link(state.src, end_pos + 1)
-            if pos2:
-                state.append_token({
-                    'type': 'link',
-                    'children': inline.render_tokens(tokens),
-                    'attrs': attrs,
-                })
-                return pos2
-
-        elif c == '[':
-            # standard ref link [text][label]
-            label, pos2 = parse_link_label(state.src, end_pos + 1)
-            if label and pos2:
-                ref_links = state.env['ref_links']
-                key = unikey(label)
-                attrs = ref_links.get(key)
-                if attrs:
-                    state.append_token({
-                        'type': 'link',
-                        'children': inline.render_tokens(tokens),
-                        'attrs': attrs,
-                    })
-                else:
-                    for tok in tokens:
-                        state.append_token(tok)
-                    state.append_token({
-                        'type': 'text',
-                        'raw': '[' + label + ']',
-                    })
-                return pos2
+        link_pos = _parse_ruby_link(inline, state, end_pos, tokens)
+        if link_pos:
+            return link_pos
 
     for tok in tokens:
         state.append_token(tok)
     return end_pos
 
+
+def _parse_ruby_link(inline, state, pos, tokens):
+    c = state.src[pos]
+    if c == '(':
+        # standard link [text](<url> "title")
+        attrs, link_pos = parse_link(state.src, pos + 1)
+        if link_pos:
+            state.append_token({
+                'type': 'link',
+                'children': inline.render_tokens(tokens),
+                'attrs': attrs,
+            })
+            return link_pos
+
+    elif c == '[':
+        # standard ref link [text][label]
+        label, link_pos = parse_link_label(state.src, pos + 1)
+        if label and link_pos:
+            ref_links = state.env['ref_links']
+            key = unikey(label)
+            attrs = ref_links.get(key)
+            if attrs:
+                state.append_token({
+                    'type': 'link',
+                    'children': inline.render_tokens(tokens),
+                    'attrs': attrs,
+                })
+            else:
+                for tok in tokens:
+                    state.append_token(tok)
+                state.append_token({
+                    'type': 'text',
+                    'raw': '[' + label + ']',
+                })
+            return link_pos
 
 
 def render_ruby(renderer, text, rt):

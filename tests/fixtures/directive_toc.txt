@@ -45,12 +45,53 @@ none
 # H1
 ## H2
 .. toc::
-   :depth: s
+   :level: s
 .
 <h1>H1</h1>
 <h2>H2</h2>
-<div class="error">TOC depth MUST be integer</div>
+<div class="error">TOC level MUST be integer</div>
 ````````````````````````````````
+
+```````````````````````````````` example
+# H1
+## H2
+.. toc::
+   :level: -1
+.
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+<details class="toc">
+<summary>Table of Contents</summary>
+<ul>
+<li><a href="#toc_1">H1</a>
+<ul>
+<li><a href="#toc_2">H2</a></li>
+</ul>
+</li>
+</ul>
+</details>
+````````````````````````````````
+
+```````````````````````````````` example
+# H1
+## H2
+.. toc::
+   :level: 9
+.
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
+<details class="toc">
+<summary>Table of Contents</summary>
+<ul>
+<li><a href="#toc_1">H1</a>
+<ul>
+<li><a href="#toc_2">H2</a></li>
+</ul>
+</li>
+</ul>
+</details>
+````````````````````````````````
+
 
 ## Complex
 
@@ -63,7 +104,7 @@ none
 # H1 `C`
 
 .. toc:: Contents
-   :depth: 3
+   :level: 3
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>

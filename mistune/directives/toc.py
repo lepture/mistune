@@ -5,9 +5,9 @@
     The TOC directive syntax looks like::
 
         .. toc:: Title
-           :depth: 3
+           :level: 3
 
-    "Title" and "depth" option can be empty. "depth" is an integer less
+    "Title" and "level" option can be empty. "level" is an integer less
     than 6, which defines the max heading level writers want to include
     in TOC.
 """
@@ -17,8 +17,8 @@ from ..toc import normalize_toc_item, render_toc_ul
 
 
 class DirectiveToc(Directive):
-    def __init__(self, depth=3, heading_id=None):
-        self.depth = depth
+    def __init__(self, level=3, heading_id=None):
+        self.level = level
 
         if callable(heading_id):
             self.heading_id = heading_id
@@ -29,25 +29,25 @@ class DirectiveToc(Directive):
 
     def parse(self, block, m, state):
         title = m.group('value')
-        depth = None
+        level = None
         options = parse_options(m)
         if options:
-            depth = dict(options).get('depth')
-            if depth:
+            level = dict(options).get('level')
+            if level:
                 try:
-                    depth = int(depth)
+                    level = int(level)
                 except (ValueError, TypeError):
                     return {
                         'type': 'block_error',
-                        'raw': 'TOC depth MUST be integer',
+                        'raw': 'TOC level MUST be integer',
                     }
 
-        if depth is None:
-            depth = self.depth
-        elif depth < 1 or depth > 6:
-            depth = self.depth
+        if level is None:
+            level = self.level
+        elif level < 1 or level > 6:
+            level = self.level
 
-        attrs = {'title': title, 'depth': depth}
+        attrs = {'title': title, 'level': level}
         return {'type': 'toc', 'raw': '', 'attrs': attrs}
 
     def toc_hook(self, md, state):
@@ -68,8 +68,8 @@ class DirectiveToc(Directive):
                 toc_items.append(normalize_toc_item(md, tok))
 
             for sec in sections:
-                depth = sec['attrs']['depth']
-                toc = [item for item in toc_items if item[0] <= depth]
+                level = sec['attrs']['level']
+                toc = [item for item in toc_items if item[0] <= level]
                 sec['raw'] = render_toc_ul(toc)
 
     def __call__(self, md):
@@ -80,7 +80,7 @@ class DirectiveToc(Directive):
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(renderer, text, title, depth):
+def render_html_toc(renderer, text, title, level):
     if not title:
         title = 'Table of Contents'
 

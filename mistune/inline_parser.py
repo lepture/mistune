@@ -193,6 +193,10 @@ class InlineParser(ScannerParser):
 
     def parse_inline_html(self, m, state):
         html = m.group(0)
+        if html.startswith('<a '):
+            state['_in_link'] = True
+        if html.startswith('</a>'):
+            state['_in_link'] = False
         return 'inline_html', html
 
     def parse_text(self, text, state):

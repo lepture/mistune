@@ -8,7 +8,10 @@ URL_LINK_PATTERN = r'''(https?:\/\/[^\s<]+[^<.,:;"')\]\s])'''
 
 
 def parse_url_link(inline, m, state):
-    return 'link', escape_url(m.group(0))
+    url = m.group(0)
+    if state.get('_in_link'):
+        return 'text', url
+    return 'link', escape_url(url)
 
 
 def plugin_url(md):

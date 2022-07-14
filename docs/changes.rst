@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.0a3
+~~~~~~~~~~~~~~~
+
+Released on Jul 14, 2022
+
+* Fix ruby plugin
+* Change toc parameter ``depth`` to ``level``
+
 Version 3.0.0a2
 ~~~~~~~~~~~~~~~
 

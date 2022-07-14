@@ -1,14 +1,14 @@
 from .util import striptags
 
 
-def add_toc_hook(md, depth=3, heading_id=None):
+def add_toc_hook(md, level=3, heading_id=None):
     """Add a hook to save toc items into ``state.env``::
 
         import mistune
         from mistune.toc import add_toc_hook, render_toc_ul
 
         md = mistune.create_markdown(...)
-        add_toc_hook(md, depth, heading_id)
+        add_toc_hook(md, level, heading_id)
 
         html, state = md.parse(text)
         toc_items = state.env['toc_items']
@@ -22,7 +22,7 @@ def add_toc_hook(md, depth=3, heading_id=None):
         headings = []
 
         for tok in state.tokens:
-            if tok['type'] == 'heading' and tok['attrs']['level'] <= depth:
+            if tok['type'] == 'heading' and tok['attrs']['level'] <= level:
                 headings.append(tok)
 
         toc_items = []

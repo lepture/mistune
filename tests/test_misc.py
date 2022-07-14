@@ -22,6 +22,11 @@ class TestMiscCases(TestCase):
         expected = '<p>foo<br />\nbar</p>'
         self.assertEqual(result.strip(), expected)
 
+        md = mistune.create_markdown(
+            escape=False, hard_wrap=True, plugins=['speedup'])
+        result = md('foo\nbar')
+        self.assertEqual(result.strip(), expected)
+
     def test_escape_html(self):
         md = mistune.create_markdown(escape=True)
         result = md('<div>1</div>')

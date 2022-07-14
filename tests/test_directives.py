@@ -20,8 +20,33 @@ def load_directive_test(filename, directive):
     globals()["TestDirective_" + filename] = TestDirective
 
 
-load_directive_test('directive_toc', DirectiveToc())
 load_directive_test('directive_admonition', Admonition())
+
+
+class TestDirectiveToc(BaseTestCase):
+    @staticmethod
+    def parse(text):
+        md = create_markdown(
+            escape=False,
+            plugins=[DirectiveToc()]
+        )
+        html = md(text)
+        return html
+
+    def test_customize_heading_id_func(self):
+        def heading_id(token, i):
+            return 't-' + str(i + 1)
+
+        md = create_markdown(
+            escape=False,
+            plugins=[DirectiveToc(heading_id=heading_id)]
+        )
+        html = md('# h1\n\n.. toc::\n')
+        self.assertIn('<h1 id="t-1">h1</h1>', html)
+        self.assertIn('<a href="#t-1">h1</a>', html)
+
+
+TestDirectiveToc.load_fixtures('directive_toc.txt')
 
 
 class TestDirectiveInclude(BaseTestCase):

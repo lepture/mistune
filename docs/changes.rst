@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune v2.
 
+Version 2.0.4
+~~~~~~~~~~~~~
+
+Released on Jul 15, 2022
+
+* Fix ``url`` plugin in ``<a>`` tag
+* Fix ``*`` formatting
+
 Version 2.0.3
 ~~~~~~~~~~~~~
 

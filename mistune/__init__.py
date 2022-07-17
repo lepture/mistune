@@ -30,7 +30,7 @@ def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None)
     inline = InlineParser(renderer, hard_wrap=hard_wrap)
     if plugins is not None:
         plugins = [import_plugin(n) for n in plugins]
-    return Markdown(renderer, inline=inline, plugins=plugins)
+    return Markdown(inline=inline, plugins=plugins)
 
 
 html = create_markdown(

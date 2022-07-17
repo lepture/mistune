@@ -3,7 +3,7 @@ from .inline_parser import InlineParser
 
 
 class Markdown:
-    def __init__(self, renderer, block=None, inline=None, plugins=None):
+    def __init__(self, renderer=None, block=None, inline=None, plugins=None):
         if block is None:
             block = BlockParser()
 
@@ -12,7 +12,6 @@ class Markdown:
 
         self.block = block
         self.inline = inline
-        self.renderer = inline.renderer
         self.before_parse_hooks = []
         self.before_render_hooks = []
         self.after_render_hooks = []
@@ -20,6 +19,10 @@ class Markdown:
         if plugins:
             for plugin in plugins:
                 plugin(self)
+
+    @property
+    def renderer(self):
+        return self.inline.renderer
 
     def use(self, plugin):
         plugin(self)

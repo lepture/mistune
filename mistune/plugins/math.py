@@ -1,4 +1,4 @@
-__all__ = ['math']
+__all__ = ['math', 'math_in_quote', 'math_in_list']
 
 BLOCK_MATH = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>.+?)\n\$\$[ \t]*$'
 INLINE_MATH = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'
@@ -26,10 +26,17 @@ def render_inline_math(renderer, text):
 
 def math(md):
     md.block.register('block_math', BLOCK_MATH, parse_block_math, before='list')
-    md.block.insert_rule(md.block.block_quote_rules, 'block_math', before='list')
-    md.block.insert_rule(md.block.list_rules, 'block_math', before='list')
-
     md.inline.register('inline_math', INLINE_MATH, parse_inline_math, before='link')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('block_math', render_block_math)
         md.renderer.register('inline_math', render_inline_math)
+
+
+def math_in_quote(md):
+    """Enable block math plugin in block quote."""
+    md.block.insert_rule(md.block.block_quote_rules, 'block_math', before='list')
+
+
+def math_in_list(md):
+    """Enable block math plugin in list."""
+    md.block.insert_rule(md.block.list_rules, 'block_math', before='list')

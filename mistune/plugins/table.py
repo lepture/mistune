@@ -3,7 +3,7 @@ from ..helpers import PREVENT_BACKSLASH
 
 # https://michelf.ca/projects/php-markdown/extra/#table
 
-__all__ = ['table']
+__all__ = ['table', 'table_in_quote', 'table_in_list']
 
 
 TABLE_PATTERN = (
@@ -145,14 +145,21 @@ def table(md):
     md.block.register('table', TABLE_PATTERN, parse_table, before='paragraph')
     md.block.register('nptable', NP_TABLE_PATTERN, parse_nptable, before='paragraph')
 
-    md.block.insert_rule(md.block.block_quote_rules, 'table', before='paragraph')
-    md.block.insert_rule(md.block.block_quote_rules, 'nptable', before='paragraph')
-    md.block.insert_rule(md.block.list_rules, 'table', before='paragraph')
-    md.block.insert_rule(md.block.list_rules, 'nptable', before='paragraph')
-
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('table', render_table)
         md.renderer.register('table_head', render_table_head)
         md.renderer.register('table_body', render_table_body)
         md.renderer.register('table_row', render_table_row)
         md.renderer.register('table_cell', render_table_cell)
+
+
+def table_in_quote(md):
+    """Enable table plugin in block quotes."""
+    md.block.insert_rule(md.block.block_quote_rules, 'table', before='paragraph')
+    md.block.insert_rule(md.block.block_quote_rules, 'nptable', before='paragraph')
+
+
+def table_in_list(md):
+    """Enable table plugin in list."""
+    md.block.insert_rule(md.block.list_rules, 'table', before='paragraph')
+    md.block.insert_rule(md.block.list_rules, 'nptable', before='paragraph')

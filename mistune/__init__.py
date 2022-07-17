@@ -1,8 +1,8 @@
 from .markdown import Markdown
-from .core import BlockState, InlineState
+from .core import BlockState, InlineState, BaseRenderer
 from .block_parser import BlockParser
 from .inline_parser import InlineParser
-from .renderers import HTMLRenderer
+from .html_renderer import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
 from .plugins import import_plugin
 
@@ -55,7 +55,7 @@ def markdown(text, escape=True, renderer='html', plugins=None):
 
 __all__ = [
     'Markdown', 'HTMLRenderer',
-    'BlockParser', 'BlockState',
+    'BlockParser', 'BlockState', 'BaseRenderer',
     'InlineParser', 'InlineState',
     'escape', 'escape_url', 'safe_entity', 'unikey',
     'html', 'create_markdown', 'markdown',

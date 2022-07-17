@@ -148,3 +148,47 @@ class Parser:
     def parse_method(self, m, state):
         func = self._methods[m.lastgroup]
         return func(m, state)
+
+
+class BaseRenderer(object):
+    NAME = 'base'
+
+    def __init__(self):
+        self.__methods = {}
+
+    def register(self, name, method):
+        # bind self into renderer method
+        self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
+
+    def _get_method(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            method = self.__methods.get(name)
+            if not method:
+                raise AttributeError('No renderer "{!r}"'.format(name))
+            return method
+
+    def _iter_tokens(self, tokens):
+        for tok in tokens:
+            func = self._get_method(tok['type'])
+
+            attrs = tok.get('attrs')
+            if 'raw' in tok:
+                children = tok['raw']
+            elif 'children' in tok:
+                children = tok['children']
+            else:
+                if attrs:
+                    yield func(**attrs)
+                else:
+                    yield func()
+                continue
+
+            if attrs:
+                yield func(children, **attrs)
+            else:
+                yield func(children)
+
+    def __call__(self, tokens):
+        return ''.join(self._iter_tokens(tokens))

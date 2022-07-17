@@ -22,7 +22,7 @@ class HTMLRenderer(BaseRenderer):
         self._allow_harmful_protocols = allow_harmful_protocols
         self._escape = escape
 
-    def _safe_url(self, url):
+    def safe_url(self, url):
         if self._allow_harmful_protocols is True:
             return url
 
@@ -42,13 +42,13 @@ class HTMLRenderer(BaseRenderer):
         return safe_entity(text)
 
     def link(self, text, url, title=None):
-        s = '<a href="' + self._safe_url(url) + '"'
+        s = '<a href="' + self.safe_url(url) + '"'
         if title:
             s += ' title="' + title + '"'
         return s + '>' + text + '</a>'
 
     def image(self, text, url, title=None):
-        src = self._safe_url(url)
+        src = self.safe_url(url)
         alt = escape(striptags(text))
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:

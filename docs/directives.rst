@@ -76,7 +76,7 @@ TOC plugin::
     )
 
 If **TOC** directive is enabled, the ``heading`` method of renderer will accept
-one more paramter::
+one more parameter::
 
     def heading(self, text, level):
         # without TOC directive

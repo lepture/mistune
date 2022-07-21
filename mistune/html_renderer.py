@@ -41,6 +41,12 @@ class HTMLRenderer(BaseRenderer):
             return escape(text)
         return safe_entity(text)
 
+    def emphasis(self, text):
+        return '<em>' + text + '</em>'
+
+    def strong(self, text):
+        return '<strong>' + text + '</strong>'
+
     def link(self, text, url, title=None):
         s = '<a href="' + self.safe_url(url) + '"'
         if title:
@@ -54,12 +60,6 @@ class HTMLRenderer(BaseRenderer):
         if title:
             s += ' title="' + title + '"'
         return s + ' />'
-
-    def emphasis(self, text):
-        return '<em>' + text + '</em>'
-
-    def strong(self, text):
-        return '<strong>' + text + '</strong>'
 
     def codespan(self, text):
         return '<code>' + text + '</code>'

@@ -25,7 +25,7 @@ none
 # H1
 ## H2
 .
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
@@ -60,7 +60,7 @@ none
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
@@ -80,7 +80,7 @@ none
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
@@ -112,7 +112,7 @@ none
 <h4 id="toc_4">H4</h4>
 <h1 id="toc_5">H1 B</h1>
 <h1 id="toc_6">H1 <code>C</code></h1>
-<details class="toc">
+<details class="toc" open>
 <summary>Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
@@ -147,7 +147,7 @@ none
 <h4 id="toc_4">H4</h4>
 <h3 id="toc_5">H3 B</h3>
 <h1 id="toc_6">H1 B</h1>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a>
@@ -174,7 +174,7 @@ none
 <h3 id="toc_1">H3</h3>
 <h2 id="toc_2">H2</h2>
 <h1 id="toc_3">H1</h1>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H3</a></li>
@@ -192,7 +192,7 @@ none
 .. toc::
 .
 <h1 id="toc_1"><a href="/bar">foo</a></h1>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">foo</a></li>
@@ -207,10 +207,33 @@ none
 .. toc::
 .
 <h1 id="toc_1"><em>H1</em></h1>
-<details class="toc">
+<details class="toc" open>
 <summary>Table of Contents</summary>
 <ul>
 <li><a href="#toc_1">H1</a></li>
 </ul>
 </details>
+````````````````````````````````
+
+## Collapse TOC
+
+```````````````````````````````` example
+.. toc::
+   :collapse:
+
+# H1
+## H2
+.
+<details class="toc">
+<summary>Table of Contents</summary>
+<ul>
+<li><a href="#toc_1">H1</a>
+<ul>
+<li><a href="#toc_2">H2</a></li>
+</ul>
+</li>
+</ul>
+</details>
+<h1 id="toc_1">H1</h1>
+<h2 id="toc_2">H2</h2>
 ````````````````````````````````

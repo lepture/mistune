@@ -30,9 +30,12 @@ class DirectiveToc(Directive):
     def parse(self, block, m, state):
         title = m.group('value')
         level = None
+        collapse = False
         options = parse_options(m)
         if options:
-            level = dict(options).get('level')
+            d_options = dict(options)
+            collapse = 'collapse' in d_options
+            level = d_options.get('level')
             if level:
                 try:
                     level = int(level)
@@ -47,7 +50,7 @@ class DirectiveToc(Directive):
         elif level < 1 or level > 6:
             level = self.level
 
-        attrs = {'title': title, 'level': level}
+        attrs = {'title': title, 'level': level, 'collapse': collapse}
         return {'type': 'toc', 'raw': '', 'attrs': attrs}
 
     def toc_hook(self, md, state):
@@ -80,9 +83,12 @@ class DirectiveToc(Directive):
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(renderer, text, title, level):
+def render_html_toc(renderer, text, title, level, collapse=False):
     if not title:
         title = 'Table of Contents'
 
-    html = '<details class="toc">\n<summary>' + title + '</summary>\n'
+    html = '<details class="toc"'
+    if not collapse:
+        html += ' open'
+    html += '>\n<summary>' + title + '</summary>\n'
     return html + text + '</details>\n'

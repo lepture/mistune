@@ -123,7 +123,15 @@ the directives part of the documentation. These are defined in the
 
 Let's try to write a "spoiler" directive, which takes a hint::
 
-    from .base import Directive
+    .. spoiler: SPOILER
+    
+        Spoilers in the information age are typically listed with a SPOILER! heading.
+
+
+
+The `Spoiler` directive::
+
+    from mistune.directives import Directive
 
 
     class Spoiler(Directive):

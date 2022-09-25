@@ -27,7 +27,7 @@ Looking for old Mistune? Switch branch to:
 </tr>
 </table>
 
-[**Support Me via GitHub Sponsors**](https://github.com/users/lepture/sponsorship).
+[**Support Me via GitHub Sponsors**](https://github.com/sponsors/lepture).
 
 ## Install
 

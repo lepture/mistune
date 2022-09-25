@@ -1,14 +1,5 @@
 from mistune import create_markdown
-from mistune.plugins.url import url
-from mistune.plugins.formatting import strikethrough, mark, insert, subscript
-from mistune.plugins.task_lists import task_lists
-from mistune.plugins.table import table
-from mistune.plugins.footnotes import footnotes
-from mistune.plugins.def_list import def_list
-from mistune.plugins.abbr import abbr
-from mistune.plugins.math import math
-from mistune.plugins.ruby import ruby
-from tests import BaseTestCase, fixtures
+from tests import BaseTestCase
 
 
 def load_plugin(plugin_name):
@@ -31,6 +22,7 @@ load_plugin("url")
 load_plugin("strikethrough")
 load_plugin("mark")
 load_plugin("insert")
+load_plugin("superscript")
 load_plugin("subscript")
 load_plugin("task_lists")
 load_plugin("table")

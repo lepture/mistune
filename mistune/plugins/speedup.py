@@ -29,12 +29,7 @@ def parse_paragraph(block, m, state):
 def speedup(md):
     md.block.register('paragraph', PARAGRAPH, parse_paragraph)
 
-    punc = r'\\<!\[_*`~'
-    plugin_puncs = {'mark': '=', 'insert': '^', 'inline_math': '$'}
-    for k in plugin_puncs:
-        if k in md.inline.rules:
-            punc += plugin_puncs[k]
-
+    punc = r'\\<!\[_*`~\^\$='
     text_pattern = r'[\s\S]+?(?=[' + punc + r']|'
     if 'url_link' in md.inline.rules:
         text_pattern += 'https?:|'

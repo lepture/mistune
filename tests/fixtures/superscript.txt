@@ -1,26 +1,26 @@
-# Subscript
+# Superscript
 
 
 ```````````````````````````````` example
-CH~3~CH~2~OH
+CH^3^CH^2^OH
 .
-<p>CH<sub>3</sub>CH<sub>2</sub>OH</p>
+<p>CH<sup>3</sup>CH<sup>2</sup>OH</p>
 ````````````````````````````````
 
 ```````````````````````````````` example
-text~a\ subscript~
+text^a\ supscript^
 .
-<p>text<sub>a subscript</sub></p>
+<p>text<sup>a supscript</sup></p>
 ````````````````````````````````
 
 ```````````````````````````````` example
-text~a subscript~
+text^a supscript^
 .
-<p>text~a subscript~</p>
+<p>text^a supscript^</p>
 ````````````````````````````````
 
 ```````````````````````````````` example
-text~a\~subscript~
+text^a\^supscript^
 .
-<p>text<sub>a~subscript</sub></p>
+<p>text<sup>a^supscript</sup></p>
 ````````````````````````````````

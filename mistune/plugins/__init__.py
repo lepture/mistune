@@ -4,6 +4,7 @@ _plugins = {
     'strikethrough': 'mistune.plugins.formatting.strikethrough',
     'mark': 'mistune.plugins.formatting.mark',
     'insert': 'mistune.plugins.formatting.insert',
+    'superscript': 'mistune.plugins.formatting.superscript',
     'subscript': 'mistune.plugins.formatting.subscript',
     'footnotes': 'mistune.plugins.footnotes.footnotes',
     'table': 'mistune.plugins.table.table',

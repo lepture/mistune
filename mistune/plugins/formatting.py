@@ -1,12 +1,14 @@
 import re
-from ..helpers import unescape_char, PREVENT_BACKSLASH
+from ..helpers import PREVENT_BACKSLASH
 
-__all__ = ["strikethrough", "mark", "insert", "subscript"]
+__all__ = ["strikethrough", "mark", "insert", "superscript", "subscript"]
 
 _STRIKE_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\~|[^\s~])~~(?!~)')
 _MARK_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\=|[^\s=])==(?!=)')
 _INSERT_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\^|[^\s^])\^\^(?!\^)')
-SUBSCRIPT_PATTERN = r'~(?:\S|\\ )+?~'
+
+SUPERSCRIPT_PATTERN = r'\^(?:' + PREVENT_BACKSLASH + r'\\\^|\S|\\ )+?\^'
+SUBSCRIPT_PATTERN = r'~(?:' + PREVENT_BACKSLASH + r'\\~|\S|\\ )+?~'
 
 
 def parse_strikethrough(inline, m, state):
@@ -33,16 +35,15 @@ def render_insert(renderer, text):
     return '<ins>' + text + '</ins>'
 
 
+def parse_superscript(inline, m, state):
+    return _parse_script(inline, m, state, 'superscript')
+
+def render_superscript(renderer, text):
+    return '<sup>' + text + '</sup>'
+
+
 def parse_subscript(inline, m, state):
-    text = m.group(0)
-    new_state = state.copy()
-    new_state.src = text[1:-1].replace('\\ ', ' ')
-    children = inline.render(new_state)
-    state.append_token({
-        'type': 'subscript',
-        'children': children
-    })
-    return m.end()
+    return _parse_script(inline, m, state, 'subscript')
 
 
 def render_subscript(renderer, text):
@@ -61,6 +62,18 @@ def _parse_to_end(inline, m, state, tok_type, end_pattern):
     children = inline.render(new_state)
     state.append_token({'type': tok_type, 'children': children})
     return end_pos
+
+
+def _parse_script(inline, m, state, tok_type):
+    text = m.group(0)
+    new_state = state.copy()
+    new_state.src = text[1:-1].replace('\\ ', ' ')
+    children = inline.render(new_state)
+    state.append_token({
+        'type': tok_type,
+        'children': children
+    })
+    return m.end()
 
 
 def strikethrough(md):
@@ -101,6 +114,12 @@ def insert(md):
     )
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('insert', render_insert)
+
+
+def superscript(md):
+    md.inline.register('superscript', SUPERSCRIPT_PATTERN, parse_superscript, before='linebreak')
+    if md.renderer and md.renderer.NAME == 'html':
+        md.renderer.register('superscript', render_superscript)
 
 
 def subscript(md):

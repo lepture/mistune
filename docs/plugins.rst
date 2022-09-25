@@ -286,6 +286,63 @@ Another way to create your own Markdown instance::
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[insert])
 
+superscript
+-----------
+
+superscript plugin adds the ability to insert ``<sup>`` tags. The syntax looks like:
+
+.. code-block:: text
+
+    Hello^superscript^
+
+Will be converted into:
+
+.. code-block:: html
+
+    <p>Hello<sup>superscript</sup></p>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**superscript** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['superscript'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.formatting import superscript
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[superscript])
+
+subscript
+---------
+
+subscript plugin adds the ability to insert ``<sub>`` tags. The syntax looks like:
+
+.. code-block:: text
+
+    Hello~subscript~
+
+    CH~3~CH~2~OH
+
+Will be converted into:
+
+.. code-block:: html
+
+    <p>Hello<sub>subscript</sub></p>
+    <p>CH<sub>3</sub>CH<sub>2</sub>OH</p>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**subscript** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['subscript'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.formatting import subscript
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[subscript])
+
 math
 ----
 

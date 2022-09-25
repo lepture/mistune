@@ -70,15 +70,22 @@ def get_markdown_parsers():
         pass
 
     try:
+        from markdown2 import Markdown, __version__ as m2v
+        markdowner = Markdown()
+        parsers[f'markdown2 ({m2v})'] = markdowner.convert
+    except ImportError:
+        pass
+
+    try:
         import mistletoe
         parsers[f'mistletoe ({mistletoe.__version__})'] = mistletoe.markdown
     except ImportError:
         pass
 
     try:
-        from markdown_it import MarkdownIt
+        from markdown_it import MarkdownIt, __version__ as mitv
         md = MarkdownIt()
-        parsers['markdown_it'] = md.render
+        parsers[f'markdown_it ({mitv})'] = md.render
     except ImportError:
         pass
 

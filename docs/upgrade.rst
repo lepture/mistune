@@ -8,7 +8,7 @@ Upgrade from v2 to v3
 HTMLRenderer
 ~~~~~~~~~~~~
 
-When customizing renderers, these methods' paramters are changed::
+When customizing renderers, these methods' parameters are changed::
 
 
     -    link(self, link, text=None, title=None)

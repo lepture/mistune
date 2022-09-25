@@ -289,6 +289,85 @@ Another way to create your own Markdown instance::
 math
 ----
 
+Math plugin wraps ``<div>`` for block level math syntax, and ``<span>`` for inline level
+math syntax.
+
+A block math is surrounded with ``$$``:
+
+.. code-block:: text
+
+    $$
+    \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+    $$
+
+Will be converted into:
+
+.. code-block:: html
+
+    <div class="math">$$
+    \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+    $$</div>
+
+An inline math is surrounded with ``$`` inline:
+
+.. code-block:: text
+
+    function $f$
+
+Will be converted into:
+
+.. code-block:: html
+
+    <p>function <span class="math">$f$</span></p>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**math** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['math'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.math import math
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[math])
+
 ruby
 ----
 
+insert plugin adds the ability to insert ``<ruby>`` tags. Here are some examples for ruby syntax:
+
+.. code-block:: text
+
+    [漢字(ㄏㄢˋㄗˋ)]
+
+    [link]: /url
+
+    [漢字(ㄏㄢˋㄗˋ)][link]
+
+    [漢字(ㄏㄢˋㄗˋ)](/url)
+
+    [漢(ㄏㄢˋ)字(ㄗˋ)]
+
+Will be converted into:
+
+.. code-block:: html
+
+    <p><ruby><rb>漢字</rb><rt>ㄏㄢˋㄗˋ</rt></ruby></p>
+    <p><a href="/url"><ruby><rb>漢字</rb><rt>ㄏㄢˋㄗˋ</rt></ruby></a></p>
+    <p><a href="/url"><ruby><rb>漢字</rb><rt>ㄏㄢˋㄗˋ</rt></ruby></a></p>
+    <p><ruby><rb>漢</rb><rt>ㄏㄢˋ</rt></ruby><ruby><rb>字</rb><rt>ㄗˋ</rt></ruby></p>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**ruby** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['ruby'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.ruby import ruby
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[ruby])
+
+Referrer blog post: https://lepture.com/en/2022/markdown-ruby-markup

@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.0
+~~~~~~~~~~~~~
+
+Released on Sep 25, 2022
+
+
+
 Version 3.0.0a3
 ~~~~~~~~~~~~~~~
 

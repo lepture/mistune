@@ -11,7 +11,10 @@ Release v\ |version|.
 A fast yet powerful Python Markdown parser with renderers and plugins,
 compatible with sane CommonMark rules.
 
-Using old Mistune? Checkout docs: https://mistune.readthedocs.io/en/v0.8.4/
+Using old Mistune? Checkout docs:
+
+- https://mistune.readthedocs.io/en/v1/
+- https://mistune.readthedocs.io/en/v2/
 
 Installation
 ------------
@@ -31,10 +34,11 @@ User Guide
 .. toctree::
    :maxdepth: 2
 
-   intro
    guide
    plugins
    directives
    advanced
    api
+   upgrade
+   community
    changes

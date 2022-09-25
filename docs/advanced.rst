@@ -111,7 +111,6 @@ Let's try to write a "spoiler" directive, which takes a hint::
 
     from mistune.directives import Directive, parse_options
 
-
     class Spoiler(Directive):
         def parse(self, block, m, state):
             if options:

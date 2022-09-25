@@ -13,7 +13,7 @@ compatible with sane CommonMark rules.
 
 Using old Mistune? Checkout docs:
 
-- https://mistune.readthedocs.io/en/v1/
+- https://mistune.readthedocs.io/en/v0.8.4/
 - https://mistune.readthedocs.io/en/v2/
 
 Installation
@@ -35,6 +35,7 @@ User Guide
    :maxdepth: 2
 
    guide
+   cli
    plugins
    directives
    advanced

@@ -42,7 +42,8 @@ There is no ``AstRenderer`` in v3, just pass ``None`` to ``create_markdown``::
 Plugins
 ~~~~~~~
 
-Please check the built-in plugins to find out how to write a mistune plugin.
+Please check the advanced guide and built-in plugins source code to find
+out how to write a mistune plugin.
 
 Directives
 ~~~~~~~~~~

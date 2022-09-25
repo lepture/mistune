@@ -1,7 +1,7 @@
 __all__ = ['math', 'math_in_quote', 'math_in_list']
 
-BLOCK_MATH = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>.+?)\n\$\$[ \t]*$'
-INLINE_MATH = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'
+BLOCK_MATH_PATTERN = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>.+?)\n\$\$[ \t]*$'
+INLINE_MATH_PATTERN = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'
 
 
 def parse_block_math(block, m, state):
@@ -25,8 +25,8 @@ def render_inline_math(renderer, text):
 
 
 def math(md):
-    md.block.register('block_math', BLOCK_MATH, parse_block_math, before='list')
-    md.inline.register('inline_math', INLINE_MATH, parse_inline_math, before='link')
+    md.block.register('block_math', BLOCK_MATH_PATTERN, parse_block_math, before='list')
+    md.inline.register('inline_math', INLINE_MATH_PATTERN, parse_inline_math, before='link')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('block_math', render_block_math)
         md.renderer.register('inline_math', render_inline_math)

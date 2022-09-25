@@ -19,6 +19,8 @@ def expand_tab(text, space='    '):
 
 
 def escape(s, quote=True):
+    """Escape characters of ``&<>``. If quote=True, ``"`` will be
+    converted to ``&quote;``."""
     s = s.replace("&", "&amp;")
     s = s.replace("<", "&lt;")
     s = s.replace(">", "&gt;")
@@ -28,6 +30,7 @@ def escape(s, quote=True):
 
 
 def escape_url(link):
+    """Escape URL for safety."""
     safe = (
         ':/?#@'           # gen-delims - '[]' (rfc3986)
         '!$&()*+,;='      # sub-delims - "'" (rfc3986)
@@ -37,10 +40,12 @@ def escape_url(link):
 
 
 def safe_entity(s):
+    """Escape characters for safety."""
     return escape(unescape(s))
 
 
 def unikey(s):
+    """Generate a unique key for links and footnotes."""
     key = ' '.join(s.split()).strip()
     return key.lower().upper()
 

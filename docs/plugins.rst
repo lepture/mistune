@@ -370,4 +370,4 @@ Another way to create your own Markdown instance::
     renderer = mistune.HTMLRenderer()
     markdown = mistune.Markdown(renderer, plugins=[ruby])
 
-Referrer blog post: https://lepture.com/en/2022/markdown-ruby-markup
+Blog post: https://lepture.com/en/2022/markdown-ruby-markup

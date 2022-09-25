@@ -48,7 +48,7 @@ def cli():
     )
     parser.add_argument(
         '-m', '--message',
-        help='the markdown message to conver',
+        help='the markdown message to convert',
     )
     parser.add_argument(
         '-f', '--file',

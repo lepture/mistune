@@ -1,8 +1,9 @@
 from .core import BaseRenderer
-from .util import escape, striptags, safe_entity
+from .util import escape as escape_text, striptags, safe_entity
 
 
 class HTMLRenderer(BaseRenderer):
+    """A renderer for converting Markdown to HTML."""
     NAME = 'html'
     HARMFUL_PROTOCOLS = (
         'javascript:',
@@ -23,6 +24,9 @@ class HTMLRenderer(BaseRenderer):
         self._escape = escape
 
     def safe_url(self, url):
+        """Ensure the given URL is safe. This method is used for rendering
+        links, images, and etc.
+        """
         if self._allow_harmful_protocols is True:
             return url
 
@@ -38,7 +42,7 @@ class HTMLRenderer(BaseRenderer):
 
     def text(self, text):
         if self._escape:
-            return escape(text)
+            return escape_text(text)
         return safe_entity(text)
 
     def emphasis(self, text):
@@ -55,7 +59,7 @@ class HTMLRenderer(BaseRenderer):
 
     def image(self, text, url, title=None):
         src = self.safe_url(url)
-        alt = escape(striptags(text))
+        alt = escape_text(striptags(text))
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + title + '"'
@@ -72,7 +76,7 @@ class HTMLRenderer(BaseRenderer):
 
     def inline_html(self, html):
         if self._escape:
-            return escape(html)
+            return escape_text(html)
         return html
 
     def paragraph(self, text):
@@ -102,14 +106,14 @@ class HTMLRenderer(BaseRenderer):
         if info:
             lang = info.split(None, 1)[0]
             html += ' class="language-' + lang + '"'
-        return html + '>' + escape(code) + '</code></pre>\n'
+        return html + '>' + escape_text(code) + '</code></pre>\n'
 
     def block_quote(self, text):
         return '<blockquote>\n' + text + '</blockquote>\n'
 
     def block_html(self, html):
         if self._escape:
-            return '<p>' + escape(html) + '</p>\n'
+            return '<p>' + escape_text(html) + '</p>\n'
         return html + '\n'
 
     def block_error(self, html):

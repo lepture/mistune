@@ -1,3 +1,13 @@
+"""
+    mistune
+    ~~~~~~~
+
+    A fast yet powerful Python Markdown parser with renderers and
+    plugins, compatible with sane CommonMark rules.
+
+    Documentation: https://mistune.lepture.com/
+"""
+
 from .markdown import Markdown
 from .core import BlockState, InlineState, BaseRenderer
 from .block_parser import BlockParser
@@ -62,3 +72,4 @@ __all__ = [
 ]
 
 __version__ = '3.0.0'
+__homepage__ = 'https://mistune.lepture.com/'

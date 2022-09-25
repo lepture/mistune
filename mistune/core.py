@@ -4,6 +4,7 @@ _LINE_END = re.compile(r'\n|$')
 
 
 class BlockState:
+    """The state to save block parser's cursor and tokens."""
     def __init__(self, parent=None):
         self.src = ''
         self.tokens = []
@@ -43,9 +44,11 @@ class BlockState:
             return self.tokens[-1]
 
     def prepend_token(self, token):
+        """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
     def append_token(self, token):
+        """Add token to the end of token list."""
         self.tokens.append(token)
 
     def add_paragraph(self, text):
@@ -72,6 +75,7 @@ class BlockState:
 
 
 class InlineState:
+    """The state to save inline parser's tokens."""
     def __init__(self, env):
         self.env = env
         self.src = ''
@@ -82,12 +86,15 @@ class InlineState:
         self.in_strong = False
 
     def prepend_token(self, token):
+        """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
     def append_token(self, token):
+        """Add token to the end of token list."""
         self.tokens.append(token)
 
     def copy(self):
+        """Create a copy of current state."""
         state = self.__class__(self.env)
         state.in_image = self.in_image
         state.in_link = self.in_link
@@ -127,6 +134,14 @@ class Parser:
         return sc
 
     def register(self, name, pattern, func, before=None):
+        """Register a new rule to parse the token. This method is usually used to
+        create a new plugin.
+
+        :param name: name of the new grammar
+        :param pattern: regex pattern in string
+        :param func: the parsing function
+        :param before: insert this rule before a built-in rule
+        """
         self.specification[name] = pattern
         self._methods[name] = lambda m, state: func(self, m, state)
         self.insert_rule(self.rules, name, before=before)
@@ -157,6 +172,13 @@ class BaseRenderer(object):
         self.__methods = {}
 
     def register(self, name, method):
+        """Register a render method for the named token. For example::
+
+            def render_wiki(renderer, key, title):
+                return f'<a href="/wiki/{key}">{title}</a>'
+
+            renderer.register('wiki', render_wiki)
+        """
         # bind self into renderer method
         self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
 

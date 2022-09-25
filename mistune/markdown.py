@@ -3,6 +3,19 @@ from .inline_parser import InlineParser
 
 
 class Markdown:
+    """Markdown instance to convert markdown text into HTML or other formats.
+    Here is an example with the HTMLRenderer::
+
+        from mistune import HTMLRenderer
+
+        md = Markdown(renderer=HTMLRenderer(escape=False))
+        md('hello **world**')
+
+    :param renderer: a renderer to convert parsed tokens
+    :param block: block level syntax parser
+    :param inline: inline level syntax parser
+    :param plugins: mistune plugins to use
+    """
     def __init__(self, renderer=None, block=None, inline=None, plugins=None):
         if block is None:
             block = BlockParser()
@@ -27,7 +40,14 @@ class Markdown:
     def use(self, plugin):
         plugin(self)
 
-    def parse(self, s, state=None):
+    def parse(self, s: str, state=None):
+        """Parse and convert the given markdown string. If renderer is None,
+        the returned **result** will be parsed markdown tokens.
+
+        :param s: markdown string
+        :param state: instance of BlockState
+        :returns: result, state
+        """
         if state is None:
             state = self.block.state_cls()
 

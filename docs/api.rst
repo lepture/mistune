@@ -3,6 +3,8 @@ API Reference
 
 .. module:: mistune
 
+Basic
+-----
 
 .. function:: html(text)
 
@@ -17,3 +19,23 @@ API Reference
         '<p><strong>hello</strong> <span>world</span></p>'
 
 .. autofunction:: create_markdown
+
+Utilities
+---------
+
+.. autofunction:: escape
+
+.. autofunction:: escape_url
+
+.. autofunction:: safe_entity
+
+.. autofunction:: unikey
+
+Advanced
+--------
+
+.. autoclass:: Markdown
+
+.. autoclass:: BlockState
+
+.. autoclass:: InlineState

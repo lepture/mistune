@@ -21,7 +21,7 @@ from .list_parser import parse_list
 
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _AXT_HEADING_TRIM = re.compile(r'(\s+|^)#+\s*$')
-_BLOCK_QUOTE_TRIM = re.compile(r'^ {0,1}', flags=re.M)
+_BLOCK_QUOTE_TRIM = re.compile(r'^ ?', flags=re.M)
 _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 
 _LINE_BLANK_END = re.compile(r'\n[ \t]*\n$')

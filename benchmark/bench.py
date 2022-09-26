@@ -50,7 +50,7 @@ def get_markdown_parsers():
         escape=False,
         plugins=[
             'url', 'abbr', 'ruby',
-            'strikethrough', 'mark', 'insert', 'subscript',
+            'strikethrough', 'mark', 'insert', 'subscript', 'superscript',
             'footnotes', 'def_list', 'math', 'table', 'task_lists',
             Admonition(), DirectiveToc(), DirectiveInclude(),
             'speedup',

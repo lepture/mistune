@@ -1,8 +1,10 @@
 .. _plugins:
 
-Mistune Markdown Plugins
-========================
+Built-in Plugins
+================
 
+.. meta::
+    :description: List of Mistune built-in plugins, their syntax and how to enable them.
 
 strikethrough
 -------------

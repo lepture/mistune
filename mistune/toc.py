@@ -2,7 +2,8 @@ from .util import striptags
 
 
 def add_toc_hook(md, level=3, heading_id=None):
-    """Add a hook to save toc items into ``state.env``::
+    """Add a hook to save toc items into ``state.env``. This is
+    usually helpful for doc generator::
 
         import mistune
         from mistune.toc import add_toc_hook, render_toc_ul
@@ -13,6 +14,10 @@ def add_toc_hook(md, level=3, heading_id=None):
         html, state = md.parse(text)
         toc_items = state.env['toc_items']
         toc_html = render_toc_ul(toc_items)
+
+    :param md: Markdown instance
+    :param level: max heading level
+    :param heading_id: a function to generate heading_id
     """
     if heading_id is None:
         def heading_id(token, index):
@@ -77,7 +82,7 @@ def render_toc_ul(toc):
             s += '\n<ul>\n<li>' + item
             levels.append(level)
         else:
-            last_level = levels.pop()
+            levels.pop()
             while levels:
                 last_level = levels.pop()
                 if level == last_level:

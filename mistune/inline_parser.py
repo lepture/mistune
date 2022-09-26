@@ -89,7 +89,6 @@ class InlineParser(Parser):
     #: every new line becomes <br>
     HARD_LINEBREAK = r' *\n\s*'
 
-
     def __init__(self, renderer, hard_wrap=False):
         super(InlineParser, self).__init__()
 

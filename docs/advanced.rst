@@ -1,6 +1,5 @@
-Advanced Guide of Mistune
-=========================
-
+Advanced Guide
+==============
 
 .. _renderers:
 

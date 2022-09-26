@@ -142,6 +142,20 @@ def render_table_cell(renderer, text, align=None, head=False):
 
 
 def table(md):
+    """A mistune plugin to support table, spec defined at
+    https://michelf.ca/projects/php-markdown/extra/#table
+
+    Here is an example:
+
+    .. code-block:: text
+
+        First Header  | Second Header
+        ------------- | -------------
+        Content Cell  | Content Cell
+        Content Cell  | Content Cell
+
+    :param md: Markdown instance
+    """
     md.block.register('table', TABLE_PATTERN, parse_table, before='paragraph')
     md.block.register('nptable', NP_TABLE_PATTERN, parse_nptable, before='paragraph')
 

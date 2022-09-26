@@ -25,6 +25,21 @@ def render_inline_math(renderer, text):
 
 
 def math(md):
+    """A mistune plugin to support math. The syntax is used
+    by many markdown extensions:
+
+    .. code-block:: text
+
+        Block math is surrounded by $$:
+
+        $$
+        \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+        $$
+
+        Inline math is surrounded by `$`, such as $f(a)=f(b)$
+
+    :param md: Markdown instance
+    """
     md.block.register('block_math', BLOCK_MATH_PATTERN, parse_block_math, before='list')
     md.inline.register('inline_math', INLINE_MATH_PATTERN, parse_inline_math, before='link')
     if md.renderer and md.renderer.NAME == 'html':

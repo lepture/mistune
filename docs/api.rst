@@ -1,6 +1,8 @@
 API Reference
 =============
 
+Here are the list of API reference; it might be helpful for developers.
+
 .. module:: mistune
 
 Basic
@@ -37,5 +39,73 @@ Advanced
 .. autoclass:: Markdown
 
 .. autoclass:: BlockState
+    :inherited-members:
 
 .. autoclass:: InlineState
+    :inherited-members:
+
+.. autoclass:: BlockParser
+    :inherited-members: register
+
+.. autoclass:: InlineParser
+    :inherited-members: register
+
+Plugins
+-------
+
+.. module:: mistune.plugins.footnotes
+
+.. autofunction:: footnotes
+
+.. module:: mistune.plugins.task_lists
+
+.. autofunction:: task_lists
+
+.. module:: mistune.plugins.abbr
+
+.. autofunction:: abbr
+
+.. module:: mistune.plugins.def_list
+
+.. autofunction:: def_list
+
+.. module:: mistune.plugins.table
+
+.. autofunction:: table
+
+.. autofunction:: table_in_quote
+
+.. autofunction:: table_in_list
+
+.. module:: mistune.plugins.math
+
+.. autofunction:: math
+
+.. autofunction:: math_in_quote
+
+.. autofunction:: math_in_list
+
+.. module:: mistune.plugins.ruby
+
+.. autofunction:: ruby
+
+.. module:: mistune.plugins.formatting
+
+.. autofunction:: strikethrough
+
+.. autofunction:: mark
+
+.. autofunction:: insert
+
+.. autofunction:: superscript
+
+.. autofunction:: subscript
+
+TOC hook
+--------
+
+.. module:: mistune.toc
+
+.. autofunction:: add_toc_hook
+
+.. autofunction:: render_toc_ul

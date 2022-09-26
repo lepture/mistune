@@ -38,6 +38,7 @@ def render_insert(renderer, text):
 def parse_superscript(inline, m, state):
     return _parse_script(inline, m, state, 'superscript')
 
+
 def render_superscript(renderer, text):
     return '<sup>' + text + '</sup>'
 
@@ -77,6 +78,21 @@ def _parse_script(inline, m, state, tok_type):
 
 
 def strikethrough(md):
+    """A mistune plugin to support strikethrough. Spec defined by
+    GitHub flavored Markdown and commonly used by many parsers:
+
+    .. code-block:: text
+
+        ~~This was mistaken text~~
+
+    It will be converted into HTML:
+
+    .. code-block:: html
+
+        <del>This was mistaken text</del>
+
+    :param md: Markdown instance
+    """
     md.inline.register(
         'strikethrough',
         r'~~(?=[^\s~])',
@@ -89,7 +105,9 @@ def strikethrough(md):
 
 def mark(md):
     """A mistune plugin to add ``<mark>`` tag. Spec defined at
-    https://facelessuser.github.io/pymdown-extensions/extensions/mark/::
+    https://facelessuser.github.io/pymdown-extensions/extensions/mark/:
+
+    .. code-block:: text
 
         ==mark me== ==mark \\=\\= equal==
 
@@ -106,6 +124,15 @@ def mark(md):
 
 
 def insert(md):
+    """A mistune plugin to add ``<ins>`` tag. Spec defined at
+    https://facelessuser.github.io/pymdown-extensions/extensions/caret/#insert:
+
+    .. code-block:: text
+
+        ^^insert me^^
+
+    :param md: Markdown instance
+    """
     md.inline.register(
         'insert',
         r'\^\^(?=[^\s\^])',
@@ -117,12 +144,30 @@ def insert(md):
 
 
 def superscript(md):
+    """A mistune plugin to add ``<sup>`` tag. Spec defined at
+    https://pandoc.org/MANUAL.html#superscripts-and-subscripts:
+
+    .. code-block:: text
+
+        2^10^ is 1024.
+
+    :param md: Markdown instance
+    """
     md.inline.register('superscript', SUPERSCRIPT_PATTERN, parse_superscript, before='linebreak')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('superscript', render_superscript)
 
 
 def subscript(md):
+    """A mistune plugin to add ``<sub>`` tag. Spec defined at
+    https://pandoc.org/MANUAL.html#superscripts-and-subscripts:
+
+    .. code-block:: text
+
+        H~2~O is a liquid.
+
+    :param md: Markdown instance
+    """
     md.inline.register('subscript', SUBSCRIPT_PATTERN, parse_subscript, before='linebreak')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('subscript', render_subscript)

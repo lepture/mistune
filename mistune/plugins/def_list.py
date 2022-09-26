@@ -15,7 +15,7 @@ DEF_PATTERN = (
   r')+'
 )
 DEF_RE = re.compile(DEF_PATTERN, re.M)
-DD_START_RE = re.compile(r'^\:[ \t]+', re.M)
+DD_START_RE = re.compile(r'^:[ \t]+', re.M)
 TRIM_RE = re.compile(r'^ {0,4}', re.M)
 HAS_BLANK_LINE_RE = re.compile(r'\n[ \t]*\n$')
 
@@ -99,6 +99,35 @@ def render_def_list_item(renderer, text):
 
 
 def def_list(md):
+    """A mistune plugin to support def list, spec defined at
+    https://michelf.ca/projects/php-markdown/extra/#def-list
+
+    Here is an example:
+
+    .. code-block:: text
+
+        Apple
+        :   Pomaceous fruit of plants of the genus Malus in
+            the family Rosaceae.
+
+        Orange
+        :   The fruit of an evergreen tree of the genus Citrus.
+
+    It will be converted into HTML:
+
+    .. code-block:: html
+
+        <dl>
+        <dt>Apple</dt>
+        <dd>Pomaceous fruit of plants of the genus Malus in
+        the family Rosaceae.</dd>
+
+        <dt>Orange</dt>
+        <dd>The fruit of an evergreen tree of the genus Citrus.</dd>
+        </dl>
+
+    :param md: Markdown instance
+    """
     md.block.register('def_list', DEF_PATTERN, parse_def_list, before='paragraph')
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('def_list', render_def_list)

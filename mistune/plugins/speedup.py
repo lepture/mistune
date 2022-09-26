@@ -27,6 +27,7 @@ def parse_paragraph(block, m, state):
 
 
 def speedup(md):
+    """Increase the speed of parsing paragraph and inline text."""
     md.block.register('paragraph', PARAGRAPH, parse_paragraph)
 
     punc = r'\\<!\[_*`~\^\$='

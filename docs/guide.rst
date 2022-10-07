@@ -68,9 +68,9 @@ the output. For instance, to add code syntax highlight::
 
 
     class HighlightRenderer(mistune.HTMLRenderer):
-        def block_code(self, code, lang=None):
-            if lang:
-                lexer = get_lexer_by_name(lang, stripall=True)
+        def block_code(self, code, info=None):
+            if info:
+                lexer = get_lexer_by_name(info, stripall=True)
                 formatter = html.HtmlFormatter()
                 return highlight(code, lexer, formatter)
             return '<pre><code>' + mistune.escape(code) + '</code></pre>'

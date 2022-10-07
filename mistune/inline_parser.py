@@ -49,6 +49,12 @@ class InlineParser(Parser):
     sc_flag = 0
     state_cls = InlineState
 
+    #: linebreak leaves two spaces at the end of line
+    STD_LINEBREAK = r'(?:\\| {2,})\n\s*'
+
+    #: every new line becomes <br>
+    HARD_LINEBREAK = r' *\n\s*'
+
     # we only need to find the start pattern of an inline token
     SPECIFICATION = {
         # e.g. \`, \$
@@ -69,6 +75,9 @@ class InlineParser(Parser):
 
         'inline_html': INLINE_HTML,
 
+        'linebreak': STD_LINEBREAK,
+        'softbreak': HARD_LINEBREAK,
+
         'prec_auto_link': r'<[A-Za-z][A-Za-z\d.+-]{1,31}:',
         'prec_inline_html': r'</?' + HTML_TAGNAME + r'|<!|<\?',
     }
@@ -83,12 +92,6 @@ class InlineParser(Parser):
         'linebreak',
     )
 
-    #: linebreak leaves two spaces at the end of line
-    STD_LINEBREAK = r'(?:\\| {2,})\n\s*'
-
-    #: every new line becomes <br>
-    HARD_LINEBREAK = r' *\n\s*'
-
     def __init__(self, renderer, hard_wrap=False):
         super(InlineParser, self).__init__()
 
@@ -98,8 +101,6 @@ class InlineParser(Parser):
         if hard_wrap:
             self.specification['linebreak'] = self.HARD_LINEBREAK
         else:
-            self.specification['linebreak'] = self.STD_LINEBREAK
-            self.specification['softbreak'] = self.HARD_LINEBREAK
             self.rules.append('softbreak')
 
         self._methods = {
@@ -141,7 +142,7 @@ class InlineParser(Parser):
             return
 
         rules = ['codespan', 'prec_auto_link', 'prec_inline_html']
-        prec_pos = self._precedence_scan(m, state, end_pos, rules)
+        prec_pos = self.precedence_scan(m, state, end_pos, rules)
         if prec_pos:
             return prec_pos
 
@@ -243,7 +244,7 @@ class InlineParser(Parser):
         end_pos = m1.end()
         text = state.src[pos:end_pos-mlen]
 
-        prec_pos = self._precedence_scan(m, state, end_pos)
+        prec_pos = self.precedence_scan(m, state, end_pos)
         if prec_pos:
             return prec_pos
 
@@ -343,7 +344,7 @@ class InlineParser(Parser):
             self.process_text(state.src[pos:], state)
         return state.tokens
 
-    def _precedence_scan(self, m, state, end_pos, rules=None):
+    def precedence_scan(self, m, state, end_pos, rules=None):
         if rules is None:
             rules = ['codespan', 'link', 'prec_auto_link', 'prec_inline_html']
 

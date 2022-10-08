@@ -1,6 +1,7 @@
 from importlib import import_module
 
 _plugins = {
+    'speedup': 'mistune.plugins.speedup.speedup',
     'strikethrough': 'mistune.plugins.formatting.strikethrough',
     'mark': 'mistune.plugins.formatting.mark',
     'insert': 'mistune.plugins.formatting.insert',
@@ -14,7 +15,7 @@ _plugins = {
     'math': 'mistune.plugins.math.math',
     'ruby': 'mistune.plugins.ruby.ruby',
     'task_lists': 'mistune.plugins.task_lists.task_lists',
-    'speedup': 'mistune.plugins.speedup.speedup',
+    'spoiler': 'mistune.plugins.spoiler.spoiler',
 }
 _cached_modules = {}
 

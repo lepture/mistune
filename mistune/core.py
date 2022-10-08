@@ -142,9 +142,11 @@ class Parser:
         :param func: the parsing function
         :param before: insert this rule before a built-in rule
         """
-        self.specification[name] = pattern
         self._methods[name] = lambda m, state: func(self, m, state)
-        self.insert_rule(self.rules, name, before=before)
+        if pattern:
+            self.specification[name] = pattern
+        if name not in self.rules:
+            self.insert_rule(self.rules, name, before=before)
 
     def register_rule(self, name, pattern, func):
         raise DeprecationWarning('This plugin is not compatible with mistune v3.')

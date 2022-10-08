@@ -30,11 +30,11 @@ _BLANK_TO_LINE = re.compile(r'[ \t]*\n')
 _BLOCK_TAGS_PATTERN = '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS)
 _OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'[ \t]*>[ \t]*(?:\n|$)')
 _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
+_STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
 
 
 class BlockParser(Parser):
     BLANK_LINE = re.compile(r'(^[ \t\v\f]*\n)+', re.M)
-    STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
 
     RAW_HTML = (
         r'^ {0,3}('
@@ -238,7 +238,7 @@ class BlockParser(Parser):
             state.env['ref_links'][key] = attrs
         return end_pos
 
-    def parse_block_quote(self, m, state):
+    def extract_block_quote(self, m, state):
         # cleanup at first to detect if it is code block
         text = m.group('quote_1') + '\n'
         text = expand_leading_tab(text, 3)
@@ -251,7 +251,7 @@ class BlockParser(Parser):
 
         end_pos = None
         if require_marker:
-            m = self.STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
+            m = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
             if m:
                 quote = m.group(0)
                 quote = _BLOCK_QUOTE_LEADING.sub('', quote)
@@ -266,7 +266,7 @@ class BlockParser(Parser):
                 'list', 'block_html',
             ])
             while state.cursor < state.cursor_max:
-                m = self.STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
+                m = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
                 if m:
                     quote = m.group(0)
                     quote = _BLOCK_QUOTE_LEADING.sub('', quote)
@@ -301,8 +301,10 @@ class BlockParser(Parser):
 
         # according to CommonMark Example 6, the second tab should be
         # treated as 4 spaces
-        text = expand_tab(text)
+        return expand_tab(text), end_pos
 
+    def parse_block_quote(self, m, state):
+        text, end_pos = self.extract_block_quote(m, state)
         # scan children state
         child = state.child_state(text)
         if state.depth() >= self.max_nested_level - 1:

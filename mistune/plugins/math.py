@@ -33,7 +33,7 @@ def math(md):
         Block math is surrounded by $$:
 
         $$
-        \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
+        f(a)=f(b)
         $$
 
         Inline math is surrounded by `$`, such as $f(a)=f(b)$

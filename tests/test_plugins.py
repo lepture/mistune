@@ -33,6 +33,7 @@ load_plugin("footnotes")
 load_plugin("abbr")
 load_plugin("math")
 load_plugin("ruby")
+load_plugin("spoiler")
 
 
 class TestExtraPlugins(BaseTestCase):

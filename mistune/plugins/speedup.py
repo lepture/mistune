@@ -30,7 +30,7 @@ def speedup(md):
     """Increase the speed of parsing paragraph and inline text."""
     md.block.register('paragraph', PARAGRAPH, parse_paragraph)
 
-    punc = r'\\<!\[_*`~\^\$='
+    punc = r'\\><!\[_*`~\^\$='
     text_pattern = r'[\s\S]+?(?=[' + punc + r']|'
     if 'url_link' in md.inline.rules:
         text_pattern += 'https?:|'

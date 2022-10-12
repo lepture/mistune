@@ -430,3 +430,51 @@ Another way to create your own Markdown instance::
     markdown = mistune.Markdown(renderer, plugins=[ruby])
 
 Blog post: https://lepture.com/en/2022/markdown-ruby-markup
+
+
+spoiler
+-------
+
+Spoiler plugin wraps ``<div class="spoiler">`` for block level syntax,
+and ``<span class="spoiler">`` for inline level syntax.
+
+A block level spoiler looks like block quote, but the marker is ``>!``:
+
+.. code-block:: text
+
+    >! here is the spoiler content
+    >!
+    >! it will be hidden
+
+Will be converted into:
+
+.. code-block:: html
+
+    <div class="spoiler">
+    <p>here is the spoiler content</p>
+    <p>it will be hidden</p>
+    </div>
+
+An inline spoiler is surrounded with ``>!`` and ``!<``:
+
+.. code-block:: text
+
+    this is the >! hidden text !<
+
+Will be converted into:
+
+.. code-block:: html
+
+    <p>this is the <span class="spoiler">hidden text</span></p>
+
+This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
+**spoiler** plugin with your own markdown instance::
+
+    markdown = mistune.create_markdown(plugins=['spoiler'])
+
+Another way to create your own Markdown instance::
+
+    from mistune.plugins.spoiler import spoiler
+
+    renderer = mistune.HTMLRenderer()
+    markdown = mistune.Markdown(renderer, plugins=[spoiler])

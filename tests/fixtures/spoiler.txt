@@ -1,0 +1,74 @@
+# Spoiler
+
+## Block spoiler
+
+```````````````````````````````` example
+>! hi
+.
+<div class="spoiler">
+<p>hi</p>
+</div>
+````````````````````````````````
+
+
+```````````````````````````````` example
+>! not
+> spoiler
+.
+<blockquote>
+<p>! not
+spoiler</p>
+</blockquote>
+````````````````````````````````
+
+```````````````````````````````` example
+>! multiple
+>! lines
+.
+<div class="spoiler">
+<p>multiple
+lines</p>
+</div>
+````````````````````````````````
+
+```````````````````````````````` example
+>! foo
+>!
+>! bar
+.
+<div class="spoiler">
+<p>foo</p>
+<p>bar</p>
+</div>
+````````````````````````````````
+
+```````````````````````````````` example
+>! foo
+>
+>! bar
+.
+<blockquote>
+<p>! foo</p>
+<p>! bar</p>
+</blockquote>
+````````````````````````````````
+
+## Inline spoiler
+
+```````````````````````````````` example
+hi >! hide !<
+.
+<p>hi <span class="spoiler">hide</span></p>
+````````````````````````````````
+
+```````````````````````````````` example
+hi >!hide !<
+.
+<p>hi <span class="spoiler">hide</span></p>
+````````````````````````````````
+
+```````````````````````````````` example
+hi >!hide!<
+.
+<p>hi <span class="spoiler">hide</span></p>
+````````````````````````````````

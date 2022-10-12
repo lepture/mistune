@@ -49,7 +49,7 @@ def parse_inline_spoiler(inline, m, state):
 
 
 def render_block_spoiler(renderer, text):
-    return '<div class="spoiler">' + text + '</div>\n'
+    return '<div class="spoiler">\n' + text + '</div>\n'
 
 
 def render_inline_spoiler(renderer, text):
@@ -57,6 +57,21 @@ def render_inline_spoiler(renderer, text):
 
 
 def spoiler(md):
+    """A mistune plugin to support block and inline spoiler. The
+    syntax is inspired by stackexchange:
+
+    .. code-block:: text
+
+        Block level spoiler looks like block quote, but with `>!`:
+
+        >! this is spoiler
+        >!
+        >! the content will be hidden
+
+        Inline spoiler is surrounded by `>!` and `!<`, such as >! hide me !<.
+
+    :param md: Markdown instance
+    """
     # reset block quote parser with block spoiler parser
     md.block.register('block_quote', None, parse_block_spoiler)
     md.inline.register('inline_spoiler', INLINE_SPOILER_PATTERN, parse_inline_spoiler)

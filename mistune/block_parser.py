@@ -1,4 +1,5 @@
 import re
+from typing import Optional, List, Dict, Any
 from .util import (
     unikey,
     escape_url,
@@ -6,7 +7,7 @@ from .util import (
     expand_tab,
     expand_leading_tab,
 )
-from .core import Parser
+from .core import Parser, BlockState
 from .helpers import (
     LINK_LABEL,
     HTML_TAGNAME,
@@ -67,7 +68,7 @@ class BlockParser(Parser):
             r'((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*'
         ),
         'thematic_break': r'^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$',
-        'ref_link': r'^ {0,3}\[(?P<link_1>' + LINK_LABEL + r')\]:',
+        'ref_link': r'^ {0,3}\[(?P<reflink_1>' + LINK_LABEL + r')\]:',
         'block_quote': r'^ {0,3}>(?P<quote_1>.*?)$',
         'list': (
             r'^(?P<list_1> {0,3})'
@@ -91,7 +92,12 @@ class BlockParser(Parser):
         'blank_line',
     )
 
-    def __init__(self, block_quote_rules=None, list_rules=None, max_nested_level=6):
+    def __init__(
+            self,
+            block_quote_rules: Optional[List[str]]=None,
+            list_rules: Optional[List[str]]=None,
+            max_nested_level: int=6
+    ):
         super(BlockParser, self).__init__()
 
         if block_quote_rules is None:
@@ -108,16 +114,19 @@ class BlockParser(Parser):
             name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
         }
 
-    def parse_blank_line(self, m, state):
+    def parse_blank_line(self, m: re.Match, state: BlockState) -> int:
+        """Parse token for blank lines."""
         state.append_token({'type': 'blank_line'})
         return m.end()
 
-    def parse_thematic_break(self, m, state):
+    def parse_thematic_break(self, m: re.Match, state: BlockState) -> int:
+        """Parse token for thematic break, e.g. ``<hr>`` tag in HTML."""
         state.append_token({'type': 'thematic_break'})
         # $ does not count '\n'
         return m.end() + 1
 
-    def parse_indent_code(self, m, state):
+    def parse_indent_code(self, m: re.Match, state: BlockState) -> int:
+        """Parse token for code block which is indented by 4 spaces."""
         # it is a part of the paragraph
         end_pos = state.append_paragraph()
         if end_pos:
@@ -130,7 +139,19 @@ class BlockParser(Parser):
         state.append_token({'type': 'block_code', 'raw': code})
         return m.end()
 
-    def parse_fenced_code(self, m, state):
+    def parse_fenced_code(self, m: re.Match, state: BlockState) -> Optional[int]:
+        """Parse token for fenced code block. A fenced code block is started with
+        3 or more backtick(`) or tilde(~).
+
+        An example of a fenced code block:
+
+        .. code-block:: markdown
+
+            ```python
+            def markdown(text):
+                return mistune.html(text)
+            ```
+        """
         spaces = m.group('fenced_1')
         marker = m.group('fenced_2')
         info = m.group('fenced_3')
@@ -166,7 +187,9 @@ class BlockParser(Parser):
         state.append_token(token)
         return end_pos
 
-    def parse_axt_heading(self, m, state):
+    def parse_axt_heading(self, m: re.Match, state: BlockState) -> int:
+        """Parse token for AXT heading. An AXT heading is started with 1 to 6
+        symbol of ``#``."""
         level = len(m.group('axt_1'))
         text = m.group('axt_2').strip()
         # remove last #
@@ -177,7 +200,14 @@ class BlockParser(Parser):
         state.append_token(token)
         return m.end() + 1
 
-    def parse_setex_heading(self, m, state):
+    def parse_setex_heading(self, m: re.Match, state: BlockState) -> Optional[int]:
+        """Parse token for setex style heading. A setex heading syntax looks like:
+
+        .. code-block:: markdown
+
+            H1 title
+            ========
+        """
         last_token = state.last_token()
         if last_token and last_token['type'] == 'paragraph':
             level = 1 if m.group('setext_1') == '=' else 2
@@ -190,12 +220,29 @@ class BlockParser(Parser):
         if m:
             return self.parse_method(m, state)
 
-    def parse_ref_link(self, m, state):
+    def parse_ref_link(self, m: re.Match, state: BlockState) -> Optional[int]:
+        """Parse link references and save the link information into ``state.env``.
+
+        Here is an example of a link reference:
+
+        .. code-block:: markdown
+
+            a [link][example]
+
+            [example]: https://example.com "Optional title"
+
+        This method will save the link reference into ``state.env`` as::
+
+            state.env['ref_links']['example'] = {
+                'url': 'https://example.com',
+                'title': "Optional title",
+            }
+        """
         end_pos = state.append_paragraph()
         if end_pos:
             return end_pos
 
-        key = unikey(m.group('link_1'))
+        key = unikey(m.group('reflink_1'))
         if not key:
             return
 
@@ -238,7 +285,9 @@ class BlockParser(Parser):
             state.env['ref_links'][key] = attrs
         return end_pos
 
-    def extract_block_quote(self, m, state):
+    def extract_block_quote(self, m: re.Match, state: BlockState) -> (str, int):
+        """Extract text and cursor end position of a block quote."""
+
         # cleanup at first to detect if it is code block
         text = m.group('quote_1') + '\n'
         text = expand_leading_tab(text, 3)
@@ -303,7 +352,14 @@ class BlockParser(Parser):
         # treated as 4 spaces
         return expand_tab(text), end_pos
 
-    def parse_block_quote(self, m, state):
+    def parse_block_quote(self, m: re.Match, state: BlockState) -> int:
+        """Parse token for block quote. Here is an example of the syntax:
+
+        .. code-block:: markdown
+
+            > a block quote starts
+            > with right arrows
+        """
         text, end_pos = self.extract_block_quote(m, state)
         # scan children state
         child = state.child_state(text)
@@ -321,7 +377,8 @@ class BlockParser(Parser):
         state.append_token(token)
         return state.cursor
 
-    def parse_list(self, m, state):
+    def parse_list(self, m: re.Match, state: BlockState) -> int:
+        """Parse tokens for ordered and unordered list."""
         text = m.group('list_3')
         if not text.strip():
             # Example 285
@@ -358,10 +415,10 @@ class BlockParser(Parser):
         state.append_token(token)
         return state.cursor
 
-    def parse_block_html(self, m, state):
+    def parse_block_html(self, m: re.Match, state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)
 
-    def parse_raw_html(self, m, state):
+    def parse_raw_html(self, m: re.Match, state: BlockState) -> Optional[int]:
         marker = m.group(0).strip()
 
         # rule 2
@@ -409,15 +466,13 @@ class BlockParser(Parser):
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)
 
-    def postprocess_paragraph(self, token, parent):
-        """A method to post process paragraph token. Developers CAN
-        subclass BlockParser and rewrite this method to update the
-        common paragraph token."""
-        attrs = parent.get('attrs')
-        if attrs and attrs.get('tight'):
-            token['type'] = 'block_text'
+    def postprocess_paragraph(self, token: Dict[str, Any], parent: Optional[Dict[str, Any]]):
+        if token['type'] == 'paragraph' and parent:
+            attrs = parent.get('attrs')
+            if attrs and attrs.get('tight'):
+                token['type'] = 'block_text'
 
-    def parse(self, state, rules=None):
+    def parse(self, state: BlockState, rules: Optional[List[str]]=None) -> None:
         sc = self.compile_sc(rules)
 
         while state.cursor < state.cursor_max:

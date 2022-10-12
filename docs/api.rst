@@ -101,6 +101,10 @@ Plugins
 
 .. autofunction:: subscript
 
+.. module:: mistune.plugins.spoiler
+
+.. autofunction:: spoiler
+
 TOC hook
 --------
 

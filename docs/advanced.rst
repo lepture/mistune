@@ -89,8 +89,6 @@ Here is a a list of available renderer functions::
     inline_math(self, text)
 
 
-.. _plugins:
-
 Create plugins
 --------------
 

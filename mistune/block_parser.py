@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any
 from .util import (
     unikey,
     escape_url,
@@ -285,7 +285,7 @@ class BlockParser(Parser):
             state.env['ref_links'][key] = attrs
         return end_pos
 
-    def extract_block_quote(self, m: re.Match, state: BlockState) -> (str, int):
+    def extract_block_quote(self, m: re.Match, state: BlockState) -> Tuple[str, int]:
         """Extract text and cursor end position of a block quote."""
 
         # cleanup at first to detect if it is code block

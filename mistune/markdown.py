@@ -40,6 +40,29 @@ class Markdown:
     def use(self, plugin):
         plugin(self)
 
+    def render(self, state):
+        data = self._iter_render(state.tokens, state, None)
+        if self.renderer:
+            return self.renderer(data)
+        return list(data)
+
+    def _iter_render(self, tokens, state, parent):
+        for tok in tokens:
+            if 'children' in tok:
+                data = self._iter_render(tok['children'], state, tok)
+                if self.renderer:
+                    children = self.renderer(data)
+                else:
+                    children = list(data)
+                tok['children'] = children
+            elif 'text' in tok:
+                text = tok.pop('text')
+                children = self.inline(text.strip(), state.env)
+                tok['children'] = children
+
+            self.block.iter_token_hook(tok, parent)
+            yield tok
+
     def parse(self, s: str, state=None):
         """Parse and convert the given markdown string. If renderer is None,
         the returned **result** will be parsed markdown tokens.
@@ -65,7 +88,7 @@ class Markdown:
         for hook in self.before_render_hooks:
             hook(self, state)
 
-        result = self.block.render(state, self.inline)
+        result = self.render(state)
 
         for hook in self.after_render_hooks:
             result = hook(self, result, state)

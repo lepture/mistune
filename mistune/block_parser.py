@@ -466,7 +466,7 @@ class BlockParser(Parser):
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)
 
-    def postprocess_paragraph(self, token: Dict[str, Any], parent: Optional[Dict[str, Any]]):
+    def iter_token_hook(self, token: Dict[str, Any], parent: Optional[Dict[str, Any]]):
         if token['type'] == 'paragraph' and parent:
             attrs = parent.get('attrs')
             if attrs and attrs.get('tight'):
@@ -499,29 +499,6 @@ class BlockParser(Parser):
             text = state.src[state.cursor:]
             state.add_paragraph(text)
             state.cursor = state.cursor_max
-
-    def render(self, state, inline):
-        return self._call_render(state.tokens, state, inline)
-
-    def _call_render(self, tokens, state, inline, parent=None):
-        data = self._iter_render(tokens, state, inline, parent)
-        if inline.renderer:
-            return inline.renderer(data)
-        return list(data)
-
-    def _iter_render(self, tokens, state, inline, parent):
-        for tok in tokens:
-            if 'children' in tok:
-                children = self._call_render(tok['children'], state, inline, tok)
-                tok['children'] = children
-            elif 'text' in tok:
-                text = tok.pop('text')
-                children = inline(text.strip(), state.env)
-                tok['children'] = children
-                if tok['type'] == 'paragraph' and parent:
-                    self.postprocess_paragraph(tok, parent)
-            yield tok
-
 
 def _parse_html_to_end(state, end_marker, start_pos):
     marker_pos = state.src.find(end_marker, start_pos)

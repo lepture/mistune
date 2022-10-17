@@ -38,11 +38,11 @@ class DirectiveToc(Directive):
             level = d_options.get('level')
             if level:
                 try:
-                    level = int(level)
-                except (ValueError, TypeError):
+                    level = self._parse_level(level, 'level')
+                except IntegerTokenError as ex:
                     return {
                         'type': 'block_error',
-                        'raw': 'TOC level MUST be integer',
+                        'raw': 'TOC {token} MUST be integer'.format(token=ex.token_name),
                     }
 
         if level is None:
@@ -52,6 +52,13 @@ class DirectiveToc(Directive):
 
         attrs = {'title': title, 'level': level, 'collapse': collapse}
         return {'type': 'toc', 'raw': '', 'attrs': attrs}
+
+    @staticmethod
+    def _parse_level(token, token_name):
+        try:
+            return int(token)
+        except (ValueError, TypeError):
+            raise IntegerTokenError(token_name)
 
     def toc_hook(self, md, state):
         sections = []
@@ -92,3 +99,11 @@ def render_html_toc(renderer, text, title, level, collapse=False):
         html += ' open'
     html += '>\n<summary>' + title + '</summary>\n'
     return html + text + '</details>\n'
+
+class IntegerTokenError(ValueError):
+    """
+    Raised if a token cannot be converted to an int.
+    """
+    def __init__(self, token_name, *args, **kwargs):
+        self.token_name = token_name
+        super(IntegerTokenError, self).__init__(*args, **kwargs)

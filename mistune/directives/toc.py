@@ -5,11 +5,12 @@
     The TOC directive syntax looks like::
 
         .. toc:: Title
+           :minlevel: 2
            :level: 3
 
-    "Title" and "level" option can be empty. "level" is an integer less
-    than 6, which defines the max heading level writers want to include
-    in TOC.
+    "Title", "minlevel", and "level" options can be empty. "minlevel" and
+    "level" are integers greater than or equal to 1 and less than 6, which
+    defines the min and max heading level writers want to include in TOC.
 """
 
 from .base import Directive, parse_options
@@ -17,7 +18,8 @@ from ..toc import normalize_toc_item, render_toc_ul
 
 
 class DirectiveToc(Directive):
-    def __init__(self, level=3, heading_id=None):
+    def __init__(self, level=3, heading_id=None, minlevel=1):
+        self.minlevel = minlevel
         self.level = level
 
         if callable(heading_id):
@@ -29,28 +31,43 @@ class DirectiveToc(Directive):
 
     def parse(self, block, m, state):
         title = m.group('value')
+        minlevel = None
         level = None
         collapse = False
         options = parse_options(m)
         if options:
             d_options = dict(options)
             collapse = 'collapse' in d_options
+            minlevel = d_options.get('minlevel')
             level = d_options.get('level')
-            if level:
-                try:
+            try:
+                if minlevel:
+                    minlevel = self._parse_level(minlevel, 'minlevel')
+                if level:
                     level = self._parse_level(level, 'level')
-                except IntegerTokenError as ex:
-                    return {
-                        'type': 'block_error',
-                        'raw': 'TOC {token} MUST be integer'.format(token=ex.token_name),
-                    }
+            except IntegerTokenError as ex:
+                return {
+                    'type': 'block_error',
+                    'raw': 'TOC {token} MUST be integer'.format(
+                        token=ex.token_name,
+                    ),
+                }
 
+        if minlevel is None:
+            minlevel = self.minlevel
+        elif minlevel < 1 or minlevel > 6:
+            minlevel = self.minlevel
         if level is None:
             level = self.level
         elif level < 1 or level > 6:
             level = self.level
 
-        attrs = {'title': title, 'level': level, 'collapse': collapse}
+        attrs = {
+            'title': title,
+            'minlevel': minlevel,
+            'level': level,
+            'collapse': collapse,
+        }
         return {'type': 'toc', 'raw': '', 'attrs': attrs}
 
     @staticmethod
@@ -78,8 +95,11 @@ class DirectiveToc(Directive):
                 toc_items.append(normalize_toc_item(md, tok))
 
             for sec in sections:
+                minlevel = sec['attrs']['minlevel']
                 level = sec['attrs']['level']
-                toc = [item for item in toc_items if item[0] <= level]
+                toc = [
+                    item for item in toc_items if minlevel <= item[0] <= level
+                ]
                 sec['raw'] = render_toc_ul(toc)
 
     def __call__(self, md):
@@ -90,7 +110,7 @@ class DirectiveToc(Directive):
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(renderer, text, title, level, collapse=False):
+def render_html_toc(renderer, text, title, minlevel, level, collapse=False):
     if not title:
         title = 'Table of Contents'
 
@@ -99,6 +119,7 @@ def render_html_toc(renderer, text, title, level, collapse=False):
         html += ' open'
     html += '>\n<summary>' + title + '</summary>\n'
     return html + text + '</details>\n'
+
 
 class IntegerTokenError(ValueError):
     """

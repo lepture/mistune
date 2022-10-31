@@ -1,6 +1,11 @@
 import os
 from mistune import create_markdown
-from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
+from mistune.directives import (
+    RstDirective,
+    Admonition,
+    DirectiveToc,
+    DirectiveInclude,
+)
 from tests import BaseTestCase
 from tests.fixtures import ROOT
 
@@ -11,7 +16,7 @@ def load_directive_test(filename, directive):
         def parse(text):
             md = create_markdown(
                 escape=False,
-                plugins=[directive]
+                plugins=[RstDirective([directive])],
             )
             html = md(text)
             return html
@@ -28,7 +33,7 @@ class TestDirectiveToc(BaseTestCase):
     def parse(text):
         md = create_markdown(
             escape=False,
-            plugins=[DirectiveToc()]
+            plugins=[RstDirective([DirectiveToc()])]
         )
         html = md(text)
         return html
@@ -39,7 +44,7 @@ class TestDirectiveToc(BaseTestCase):
 
         md = create_markdown(
             escape=False,
-            plugins=[DirectiveToc(heading_id=heading_id)]
+            plugins=[RstDirective([DirectiveToc(heading_id=heading_id)])]
         )
         html = md('# h1\n\n.. toc::\n')
         self.assertIn('<h1 id="t-1">h1</h1>', html)
@@ -50,7 +55,7 @@ TestDirectiveToc.load_fixtures('directive_toc.txt')
 
 
 class TestDirectiveInclude(BaseTestCase):
-    md = create_markdown(escape=False, plugins=[DirectiveInclude()])
+    md = create_markdown(escape=False, plugins=[RstDirective([DirectiveInclude()])])
 
     def test_html_include(self):
         html = self.md.read(os.path.join(ROOT, 'include/text.md'))[0]

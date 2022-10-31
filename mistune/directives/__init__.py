@@ -1,13 +1,13 @@
-from .base import Directive, parse_options, parse_children
+from ._base import DirectiveParser, BaseDirective, DirectivePlugin
+from ._rst import RstDirective
 from .admonition import Admonition
 from .toc import DirectiveToc
 from .include import DirectiveInclude
 
 
 __all__ = [
-    'parse_options', 'parse_children',
-    'Directive',
-    'Admonition',
+    'DirectiveParser', 'BaseDirective', 'DirectivePlugin',
+    'RstDirective', 'Admonition',
     'DirectiveToc',
     'DirectiveInclude',
 ]

@@ -12,11 +12,11 @@
     in TOC.
 """
 
-from .base import Directive, parse_options
+from ._base import DirectivePlugin
 from ..toc import normalize_toc_item, render_toc_ul
 
 
-class DirectiveToc(Directive):
+class DirectiveToc(DirectivePlugin):
     def __init__(self, level=3, heading_id=None):
         self.level = level
 
@@ -28,10 +28,10 @@ class DirectiveToc(Directive):
             self.heading_id = heading_id
 
     def parse(self, block, m, state):
-        title = m.group('value')
+        title = self.parse_title(m)
         level = None
         collapse = False
-        options = parse_options(m)
+        options = self.parse_options(m)
         if options:
             d_options = dict(options)
             collapse = 'collapse' in d_options
@@ -75,10 +75,10 @@ class DirectiveToc(Directive):
                 toc = [item for item in toc_items if item[0] <= level]
                 sec['raw'] = render_toc_ul(toc)
 
-    def __call__(self, md):
+    def __call__(self, directive, md):
         if md.renderer and md.renderer.NAME == 'html':
             # only works with HTML renderer
-            self.register_directive(md, 'toc')
+            directive.register('toc', self.parse)
             md.before_render_hooks.append(self.toc_hook)
             md.renderer.register('toc', render_html_toc)
 

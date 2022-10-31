@@ -1,16 +1,15 @@
 import os
-from .base import Directive, parse_options
+from ._base import DirectivePlugin
 
 
-class DirectiveInclude(Directive):
+class DirectiveInclude(DirectivePlugin):
     def parse(self, block, m, state):
         source_file = state.env.get('__file__')
         if not source_file:
             return {'type': 'block_error', 'raw': 'Missing source file'}
 
-        relpath = m.group('value')
         encoding = 'utf-8'
-        options = parse_options(m)
+        options = self.parse_options(m)
         if options:
             attrs = dict(options)
             if 'encoding' in attrs:
@@ -18,6 +17,7 @@ class DirectiveInclude(Directive):
         else:
             attrs = {}
 
+        relpath = self.parse_title(m)
         dest = os.path.join(os.path.dirname(source_file), relpath)
         dest = os.path.normpath(dest)
 
@@ -55,8 +55,8 @@ class DirectiveInclude(Directive):
             'attrs': attrs,
         }
 
-    def __call__(self, md):
-        self.register_directive(md, 'include')
+    def __call__(self, directive, md):
+        directive.register('include', self.parse)
         if md.renderer and md.renderer.NAME == 'html':
             md.renderer.register('include', render_html_include)
 

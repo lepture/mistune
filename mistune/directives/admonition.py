@@ -1,29 +1,29 @@
-from .base import Directive, parse_options, parse_children
+from ._base import DirectivePlugin
 
 
-class Admonition(Directive):
+class Admonition(DirectivePlugin):
     SUPPORTED_NAMES = {
         "attention", "caution", "danger", "error", "hint",
         "important", "note", "tip", "warning",
     }
 
     def parse(self, block, m, state):
-        options = parse_options(m)
-
-        name = m.group('name')
-        title = m.group('value')
+        options = self.parse_options(m)
+        name = self.parse_name(m)
+        title = self.parse_title(m)
         attrs = {'name': name, 'title': title, 'options': options}
 
-        children = parse_children(block, m, state)
+        content = self.parse_content(m)
+        children = self.parse_tokens(block, content, state)
         return {
             'type': 'admonition',
             'children': children,
             'attrs': attrs,
         }
 
-    def __call__(self, md):
+    def __call__(self, directive, md):
         for name in self.SUPPORTED_NAMES:
-            self.register_directive(md, name)
+            directive.register(name, self.parse)
 
         if md.renderer.NAME == 'html':
             md.renderer.register('admonition', render_admonition)

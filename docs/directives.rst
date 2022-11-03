@@ -1,22 +1,81 @@
+.. _directives:
+
 Directives
 ==========
 
-Directive is a special plugin which is inspired by reStructuredText. The
-syntax is very powerful:
+A directive is a generic block of explicit markup that is powerful
+and extensible. In mistune v3, there are 2 styles of directives for
+now:
+
+1. reStructuredText style
+2. fenced style
+
+.. versionchanged:: 3.0
+
+    Fenced style directive is added in 3.0. Because v3 has multiple
+    styles of directives, developers can not add each directive into
+    ``plugins`` parameter of ``mistune.create_markdown`` directly.
+    Instead, each directive should be wrapped by::
+
+        import mistune
+        from mistune.directives import FencedDirective, RstDirective
+        from mistune.directives import Admonition, TableOfContents
+
+        markdown = mistune.create_markdown(plugins=[
+            'math',
+            'footnotes',
+            # ...
+            FencedDirective([
+                Admonition(),
+                TableOfContents(),
+            ]),
+        ])
+
+        markdown = mistune.create_markdown(plugins=[
+            'math',
+            'footnotes',
+            # ...
+            RstDirective([
+                Admonition(),
+                TableOfContents(),
+            ]),
+        ])
+
+A **reStructuredText** style of directive is inspired by reStructuredText_,
+and the syntax looks like:
 
 .. code-block:: text
 
-    .. directive-name:: directive value
+    .. directive-name:: title
        :option-key: option value
        :option-key: option value
 
-       full featured markdown text here
+       content text here
 
-It was designed to be used by other plugins. There are three built-in
-plugins based on directive.
+
+A **fenced** style of directive looks like a fenced code block, it is
+inspired by `markdown-it-docutils`_. The syntax looks like:
+
+.. code-block:: text
+
+    ```{directive-name} title
+    :option-key: option value
+    :option-key: option value
+
+    content text here
+    ```
+
+.. _reStructuredText: https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#directives
+
+.. _`markdown-it-docutils`: https://executablebooks.github.io/markdown-it-docutils/
+
+
+Developers can choose the directive style in their own favor.
 
 Admonitions
 -----------
+
+The reStructuredText style syntax:
 
 .. code-block:: text
 
@@ -24,6 +83,15 @@ Admonitions
 
        You are looking at the **dev** documentation. Check out our
        [stable](/stable/) documentation instead.
+
+The fenced style syntax:
+
+.. code-block:: text
+
+    ```{warning}
+    You are looking at the **dev** documentation. Check out our
+    [stable](/stable/) documentation instead.
+    ```
 
 Admonitions contains a group of ``directive-name``:
 
@@ -38,17 +106,21 @@ To enable admonitions::
     from mistune.directives import Admonition
 
     markdown = mistune.create_markdown(
-        plugins=[Admonition()]
+        plugins=[
+            ...
+            RstDirective([Admonition()]),
+            # FencedDirective([Admonition()]),
+        ]
     )
 
 
-TOC Plugin
-----------
+Table of Contents
+-----------------
 
 .. code-block:: text
 
     .. toc:: Table of Contents
-       :depth: 3
+       :max-level: 3
 
 TOC plugin is based on directive. It can add a table of contents section in
 the documentation. Let's take an example:
@@ -69,10 +141,13 @@ The rendered HTML will show a TOC at the ``.. toc::`` position. To enable
 TOC plugin::
 
     import mistune
-    from mistune.directives import DirectiveToc
+    from mistune.directives import RstDirective, TableOfContents
 
     markdown = mistune.create_markdown(
-        plugins=[DirectiveToc()]
+        plugins=[
+            # ...
+            RstDirective([TableOfContents()]),
+        ]
     )
 
 Include

@@ -113,3 +113,9 @@ TOC hook
 .. autofunction:: add_toc_hook
 
 .. autofunction:: render_toc_ul
+
+
+Directives
+----------
+
+.. module:: mistune.directives

@@ -48,5 +48,5 @@ out how to write a mistune plugin.
 Directives
 ~~~~~~~~~~
 
-Removed ``self.parse_options`` and ``self.parse_text`` methods on ``Directive``
-class. Please check the source code to find out how to create a directive.
+Find out all the details in :ref:`directives`. In v3, there is one more
+style of directive -- fenced style directive.

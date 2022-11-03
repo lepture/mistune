@@ -229,50 +229,11 @@ looks like:
 If current markdown instance is using HTML renderer, developers can register
 the plugin renderer for converting markdown to HTML.
 
-.. _directives:
 
 Write directives
 ----------------
 
 Mistune has some built-in directives that have been presented in
 the directives part of the documentation. These are defined in the
-``mistune/directives``, and these can help writing a new directive.
-
-Let's try to write a "spoiler" directive, which takes a hint::
-
-    from mistune.directives import Directive, parse_options
-
-    class Spoiler(Directive):
-        def parse(self, block, m, state):
-            if options:
-                return {
-                    'type': 'block_error',
-                    'raw': 'Spoiler has no options'
-                }
-
-            hint = m.group('value')
-            attrs = {'hint': hint}
-            children = parse_children(block, m, state)
-            return {
-                'type': 'spoiler',
-                'children': children,
-                'attrs': attrs,
-            }
-
-        def __call__(self, md):
-            self.register_directive(md, 'spoiler')
-
-            if md.renderer.NAME == 'html':
-                md.renderer.register('spoiler', render_html_spoiler)
-
-
-    def render_html_spoiler(text, name, hint="Spoiler"):
-        html = '<section class="spoiler">\n'
-        html += '<p class="spoiler-hint">' + hint + '</p>\n'
-        if text:
-            html += '<div class="spoiler-text">' + text + '</div>\n'
-        return html + '</section>\n'
-
-
-Some design functionalities would be required to make the
-HTML rendering actually output a spoiler block.
+``mistune/directives``, you can learn how to write a new directive
+by reading the source code in ``mistune/directives/``.

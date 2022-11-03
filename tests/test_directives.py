@@ -31,14 +31,14 @@ load_directive_test('rst_toc', TableOfContents())
 
 class TestCustomizeHeadingToc(BaseTestCase):
     def test_customize_heading_id_func(self):
-        def heading_id(token, i):
-            return 't-' + str(i + 1)
+        class CustomizeTableOfContents(TableOfContents):
+            def generate_heading_id(self, token, i):
+                return 't-' + str(i + 1)
 
-        toc = TableOfContents(heading_id=heading_id)
         md = create_markdown(
             escape=False,
             plugins=[
-                RstDirective([toc]),
+                RstDirective([CustomizeTableOfContents()]),
             ],
         )
         html = md('# h1\n\n.. toc::\n')

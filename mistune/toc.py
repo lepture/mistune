@@ -1,7 +1,7 @@
 from .util import striptags
 
 
-def add_toc_hook(md, level=3, heading_id=None):
+def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
     """Add a hook to save toc items into ``state.env``. This is
     usually helpful for doc generator::
 
@@ -16,7 +16,8 @@ def add_toc_hook(md, level=3, heading_id=None):
         toc_html = render_toc_ul(toc_items)
 
     :param md: Markdown instance
-    :param level: max heading level
+    :param min_level: min heading level
+    :param max_level: max heading level
     :param heading_id: a function to generate heading_id
     """
     if heading_id is None:
@@ -27,7 +28,8 @@ def add_toc_hook(md, level=3, heading_id=None):
         headings = []
 
         for tok in state.tokens:
-            if tok['type'] == 'heading' and tok['attrs']['level'] <= level:
+            level = tok['attrs']['level']
+            if tok['type'] == 'heading' and min_level <= level <= max_level:
                 headings.append(tok)
 
         toc_items = []

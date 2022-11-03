@@ -45,11 +45,11 @@ none
 # H1
 ## H2
 .. toc::
-   :level: s
+   :max-level: s
 .
 <h1>H1</h1>
 <h2>H2</h2>
-<div class="error">TOC level MUST be integer</div>
+<div class="error"><pre>"max-level" option MUST be integer</pre></div>
 ````````````````````````````````
 
 ```````````````````````````````` example

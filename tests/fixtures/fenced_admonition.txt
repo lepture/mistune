@@ -48,3 +48,60 @@ Test with no message.
 <p class="admonition-title">Warning</p>
 </section>
 ````````````````````````````````
+
+Test with no ending fence
+
+```````````````````````````````` example
+~~~{note} Warning
+.
+<section class="admonition note">
+<p class="admonition-title">Warning</p>
+</section>
+````````````````````````````````
+
+Test with nested admonition
+
+```````````````````````````````` example
+~~~~~~~{note}
+~~~~~~{warning}
+~~~~~{tip}
+~~~~{caution}
+~~~{hint}
+``````{danger}
+`````{attention}
+````{important}
+```{error}
+```
+````
+`````
+``````
+~~~
+~~~~
+~~~~~
+~~~~~~
+~~~~~~~
+.
+<section class="admonition note">
+<p class="admonition-title">Note</p>
+<section class="admonition warning">
+<p class="admonition-title">Warning</p>
+<section class="admonition tip">
+<p class="admonition-title">Tip</p>
+<section class="admonition caution">
+<p class="admonition-title">Caution</p>
+<section class="admonition hint">
+<p class="admonition-title">Hint</p>
+<section class="admonition danger">
+<p class="admonition-title">Danger</p>
+<pre><code class="language-{attention}">````{important}
+```{error}
+```
+````
+</code></pre>
+</section>
+</section>
+</section>
+</section>
+</section>
+</section>
+````````````````````````````````

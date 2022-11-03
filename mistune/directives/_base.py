@@ -16,11 +16,11 @@ class DirectiveParser:
     def parse_content(m: re.Match):
         raise NotImplementedError()
 
-    @staticmethod
-    def parse_tokens(block, text, state):
+    @classmethod
+    def parse_tokens(cls, block, text, state):
         if state.depth() >= block.max_nested_level - 1:
             rules = list(block.rules)
-            rules.remove(self.NAME)
+            rules.remove(cls.NAME)
         else:
             rules = block.rules
         child = state.child_state(text)

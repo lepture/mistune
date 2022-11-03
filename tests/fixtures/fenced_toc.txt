@@ -20,7 +20,8 @@ none
 ## Simple TOC
 
 ```````````````````````````````` example
-.. toc::
+~~~{toc}
+~~~
 
 # H1
 ## H2
@@ -45,8 +46,9 @@ none
 # H1
 ## H2
 
-.. toc::
-   :max-level: s
+~~~{toc}
+:max-level: s
+~~~
 .
 <h1>H1</h1>
 <h2>H2</h2>
@@ -56,8 +58,10 @@ none
 ```````````````````````````````` example
 # H1
 ## H2
-.. toc::
-   :max-level: 9
+
+~~~{toc}
+:max-level: 9
+~~~
 .
 <h1>H1</h1>
 <h2>H2</h2>
@@ -67,15 +71,16 @@ none
 ```````````````````````````````` example
 # H1
 ## H2
-.. toc::
-   :min-level: 2
-   :max-level: 1
+
+~~~{toc}
+:min-level: 2
+:max-level: 1
+~~~
 .
 <h1>H1</h1>
 <h2>H2</h2>
 <div class="error"><pre>"min-level" option MUST be less than "max-level" option</pre></div>
 ````````````````````````````````
-
 
 ## Complex
 
@@ -87,8 +92,8 @@ none
 # H1 B
 # H1 `C`
 
-.. toc:: Contents
-   :max-level: 3
+```{toc} Contents
+```
 .
 <h1 id="toc_1">H1</h1>
 <h2 id="toc_2">H2</h2>
@@ -123,7 +128,9 @@ none
 #### H4
 ### H3 B
 # H1 B
-.. toc::
+
+```{toc}
+```
 .
 <h1 id="toc_1">H1</h1>
 <h3 id="toc_2">H3</h3>
@@ -153,7 +160,9 @@ none
 ### H3
 ## H2
 # H1
-.. toc::
+
+```{toc}
+```
 .
 <h3 id="toc_1">H3</h3>
 <h2 id="toc_2">H2</h2>
@@ -173,7 +182,9 @@ none
 
 ```````````````````````````````` example
 # [foo](/bar)
-.. toc::
+
+```{toc}
+```
 .
 <h1 id="toc_1"><a href="/bar">foo</a></h1>
 <details class="toc" open>
@@ -188,7 +199,8 @@ none
 
 ```````````````````````````````` example
 # <em>H1</em>
-.. toc::
+```{toc}
+```
 .
 <h1 id="toc_1"><em>H1</em></h1>
 <details class="toc" open>
@@ -202,8 +214,10 @@ none
 ## Collapse TOC
 
 ```````````````````````````````` example
-.. toc::
-   :collapse:
+
+```{toc}
+:collapse:
+```
 
 # H1
 ## H2

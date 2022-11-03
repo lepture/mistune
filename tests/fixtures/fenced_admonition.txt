@@ -1,0 +1,50 @@
+# Admonition
+
+```````````````````````````````` example
+```{unknown} Hi
+
+this is **strong** world
+```
+.
+<div class="error"><pre>{unknown} Hi
+
+this is **strong** world
+</pre></div>
+````````````````````````````````
+
+```````````````````````````````` example
+~~~{note} Warning
+
+message
+~~~
+.
+<section class="admonition note">
+<p class="admonition-title">Warning</p>
+<p>message</p>
+</section>
+````````````````````````````````
+
+Test with code block.
+
+```````````````````````````````` example
+```{note}
+
+    print()
+```
+.
+<section class="admonition note">
+<p class="admonition-title">Note</p>
+<pre><code>print()</code></pre>
+</section>
+````````````````````````````````
+
+Test with no message.
+
+```````````````````````````````` example
+~~~{note} Warning
+~~~
+.
+<section class="admonition note">
+<p class="admonition-title">Warning</p>
+</section>
+````````````````````````````````

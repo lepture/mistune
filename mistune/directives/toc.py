@@ -99,9 +99,6 @@ def _normalize_level(options, name, default):
     if not level:
         return default
     try:
-        level = int(level)
+        return int(level)
     except (ValueError, TypeError):
         raise ValueError(f'"{name}" option MUST be integer')
-    if 1 <= level <= 6:
-        return level
-    raise ValueError(f'"{name}" option MUST be between 1 and 6')

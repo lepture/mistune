@@ -22,7 +22,7 @@ __all__ = ['FencedDirective']
 
 
 _directive_re = re.compile(
-    r'\{(?P<name>[a-zA-Z0-9_-]+)\} +(?P<title>[^\n]*)(?:\n|$)'
+    r'\{(?P<name>[a-zA-Z0-9_-]+)\} *(?P<title>[^\n]*)(?:\n|$)'
     r'(?P<options>(?:\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
     r'\n*(?P<text>(?:[^\n]*\n+)*)'
 )
@@ -41,8 +41,7 @@ class FencedParser(DirectiveParser):
 
     @staticmethod
     def parse_content(m: re.Match):
-        text = m.group('text')
-        return text.strip() + '\n'
+        return m.group('text')
 
 
 class FencedDirective(BaseDirective):

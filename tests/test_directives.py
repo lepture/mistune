@@ -2,6 +2,7 @@ import os
 from mistune import create_markdown
 from mistune.directives import (
     RstDirective,
+    FencedDirective,
     Admonition,
     TableOfContents,
     Include,
@@ -10,13 +11,13 @@ from tests import BaseTestCase
 from tests.fixtures import ROOT
 
 
-def load_directive_test(filename, directive):
+def load_directive_test(filename, directive, cls):
     class TestDirective(BaseTestCase):
         @staticmethod
         def parse(text):
             md = create_markdown(
                 escape=False,
-                plugins=[RstDirective([directive])],
+                plugins=[cls([directive])],
             )
             html = md(text)
             return html
@@ -25,16 +26,19 @@ def load_directive_test(filename, directive):
     globals()["TestDirective_" + filename] = TestDirective
 
 
-load_directive_test('rst_admonition', Admonition())
-load_directive_test('rst_toc', TableOfContents())
+load_directive_test('rst_admonition', Admonition(), RstDirective)
+load_directive_test('rst_toc', TableOfContents(), RstDirective)
+load_directive_test('fenced_admonition', Admonition(), FencedDirective)
+load_directive_test('fenced_toc', TableOfContents(), FencedDirective)
+
+
+class CustomizeTableOfContents(TableOfContents):
+    def generate_heading_id(self, token, i):
+        return 't-' + str(i + 1)
 
 
 class TestCustomizeHeadingToc(BaseTestCase):
-    def test_customize_heading_id_func(self):
-        class CustomizeTableOfContents(TableOfContents):
-            def generate_heading_id(self, token, i):
-                return 't-' + str(i + 1)
-
+    def test_rst_toc(self):
         md = create_markdown(
             escape=False,
             plugins=[
@@ -45,6 +49,16 @@ class TestCustomizeHeadingToc(BaseTestCase):
         self.assertIn('<h1 id="t-1">h1</h1>', html)
         self.assertIn('<a href="#t-1">h1</a>', html)
 
+    def test_fenced_toc(self):
+        md = create_markdown(
+            escape=False,
+            plugins=[
+                FencedDirective([CustomizeTableOfContents()]),
+            ],
+        )
+        html = md('# h1\n\n```{toc}\n```\n')
+        self.assertIn('<h1 id="t-1">h1</h1>', html)
+        self.assertIn('<a href="#t-1">h1</a>', html)
 
 
 class TestDirectiveInclude(BaseTestCase):

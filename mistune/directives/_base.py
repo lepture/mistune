@@ -59,11 +59,15 @@ class BaseDirective:
     def parse_method(self, name, block, m, state):
         method = self._methods.get(name)
         if method:
-            token = method(block, m, state)
+            try:
+                token = method(block, m, state)
+            except ValueError as e:
+                token = {'type': 'block_error', 'raw': str(e)}
         else:
+            text = m.group(0)
             token = {
                 'type': 'block_error',
-                'raw': 'Unsupported directive: ' + name,
+                'raw': text,
             }
 
         if isinstance(token, list):

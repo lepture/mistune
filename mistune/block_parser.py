@@ -500,6 +500,7 @@ class BlockParser(Parser):
             state.add_paragraph(text)
             state.cursor = state.cursor_max
 
+
 def _parse_html_to_end(state, end_marker, start_pos):
     marker_pos = state.src.find(end_marker, start_pos)
     if marker_pos == -1:

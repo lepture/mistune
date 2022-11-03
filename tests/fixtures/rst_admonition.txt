@@ -5,7 +5,10 @@
 
     message
 .
-<div class="error">Unsupported directive: hello</div>
+<div class="error"><pre>..  hello:: Warning
+
+    message
+</pre></div>
 ````````````````````````````````
 
 ```````````````````````````````` example

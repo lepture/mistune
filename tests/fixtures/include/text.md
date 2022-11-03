@@ -9,4 +9,4 @@
 
 .. include:: ./hello.md
 
-.. include:: ../directive_toc.txt
+.. include:: ../rst_toc.txt

@@ -16,7 +16,7 @@ from ._base import DirectivePlugin
 from ..toc import normalize_toc_item, render_toc_ul
 
 
-class DirectiveToc(DirectivePlugin):
+class TableOfContents(DirectivePlugin):
     def __init__(self, level=3, heading_id=None):
         self.level = level
 

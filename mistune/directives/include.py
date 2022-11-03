@@ -2,7 +2,7 @@ import os
 from ._base import DirectivePlugin
 
 
-class DirectiveInclude(DirectivePlugin):
+class Include(DirectivePlugin):
     def parse(self, block, m, state):
         source_file = state.env.get('__file__')
         if not source_file:

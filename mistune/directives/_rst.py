@@ -51,7 +51,7 @@ class RstParser(DirectiveParser):
 
 class RstDirective(BaseDirective):
     parser = RstParser
-    DIRECTIVE_PATTERN = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
+    directive_pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
 
     def parse_directive(self, block, m, state):
         m = _directive_re.match(state.src, state.cursor)

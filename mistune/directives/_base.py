@@ -47,7 +47,8 @@ class DirectiveParser:
 
 class BaseDirective:
     parser = DirectiveParser
-    DIRECTIVE_PATTERN = None
+    directive_pattern = None
+    register_before = None
 
     def __init__(self, plugins):
         self._methods = {}
@@ -83,8 +84,9 @@ class BaseDirective:
     def __call__(self, md):
         md.block.register(
             self.parser.NAME,
-            self.DIRECTIVE_PATTERN,
+            self.directive_pattern,
             self.parse_directive,
+            before=self.register_before,
         )
         for plugin in self.__plugins:
             plugin.parser = self.parser

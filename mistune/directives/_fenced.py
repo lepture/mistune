@@ -1,20 +1,3 @@
-"""
-    Fenced Directive Syntax
-    ~~~~~~~~~~~~~~~~~~~~~~~
-
-    This syntax is inspired by markdown-it-docutils, the syntax looks
-    like a fenced code block, except the language code is wrapped with
-    ``{`` and ``}``::
-
-        ```{name} title
-        :option: value
-
-        content
-        ```
-
-    :copyright: (c) Hsiaoming Yang
-"""
-
 import re
 from ._base import DirectiveParser, BaseDirective
 
@@ -45,9 +28,70 @@ class FencedParser(DirectiveParser):
 
 
 class FencedDirective(BaseDirective):
+    """A **fenced** style of directive looks like a fenced code block, it is
+    inspired by markdown-it-docutils. The syntax looks like:
+
+    .. code-block:: text
+
+        ```{directive-name} title
+        :option-key: option value
+        :option-key: option value
+
+        content text here
+        ```
+
+    To use ``FencedDirective``, developers can add it into plugin list in
+    the :class:`Markdown` instance:
+
+    .. code-block:: python
+
+        import mistune
+        from mistune.directives import FencedDirective, Admonition
+
+        md = mistune.create_markdown(plugins=[
+            # ...
+            FencedDirective([Admonition()]),
+        ])
+
+    FencedDirective is using >= 3 backticks or curly-brackets for the fenced
+    syntax. Developers can change it to other characters, e.g. colon:
+
+    .. code-block:: python
+
+            directive = FencedDirective([Admonition()], ':')
+
+    And then the directive syntax would look like:
+
+    .. code-block:: text
+
+        ::::{note} Nesting directives
+        You can nest directives by ensuring the start and end fence matching
+        the length. For instance, in this example, the admonition is started
+        with 4 colons, then it should end with 4 colons.
+
+        You can nest another admonition with other length of colons except 4.
+
+        :::{tip} Longer outermost fence
+        It would be better that you put longer markers for the outer fence,
+        and shorter markers for the inner fence. In this example, we put 4
+        colons outsie, and 3 colons inside.
+        :::
+        ::::
+
+    :param plugins: list of directive plugins
+    :param markers: characters to determine the fence, default is backtick
+                    and curly-bracket
+    """
     parser = FencedParser
-    directive_pattern = r'^(?P<fenced_directive_mark>`{3,}|~{3,})\{[a-zA-Z0-9_-]+\}'
     register_before = 'fenced_code'
+
+    def __init__(self, plugins, markers='`~'):
+        super(FencedDirective, self).__init__(plugins)
+        _marker_pattern = '|'.join(re.escape(c) for c in markers)
+        self.directive_pattern = (
+            r'^(?P<fenced_directive_mark>(?:' + _marker_pattern + r'){3,})'
+            r'\{[a-zA-Z0-9_-]+\}'
+        )
 
     def parse_directive(self, block, m, state):
         marker = m.group('fenced_directive_mark')

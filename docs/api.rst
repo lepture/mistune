@@ -119,3 +119,7 @@ Directives
 ----------
 
 .. module:: mistune.directives
+
+.. autoclass:: RstDirective
+
+.. autoclass:: FencedDirective

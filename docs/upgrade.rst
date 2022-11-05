@@ -8,8 +8,9 @@ Upgrade from v2 to v3
 HTMLRenderer
 ~~~~~~~~~~~~
 
-When customizing renderers, these methods' parameters are changed::
+When customizing renderers, these methods' parameters are changed:
 
+.. code-block:: diff
 
     -    link(self, link, text=None, title=None)
     +    link(self, text, url, title=None)

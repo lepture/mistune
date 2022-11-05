@@ -1,21 +1,3 @@
-"""
-    RST Directive Syntax
-    ~~~~~~~~~~~~~~~~~~~~
-
-    This syntax is inspired by reStructuredText. The syntax is very powerful,
-    that you can define a lot of custom features by your own.
-
-    The syntax looks like::
-
-        .. directive-name:: directive value
-           :option-key: option value
-           :option-key: option value
-
-           full featured markdown text here
-
-    :copyright: (c) Hsiaoming Yang
-"""
-
 import re
 from ._base import DirectiveParser, BaseDirective
 
@@ -50,6 +32,31 @@ class RstParser(DirectiveParser):
 
 
 class RstDirective(BaseDirective):
+    """A RST style of directive syntax is inspired by reStructuredText.
+    The syntax is very powerful that you can define a lot of custom
+    features on your own. The syntax looks like:
+
+    .. code-block:: text
+
+        .. directive-name:: directive value
+           :option-key: option value
+           :option-key: option value
+
+           content text here
+
+    To use ``RstDirective``, developers can add it into plugin list in
+    the :class:`Markdown` instance:
+
+    .. code-block:: python
+
+        import mistune
+        from mistune.directives import RstDirective, Admonition
+
+        md = mistune.create_markdown(plugins=[
+            # ...
+            RstDirective([Admonition()]),
+        ])
+    """
     parser = RstParser
     directive_pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
 

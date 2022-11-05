@@ -37,7 +37,7 @@ class CustomizeTableOfContents(TableOfContents):
         return 't-' + str(i + 1)
 
 
-class TestCustomizeHeadingToc(BaseTestCase):
+class TestCustomizeToc(BaseTestCase):
     def test_rst_toc(self):
         md = create_markdown(
             escape=False,
@@ -57,6 +57,17 @@ class TestCustomizeHeadingToc(BaseTestCase):
             ],
         )
         html = md('# h1\n\n```{toc}\n```\n')
+        self.assertIn('<h1 id="t-1">h1</h1>', html)
+        self.assertIn('<a href="#t-1">h1</a>', html)
+
+    def test_colon_fenced_toc(self):
+        md = create_markdown(
+            escape=False,
+            plugins=[
+                FencedDirective([CustomizeTableOfContents()], ':'),
+            ],
+        )
+        html = md('# h1\n\n:::{toc}\n:::\n')
         self.assertIn('<h1 id="t-1">h1</h1>', html)
         self.assertIn('<a href="#t-1">h1</a>', html)
 

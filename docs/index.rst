@@ -13,8 +13,8 @@ compatible with sane CommonMark rules.
 
 Using old Mistune? Checkout docs:
 
-- https://mistune.readthedocs.io/en/v0.8.4/
-- https://mistune.readthedocs.io/en/v2/
+- https://mistune.lepture.com/en/v0.8.4/
+- https://mistune.lepture.com/en/v2/
 
 Installation
 ------------

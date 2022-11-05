@@ -40,7 +40,9 @@ def get_markdown_parsers():
     parsers = {}
 
     import mistune
-    from mistune.directives import Admonition, DirectiveToc, DirectiveInclude
+    from mistune.directives import (
+        RstDirective, Admonition, TableOfContents, Include,
+    )
 
     parsers[f'mistune ({mistune.__version__})'] = mistune.html
     parsers[f'mistune (slow)'] = mistune.create_markdown(escape=False)
@@ -52,7 +54,11 @@ def get_markdown_parsers():
             'url', 'abbr', 'ruby',
             'strikethrough', 'mark', 'insert', 'subscript', 'superscript',
             'footnotes', 'def_list', 'math', 'table', 'task_lists',
-            Admonition(), DirectiveToc(), DirectiveInclude(),
+            RstDirective([
+                Admonition(),
+                TableOfContents(),
+                Include(),
+            ]),
             'speedup',
         ],
     )

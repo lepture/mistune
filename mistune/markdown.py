@@ -42,7 +42,7 @@ class Markdown:
     def use(self, plugin):
         plugin(self)
 
-    def render_tokens(self, state: BlockState):
+    def render_state(self, state: BlockState):
         data = self._iter_render(state.tokens, state, None)
         if self.renderer:
             return self.renderer(data)
@@ -90,7 +90,7 @@ class Markdown:
         for hook in self.before_render_hooks:
             hook(self, state)
 
-        result = self.render_tokens(state)
+        result = self.render_state(state)
 
         for hook in self.after_render_hooks:
             result = hook(self, result, state)

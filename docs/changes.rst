@@ -6,6 +6,8 @@ Here is the full history of mistune v3.
 Version 3.0.0rc2
 ----------------
 
+**Released on Nov 6, 2022**
+
 * Add **spoiler** plugin
 * Add ``collapse`` option for ``TableOfContents`` directive
 * **Breaking change** on directive design, added fenced directive

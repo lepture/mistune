@@ -87,7 +87,7 @@ def md_footnotes_hook(md, result: str, state: BlockState):
     ]
     state = BlockState()
     state.tokens = [{'type': 'footnotes', 'children': children}]
-    output = md.render_tokens(state)
+    output = md.render_state(state)
     return result + output
 
 

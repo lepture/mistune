@@ -214,5 +214,8 @@ class BaseRenderer(object):
             else:
                 yield func(children)
 
-    def __call__(self, tokens):
+    def render_tokens(self, tokens):
         return ''.join(self._iter_tokens(tokens))
+
+    def __call__(self, tokens):
+        return self.render_tokens(tokens)

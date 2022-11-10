@@ -43,8 +43,9 @@ def parse_table(block, m, state):
             return
         rows.append(row)
 
-    children = [thead, {'type': 'table_body', 'children': rows}]
-    state.append_token({'type': 'table', 'children': children})
+    attrs = {"attrs": { "cols": len(thead["children"])}}
+    children = [thead, {'type': 'table_body', 'children': rows, **attrs }]
+    state.append_token({'type': 'table', 'children': children, **attrs})
     return pos
 
 

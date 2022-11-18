@@ -18,7 +18,7 @@ from .helpers import (
     parse_link_href,
     parse_link_title,
 )
-from .list_parser import parse_list
+from .list_parser import parse_list, LIST_PATTERN
 
 _INDENT_CODE_TRIM = re.compile(r'^ {1,4}', flags=re.M)
 _AXT_HEADING_TRIM = re.compile(r'(\s+|^)#+\s*$')
@@ -70,11 +70,7 @@ class BlockParser(Parser):
         'thematic_break': r'^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$',
         'ref_link': r'^ {0,3}\[(?P<reflink_1>' + LINK_LABEL + r')\]:',
         'block_quote': r'^ {0,3}>(?P<quote_1>.*?)$',
-        'list': (
-            r'^(?P<list_1> {0,3})'
-            r'(?P<list_2>[\*\+-]|\d{1,9}[.)])'
-            r'(?P<list_3>[ \t]*|[ \t].+)$'
-        ),
+        'list': LIST_PATTERN,
         'block_html': BLOCK_HTML,
         'raw_html': RAW_HTML,
     }
@@ -380,38 +376,7 @@ class BlockParser(Parser):
 
     def parse_list(self, m: re.Match, state: BlockState) -> int:
         """Parse tokens for ordered and unordered list."""
-        text = m.group('list_3')
-        if not text.strip():
-            # Example 285
-            # an empty list item cannot interrupt a paragraph
-            end_pos = state.append_paragraph()
-            if end_pos:
-                return end_pos
-
-        marker = m.group('list_2')
-        ordered = len(marker) > 1
-        token = {
-            'type': 'list',
-            'children': [],
-            'tight': True,
-            'attrs': {
-                'ordered': ordered,
-                'depth': state.depth(),
-            },
-        }
-        if ordered:
-            start = int(marker[:-1])
-            if start != 1:
-                # Example 304
-                # we allow only lists starting with 1 to interrupt paragraphs
-                end_pos = state.append_paragraph()
-                if end_pos:
-                    return end_pos
-                token['attrs']['start'] = start
-
-        state.cursor = m.end() + 1
-        groups = (m.group('list_1'), marker, text)
-        return parse_list(self, token, groups, state)
+        return parse_list(self, m, state)
 
     def parse_block_html(self, m: re.Match, state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)

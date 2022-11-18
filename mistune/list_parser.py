@@ -1,4 +1,5 @@
 import re
+from .core import BlockState
 from .util import (
     strip_end,
     expand_tab,
@@ -6,18 +7,57 @@ from .util import (
 )
 # because list is complex, split list parser in a new file
 
+LIST_PATTERN = (
+    r'^(?P<list_1> {0,3})'
+    r'(?P<list_2>[\*\+-]|\d{1,9}[.)])'
+    r'(?P<list_3>[ \t]*|[ \t].+)$'
+)
+
 _LINE_HAS_TEXT = re.compile(r'( *)\S')
 
 
-def parse_list(block, token, groups, state):
-    depth = token['attrs']['depth']
+def parse_list(block, m: re.Match, state: BlockState) -> int:
+    """Parse tokens for ordered and unordered list."""
+    text = m.group('list_3')
+    if not text.strip():
+        # Example 285
+        # an empty list item cannot interrupt a paragraph
+        end_pos = state.append_paragraph()
+        if end_pos:
+            return end_pos
+
+    marker = m.group('list_2')
+    ordered = len(marker) > 1
+    depth = state.depth()
+    token = {
+        'type': 'list',
+        'children': [],
+        'tight': True,
+        'attrs': {
+            'ordered': ordered,
+            'depth': depth,
+        },
+    }
+    if ordered:
+        start = int(marker[:-1])
+        if start != 1:
+            # Example 304
+            # we allow only lists starting with 1 to interrupt paragraphs
+            end_pos = state.append_paragraph()
+            if end_pos:
+                return end_pos
+            token['attrs']['start'] = start
+
+    state.cursor = m.end() + 1
+    groups = (m.group('list_1'), marker, text)
+
     if depth >= block.max_nested_level - 1:
         rules = list(block.list_rules)
         rules.remove('list')
     else:
         rules = block.list_rules
 
-    bullet = _get_list_bullet(groups[1][-1])
+    bullet = _get_list_bullet(marker[-1])
     while groups:
         groups = _parse_list_item(block, bullet, groups, token, state, rules)
 

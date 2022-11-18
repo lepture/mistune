@@ -1,0 +1,250 @@
+# RSTRenderer
+
+## inline
+
+```````````````````````````````` example
+this is _em_, **strong**, and `code`
+.
+this is *em*, **strong**, and ``code``
+````````````````````````````````
+
+```````````````````````````````` example
+| escape |
+.
+\| escape \|
+````````````````````````````````
+
+## links
+
+```````````````````````````````` example
+this is [link][] and [link](/foo)
+
+[link]: /url
+.
+this is `link </url>`__ and `link </foo>`__
+````````````````````````````````
+
+## images
+
+```````````````````````````````` example
+this is inline ![alt _text_](/foo)
+.
+this is inline |img-0|
+
+.. |img-0| image:: /foo
+   :alt: alt *text*
+````````````````````````````````
+
+```````````````````````````````` example
+this is figure
+
+![alt _text_](/foo)
+.
+this is figure
+
+.. figure:: /foo
+
+   alt *text*
+````````````````````````````````
+
+```````````````````````````````` example
+this is figure
+
+![alt _text_](/foo "title")
+.
+this is figure
+
+.. figure:: /foo
+   :alt: title
+
+   alt *text*
+````````````````````````````````
+
+
+## html
+
+```````````````````````````````` example
+ignore inline html <a>text</a>
+
+but show block html
+
+<div>hi</div>
+.
+ignore inline html text
+
+but show block html
+
+.. raw:: html
+
+   <div>hi</div>
+````````````````````````````````
+
+## line break
+
+```````````````````````````````` example
+hello  
+world
+.
+| hello
+| world
+````````````````````````````````
+
+## heading
+
+```````````````````````````````` example
+# h1
+## h2
+### h3
+#### h4
+##### h5
+###### h6
+.
+h1
+==
+
+h2
+--
+
+h3
+~~
+
+h4
+^^
+
+h5
+""
+
+h6
+''
+````````````````````````````````
+
+## thematic break
+
+```````````````````````````````` example
+hi
+***
+.
+hi
+
+--------------
+````````````````````````````````
+
+## code
+
+```````````````````````````````` example
+start
+
+    def foo():
+        pass
+
+end
+.
+start
+
+::
+
+   def foo():
+       pass
+
+end
+````````````````````````````````
+
+```````````````````````````````` example
+start
+
+```py
+def foo():
+    pass
+```
+
+end
+.
+start
+
+.. code:: py
+
+   def foo():
+       pass
+
+end
+````````````````````````````````
+
+
+## quote
+
+```````````````````````````````` example
+> quote
+.
+   quote
+````````````````````````````````
+
+```````````````````````````````` example
+hello
+
+> quote
+.
+hello
+
+   quote
+````````````````````````````````
+
+```````````````````````````````` example
+> hello
+
+> quote
+.
+   hello
+
+..
+
+   quote
+````````````````````````````````
+
+## list
+
+```````````````````````````````` example
+- list
++ list
+.
+- list
+
++ list
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+  item 2
+.
+- item 1 item 2
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+
+  item 2
+-  item 3
+.
+- item 1
+
+  item 2
+
+- item 3
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+  1. item 2
+.
+- item 1
+  1. item 2
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+
+  1. item 2
+.
+- item 1
+
+  1. item 2
+````````````````````````````````

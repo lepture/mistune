@@ -22,6 +22,9 @@ class RSTRenderer(BaseRenderer):
     def iter_tokens(self, tokens, state):
         prev = None
         for tok in tokens:
+            # ignore blank line
+            if tok['type'] == 'blank_line':
+                continue
             tok['prev'] = prev
             prev = tok
             yield self.render_token(tok, state)
@@ -29,7 +32,8 @@ class RSTRenderer(BaseRenderer):
     def __call__(self, tokens, state: BlockState):
         state.env['inline_images'] = []
         out = self.render_tokens(tokens, state)
-        out += '\n\n'.join(self.render_referrences(state))
+        # special handle for line breaks
+        out += '\n\n'.join(self.render_referrences(state)) + '\n'
         return strip_end(out)
 
     def render_referrences(self, state: BlockState):
@@ -45,7 +49,8 @@ class RSTRenderer(BaseRenderer):
         return self.render_tokens(children, state)
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
-        return safe_entity(token['raw'])
+        text = safe_entity(token['raw'])
+        return text.replace('|', r'\|')
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return '*' + self.render_children(token, state) + '*'
@@ -65,13 +70,13 @@ class RSTRenderer(BaseRenderer):
         return '|' + self.INLINE_IMAGE_PREFIX + str(index) + '|'
 
     def codespan(self, token: Dict[str, Any], state: BlockState) -> str:
-        return '``' + self.render_children(token, state) + '``'
+        return '``' + token['raw'] + '``'
 
     def linebreak(self, token: Dict[str, Any], state: BlockState) -> str:
-        return '\n\n'
+        return '<linebreak>'
 
     def softbreak(self, token: Dict[str, Any], state: BlockState) -> str:
-        return '\n'
+        return ' '
 
     def inline_html(self, token: Dict[str, Any], state: BlockState) -> str:
         # rst does not support inline html
@@ -90,6 +95,9 @@ class RSTRenderer(BaseRenderer):
             text += '\n\n' + indent(alt, '   ')
         else:
             text = self.render_tokens(children, state)
+            lines = text.split('<linebreak>')
+            if len(lines) > 1:
+                text = '\n'.join('| ' + line for line in lines)
         return text + '\n\n'
 
     def heading(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -97,9 +105,6 @@ class RSTRenderer(BaseRenderer):
         text = self.render_children(token, state)
         marker = self.HEADING_MARKERS[attrs['level']]
         return text + '\n' + marker * len(text) + '\n\n'
-
-    def blank_line(self, token: Dict[str, Any], state: BlockState) -> str:
-        return ''
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:
         return '--------------\n\n'
@@ -110,18 +115,24 @@ class RSTRenderer(BaseRenderer):
     def block_code(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token.get('attrs', {})
         info = attrs.get('info')
+        code = indent(token['raw'], '   ')
         if info:
             lang = info.split()[0]
-            return '.. code:: ' + lang + '\n\n' + indent(token['raw'], '   ') + '\n\n'
+            return '.. code:: ' + lang + '\n\n' + code + '\n'
         else:
-            return '::\n\n' + indent(token['raw'], '    ') + '\n\n'
-        return ''
+            return '::\n\n' + code + '\n\n'
 
     def block_quote(self, token: Dict[str, Any], state: BlockState) -> str:
         text = indent(self.render_children(token, state), '   ')
         prev = token['prev']
-        if prev and prev['type'] != 'paragraph':
-            text = '.. \n\n' + text
+        ignore_blocks = (
+            'paragraph',
+            'thematic_break',
+            'linebreak',
+            'heading',
+        )
+        if prev and prev['type'] not in ignore_blocks:
+            text = '..\n\n' + text
         return text
 
     def block_html(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -152,6 +163,8 @@ class RSTRenderer(BaseRenderer):
         for tok in item['children']:
             if tok['type'] == 'list':
                 tok['parent'] = parent
+            elif tok['type'] == 'blank_line':
+                continue
             text += self.render_token(tok, state)
 
         lines = text.splitlines()

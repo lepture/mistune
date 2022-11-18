@@ -52,9 +52,8 @@ class Markdown:
                 tok['children'] = list(children)
             elif 'text' in tok:
                 text = tok.pop('text')
+                # process inline text
                 tok['children'] = self.inline(text.strip(), state.env)
-
-            self.block.iter_token_hook(tok, parent)
             yield tok
 
     def parse(self, s: str, state: Optional[BlockState]=None):

@@ -9,24 +9,37 @@ from .util import (
 _LINE_HAS_TEXT = re.compile(r'( *)\S')
 
 
-def parse_list(block, attrs, groups, state):
-    depth = state.depth()
-    attrs['depth'] = depth
+def parse_list(block, token, groups, state):
+    depth = token['attrs']['depth']
     if depth >= block.max_nested_level - 1:
         rules = list(block.list_rules)
         rules.remove('list')
     else:
         rules = block.list_rules
 
-    token = {
-        'type': 'list',
-        'children': [],
-        'attrs': attrs,
-    }
     bullet = _get_list_bullet(groups[1][-1])
     while groups:
         groups = _parse_list_item(block, bullet, groups, token, state, rules)
-    return token
+
+    _transform_tight_list(token)
+    end_pos = token.pop('_end_pos', None)
+    if end_pos:
+        state.prepend_token(token)
+        return end_pos
+
+    state.append_token(token)
+    return state.cursor
+
+
+def _transform_tight_list(token):
+    if token['tight']:
+        # reset tight list item
+        for list_item in token['children']:
+            for tok in list_item['children']:
+                if tok['type'] == 'paragraph':
+                    tok['type'] = 'block_text'
+                elif tok['type'] == 'list':
+                    _transform_tight_list(tok)
 
 
 def _parse_list_item(block, bullet, groups, token, state, rules):
@@ -83,7 +96,7 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
             tok_type = m.lastgroup
             if tok_type == 'list_item':
                 if prev_blank_line:
-                    token['attrs']['tight'] = False
+                    token['tight'] = False
                 next_group = (
                     m.group('listitem_1'),
                     m.group('listitem_2'),
@@ -108,8 +121,8 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
 
     block.parse(child, rules)
 
-    if token['attrs']['tight'] and _is_loose_list(child.tokens):
-        token['attrs']['tight'] = False
+    if token['tight'] and _is_loose_list(child.tokens):
+        token['tight'] = False
 
     token['children'].append({
         'type': 'list_item',

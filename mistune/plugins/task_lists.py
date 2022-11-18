@@ -10,7 +10,7 @@ def task_lists_hook(md, state):
     return _rewrite_all_list_items(state.tokens)
 
 
-def render_task_list_item(renderer, text, checked=False, **attrs):
+def render_task_list_item(renderer, text, checked=False):
     checkbox = (
         '<input class="task-list-item-checkbox" '
         'type="checkbox" disabled'
@@ -48,7 +48,7 @@ def _rewrite_all_list_items(tokens):
     for tok in tokens:
         if tok['type'] == 'list_item':
             _rewrite_list_item(tok)
-        if 'children' in tok.keys():
+        if 'children' in tok:
             _rewrite_all_list_items(tok['children'])
     return tokens
 
@@ -64,7 +64,4 @@ def _rewrite_list_item(tok):
             first_child['text'] = text[m.end():]
 
             tok['type'] = 'task_list_item'
-            if mark == '[ ]':
-                tok['attrs']['checked'] = False
-            else:
-                tok['attrs']['checked'] = True
+            tok['attrs'] = {'checked': mark != '[ ]'}

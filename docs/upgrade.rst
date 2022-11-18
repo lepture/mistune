@@ -25,7 +25,7 @@ When customizing renderers, these methods' parameters are changed:
     +    list(self, text, ordered, **attrs)
 
     -    list_item(self, text, level)
-    +    list_item(self, text, **attrs)
+    +    list_item(self, text)
 
     -    table_cell(self, text, align=None, is_head=False)
     +    table_cell(self, text, align=None, head=False)

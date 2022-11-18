@@ -390,7 +390,15 @@ class BlockParser(Parser):
 
         marker = m.group('list_2')
         ordered = len(marker) > 1
-        attrs = {'ordered': ordered, 'tight': True}
+        token = {
+            'type': 'list',
+            'children': [],
+            'tight': True,
+            'attrs': {
+                'ordered': ordered,
+                'depth': state.depth(),
+            },
+        }
         if ordered:
             start = int(marker[:-1])
             if start != 1:
@@ -399,22 +407,11 @@ class BlockParser(Parser):
                 end_pos = state.append_paragraph()
                 if end_pos:
                     return end_pos
-                attrs['start'] = start
+                token['attrs']['start'] = start
 
         state.cursor = m.end() + 1
         groups = (m.group('list_1'), marker, text)
-        token = parse_list(self, attrs, groups, state)
-        # add attrs to list item token
-        for tok in token['children']:
-            tok['attrs'] = {'depth': attrs['depth'], 'tight': attrs['tight']}
-
-        end_pos = token.pop('_end_pos', None)
-        if end_pos:
-            state.prepend_token(token)
-            return end_pos
-
-        state.append_token(token)
-        return state.cursor
+        return parse_list(self, token, groups, state)
 
     def parse_block_html(self, m: re.Match, state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)
@@ -466,12 +463,6 @@ class BlockParser(Parser):
         if (open_tag and _OPEN_TAG_END.match(state.src, start_pos, end_pos)) or \
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)
-
-    def iter_token_hook(self, token: Dict[str, Any], parent: Optional[Dict[str, Any]]):
-        if token['type'] == 'paragraph' and parent:
-            attrs = parent.get('attrs')
-            if attrs and attrs.get('tight'):
-                token['type'] = 'block_text'
 
     def parse(self, state: BlockState, rules: Optional[List[str]]=None) -> None:
         sc = self.compile_sc(rules)

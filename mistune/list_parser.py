@@ -33,9 +33,10 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
         'type': 'list',
         'children': [],
         'tight': True,
+        'bullet': marker[-1],
+        'depth': depth,
         'attrs': {
             'ordered': ordered,
-            'depth': depth,
         },
     }
     if ordered:
@@ -61,10 +62,11 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
     while groups:
         groups = _parse_list_item(block, bullet, groups, token, state, rules)
 
-    _transform_tight_list(token)
     end_pos = token.pop('_end_pos', None)
+    _transform_tight_list(token)
     if end_pos:
-        state.prepend_token(token)
+        index = token.pop('_tok_index')
+        state.tokens.insert(index, token)
         return end_pos
 
     state.append_token(token)
@@ -144,8 +146,10 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
                 )
                 state.cursor = m.end() + 1
                 break
+            tok_index = len(state.tokens)
             end_pos = block.parse_method(m, state)
             if end_pos:
+                token['_tok_index'] = tok_index
                 token['_end_pos'] = end_pos
                 break
 

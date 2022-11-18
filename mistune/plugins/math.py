@@ -21,7 +21,7 @@ def render_block_math(renderer, text):
 
 
 def render_inline_math(renderer, text):
-    return '<span class="math">$' + text + '$</span>'
+    return r'<span class="math">\(' + text + r'\)</span>'
 
 
 def math(md):

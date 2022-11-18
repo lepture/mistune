@@ -136,7 +136,7 @@ class BlockParser(Parser):
         code = expand_leading_tab(code)
         code = _INDENT_CODE_TRIM.sub('', code)
         code = code.strip('\n')
-        state.append_token({'type': 'block_code', 'raw': code})
+        state.append_token({'type': 'block_code', 'raw': code, 'style': 'indent'})
         return m.end()
 
     def parse_fenced_code(self, m: re.Match, state: BlockState) -> Optional[int]:
@@ -179,7 +179,7 @@ class BlockParser(Parser):
             _trim_pattern = re.compile('^ {0,' + str(len(spaces)) + '}', re.M)
             code = _trim_pattern.sub('', code)
 
-        token = {'type': 'block_code', 'raw': code, 'fenced': True}
+        token = {'type': 'block_code', 'raw': code, 'style': 'fenced', 'marker': marker}
         if info:
             info = unescape_char(info)
             token['attrs'] = {'info': safe_entity(info.strip())}
@@ -196,7 +196,7 @@ class BlockParser(Parser):
         if text:
             text = _AXT_HEADING_TRIM.sub('', text)
 
-        token = {'type': 'heading', 'text': text, 'attrs': {'level': level}}
+        token = {'type': 'heading', 'text': text, 'attrs': {'level': level}, 'style': 'axt'}
         state.append_token(token)
         return m.end() + 1
 
@@ -212,6 +212,7 @@ class BlockParser(Parser):
         if last_token and last_token['type'] == 'paragraph':
             level = 1 if m.group('setext_1') == '=' else 2
             last_token['type'] = 'heading'
+            last_token['style'] = 'setext'
             last_token['attrs'] = {'level': level}
             return m.end() + 1
 

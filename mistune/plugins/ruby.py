@@ -46,7 +46,7 @@ def _parse_ruby_link(inline, state, pos, tokens):
         if link_pos:
             state.append_token({
                 'type': 'link',
-                'children': inline.render_tokens(tokens),
+                'children': tokens,
                 'attrs': attrs,
             })
             return link_pos
@@ -61,7 +61,7 @@ def _parse_ruby_link(inline, state, pos, tokens):
             if attrs:
                 state.append_token({
                     'type': 'link',
-                    'children': inline.render_tokens(tokens),
+                    'children': tokens,
                     'attrs': attrs,
                 })
             else:

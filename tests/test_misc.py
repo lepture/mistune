@@ -79,6 +79,7 @@ class TestMiscCases(TestCase):
                 'type': 'heading',
                 'children': [{'type': 'text', 'raw': 'h1'}],
                 'attrs': {'level': 1},
+                'style': 'axt',
             },
             {'type': 'blank_line'},
             {

@@ -25,7 +25,7 @@ def parse_ref_abbr(block, m, state):
     return m.end() + 1
 
 
-def process_text(self, text, state):
+def process_text(inline, text, state):
     ref = state.env.get('ref_abbrs')
     if not ref:
         return state.append_token({'type': 'text', 'raw': text})
@@ -55,7 +55,7 @@ def process_text(self, text, state):
         label = m.group(0)
         state.append_token({
             'type': 'abbr',
-            'children': self.render_tokens([{'type': 'text', 'raw': label}]),
+            'children': [{'type': 'text', 'raw': label}],
             'attrs': {'title': ref[label]}
         })
         pos = m.end()

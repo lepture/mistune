@@ -93,10 +93,9 @@ class InlineParser(Parser):
         'linebreak',
     )
 
-    def __init__(self, renderer, hard_wrap=False):
+    def __init__(self, hard_wrap=False):
         super(InlineParser, self).__init__()
 
-        self.renderer = renderer
         self.hard_wrap = hard_wrap
         # lazy add linebreak
         if hard_wrap:
@@ -153,7 +152,8 @@ class InlineParser(Parser):
                 # standard link [text](<url> "title")
                 attrs, pos2 = parse_link(state.src, end_pos + 1)
                 if pos2:
-                    self._add_link_token(is_image, text, attrs, state)
+                    token = self.__parse_link_token(is_image, text, attrs, state)
+                    state.append_token(token)
                     return pos2
 
             elif c == '[':
@@ -171,10 +171,12 @@ class InlineParser(Parser):
         key = unikey(label)
         attrs = ref_links.get(key)
         if attrs:
-            self._add_link_token(is_image, text, attrs, state)
+            token = self.__parse_link_token(is_image, text, attrs, state)
+            token['ref'] = label
+            state.append_token(token)
             return end_pos
 
-    def _add_link_token(self, is_image, text, attrs, state):
+    def __parse_link_token(self, is_image, text, attrs, state):
         new_state = state.copy()
         new_state.src = text
         if is_image:
@@ -191,7 +193,7 @@ class InlineParser(Parser):
                 'children': self.render(new_state),
                 'attrs': attrs,
             }
-        state.append_token(token)
+        return token
 
     def parse_auto_link(self, m: re.Match, state: InlineState) -> int:
         text = m.group(0)
@@ -217,10 +219,9 @@ class InlineParser(Parser):
         return pos
 
     def _add_auto_link(self, url, text, state):
-        children = self.render_tokens([{'type': 'text', 'raw': text}])
         state.append_token({
             'type': 'link',
-            'children': children,
+            'children': [{'type': 'text', 'raw': text}],
             'attrs': {'url': escape_url(url)},
         })
 
@@ -263,10 +264,10 @@ class InlineParser(Parser):
             new_state.in_emphasis = True
             new_state.in_strong = True
 
-            children = self.render_tokens([{
+            children = [{
                 'type': 'strong',
                 'children': self.render(new_state)
-            }])
+            }]
             state.append_token({
                 'type': 'emphasis',
                 'children': children,
@@ -376,12 +377,7 @@ class InlineParser(Parser):
 
     def render(self, state: InlineState):
         self.parse(state)
-        return self.render_tokens(state.tokens)
-
-    def render_tokens(self, tokens: List[Dict[str, Any]]):
-        if self.renderer:
-            return self.renderer(tokens)
-        return list(tokens)
+        return state.tokens
 
     def __call__(self, s, env):
         state = self.state_cls(env)

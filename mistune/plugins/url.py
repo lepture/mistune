@@ -11,10 +11,9 @@ def parse_url_link(inline, m, state):
     if state.in_link:
         inline.process_text(text, state)
         return pos
-    children = inline.render_tokens([{'type': 'text', 'raw': text}])
     state.append_token({
         'type': 'link',
-        'children': children,
+        'children': [{'type': 'text', 'raw': text}],
         'attrs': {'url': escape_url(text)},
     })
     return pos

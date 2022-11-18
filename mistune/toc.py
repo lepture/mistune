@@ -45,7 +45,8 @@ def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
 
 def normalize_toc_item(md, token):
     text = token['text']
-    html = md.inline(text, {})
+    tokens = md.inline(text, {})
+    html = md.renderer(tokens, {})
     text = striptags(html)
     attrs = token['attrs']
     return attrs['level'], attrs['id'], text

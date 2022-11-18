@@ -193,29 +193,16 @@ class BaseRenderer(object):
                 raise AttributeError('No renderer "{!r}"'.format(name))
             return method
 
-    def _iter_tokens(self, tokens):
+    def render_token(self, token, state):
+        func = self._get_method(token['type'])
+        return func(token, state)
+
+    def iter_tokens(self, tokens, state):
         for tok in tokens:
-            func = self._get_method(tok['type'])
+            yield self.render_token(tok, state)
 
-            attrs = tok.get('attrs')
-            if 'raw' in tok:
-                children = tok['raw']
-            elif 'children' in tok:
-                children = tok['children']
-            else:
-                if attrs:
-                    yield func(**attrs)
-                else:
-                    yield func()
-                continue
+    def render_tokens(self, tokens, state):
+        return ''.join(self.iter_tokens(tokens, state))
 
-            if attrs:
-                yield func(children, **attrs)
-            else:
-                yield func(children)
-
-    def render_tokens(self, tokens):
-        return ''.join(self._iter_tokens(tokens))
-
-    def __call__(self, tokens):
-        return self.render_tokens(tokens)
+    def __call__(self, tokens, state):
+        return self.render_tokens(tokens, state)

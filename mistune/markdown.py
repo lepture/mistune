@@ -23,8 +23,9 @@ class Markdown:
             block = BlockParser()
 
         if inline is None:
-            inline = InlineParser(renderer)
+            inline = InlineParser()
 
+        self.renderer = renderer
         self.block = block
         self.inline = inline
         self.before_parse_hooks = []
@@ -35,32 +36,23 @@ class Markdown:
             for plugin in plugins:
                 plugin(self)
 
-    @property
-    def renderer(self):
-        return self.inline.renderer
-
     def use(self, plugin):
         plugin(self)
 
     def render_state(self, state: BlockState):
         data = self._iter_render(state.tokens, state, None)
         if self.renderer:
-            return self.renderer(data)
+            return self.renderer(data, state)
         return list(data)
 
     def _iter_render(self, tokens, state, parent):
         for tok in tokens:
             if 'children' in tok:
-                data = self._iter_render(tok['children'], state, tok)
-                if self.renderer:
-                    children = self.renderer(data)
-                else:
-                    children = list(data)
-                tok['children'] = children
+                children = self._iter_render(tok['children'], state, tok)
+                tok['children'] = list(children)
             elif 'text' in tok:
                 text = tok.pop('text')
-                children = self.inline(text.strip(), state.env)
-                tok['children'] = children
+                tok['children'] = self.inline(text.strip(), state.env)
 
             self.block.iter_token_hook(tok, parent)
             yield tok

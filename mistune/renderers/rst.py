@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from textwrap import indent
+from ._list import render_list
 from ..core import BaseRenderer, BlockState
 from ..util import safe_entity, strip_end
 
@@ -143,56 +144,4 @@ class RSTRenderer(BaseRenderer):
         return ''
 
     def list(self, token: Dict[str, Any], state: BlockState) -> str:
-        attrs = token['attrs']
-        if attrs['ordered']:
-            children = self._render_ordered_list(token, state)
-        else:
-            children = self._render_unordered_list(token, state)
-
-        text = ''.join(children)
-        parent = token.get('parent')
-        if parent:
-            if parent['tight']:
-                return text
-            return text + '\n'
-        return strip_end(text) + '\n'
-
-    def _render_list_item(self, parent, item, state):
-        leading = parent['leading']
-        text = ''
-        for tok in item['children']:
-            if tok['type'] == 'list':
-                tok['parent'] = parent
-            elif tok['type'] == 'blank_line':
-                continue
-            text += self.render_token(tok, state)
-
-        lines = text.splitlines()
-        text = lines[0] + '\n'
-        prefix = ' ' * len(leading)
-        for line in lines[1:]:
-            if line:
-                text += prefix + line + '\n'
-            else:
-                text += '\n'
-        return leading + text
-
-    def _render_ordered_list(self, token, state):
-        attrs = token['attrs']
-        start = attrs.get('start', 1)
-        for item in token['children']:
-            leading = str(start) + token['bullet'] + ' '
-            parent = {
-                'leading': leading,
-                'tight': token['tight'],
-            }
-            yield self._render_list_item(parent, item, state)
-            start += 1
-
-    def _render_unordered_list(self, token, state):
-        parent = {
-            'leading': token['bullet'] + ' ',
-            'tight': token['tight'],
-        }
-        for item in token['children']:
-            yield self._render_list_item(parent, item, state)
+        return render_list(self, token, state)

@@ -1,5 +1,7 @@
 import sys
 import argparse
+from .renderers.rst import RSTRenderer
+from .renderers.markdown import MarkdownRenderer
 from . import (
     create_markdown,
     __version__ as version
@@ -12,10 +14,17 @@ def _md(args):
     else:
         # default plugins
         plugins = ['strikethrough', 'footnotes', 'table', 'speedup']
+
+    if args.renderer == 'rst':
+        renderer = RSTRenderer()
+    elif args.renderer == 'markdown':
+        renderer = MarkdownRenderer()
+    else:
+        renderer = args.renderer
     return create_markdown(
         escape=args.escape,
         hard_wrap=args.hardwrap,
-        renderer=args.renderer,
+        renderer=renderer,
         plugins=plugins,
     )
 

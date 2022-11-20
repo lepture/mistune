@@ -1,12 +1,17 @@
 from mistune import create_markdown
 from mistune.renderers.rst import RSTRenderer
+from mistune.renderers.markdown import MarkdownRenderer
 from tests import BaseTestCase
 
 
-class TestRSTRenderer(BaseTestCase):
-    @staticmethod
-    def parse(text):
-        md = create_markdown(renderer=RSTRenderer())
-        return md(text)
+def load_renderer(renderer):
+    class TestRenderer(BaseTestCase):
+        parse = create_markdown(renderer=renderer)
 
-TestRSTRenderer.load_fixtures('renderer_rst.txt')
+    name = renderer.NAME
+    TestRenderer.load_fixtures('renderer_' + name + '.txt')
+    globals()["TestRenderer" + name.title()] = TestRenderer
+
+
+load_renderer(RSTRenderer())
+load_renderer(MarkdownRenderer())

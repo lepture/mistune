@@ -17,9 +17,9 @@ class MarkdownRenderer(BaseRenderer):
 
     def render_referrences(self, state: BlockState):
         ref_links = state.env['ref_links']
-        for label in ref_links:
-            attrs = ref_links[label]
-            text = '[' + label + ']: ' + attrs['url']
+        for key in ref_links:
+            attrs = ref_links[key]
+            text = '[' + attrs['label'] + ']: ' + attrs['url']
             title = attrs.get('title')
             if title:
                 text += ' "' + title + '"'
@@ -39,11 +39,11 @@ class MarkdownRenderer(BaseRenderer):
         return '**' + self.render_children(token, state) + '**'
 
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
-        ref = token.get('ref')
+        label = token.get('label')
         text = self.render_children(token, state)
         out = '[' + text + ']'
-        if ref:
-            return out + '[' + ref + ']'
+        if label:
+            return out + '[' + label + ']'
 
         out += '('
         attrs = token['attrs']
@@ -73,7 +73,6 @@ class MarkdownRenderer(BaseRenderer):
         return ''
 
     def inline_html(self, token: Dict[str, Any], state: BlockState) -> str:
-        # rst does not support inline html
         return token['raw']
 
     def paragraph(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -113,4 +112,4 @@ class MarkdownRenderer(BaseRenderer):
         return ''
 
     def list(self, token: Dict[str, Any], state: BlockState) -> str:
-        return parse_list(self, token, state)
+        return render_list(self, token, state)

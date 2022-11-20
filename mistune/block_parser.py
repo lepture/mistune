@@ -239,7 +239,8 @@ class BlockParser(Parser):
         if end_pos:
             return end_pos
 
-        key = unikey(m.group('reflink_1'))
+        label = m.group('reflink_1')
+        key = unikey(label)
         if not key:
             return
 
@@ -276,10 +277,10 @@ class BlockParser(Parser):
 
         if key not in state.env['ref_links']:
             href = unescape_char(href)
-            attrs = {'url': escape_url(href)}
+            data = {'url': escape_url(href), 'label': label}
             if title:
-                attrs['title'] = safe_entity(title)
-            state.env['ref_links'][key] = attrs
+                data['title'] = safe_entity(title)
+            state.env['ref_links'][key] = data
         return end_pos
 
     def extract_block_quote(self, m: re.Match, state: BlockState) -> Tuple[str, int]:

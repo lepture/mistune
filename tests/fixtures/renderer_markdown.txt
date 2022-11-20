@@ -1,0 +1,215 @@
+# MarkdownRenderer
+
+
+## inline
+
+```````````````````````````````` example
+this is _em_, **strong**, and `code`
+.
+this is *em*, **strong**, and `code`
+````````````````````````````````
+
+## links
+
+```````````````````````````````` example
+[link], [link][], [text][link], [link](/foo), [link](/foo "title")
+
+[link]: /url
+.
+[link][link], [link][link], [text][link], [link](/foo), [link](/foo "title")
+
+[link]: /url
+````````````````````````````````
+
+```````````````````````````````` example
+[link], [link](https://foo(bar "title")
+
+[link]: /url "title"
+.
+[link][link], [link](<https://foo(bar> "title")
+
+[link]: /url "title"
+````````````````````````````````
+
+## images
+
+```````````````````````````````` example
+[link]: /url
+
+![link], ![link][], ![alt][link]
+.
+![link][link], ![link][link], ![alt][link]
+
+[link]: /url
+````````````````````````````````
+
+## linebreak
+
+```````````````````````````````` example
+foo\
+bar
+.
+foo  
+bar
+````````````````````````````````
+
+## html
+
+```````````````````````````````` example
+inline html <a>text</a>
+
+and block html
+
+<div>hi</div>
+.
+inline html <a>text</a>
+
+and block html
+
+<div>hi</div>
+````````````````````````````````
+
+## heading
+
+```````````````````````````````` example
+#     h1
+##    h2
+###   h3
+####  h4
+##### h5
+###### h6
+
+h1
+==
+.
+# h1
+
+## h2
+
+### h3
+
+#### h4
+
+##### h5
+
+###### h6
+
+# h1
+````````````````````````````````
+
+## thematic break
+
+```````````````````````````````` example
+hi
+***
+.
+hi
+
+***
+````````````````````````````````
+
+## code
+
+```````````````````````````````` example
+start
+
+    def foo():
+        pass
+
+end
+.
+start
+
+```
+def foo():
+    pass
+```
+
+end
+````````````````````````````````
+
+```````````````````````````````` example
+start
+```py
+def foo():
+    pass
+```
+end
+.
+start
+
+```py
+def foo():
+    pass
+```
+
+end
+````````````````````````````````
+
+
+## quote
+
+```````````````````````````````` example
+>  quote
+.
+> quote
+````````````````````````````````
+
+```````````````````````````````` example
+hello
+> quote
+.
+hello
+
+> quote
+````````````````````````````````
+
+## list
+
+```````````````````````````````` example
+- list
++ list
+.
+- list
+
++ list
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+  item 2
+.
+- item 1
+  item 2
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+
+  item 2
+-  item 3
+.
+- item 1
+
+  item 2
+
+- item 3
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+  1. item 2
+.
+- item 1
+  1. item 2
+````````````````````````````````
+
+```````````````````````````````` example
+- item 1
+
+  2. item 2
+.
+- item 1
+
+  2. item 2
+````````````````````````````````

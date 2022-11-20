@@ -169,10 +169,12 @@ class InlineParser(Parser):
 
         ref_links = state.env['ref_links']
         key = unikey(label)
-        attrs = ref_links.get(key)
-        if attrs:
+        env = ref_links.get(key)
+        if env:
+            attrs = {'url': env['url'], 'title': env.get('title')}
             token = self.__parse_link_token(is_image, text, attrs, state)
-            token['ref'] = label
+            token['ref'] = key
+            token['label'] = label
             state.append_token(token)
             return end_pos
 

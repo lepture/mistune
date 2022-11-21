@@ -28,7 +28,10 @@ def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
         headings = []
 
         for tok in state.tokens:
-            level = tok['attrs']['level']
+            try:
+                level = tok['attrs']['level']
+            except:
+                pass
             if tok['type'] == 'heading' and min_level <= level <= max_level:
                 headings.append(tok)
 

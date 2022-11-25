@@ -31,6 +31,20 @@ this is *em*, **strong**, and `code`
 [link]: /url "title"
 ````````````````````````````````
 
+```````````````````````````````` example
+[https://lepture.com](https://lepture.com)
+
+<https://lepture.com>
+
+<demo@example.com> [demo@example.com](mailto:demo@example.com)
+.
+<https://lepture.com>
+
+<https://lepture.com>
+
+<demo@example.com> <demo@example.com>
+````````````````````````````````
+
 ## images
 
 ```````````````````````````````` example
@@ -144,6 +158,56 @@ def foo():
 ```
 
 end
+````````````````````````````````
+
+```````````````````````````````` example
+indent code
+
+    markdown
+    ```
+    fenced
+.
+indent code
+
+~~~
+markdown
+```
+fenced
+~~~
+````````````````````````````````
+
+```````````````````````````````` example
+indent code
+
+    markdown
+    ~~~
+    fenced
+.
+indent code
+
+```
+markdown
+~~~
+fenced
+```
+````````````````````````````````
+
+```````````````````````````````` example
+indent code
+
+    markdown
+    ```
+    fenced
+    ~~~
+.
+indent code
+
+````
+markdown
+```
+fenced
+~~~
+````
 ````````````````````````````````
 
 

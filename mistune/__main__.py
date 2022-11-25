@@ -46,6 +46,9 @@ Here are some use cases of the command line tool:
 
     $ python -m mistune -f README.md
     <p>...
+
+    $ cat README.md | python -m mistune
+    <p>...
 '''
 
 
@@ -92,18 +95,29 @@ def cli():
     parser.add_argument('--version', action='version', version='mistune ' + version)
     args = parser.parse_args()
 
-    if not args.message and not args.file:
-        print('You MUST specify a message or file')
-        return sys.exit(1)
+    message = args.message
+    if not message and not args.file:
+        message = read_stdin()
 
-    if args.message:
+    if message:
         md = _md(args)
-        text = md(args.message)
+        text = md(message)
         _output(text, args)
     elif args.file:
         md = _md(args)
         text = md.read(args.file)[0]
         _output(text, args)
+    else:
+        print('You MUST specify a message or file')
+        return sys.exit(1)
+
+
+def read_stdin():
+    is_stdin_pipe = not sys.stdin.isatty()
+    if is_stdin_pipe:
+        return sys.stdin.read()
+    else:
+        return None
 
 
 if __name__ == '__main__':

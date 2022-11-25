@@ -1,8 +1,11 @@
+import re
 from typing import Dict, Any
 from textwrap import indent
 from ._list import render_list
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
+
+fenced_re = re.compile(r'^(?:`|~)+', re.M)
 
 
 class MarkdownRenderer(BaseRenderer):
@@ -45,14 +48,19 @@ class MarkdownRenderer(BaseRenderer):
         if label:
             return out + '[' + label + ']'
 
-        out += '('
         attrs = token['attrs']
         url = attrs['url']
+        title = attrs.get('title')
+        if text == url and not title:
+            return '<' + text + '>'
+        elif 'mailto:' + text == url and not title:
+            return '<' + text + '>'
+
+        out += '('
         if '(' in url or ')' in url:
             out += '<' + url + '>'
         else:
             out += url
-        title = attrs.get('title')
         if title:
             out += ' "' + title + '"'
         return out + ')'
@@ -95,10 +103,12 @@ class MarkdownRenderer(BaseRenderer):
         attrs = token.get('attrs', {})
         info = attrs.get('info', '')
         code = token['raw']
-        if code[-1] != '\n':
+        if code and code[-1] != '\n':
             code += '\n'
-        # TODO: detect if ``` in code
-        marker = '```'
+
+        marker = token.get('marker')
+        if not marker:
+            marker = _get_fenced_marker(code)
         return marker + info + '\n' + code + marker + '\n\n'
 
     def block_quote(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -113,3 +123,24 @@ class MarkdownRenderer(BaseRenderer):
 
     def list(self, token: Dict[str, Any], state: BlockState) -> str:
         return render_list(self, token, state)
+
+
+def _get_fenced_marker(code):
+    found = fenced_re.findall(code)
+    if not found:
+        return '```'
+
+    ticks = []  # `
+    waves = []  # ~
+    for s in found:
+        if s[0] == '`':
+            ticks.append(len(s))
+        else:
+            waves.append(len(s))
+
+    if not ticks:
+        return '```'
+
+    if not waves:
+        return '~~~'
+    return '`' * (max(ticks) + 1)

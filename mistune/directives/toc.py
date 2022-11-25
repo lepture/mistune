@@ -45,12 +45,11 @@ class TableOfContents(DirectivePlugin):
             max_level = self.max_level
 
         attrs = {
-            'title': title,
             'min_level': min_level,
             'max_level': max_level,
             'collapse': collapse,
         }
-        return {'type': 'toc', 'raw': '', 'attrs': attrs}
+        return {'type': 'toc', 'title': title or '', 'attrs': attrs}
 
     def toc_hook(self, md, state):
         sections = []
@@ -73,7 +72,7 @@ class TableOfContents(DirectivePlugin):
                 _min = sec['attrs']['min_level']
                 _max = sec['attrs']['max_level']
                 toc = [item for item in toc_items if _min <= item[0] <= _max]
-                sec['raw'] = render_toc_ul(toc)
+                sec['attrs']['toc'] = toc
 
     def __call__(self, directive, md):
         if md.renderer and md.renderer.NAME == 'html':
@@ -83,15 +82,18 @@ class TableOfContents(DirectivePlugin):
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(renderer, text, title, collapse=False, **attrs):
+def render_html_toc(renderer, title, collapse=False, **attrs):
     if not title:
         title = 'Table of Contents'
+
+    toc = attrs['toc']
+    content = render_toc_ul(attrs['toc'])
 
     html = '<details class="toc"'
     if not collapse:
         html += ' open'
     html += '>\n<summary>' + title + '</summary>\n'
-    return html + text + '</details>\n'
+    return html + content + '</details>\n'
 
 
 def _normalize_level(options, name, default):

@@ -24,6 +24,18 @@ message
 </section>
 ````````````````````````````````
 
+```````````````````````````````` example
+~~~{note} A **strong** title
+
+_message_
+~~~
+.
+<section class="admonition note">
+<p class="admonition-title">A <strong>strong</strong> title</p>
+<p><em>message</em></p>
+</section>
+````````````````````````````````
+
 Test with code block.
 
 ```````````````````````````````` example

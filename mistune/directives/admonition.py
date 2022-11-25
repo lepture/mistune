@@ -11,12 +11,13 @@ class Admonition(DirectivePlugin):
         options = self.parse_options(m)
         name = self.parse_name(m)
         title = self.parse_title(m)
-        attrs = {'name': name, 'title': title, 'options': options}
+        attrs = {'name': name, 'options': options}
 
         content = self.parse_content(m)
         children = self.parse_tokens(block, content, state)
         return {
             'type': 'admonition',
+            'title': title or '',
             'children': children,
             'attrs': attrs,
         }

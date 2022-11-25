@@ -4,9 +4,13 @@
 
 ```````````````````````````````` example
 # H1
+
+content
+
 ## H2
 .
 <h1 id="toc_1">H1</h1>
+<p>content</p>
 <h2 id="toc_2">H2</h2>
 <ul>
 <li><a href="#toc_1">H1</a>

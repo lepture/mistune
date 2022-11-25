@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.0rc3
+----------------
+
+**Released on Nov 25, 2022**
+
+* Render inline math with ``\(`` and ``\)``
+* Added ``RSTRenderer``, and ``MarkdownRenderer``
+* Fix ``toc_hook`` method
+* **Breaking change**, rename ``RstDirective`` to ``RSTDirective``
+
 Version 3.0.0rc2
 ----------------
 

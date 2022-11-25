@@ -1,7 +1,7 @@
 import re
 from ._base import DirectiveParser, BaseDirective
 
-__all__ = ['RstDirective']
+__all__ = ['RSTDirective']
 
 
 _directive_re = re.compile(
@@ -11,7 +11,7 @@ _directive_re = re.compile(
 )
 
 
-class RstParser(DirectiveParser):
+class RSTParser(DirectiveParser):
     NAME = 'rst_directive'
 
     @staticmethod
@@ -31,7 +31,7 @@ class RstParser(DirectiveParser):
         return '\n'.join(line[leading:] for line in text.splitlines()) + '\n'
 
 
-class RstDirective(BaseDirective):
+class RSTDirective(BaseDirective):
     """A RST style of directive syntax is inspired by reStructuredText.
     The syntax is very powerful that you can define a lot of custom
     features on your own. The syntax looks like:
@@ -44,20 +44,20 @@ class RstDirective(BaseDirective):
 
            content text here
 
-    To use ``RstDirective``, developers can add it into plugin list in
+    To use ``RSTDirective``, developers can add it into plugin list in
     the :class:`Markdown` instance:
 
     .. code-block:: python
 
         import mistune
-        from mistune.directives import RstDirective, Admonition
+        from mistune.directives import RSTDirective, Admonition
 
         md = mistune.create_markdown(plugins=[
             # ...
-            RstDirective([Admonition()]),
+            RSTDirective([Admonition()]),
         ])
     """
-    parser = RstParser
+    parser = RSTParser
     directive_pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
 
     def parse_directive(self, block, m, state):

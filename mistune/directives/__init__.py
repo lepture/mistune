@@ -1,16 +1,27 @@
 from ._base import DirectiveParser, BaseDirective, DirectivePlugin
-from ._rst import RstDirective
+from ._rst import RSTDirective
 from ._fenced import FencedDirective
 from .admonition import Admonition
 from .toc import TableOfContents
 from .include import Include
+
+    
+class RstDirective(RSTDirective):  # pragma: no cover
+    def __init__(self, plugins):
+        super(RstDirective, self).__init__(plugins)
+        import warnings
+        warnings.warn(
+            "'RstDirective' is deprecated, please use 'RSTDirective' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
 
 __all__ = [
     'DirectiveParser',
     'BaseDirective',
     'DirectivePlugin',
-    'RstDirective',
+    'RSTDirective',
     'FencedDirective',
     'Admonition',
     'TableOfContents',

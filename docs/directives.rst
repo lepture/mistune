@@ -18,7 +18,7 @@ now:
     Instead, each directive should be wrapped by::
 
         import mistune
-        from mistune.directives import FencedDirective, RstDirective
+        from mistune.directives import FencedDirective, RSTDirective
         from mistune.directives import Admonition, TableOfContents
 
         markdown = mistune.create_markdown(plugins=[
@@ -35,7 +35,7 @@ now:
             'math',
             'footnotes',
             # ...
-            RstDirective([
+            RSTDirective([
                 Admonition(),
                 TableOfContents(),
             ]),
@@ -108,7 +108,7 @@ To enable admonitions::
     markdown = mistune.create_markdown(
         plugins=[
             ...
-            RstDirective([Admonition()]),
+            RSTDirective([Admonition()]),
             # FencedDirective([Admonition()]),
         ]
     )
@@ -141,12 +141,12 @@ The rendered HTML will show a TOC at the ``.. toc::`` position. To enable
 TOC plugin::
 
     import mistune
-    from mistune.directives import RstDirective, TableOfContents
+    from mistune.directives import RSTDirective, TableOfContents
 
     markdown = mistune.create_markdown(
         plugins=[
             # ...
-            RstDirective([TableOfContents()]),
+            RSTDirective([TableOfContents()]),
         ]
     )
 

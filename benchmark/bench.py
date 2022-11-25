@@ -41,7 +41,7 @@ def get_markdown_parsers():
 
     import mistune
     from mistune.directives import (
-        RstDirective, Admonition, TableOfContents, Include,
+        RSTDirective, Admonition, TableOfContents, Include,
     )
 
     parsers[f'mistune ({mistune.__version__})'] = mistune.html
@@ -54,7 +54,7 @@ def get_markdown_parsers():
             'url', 'abbr', 'ruby',
             'strikethrough', 'mark', 'insert', 'subscript', 'superscript',
             'footnotes', 'def_list', 'math', 'table', 'task_lists',
-            RstDirective([
+            RSTDirective([
                 Admonition(),
                 TableOfContents(),
                 Include(),

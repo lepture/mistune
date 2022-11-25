@@ -1,7 +1,7 @@
 import os
 from mistune import create_markdown
 from mistune.directives import (
-    RstDirective,
+    RSTDirective,
     FencedDirective,
     Admonition,
     TableOfContents,
@@ -26,8 +26,8 @@ def load_directive_test(filename, directive, cls):
     globals()["TestDirective_" + filename] = TestDirective
 
 
-load_directive_test('rst_admonition', Admonition(), RstDirective)
-load_directive_test('rst_toc', TableOfContents(), RstDirective)
+load_directive_test('rst_admonition', Admonition(), RSTDirective)
+load_directive_test('rst_toc', TableOfContents(), RSTDirective)
 load_directive_test('fenced_admonition', Admonition(), FencedDirective)
 load_directive_test('fenced_toc', TableOfContents(), FencedDirective)
 
@@ -42,7 +42,7 @@ class TestCustomizeToc(BaseTestCase):
         md = create_markdown(
             escape=False,
             plugins=[
-                RstDirective([CustomizeTableOfContents()]),
+                RSTDirective([CustomizeTableOfContents()]),
             ],
         )
         html = md('# h1\n\n.. toc::\n')
@@ -73,7 +73,7 @@ class TestCustomizeToc(BaseTestCase):
 
 
 class TestDirectiveInclude(BaseTestCase):
-    md = create_markdown(escape=False, plugins=[RstDirective([Include()])])
+    md = create_markdown(escape=False, plugins=[RSTDirective([Include()])])
 
     def test_html_include(self):
         html = self.md.read(os.path.join(ROOT, 'include/text.md'))[0]

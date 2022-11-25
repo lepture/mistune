@@ -36,6 +36,7 @@ User Guide
 
    guide
    cli
+   renderers
    plugins
    directives
    advanced

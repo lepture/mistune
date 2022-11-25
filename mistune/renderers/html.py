@@ -31,8 +31,6 @@ class HTMLRenderer(BaseRenderer):
             text = token['raw']
         elif 'children' in token:
             text = self.render_tokens(token['children'], state)
-        elif 'text' in token:
-            text = token['text']
         else:
             if attrs:
                 return func(**attrs)

@@ -40,15 +40,15 @@ class Markdown:
         plugin(self)
 
     def render_state(self, state: BlockState):
-        data = self._iter_render(state.tokens, state, None)
+        data = self._iter_render(state.tokens, state)
         if self.renderer:
             return self.renderer(data, state)
         return list(data)
 
-    def _iter_render(self, tokens, state, parent):
+    def _iter_render(self, tokens, state):
         for tok in tokens:
             if 'children' in tok:
-                children = self._iter_render(tok['children'], state, tok)
+                children = self._iter_render(tok['children'], state)
                 tok['children'] = list(children)
             elif 'text' in tok:
                 text = tok.pop('text')

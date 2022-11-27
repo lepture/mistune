@@ -1,0 +1,83 @@
+# Image
+
+## No options
+
+```````````````````````````````` example
+~~~{image} picture.png
+~~~
+.
+<div class="block-image"><img src="picture.png" /></div>
+````````````````````````````````
+
+## Align options
+
+```````````````````````````````` example
+~~~{image} picture.png
+:align: left
+~~~
+.
+<div class="block-image align-left"><img src="picture.png" /></div>
+````````````````````````````````
+
+
+```````````````````````````````` example
+~~~{image} picture.png
+:align: invalid
+~~~
+.
+<div class="block-image"><img src="picture.png" /></div>
+````````````````````````````````
+
+## width and height
+
+```````````````````````````````` example
+~~~{image} picture.png
+:width: 100
+:height: 50
+~~~
+.
+<div class="block-image"><img src="picture.png" width="100" height="50" /></div>
+````````````````````````````````
+
+```````````````````````````````` example
+~~~{image} picture.png
+:width: 100px
+:height: 50px
+~~~
+.
+<div class="block-image"><img src="picture.png" style="width:100px;height:50px;" /></div>
+````````````````````````````````
+
+## alt option
+
+```````````````````````````````` example
+~~~{image} picture.png
+:alt: description text
+~~~
+.
+<div class="block-image"><img src="picture.png" alt="description text" /></div>
+````````````````````````````````
+
+## target option
+
+```````````````````````````````` example
+~~~{image} picture.png
+:target: https://lepture.com
+~~~
+.
+<a class="block-image" href="https://lepture.com"><img src="picture.png" /></a>
+````````````````````````````````
+
+## all options
+
+```````````````````````````````` example
+~~~{image} picture.png
+:target: https://lepture.com
+:alt: description
+:align: left
+:width: 100
+:height: 50
+~~~
+.
+<a class="block-image align-left" href="https://lepture.com"><img src="picture.png" alt="description" width="100" height="50" /></a>
+````````````````````````````````

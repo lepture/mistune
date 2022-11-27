@@ -4,6 +4,7 @@ from ._fenced import FencedDirective
 from .admonition import Admonition
 from .toc import TableOfContents
 from .include import Include
+from .image import Image, Figure
 
     
 class RstDirective(RSTDirective):  # pragma: no cover
@@ -26,4 +27,5 @@ __all__ = [
     'Admonition',
     'TableOfContents',
     'Include',
+    'Image', 'Figure',
 ]

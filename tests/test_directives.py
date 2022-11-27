@@ -6,6 +6,8 @@ from mistune.directives import (
     Admonition,
     TableOfContents,
     Include,
+    Image,
+    Figure,
 )
 from tests import BaseTestCase
 from tests.fixtures import ROOT
@@ -30,6 +32,8 @@ load_directive_test('rst_admonition', Admonition(), RSTDirective)
 load_directive_test('rst_toc', TableOfContents(), RSTDirective)
 load_directive_test('fenced_admonition', Admonition(), FencedDirective)
 load_directive_test('fenced_toc', TableOfContents(), FencedDirective)
+load_directive_test('fenced_image', Image(), FencedDirective)
+load_directive_test('fenced_figure', Figure(), FencedDirective)
 
 
 class CustomizeTableOfContents(TableOfContents):

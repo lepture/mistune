@@ -1,0 +1,166 @@
+# Figure
+
+## No options
+
+```````````````````````````````` example
+~~~{figure} picture.png
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" /></div>
+</figure>
+````````````````````````````````
+
+## Align options
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:align: left
+~~~
+.
+<figure class="figure align-left">
+<div class="block-image"><img src="picture.png" /></div>
+</figure>
+````````````````````````````````
+
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:align: invalid
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" /></div>
+</figure>
+````````````````````````````````
+
+## width and height
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:width: 100
+:height: 50
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" width="100" height="50" /></div>
+</figure>
+````````````````````````````````
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:width: 100px
+:height: 50px
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" style="width:100px;height:50px;" /></div>
+</figure>
+````````````````````````````````
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:figwidth: 400px
+~~~
+.
+<figure class="figure" style="width:400px">
+<div class="block-image"><img src="picture.png" /></div>
+</figure>
+````````````````````````````````
+
+## alt option
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:alt: description text
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" alt="description text" /></div>
+</figure>
+````````````````````````````````
+
+## target option
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:target: https://lepture.com
+~~~
+.
+<figure class="figure">
+<a class="block-image" href="https://lepture.com"><img src="picture.png" /></a>
+</figure>
+````````````````````````````````
+
+## caption
+
+```````````````````````````````` example
+~~~{figure} picture.png
+a caption with **emphasis** text
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" /></div>
+<figcaption>a caption with <strong>emphasis</strong> text</figcaption>
+</figure>
+````````````````````````````````
+
+## legend
+
+```````````````````````````````` example
+~~~{figure} picture.png
+a caption with **emphasis** text
+
+> quote
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" /></div>
+<figcaption>a caption with <strong>emphasis</strong> text</figcaption>
+<div class="legend">
+<blockquote>
+<p>quote</p>
+</blockquote>
+</div>
+</figure>
+````````````````````````````````
+
+
+```````````````````````````````` example
+~~~{figure} picture.png
+> quote
+~~~
+.
+<figure class="figure">
+<div class="block-image"><img src="picture.png" /></div>
+</figure>
+````````````````````````````````
+
+## all options
+
+
+```````````````````````````````` example
+~~~{figure} picture.png
+:figwidth: 400px
+:figclass: all-options
+:target: https://lepture.com
+:alt: description
+:align: left
+:width: 100
+:height: 50
+
+a caption with **emphasis** text
+
+> quote
+~~~
+.
+<figure class="figure align-left all-options" style="width:400px">
+<a class="block-image" href="https://lepture.com"><img src="picture.png" alt="description" width="100" height="50" /></a>
+<figcaption>a caption with <strong>emphasis</strong> text</figcaption>
+<div class="legend">
+<blockquote>
+<p>quote</p>
+</blockquote>
+</div>
+</figure>
+````````````````````````````````

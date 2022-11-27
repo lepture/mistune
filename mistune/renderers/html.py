@@ -28,15 +28,6 @@ class HTMLRenderer(BaseRenderer):
         func = self._get_method(token['type'])
         attrs = token.get('attrs')
 
-        if 'title' in token:
-            title = self.render_tokens(token['title'], state)
-            if attrs:
-                _attrs = {'title': title}
-                _attrs.update(attrs)
-                attrs = _attrs
-            else:
-                attrs = {'title': title}
-
         if 'raw' in token:
             text = token['raw']
         elif 'children' in token:

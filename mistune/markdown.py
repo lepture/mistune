@@ -54,8 +54,6 @@ class Markdown:
                 text = tok.pop('text')
                 # process inline text
                 tok['children'] = self.inline(text.strip(), state.env)
-            if 'title' in tok:
-                tok['title'] = self.inline(tok['title'], state.env)
             yield tok
 
     def parse(self, s: str, state: Optional[BlockState]=None):

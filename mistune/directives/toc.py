@@ -49,7 +49,7 @@ class TableOfContents(DirectivePlugin):
             'max_level': max_level,
             'collapse': collapse,
         }
-        return {'type': 'toc', 'title': title or '', 'attrs': attrs}
+        return {'type': 'toc', 'text': title or '', 'attrs': attrs}
 
     def toc_hook(self, md, state):
         sections = []
@@ -85,7 +85,6 @@ class TableOfContents(DirectivePlugin):
 def render_html_toc(renderer, title, collapse=False, **attrs):
     if not title:
         title = 'Table of Contents'
-
     toc = attrs['toc']
     content = render_toc_ul(attrs['toc'])
 

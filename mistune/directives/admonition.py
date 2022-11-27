@@ -8,16 +8,29 @@ class Admonition(DirectivePlugin):
     }
 
     def parse(self, block, m, state):
-        options = self.parse_options(m)
         name = self.parse_name(m)
+        attrs = {'name': name}
+        options = dict(self.parse_options(m))
+        if 'class' in options:
+            attrs['class'] = options['class']
+
         title = self.parse_title(m)
-        attrs = {'name': name, 'options': options}
+        if not title:
+            title = name.capitalize()
 
         content = self.parse_content(m)
-        children = self.parse_tokens(block, content, state)
+        children = [
+            {
+                'type': 'admonition_title',
+                'text': title,
+            },
+            {
+                'type': 'admonition_content',
+                'children': self.parse_tokens(block, content, state),
+            }
+        ]
         return {
             'type': 'admonition',
-            'title': title or '',
             'children': children,
             'attrs': attrs,
         }
@@ -28,14 +41,21 @@ class Admonition(DirectivePlugin):
 
         if md.renderer.NAME == 'html':
             md.renderer.register('admonition', render_admonition)
+            md.renderer.register('admonition_title', render_admonition_title)
+            md.renderer.register('admonition_content', render_admonition_content)
 
 
-def render_admonition(self, text, name, title="", options=None):
-    html = '<section class="admonition ' + name + '">\n'
-    if not title:
-        title = name.capitalize()
-    if title:
-        html += '<p class="admonition-title">' + title + '</p>\n'
-    if text:
-        html += text
-    return html + '</section>\n'
+def render_admonition(self, text, name, **attrs):
+    html = '<section class="admonition ' + name
+    _cls = attrs.get('class')
+    if _cls:
+        html += ' ' + _cls
+    return html + '">\n' + text + '</section>\n'
+
+
+def render_admonition_title(self, text):
+    return '<p class="admonition-title">' + text + '</p>\n'
+
+
+def render_admonition_content(self, text):
+    return text

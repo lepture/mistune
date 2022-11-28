@@ -1,6 +1,6 @@
 import re
 import string
-from .util import escape_url, safe_entity
+from .util import escape_url
 
 PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
 PUNCTUATION = r'[' + re.escape(string.punctuation) + r']'
@@ -133,5 +133,5 @@ def parse_link(src, pos):
     href = unescape_char(href)
     attrs = {'url': escape_url(href)}
     if title:
-        attrs['title'] = safe_entity(title)
+        attrs['title'] = title
     return attrs, m.end()

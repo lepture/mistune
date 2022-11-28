@@ -2,7 +2,7 @@ from typing import Dict, Any
 from textwrap import indent
 from ._list import render_list
 from ..core import BaseRenderer, BlockState
-from ..util import safe_entity, strip_end
+from ..util import strip_end
 
 
 class RSTRenderer(BaseRenderer):
@@ -50,7 +50,7 @@ class RSTRenderer(BaseRenderer):
         return self.render_tokens(children, state)
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
-        text = safe_entity(token['raw'])
+        text = token['raw']
         return text.replace('|', r'\|')
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:

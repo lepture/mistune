@@ -73,7 +73,7 @@ class HTMLRenderer(BaseRenderer):
     def link(self, text: str, url: str, title=None) -> str:
         s = '<a href="' + self.safe_url(url) + '"'
         if title:
-            s += ' title="' + title + '"'
+            s += ' title="' + safe_entity(title) + '"'
         return s + '>' + text + '</a>'
 
     def image(self, text: str, url: str, title=None) -> str:
@@ -81,7 +81,7 @@ class HTMLRenderer(BaseRenderer):
         alt = escape_text(striptags(text))
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
-            s += ' title="' + title + '"'
+            s += ' title="' + safe_entity(title) + '"'
         return s + ' />'
 
     def codespan(self, text: str) -> str:
@@ -121,7 +121,7 @@ class HTMLRenderer(BaseRenderer):
     def block_code(self, code: str, info=None) -> str:
         html = '<pre><code'
         if info is not None:
-            info = info.strip()
+            info = safe_entity(info.strip())
         if info:
             lang = info.split(None, 1)[0]
             html += ' class="language-' + lang + '"'

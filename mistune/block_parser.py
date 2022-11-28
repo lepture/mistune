@@ -3,7 +3,6 @@ from typing import Optional, List, Tuple, Dict, Any
 from .util import (
     unikey,
     escape_url,
-    safe_entity,
     expand_tab,
     expand_leading_tab,
 )
@@ -178,7 +177,7 @@ class BlockParser(Parser):
         token = {'type': 'block_code', 'raw': code, 'style': 'fenced', 'marker': marker}
         if info:
             info = unescape_char(info)
-            token['attrs'] = {'info': safe_entity(info.strip())}
+            token['attrs'] = {'info': info.strip()}
 
         state.append_token(token)
         return end_pos
@@ -279,7 +278,7 @@ class BlockParser(Parser):
             href = unescape_char(href)
             data = {'url': escape_url(href), 'label': label}
             if title:
-                data['title'] = safe_entity(title)
+                data['title'] = title
             state.env['ref_links'][key] = data
         return end_pos
 

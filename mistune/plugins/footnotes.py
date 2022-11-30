@@ -10,7 +10,7 @@ _PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
 REF_FOOTNOTE = (
   r'^(?P<footnote_lead> {0,3})'
   r'\[\^(?P<footnote_key>' + LINK_LABEL + r')]:[ \t]'
-  r'(?P<footnote_text>[^\n]*\n+'
+  r'(?P<footnote_text>[^\n]*(?:\n+|$)'
   r'(?:(?P=footnote_lead) {1,3}(?! )[^\n]*\n+)*'
   r')'
 )

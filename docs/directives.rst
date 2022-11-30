@@ -46,7 +46,7 @@ and the syntax looks like:
 
 .. code-block:: text
 
-    .. directive-name:: title
+    .. directive-type:: title
        :option-key: option value
        :option-key: option value
 
@@ -58,7 +58,7 @@ inspired by `markdown-it-docutils`_. The syntax looks like:
 
 .. code-block:: text
 
-    ```{directive-name} title
+    ```{directive-type} title
     :option-key: option value
     :option-key: option value
 

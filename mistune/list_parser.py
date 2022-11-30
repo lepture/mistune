@@ -34,8 +34,8 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
         'children': [],
         'tight': True,
         'bullet': marker[-1],
-        'depth': depth,
         'attrs': {
+            'depth': depth,
             'ordered': ordered,
         },
     }

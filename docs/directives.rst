@@ -159,3 +159,26 @@ Include
 
 ``include`` is a powerful plugin for documentation generator. With this
 plugin, we can embed contents from other files.
+
+
+Image
+-----
+
+.. code-block:: text
+
+    ```{image} https://domain/path.png
+    :alt: alt text
+    :width: 800
+    :height: 500
+    ```
+
+Figure
+------
+
+.. code-block:: text
+
+    ```{figure} https://domain/path.png
+    :alt: alt text
+    :width: 800
+    :height: 500
+    ```

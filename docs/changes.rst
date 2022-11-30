@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.0rc4
+----------------
+
+**Released on Nov 30, 2022**
+
+* Fix plugin footnotes when there is no newline at the end
+* Move safe HTML entities to HTMLRenderer
+* Redesign directives parsing
+* Add Image and Figure directive
+
 Version 3.0.0rc3
 ----------------
 

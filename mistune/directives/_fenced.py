@@ -6,18 +6,18 @@ __all__ = ['FencedDirective']
 
 _type_re = re.compile(r'^ *\{[a-zA-Z0-9_-]+\}')
 _directive_re = re.compile(
-    r'\{(?P<name>[a-zA-Z0-9_-]+)\} *(?P<title>[^\n]*)(?:\n|$)'
+    r'\{(?P<type>[a-zA-Z0-9_-]+)\} *(?P<title>[^\n]*)(?:\n|$)'
     r'(?P<options>(?:\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
     r'\n*(?P<text>(?:[^\n]*\n+)*)'
 )
 
 
 class FencedParser(DirectiveParser):
-    NAME = 'fenced_directive'
+    name = 'fenced_directive'
 
     @staticmethod
-    def parse_name(m: re.Match):
-        return m.group('name')
+    def parse_type(m: re.Match):
+        return m.group('type')
 
     @staticmethod
     def parse_title(m: re.Match):
@@ -34,7 +34,7 @@ class FencedDirective(BaseDirective):
 
     .. code-block:: text
 
-        ```{directive-name} title
+        ```{directive-type} title
         :option-key: option value
         :option-key: option value
 
@@ -84,7 +84,6 @@ class FencedDirective(BaseDirective):
                     and curly-bracket
     """
     parser = FencedParser
-    register_before = 'fenced_code'
 
     def __init__(self, plugins, markers='`~'):
         super(FencedDirective, self).__init__(plugins)
@@ -97,46 +96,47 @@ class FencedDirective(BaseDirective):
 
     def _process_directive(self, block, marker, start, state):
         mlen = len(marker)
+        cursor_start = start + len(marker)
+
         _end_pattern = (
             r'^ {0,3}' + marker[0] + '{' + str(mlen) + r',}'
             r'[ \t]*(?:\n|$)'
         )
         _end_re = re.compile(_end_pattern, re.M)
 
-        _end_m = _end_re.search(state.src, start)
+        _end_m = _end_re.search(state.src, cursor_start)
         if _end_m:
-            text = state.src[start:_end_m.start()]
+            text = state.src[cursor_start:_end_m.start()]
             end_pos = _end_m.end()
         else:
-            text = state.src[start:]
+            text = state.src[cursor_start:]
             end_pos = state.cursor_max
 
-        _new_m = _directive_re.match(text)
-        if not _new_m:
+        m = _directive_re.match(text)
+        if not m:
             return
 
-        name = _new_m.group('name')
-        self.parse_method(name, block, _new_m, state)
+        self.parse_method(block, m, state)
         return end_pos
 
     def parse_directive(self, block, m, state):
         marker = m.group('fenced_directive_mark')
-        cursor_start = m.start() + len(marker)
-        return self._process_directive(block, marker, cursor_start, state)
+        return self._process_directive(block, marker, m.start(), state)
 
     def parse_fenced_code(self, block, m, state):
         info = m.group('fenced_3')
         if not info or not _type_re.match(info):
             return block.parse_fenced_code(m, state)
 
-        if state.depth() >= block.max_nested_level - 1:
+        if state.depth() >= block.max_nested_level:
             return block.parse_fenced_code(m, state)
 
         marker = m.group('fenced_2')
-        cursor_start = m.start() + len(marker)
-        return self._process_directive(block, marker, cursor_start, state)
+        return self._process_directive(block, marker, m.start(), state)
 
     def __call__(self, md):
         super(FencedDirective, self).__call__(md)
         if self.markers == '`~':
             md.block.register('fenced_code', None, self.parse_fenced_code)
+        else:
+            self.register_block_parser(md, 'fenced_code')

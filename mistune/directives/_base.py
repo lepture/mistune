@@ -2,10 +2,10 @@ import re
 
 
 class DirectiveParser:
-    NAME = 'directive'
+    name = 'directive'
 
     @staticmethod
-    def parse_name(m: re.Match):
+    def parse_type(m: re.Match):
         raise NotImplementedError()
 
     @staticmethod
@@ -18,9 +18,9 @@ class DirectiveParser:
 
     @classmethod
     def parse_tokens(cls, block, text, state):
-        if state.depth() >= block.max_nested_level - 1:
+        if state.depth() >= block.max_nested_level - 1 and cls.name in block.rules:
             rules = list(block.rules)
-            rules.remove(cls.NAME)
+            rules.remove(cls.name)
         else:
             rules = block.rules
         child = state.child_state(text)
@@ -48,7 +48,6 @@ class DirectiveParser:
 class BaseDirective:
     parser = DirectiveParser
     directive_pattern = None
-    register_before = None
 
     def __init__(self, plugins):
         self._methods = {}
@@ -57,8 +56,9 @@ class BaseDirective:
     def register(self, name, fn):
         self._methods[name] = fn
 
-    def parse_method(self, name, block, m, state):
-        method = self._methods.get(name)
+    def parse_method(self, block, m, state):
+        _type = self.parser.parse_type(m)
+        method = self._methods.get(_type)
         if method:
             try:
                 token = method(block, m, state)
@@ -81,13 +81,15 @@ class BaseDirective:
     def parse_directive(self, block, m, state):
         raise NotImplementedError()
 
-    def __call__(self, md):
+    def register_block_parser(self, md, before=None):
         md.block.register(
-            self.parser.NAME,
+            self.parser.name,
             self.directive_pattern,
             self.parse_directive,
-            before=self.register_before,
+            before=before,
         )
+
+    def __call__(self, md):
         for plugin in self.__plugins:
             plugin.parser = self.parser
             plugin(self, md)
@@ -100,8 +102,8 @@ class DirectivePlugin:
     def parse_options(self, m: re.Match):
         return self.parser.parse_options(m)
 
-    def parse_name(self, m: re.Match):
-        return self.parser.parse_name(m)
+    def parse_type(self, m: re.Match):
+        return self.parser.parse_type(m)
 
     def parse_title(self, m: re.Match):
         return self.parser.parse_title(m)

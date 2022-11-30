@@ -13,6 +13,16 @@ this is **strong** world
 ````````````````````````````````
 
 ```````````````````````````````` example
+```
+this is code
+```
+.
+<pre><code>this is code
+</code></pre>
+````````````````````````````````
+
+
+```````````````````````````````` example
 ~~~{note} Warning
 
 message

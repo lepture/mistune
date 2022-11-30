@@ -5,18 +5,18 @@ __all__ = ['RSTDirective']
 
 
 _directive_re = re.compile(
-    r'\.\.( +)(?P<name>[a-zA-Z0-9_-]+)\:\: *(?P<title>[^\n]*)(?:\n|$)'
+    r'\.\.( +)(?P<type>[a-zA-Z0-9_-]+)\:\: *(?P<title>[^\n]*)(?:\n|$)'
     r'(?P<options>(?:  \1 {0,3}\:[a-zA-Z0-9_-]+\: *[^\n]*\n+)*)'
     r'\n*(?P<text>(?:  \1 {0,3}[^\n]*\n+)*)'
 )
 
 
 class RSTParser(DirectiveParser):
-    NAME = 'rst_directive'
+    name = 'rst_directive'
 
     @staticmethod
-    def parse_name(m: re.Match):
-        return m.group('name')
+    def parse_type(m: re.Match):
+        return m.group('type')
 
     @staticmethod
     def parse_title(m: re.Match):
@@ -38,7 +38,7 @@ class RSTDirective(BaseDirective):
 
     .. code-block:: text
 
-        .. directive-name:: directive value
+        .. directive-type:: directive value
            :option-key: option value
            :option-key: option value
 
@@ -65,6 +65,9 @@ class RSTDirective(BaseDirective):
         if not m:
             return
 
-        name = m.group('name')
-        self.parse_method(name, block, m, state)
+        self.parse_method(block, m, state)
         return m.end()
+
+    def __call__(self, md):
+        super(RSTDirective, self).__call__(md)
+        self.register_block_parser(md)

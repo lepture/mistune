@@ -8,7 +8,7 @@ class Admonition(DirectivePlugin):
     }
 
     def parse(self, block, m, state):
-        name = self.parse_name(m)
+        name = self.parse_type(m)
         attrs = {'name': name}
         options = dict(self.parse_options(m))
         if 'class' in options:

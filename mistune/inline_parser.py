@@ -167,7 +167,10 @@ class InlineParser(Parser):
         if label is None:
             return
 
-        ref_links = state.env['ref_links']
+        ref_links = state.env.get('ref_links')
+        if not ref_links:
+            return
+
         key = unikey(label)
         env = ref_links.get(key)
         if env:

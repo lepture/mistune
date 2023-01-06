@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple
 from .util import (
     unikey,
     escape_url,

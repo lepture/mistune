@@ -92,7 +92,7 @@ RestructuredText Renderer
 -------------------------
 
 
-Customize Markdown Renderer
+Customize MarkdownRenderer
 ---------------------------
 
 You can customize Markdown output with your own renderers. Create a subclass

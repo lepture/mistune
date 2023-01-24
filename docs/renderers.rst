@@ -92,5 +92,42 @@ RestructuredText Renderer
 -------------------------
 
 
-Markdown Renderer
------------------
+Customize Markdown Renderer
+---------------------------
+
+You can customize Markdown output with your own renderers. Create a subclass
+of ``mistune.MarkdownRenderer``::
+
+
+    class MyRenderer(mistune.renderers.markdown.MarkdownRenderer):
+        def link(self, token, state):
+            return '**' + self.render_children(token, state) + '** '
+
+    # use customized renderer
+    markdown = mistune.create_markdown(renderer=MyRenderer())
+    print(markdown('[Mistune](mistune.lepture.com)'))
+
+Here is a a list of available renderer functions::
+
+    # inline level
+    text(self, token, state)
+    link(self, token, state)
+    image(self, token, state)
+    emphasis(self, token, state)
+    strong(self, token, state)
+    codespan(self, token, state)
+    linebreak(self, token, state)
+    softbreak(self, token, state)
+    inline_html(self, token, state)
+
+    # block level
+    paragraph(self, token, state)
+    heading(self, token, state)
+    blank_line(self, token, state)
+    thematic_break(self, token, state)
+    block_text(self, token, state)
+    block_code(self, token, state)
+    block_quote(self, token, state)
+    block_html(self, token, state)
+    block_error(self, token, state)
+    list(self, token, state)

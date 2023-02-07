@@ -317,12 +317,7 @@ def _create_list_item_pattern(spaces, marker):
         else:
             prefix = prefix + r'\d{0,9}\)'
     else:
-        if marker == '*':
-            prefix = prefix + r'\*'
-        elif marker == '+':
-            prefix = prefix + r'\+'
-        else:
-            prefix = prefix + r'-'
+        prefix = prefix + re.escape(marker)
 
     s1 = ' {' + str(len(marker) + 1) + ',}'
     if len(marker) > 4:

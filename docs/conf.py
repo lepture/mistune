@@ -3,7 +3,6 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 import mistune
-import sphinx_typlog_theme
 
 project = 'Mistune'
 copyright = '2019, Hsiaoming Yang'
@@ -37,19 +36,15 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_typlog_theme'
-html_theme_path = [sphinx_typlog_theme.get_path()]
+html_theme = 'shibuya'
 html_theme_options = {
-    'logo': 'logo.svg',
-    'description': (
-        'A fast yet powerful Python Markdown parser '
-        'with renderers and plugins'
-    ),
-    'color': '#3E7FCB',
-    'github_user': 'lepture',
-    'github_repo': 'mistune',
-    'twitter': 'lepture',
-    'meta_html': '<style>.ethical-fixedfooter{display:none}</style>',
+    'twitter_site': 'lepture',
+    'twitter_creator': 'lepture',
+    'twitter_url': 'https://twitter.com/lepture',
+    'github_url': 'https://github.com/lepture/mistune',
+    'nav_links': [
+        {'title': 'Sponsor me', 'url': 'https://github.com/sponsors/lepture'}
+    ]
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -57,18 +52,14 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_copy_source = False
+html_show_sourcelink = False
+
 html_sidebars = {
-    '**': [
-        'logo.html',
-        'github.html',
-        'sponsors.html',
-        'globaltoc.html',
-        'links.html',
-        'searchbox.html',
+    "**": [
+        "sidebars/localtoc.html",
+        "sidebars/editlink.html",
+        "sponsors.html",
+        "sidebars/ethical-ads.html",
     ]
 }
-
-
-def setup(app):
-    sphinx_typlog_theme.add_badge_roles(app)
-    sphinx_typlog_theme.add_github_roles(app, 'lepture/mistune')

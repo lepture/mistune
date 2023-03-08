@@ -54,7 +54,7 @@ html_show_sourcelink = False
 html_sidebars = {
     "**": [
         "sidebars/localtoc.html",
-        "sidebars/editlink.html",
+        "sidebars/edit-this-page.html",
         "sponsors.html",
         "sidebars/ethical-ads.html",
     ]

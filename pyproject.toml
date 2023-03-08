@@ -1,3 +1,62 @@
+[project]
+name = "mistune"
+description = "A sane and fast Markdown parser with useful plugins and renderers"
+authors = [{name = "Hsiaoming Yang", email="me@lepture.com"}]
+dependencies = []
+license = {file = "LICENSE"}
+dynamic = ["version"]
+requires-python = ">=3.7"
+readme = "README.rst"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Text Processing :: Markup",
+]
+
+[project.urls]
+Documentation = "https://mistune.lepture.com/"
+Source = "https://github.com/lepture/mistune"
+Donate = "https://github.com/sponsors/lepture"
+
 [build-system]
-requires = [ "setuptools", "wheel" ]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "mistune.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["mistune"]
+
+[tool.coverage.paths]
+source = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise NotImplementedError",
+  "@(abc\\.)?abstractmethod",
+]

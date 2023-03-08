@@ -17,9 +17,10 @@ cover/
 *.bak
 *.c
 *.so
-venv/
+.venv/
 .python-version
 .coverage
 htmlcov
 .eggs
 coverage.xml
+demo.py

@@ -1,5 +1,5 @@
 <a href="https://github.com/lepture/mistune">
-<img align="right" width="120" height="120" src="docs/_static/logo.svg">
+<img align="right" width="120" height="120" src="docs/_static/light-logo.svg">
 </a>
 
 # Mistune v3

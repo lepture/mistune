@@ -34,6 +34,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'shibuya'
 html_theme_options = {
+    "light_logo": "_static/light-logo.svg",
+    "dark_logo": "_static/dark-logo.svg",
     'twitter_site': 'lepture',
     'twitter_creator': 'lepture',
     'twitter_url': 'https://twitter.com/lepture',
@@ -51,9 +53,11 @@ html_static_path = ['_static']
 html_copy_source = False
 html_show_sourcelink = False
 
+html_favicon = "_static/light-icon.svg"
 html_sidebars = {
     "**": [
         "sidebars/localtoc.html",
+        "sidebars/repo-stats.html",
         "sidebars/edit-this-page.html",
         "sponsors.html",
         "sidebars/ethical-ads.html",

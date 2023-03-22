@@ -132,7 +132,7 @@ class HTMLRenderer(BaseRenderer):
 
     def block_html(self, html: str) -> str:
         if self._escape:
-            return '<p>' + escape_text(html) + '</p>\n'
+            return '<p>' + escape_text(html.strip()) + '</p>\n'
         return html + '\n'
 
     def block_error(self, text: str) -> str:

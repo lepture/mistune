@@ -70,9 +70,7 @@ class Markdown:
         # normalize line separator
         s = s.replace('\r\n', '\n')
         s = s.replace('\r', '\n')
-
-        # ensure new line at end
-        if s[-1] != '\n':
+        if not s.endswith('\n'):
             s += '\n'
 
         state.process(s)

@@ -42,6 +42,11 @@ class TestMiscCases(TestCase):
         expected = '<p><a href="#harmful-link">h</a></p>'
         self.assertEqual(result.strip(), expected)
 
+    def test_ref_link(self):
+        result = mistune.html('[link][h]\n\n[h]: /foo')
+        expected = '<p><a href="/foo">link</a></p>'
+        self.assertEqual(result.strip(), expected)
+
     def test_allow_harmful_protocols(self):
         renderer = mistune.HTMLRenderer(allow_harmful_protocols=True)
         md = mistune.Markdown(renderer)

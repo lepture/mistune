@@ -71,6 +71,10 @@ class Markdown:
         s = s.replace('\r\n', '\n')
         s = s.replace('\r', '\n')
 
+        # ensure new line at end
+        if s[-1] != '\n':
+            s += '\n'
+
         state.process(s)
 
         for hook in self.before_parse_hooks:

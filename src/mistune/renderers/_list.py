@@ -28,7 +28,7 @@ def _render_list_item(renderer, parent, item, state):
         text += renderer.render_token(tok, state)
 
     lines = text.splitlines()
-    text = lines[0] + '\n'
+    text = (lines[0] if lines else '') + '\n'
     prefix = ' ' * len(leading)
     for line in lines[1:]:
         if line:

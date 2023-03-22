@@ -3,6 +3,16 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.0rc5
+----------------
+
+**Released on Mar 22, 2023**
+
+* Fix fenced directives
+* Fix inline link parser
+* Fix block math plugin for multiple lines
+* Fix empty list item for markdown renderer
+
 Version 3.0.0rc4
 ----------------
 

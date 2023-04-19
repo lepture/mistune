@@ -56,7 +56,7 @@ class BlockParser(Parser):
 
     SPECIFICATION = {
         'blank_line': r'(^[ \t\v\f]*\n)+',
-        'axt_heading': r'^ {0,3}(?P<axt_1>#{1,6})(?!#+)(?P<axt_2>[ \t]*|[ \t]+.*?)$',
+        'axt_heading': r'^ {0,3}(?P<axt_1>#{1,})(?!#+)(?P<axt_2>[ \t]*|[ \t]+.*?)$',
         'setex_heading': r'^ {0,3}(?P<setext_1>=|-){1,}[ \t]*$',
         'fenced_code': (
             r'^(?P<fenced_1> {0,3})(?P<fenced_2>`{3,}|~{3,})'

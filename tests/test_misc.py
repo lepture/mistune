@@ -96,3 +96,10 @@ class TestMiscCases(TestCase):
             },
         ]
         self.assertEqual(result, expected)
+
+
+    def test_emsp(self):
+        md = mistune.create_markdown(escape=False, hard_wrap=True)
+        result = md('\u2003\u2003foo\nbar\n\n\u2003\u2003foobar')
+        expected = '<p>\u2003\u2003foo<br />\nbar</p>\n<p>\u2003\u2003foobar</p>'
+        self.assertEqual(result.strip(), expected)

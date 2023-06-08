@@ -1,7 +1,3 @@
-<a href="https://github.com/lepture/mistune">
-<img align="right" width="120" height="120" src="docs/_static/light-logo.svg">
-</a>
-
 # Mistune v3
 
 A fast yet powerful Python Markdown parser with renderers and plugins.

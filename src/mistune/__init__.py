@@ -17,7 +17,7 @@ from .util import escape, escape_url, safe_entity, unikey
 from .plugins import import_plugin
 
 
-def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None):
+def create_markdown(escape: bool=True, hard_wrap: bool=False, renderer='html', plugins=None) -> Markdown:
     """Create a Markdown instance based on the given condition.
 
     :param escape: Boolean. If using html renderer, escape html.
@@ -43,7 +43,7 @@ def create_markdown(escape=True, hard_wrap=False, renderer='html', plugins=None)
     return Markdown(renderer=renderer, inline=inline, plugins=plugins)
 
 
-html = create_markdown(
+html: Markdown = create_markdown(
     escape=False,
     plugins=['strikethrough', 'footnotes', 'table', 'speedup']
 )
@@ -52,7 +52,7 @@ html = create_markdown(
 __cached_parsers = {}
 
 
-def markdown(text, escape=True, renderer='html', plugins=None):
+def markdown(text, escape=True, renderer='html', plugins=None) -> str:
     key = (escape, renderer, plugins)
     if key in __cached_parsers:
         return __cached_parsers[key](text)

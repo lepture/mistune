@@ -18,7 +18,10 @@ class Markdown:
     :param inline: inline level syntax parser
     :param plugins: mistune plugins to use
     """
-    def __init__(self, renderer=None, block=None, inline=None, plugins=None):
+    def __init__(self, renderer=None,
+                 block: Optional[BlockParser]=None,
+                 inline: Optional[InlineParser]=None,
+                 plugins=None):
         if block is None:
             block = BlockParser()
 
@@ -26,8 +29,8 @@ class Markdown:
             inline = InlineParser()
 
         self.renderer = renderer
-        self.block = block
-        self.inline = inline
+        self.block: BlockParser = block
+        self.inline: InlineParser = inline
         self.before_parse_hooks = []
         self.before_render_hooks = []
         self.after_render_hooks = []

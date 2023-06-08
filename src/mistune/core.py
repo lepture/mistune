@@ -1,4 +1,5 @@
 import re
+from typing import Dict, Any
 
 _LINE_END = re.compile(r'\n|$')
 
@@ -23,12 +24,12 @@ class BlockState:
         else:
             self.env = {'ref_links': {}}
 
-    def child_state(self, src):
+    def child_state(self, src: str):
         child = self.__class__(self)
         child.process(src)
         return child
 
-    def process(self, src):
+    def process(self, src: str):
         self.src = src
         self.cursor_max = len(src)
 
@@ -36,22 +37,22 @@ class BlockState:
         m = _LINE_END.search(self.src, self.cursor)
         return m.end()
 
-    def get_text(self, end_pos):
+    def get_text(self, end_pos: int):
         return self.src[self.cursor:end_pos]
 
     def last_token(self):
         if self.tokens:
             return self.tokens[-1]
 
-    def prepend_token(self, token):
+    def prepend_token(self, token: Dict[str, Any]):
         """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
-    def append_token(self, token):
+    def append_token(self, token: Dict[str, Any]):
         """Add token to the end of token list."""
         self.tokens.append(token)
 
-    def add_paragraph(self, text):
+    def add_paragraph(self, text: str):
         last_token = self.last_token()
         if last_token and last_token['type'] == 'paragraph':
             last_token['text'] += text
@@ -76,7 +77,7 @@ class BlockState:
 
 class InlineState:
     """The state to save inline parser's tokens."""
-    def __init__(self, env):
+    def __init__(self, env: Dict[str, Any]):
         self.env = env
         self.src = ''
         self.tokens = []
@@ -85,11 +86,11 @@ class InlineState:
         self.in_emphasis = False
         self.in_strong = False
 
-    def prepend_token(self, token):
+    def prepend_token(self, token: Dict[str, Any]):
         """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
-    def append_token(self, token):
+    def append_token(self, token: Dict[str, Any]):
         """Add token to the end of token list."""
         self.tokens.append(token)
 
@@ -133,7 +134,7 @@ class Parser:
         self.__sc[key] = sc
         return sc
 
-    def register(self, name, pattern, func, before=None):
+    def register(self, name: str, pattern, func, before=None):
         """Register a new rule to parse the token. This method is usually used to
         create a new plugin.
 
@@ -173,7 +174,7 @@ class BaseRenderer(object):
     def __init__(self):
         self.__methods = {}
 
-    def register(self, name, method):
+    def register(self, name: str, method):
         """Register a render method for the named token. For example::
 
             def render_wiki(renderer, key, title):

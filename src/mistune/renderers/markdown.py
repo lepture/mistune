@@ -5,7 +5,7 @@ from ._list import render_list
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
 
-fenced_re = re.compile(r'^(?:`|~)+', re.M)
+fenced_re = re.compile(r'^[`~]+', re.M)
 
 
 class MarkdownRenderer(BaseRenderer):

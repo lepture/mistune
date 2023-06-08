@@ -93,7 +93,7 @@ class InlineParser(Parser):
         'linebreak',
     )
 
-    def __init__(self, hard_wrap=False):
+    def __init__(self, hard_wrap: bool=False):
         super(InlineParser, self).__init__()
 
         self.hard_wrap = hard_wrap
@@ -283,7 +283,7 @@ class InlineParser(Parser):
         marker = m.group(0)
         # require same marker with same length at end
 
-        pattern = re.compile(r'(.*?(?:[^`]))' + marker + r'(?!`)', re.S)
+        pattern = re.compile(r'(.*?[^`])' + marker + r'(?!`)', re.S)
 
         pos = m.end()
         m = pattern.match(state.src, pos)

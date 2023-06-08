@@ -8,7 +8,7 @@ Here are the list of API reference; it might be helpful for developers.
 Basic
 -----
 
-.. function:: html(text)
+.. function:: html(text: str)
 
     :param text: markdown formatted text
 

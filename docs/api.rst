@@ -105,6 +105,21 @@ Plugins
 
 .. autofunction:: spoiler
 
+Renderers
+---------
+
+.. module:: mistune.renderers.html
+
+.. autoclass:: HTMLRenderer
+
+.. module:: mistune.renderers.markdown
+
+.. autoclass:: MarkdownRenderer
+
+.. module:: mistune.renderers.rst
+
+.. autoclass:: RSTRenderer
+
 TOC hook
 --------
 

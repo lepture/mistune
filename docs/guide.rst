@@ -83,8 +83,8 @@ In this way, we can use Pygments to highlight the fenced code. Learn more
 at :ref:`renderers`.
 
 
-AST
----
+Abstract syntax tree
+--------------------
 
 Mistune can produce AST by default without any renderer::
 

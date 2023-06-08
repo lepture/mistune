@@ -6,6 +6,10 @@ Built-in Plugins
 .. meta::
     :description: List of Mistune built-in plugins, their syntax and how to enable them.
 
+Mistune offers many built-in plugins, including all the popular markups.
+
+.. _strikethrough:
+
 strikethrough
 -------------
 

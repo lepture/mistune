@@ -3,15 +3,31 @@
 Renderers
 =========
 
+Mistune has several built-in renderers, including:
+
+- :class:`mistune.renderers.html.HTMLRenderer`
+- :class:`mistune.renderers.markdown.MarkdownRenderer`
+- :class:`mistune.renderers.rst.RSTRenderer`
+
+You're welcome to contribute more renderers.
 
 Customize HTMLRenderer
 ----------------------
 
-You can customize HTML output with your own renderers. Create a subclass
-of ``mistune.HTMLRenderer``::
+You can customize HTML output with your own renderers. Take an example, we're going
+to add an inline math syntax like below:
 
+.. code::
 
-    class MyRenderer(mistune.HTMLRenderer):
+    `$a^2=4$`
+
+To render this syntax, we can create a subclass of ``mistune.HTMLRenderer``:
+
+.. code-block:: python
+
+    from mistune import HTMLRenderer
+
+    class MyRenderer(HTMLRenderer):
         def codespan(self, text):
             if text.startswith('$') and text.endswith('$'):
                 return '<span class="math">' + escape(text) + '</span>'
@@ -21,7 +37,12 @@ of ``mistune.HTMLRenderer``::
     markdown = mistune.create_markdown(renderer=MyRenderer())
     print(markdown('hi `$a^2=4$`'))
 
-Here is a a list of available renderer functions::
+Available methods
+~~~~~~~~~~~~~~~~~
+
+Here is a a list of available renderer functions for ``HTMLRenderer``, including methods on plugins:
+
+.. code-block::
 
     # inline level
     text(self, text)
@@ -93,23 +114,53 @@ Here is a a list of available renderer functions::
 RestructuredText Renderer
 -------------------------
 
+The ``RSTRenderer`` can be used to convert markdown text to RestructuredText.
 
-Customize MarkdownRenderer
----------------------------
+.. code-block:: python
 
-You can customize Markdown output with your own renderers. Create a subclass
-of ``mistune.MarkdownRenderer``::
+    from mistune.renderers.rst import RSTRenderer
+
+    convert_rst = mistune.create_markdown(renderer=RSTRenderer())
+    convert_rst(your_markdown_text)
 
 
-    class MyRenderer(mistune.renderers.markdown.MarkdownRenderer):
-        def link(self, token, state):
-            return '**' + self.render_children(token, state) + '** '
+Markdown Renderer
+-----------------
 
-    # use customized renderer
-    markdown = mistune.create_markdown(renderer=MyRenderer())
-    print(markdown('[Mistune](mistune.lepture.com)'))
+The ``MarkdownRenderer`` can be used to reformat your Markdown text.
 
-Here is a a list of available renderer functions::
+.. code-block:: python
+
+    from mistune.renderers.markdown import MarkdownRenderer
+
+    format_markdown = mistune.create_markdown(renderer=MarkdownRenderer())
+    format_markdown(your_markdown_text)
+
+With plugins
+~~~~~~~~~~~~
+
+The original ``MarkdownRenderer`` can **ONLY** render the basic Markdown syntax.
+If you're using plugins, you would need to customize ``MarkdownRenderer`` with
+extra render methods. Take an example, you are going to add the :ref:`strikethrough`
+plugin:
+
+.. code-block:: python
+
+    from mistune.renderers.markdown import MarkdownRenderer
+
+    class MyRenderer(MarkdownRenderer):
+        def strikethrough(self, token, state):
+            return '~~' + self.render_children(token, state) + '~~'
+
+    format_markdown = mistune.create_markdown(renderer=MarkdownRenderer(), plugins=['strikethrough'])
+    format_markdown(your_markdown_text)
+
+Default methods
+~~~~~~~~~~~~~~~
+
+Here is a a list of default renderer functions of ``MarkdownRenderer``:
+
+.. code-block::
 
     # inline level
     text(self, token, state)

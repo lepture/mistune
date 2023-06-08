@@ -41,6 +41,21 @@ html_theme_options = {
     'twitter_url': 'https://twitter.com/lepture',
     'github_url': 'https://github.com/lepture/mistune',
     'nav_links': [
+        {
+            'title': 'Projects',
+            'children': [
+                {
+                    'title': 'Authlib',
+                    'url': 'https://authlib.org/',
+                    'summary': 'OAuth, JOSE, OpenID, etc'
+                },
+                {
+                    'title': 'Shibuya',
+                    'url': 'https://shibuya.lepture.com/',
+                    'summary': 'A pretty Sphinx theme',
+                }
+            ]
+        },
         {'title': 'Sponsor me', 'url': 'https://github.com/sponsors/lepture'}
     ]
 }
@@ -54,12 +69,3 @@ html_copy_source = False
 html_show_sourcelink = False
 
 html_favicon = "_static/light-icon.svg"
-html_sidebars = {
-    "**": [
-        "sidebars/localtoc.html",
-        "sidebars/repo-stats.html",
-        "sidebars/edit-this-page.html",
-        "sponsors.html",
-        "sidebars/ethical-ads.html",
-    ]
-}

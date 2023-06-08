@@ -4,4 +4,5 @@ from setuptools import setup
 
 setup(
     name="mistune",
+    package_data={"mistune": ["py.typed", ]}
 )

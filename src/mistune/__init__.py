@@ -34,7 +34,10 @@ def create_markdown(escape: bool=True, hard_wrap: bool=False, renderer='html', p
         # re-use markdown function
         markdown('.... your text ...')
     """
-    if renderer == 'html':
+    if renderer == 'ast':
+        # explicit and more similar to 2.x's API
+        renderer = None
+    elif renderer == 'html':
         renderer = HTMLRenderer(escape=escape)
 
     inline = InlineParser(hard_wrap=hard_wrap)
@@ -53,6 +56,9 @@ __cached_parsers = {}
 
 
 def markdown(text, escape=True, renderer='html', plugins=None) -> str:
+    if renderer == 'ast':
+        # explicit and more similar to 2.x's API
+        renderer = None
     key = (escape, renderer, plugins)
     if key in __cached_parsers:
         return __cached_parsers[key](text)

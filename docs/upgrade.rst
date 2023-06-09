@@ -33,11 +33,11 @@ When customizing renderers, these methods' parameters are changed:
 AstRenderer
 ~~~~~~~~~~~
 
-There is no ``AstRenderer`` in v3, just pass ``None`` to ``create_markdown``::
+There is no ``AstRenderer`` in v3, just pass ``None`` or ``'ast'`` to ``create_markdown``::
 
     import mistune
 
-    md = mistune.create_markdown(renderer=None)
+    md = mistune.create_markdown(renderer='ast') # or render=None
     md('...markdown text...')
 
 Plugins

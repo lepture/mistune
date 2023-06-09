@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Match
 from .util import (
     unikey,
     escape_url,
@@ -109,18 +109,18 @@ class BlockParser(Parser):
             name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
         }
 
-    def parse_blank_line(self, m: re.Match, state: BlockState) -> int:
+    def parse_blank_line(self, m: Match, state: BlockState) -> int:
         """Parse token for blank lines."""
         state.append_token({'type': 'blank_line'})
         return m.end()
 
-    def parse_thematic_break(self, m: re.Match, state: BlockState) -> int:
+    def parse_thematic_break(self, m: Match, state: BlockState) -> int:
         """Parse token for thematic break, e.g. ``<hr>`` tag in HTML."""
         state.append_token({'type': 'thematic_break'})
         # $ does not count '\n'
         return m.end() + 1
 
-    def parse_indent_code(self, m: re.Match, state: BlockState) -> int:
+    def parse_indent_code(self, m: Match, state: BlockState) -> int:
         """Parse token for code block which is indented by 4 spaces."""
         # it is a part of the paragraph
         end_pos = state.append_paragraph()
@@ -134,7 +134,7 @@ class BlockParser(Parser):
         state.append_token({'type': 'block_code', 'raw': code, 'style': 'indent'})
         return m.end()
 
-    def parse_fenced_code(self, m: re.Match, state: BlockState) -> Optional[int]:
+    def parse_fenced_code(self, m: Match, state: BlockState) -> Optional[int]:
         """Parse token for fenced code block. A fenced code block is started with
         3 or more backtick(`) or tilde(~).
 
@@ -182,7 +182,7 @@ class BlockParser(Parser):
         state.append_token(token)
         return end_pos
 
-    def parse_axt_heading(self, m: re.Match, state: BlockState) -> int:
+    def parse_axt_heading(self, m: Match, state: BlockState) -> int:
         """Parse token for AXT heading. An AXT heading is started with 1 to 6
         symbol of ``#``."""
         level = len(m.group('axt_1'))
@@ -195,7 +195,7 @@ class BlockParser(Parser):
         state.append_token(token)
         return m.end() + 1
 
-    def parse_setex_heading(self, m: re.Match, state: BlockState) -> Optional[int]:
+    def parse_setex_heading(self, m: Match, state: BlockState) -> Optional[int]:
         """Parse token for setex style heading. A setex heading syntax looks like:
 
         .. code-block:: markdown
@@ -216,7 +216,7 @@ class BlockParser(Parser):
         if m:
             return self.parse_method(m, state)
 
-    def parse_ref_link(self, m: re.Match, state: BlockState) -> Optional[int]:
+    def parse_ref_link(self, m: Match, state: BlockState) -> Optional[int]:
         """Parse link references and save the link information into ``state.env``.
 
         Here is an example of a link reference:
@@ -282,7 +282,7 @@ class BlockParser(Parser):
             state.env['ref_links'][key] = data
         return end_pos
 
-    def extract_block_quote(self, m: re.Match, state: BlockState) -> Tuple[str, int]:
+    def extract_block_quote(self, m: Match, state: BlockState) -> Tuple[str, int]:
         """Extract text and cursor end position of a block quote."""
 
         # cleanup at first to detect if it is code block
@@ -349,7 +349,7 @@ class BlockParser(Parser):
         # treated as 4 spaces
         return expand_tab(text), end_pos
 
-    def parse_block_quote(self, m: re.Match, state: BlockState) -> int:
+    def parse_block_quote(self, m: Match, state: BlockState) -> int:
         """Parse token for block quote. Here is an example of the syntax:
 
         .. code-block:: markdown
@@ -374,14 +374,14 @@ class BlockParser(Parser):
         state.append_token(token)
         return state.cursor
 
-    def parse_list(self, m: re.Match, state: BlockState) -> int:
+    def parse_list(self, m: Match, state: BlockState) -> int:
         """Parse tokens for ordered and unordered list."""
         return parse_list(self, m, state)
 
-    def parse_block_html(self, m: re.Match, state: BlockState) -> Optional[int]:
+    def parse_block_html(self, m: Match, state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)
 
-    def parse_raw_html(self, m: re.Match, state: BlockState) -> Optional[int]:
+    def parse_raw_html(self, m: Match, state: BlockState) -> Optional[int]:
         marker = m.group(0).strip()
 
         # rule 2

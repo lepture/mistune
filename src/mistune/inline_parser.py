@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Match
 from .core import Parser, InlineState
 from .util import (
     escape,
@@ -107,7 +107,7 @@ class InlineParser(Parser):
             name: getattr(self, 'parse_' + name) for name in self.rules
         }
 
-    def parse_escape(self, m: re.Match, state: InlineState) -> int:
+    def parse_escape(self, m: Match, state: InlineState) -> int:
         text = m.group(0)
         text = unescape_char(text)
         state.append_token({
@@ -116,7 +116,7 @@ class InlineParser(Parser):
         })
         return m.end()
 
-    def parse_link(self, m: re.Match, state: InlineState) -> Optional[int]:
+    def parse_link(self, m: Match, state: InlineState) -> Optional[int]:
         pos = m.end()
 
         marker = m.group(0)
@@ -200,7 +200,7 @@ class InlineParser(Parser):
             }
         return token
 
-    def parse_auto_link(self, m: re.Match, state: InlineState) -> int:
+    def parse_auto_link(self, m: Match, state: InlineState) -> int:
         text = m.group(0)
         pos = m.end()
         if state.in_link:
@@ -211,7 +211,7 @@ class InlineParser(Parser):
         self._add_auto_link(text, text, state)
         return pos
 
-    def parse_auto_email(self, m: re.Match, state: InlineState) -> int:
+    def parse_auto_email(self, m: Match, state: InlineState) -> int:
         text = m.group(0)
         pos = m.end()
         if state.in_link:
@@ -230,7 +230,7 @@ class InlineParser(Parser):
             'attrs': {'url': escape_url(url)},
         })
 
-    def parse_emphasis(self, m: re.Match, state: InlineState) -> int:
+    def parse_emphasis(self, m: Match, state: InlineState) -> int:
         pos = m.end()
 
         marker = m.group(0)
@@ -279,7 +279,7 @@ class InlineParser(Parser):
             })
         return end_pos
 
-    def parse_codespan(self, m: re.Match, state: InlineState) -> int:
+    def parse_codespan(self, m: Match, state: InlineState) -> int:
         marker = m.group(0)
         # require same marker with same length at end
 
@@ -301,15 +301,15 @@ class InlineParser(Parser):
             state.append_token({'type': 'text', 'raw': marker})
             return pos
 
-    def parse_linebreak(self, m: re.Match, state: InlineState) -> int:
+    def parse_linebreak(self, m: Match, state: InlineState) -> int:
         state.append_token({'type': 'linebreak'})
         return m.end()
 
-    def parse_softbreak(self, m: re.Match, state: InlineState) -> int:
+    def parse_softbreak(self, m: Match, state: InlineState) -> int:
         state.append_token({'type': 'softbreak'})
         return m.end()
 
-    def parse_inline_html(self, m: re.Match, state: InlineState) -> int:
+    def parse_inline_html(self, m: Match, state: InlineState) -> int:
         end_pos = m.end()
         html = m.group(0)
         state.append_token({'type': 'inline_html', 'raw': html})
@@ -351,7 +351,7 @@ class InlineParser(Parser):
             self.process_text(state.src[pos:], state)
         return state.tokens
 
-    def precedence_scan(self, m: re.Match, state: InlineState, end_pos: int, rules=None):
+    def precedence_scan(self, m: Match, state: InlineState, end_pos: int, rules=None):
         if rules is None:
             rules = ['codespan', 'link', 'prec_auto_link', 'prec_inline_html']
 

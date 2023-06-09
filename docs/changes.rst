@@ -3,10 +3,19 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.1
+-------------
+
+**Released on Jun 10, 2023**
+
+* Add ``py.typed`` for mypy
+* Add ``tests``, ``docs`` for sdist
+* Support ``renderer="ast"`` for rendering AST
+
 Version 3.0.0
 -------------
 
-**Released on June 08, 2023**
+**Released on Jun 08, 2023**
 
 * Do not strip leading unicode spaces like emsp
 * Ensure new line at end of the text

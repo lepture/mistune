@@ -9,7 +9,7 @@ def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
         from mistune.toc import add_toc_hook, render_toc_ul
 
         md = mistune.create_markdown(...)
-        add_toc_hook(md, level, heading_id)
+        add_toc_hook(md)
 
         html, state = md.parse(text)
         toc_items = state.env['toc_items']

@@ -1,15 +1,6 @@
-.PHONY: clean-pyc clean-build docs
+.PHONY: clean-pyc clean-build build-docs
 
-test:
-	@pytest -s
-
-coverage:
-	@pytest --cov=mistune
-
-clean: clean-build clean-pyc clean-docs
-
-build:
-	@python3 -m build
+clean: clean-build clean-pyc
 
 clean-build:
 	@rm -fr build/
@@ -24,14 +15,6 @@ clean-pyc:
 	@find . -name '*~' -exec rm -f {} +
 	@find . -name '__pycache__' -exec rm -fr {} +
 
-clean-docs:
-	@rm -fr  docs/_build
 
-docs:
-	@$(MAKE) -C docs html
-
-publish:
-	@twine upload dist/*.tar.gz
-	@twine upload dist/*.whl
-
-.PHONY: build
+build-docs:
+	@sphinx-build docs build/_html -a

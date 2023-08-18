@@ -30,6 +30,16 @@ When customizing renderers, these methods' parameters are changed:
     -    table_cell(self, text, align=None, is_head=False)
     +    table_cell(self, text, align=None, head=False)
 
+For plugins:
+
+.. code-block:: diff
+
+    - abbr(self, key, definition)
+    + abbr(self, text: str, title: str)
+
+    - task_list_item(self, text: str, level: int, checked: bool)
+    + task_list_item(self, text: str, checked: bool)
+
 AstRenderer
 ~~~~~~~~~~~
 

@@ -62,7 +62,7 @@ def render_block_image(self, src: str, alt=None, width=None, height=None, **attr
     if style:
         img += ' style="' + escape_text(style) + '"'
 
-    img += ' />'
+    img += '>'
 
     _cls = 'block-image'
     align = attrs.get('align')

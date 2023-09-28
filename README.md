@@ -2,7 +2,7 @@
 
 A fast yet powerful Python Markdown parser with renderers and plugins.
 
-<a href="https://github.com/lepture/mistune/actions"><img src="https://github.com/lepture/mistune/workflows/tests/badge.svg" /></a>
+<a href="https://github.com/lepture/mistune/actions"><img src="https://github.com/lepture/mistune/workflows/tests/badge.svg"></a>
 <a href="https://codecov.io/gh/lepture/mistune"><img src="https://badgen.net/codecov/c/github/lepture/mistune" alt="Coverage"></a>
 
 

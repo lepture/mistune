@@ -82,13 +82,13 @@ class HTMLRenderer(BaseRenderer):
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + safe_entity(title) + '"'
-        return s + ' />'
+        return s + '>'
 
     def codespan(self, text: str) -> str:
         return '<code>' + text + '</code>'
 
     def linebreak(self) -> str:
-        return '<br />\n'
+        return '<br>\n'
 
     def softbreak(self) -> str:
         return '\n'
@@ -113,7 +113,7 @@ class HTMLRenderer(BaseRenderer):
         return ''
 
     def thematic_break(self) -> str:
-        return '<hr />\n'
+        return '<hr>\n'
 
     def block_text(self, text: str) -> str:
         return text

@@ -19,7 +19,7 @@ class TestMiscCases(TestCase):
     def test_hard_wrap(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md('foo\nbar')
-        expected = '<p>foo<br />\nbar</p>'
+        expected = '<p>foo<br>\nbar</p>'
         self.assertEqual(result.strip(), expected)
 
         md = mistune.create_markdown(
@@ -101,5 +101,5 @@ class TestMiscCases(TestCase):
     def test_emsp(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md('\u2003\u2003foo\nbar\n\n\u2003\u2003foobar')
-        expected = '<p>\u2003\u2003foo<br />\nbar</p>\n<p>\u2003\u2003foobar</p>'
+        expected = '<p>\u2003\u2003foo<br>\nbar</p>\n<p>\u2003\u2003foobar</p>'
         self.assertEqual(result.strip(), expected)

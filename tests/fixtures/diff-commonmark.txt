@@ -46,7 +46,7 @@ Example 573
 ```````````````````````````````` example
 ![foo ![bar](/url)](/url2)
 .
-<p><img src="/url2" alt="foo ![bar](/url)" /></p>
+<p><img src="/url2" alt="foo ![bar](/url)"></p>
 ````````````````````````````````
 
 ## Link
@@ -72,5 +72,5 @@ Example 519
 ```````````````````````````````` example
 ![[[foo](uri1)](uri2)](uri3)
 .
-<p><img src="uri3" alt="[foo](uri1)" /></p>
+<p><img src="uri3" alt="[foo](uri1)"></p>
 ````````````````````````````````

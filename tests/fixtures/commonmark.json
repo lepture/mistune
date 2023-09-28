@@ -81,7 +81,7 @@
   },
   {
     "markdown": "*\t*\t*\t\n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 11,
     "start_line": 473,
     "end_line": 477,
@@ -121,7 +121,7 @@
   },
   {
     "markdown": "foo\\\nbar\n",
-    "html": "<p>foo<br />\nbar</p>\n",
+    "html": "<p>foo<br>\nbar</p>\n",
     "example": 16,
     "start_line": 544,
     "end_line": 550,
@@ -337,7 +337,7 @@
   },
   {
     "markdown": "***\n---\n___\n",
-    "html": "<hr />\n<hr />\n<hr />\n",
+    "html": "<hr>\n<hr>\n<hr>\n",
     "example": 43,
     "start_line": 880,
     "end_line": 888,
@@ -369,7 +369,7 @@
   },
   {
     "markdown": " ***\n  ***\n   ***\n",
-    "html": "<hr />\n<hr />\n<hr />\n",
+    "html": "<hr>\n<hr>\n<hr>\n",
     "example": 47,
     "start_line": 922,
     "end_line": 930,
@@ -393,7 +393,7 @@
   },
   {
     "markdown": "_____________________________________\n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 50,
     "start_line": 954,
     "end_line": 958,
@@ -401,7 +401,7 @@
   },
   {
     "markdown": " - - -\n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 51,
     "start_line": 963,
     "end_line": 967,
@@ -409,7 +409,7 @@
   },
   {
     "markdown": " **  * ** * ** * **\n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 52,
     "start_line": 970,
     "end_line": 974,
@@ -417,7 +417,7 @@
   },
   {
     "markdown": "-     -      -      -\n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 53,
     "start_line": 977,
     "end_line": 981,
@@ -425,7 +425,7 @@
   },
   {
     "markdown": "- - - -    \n",
-    "html": "<hr />\n",
+    "html": "<hr>\n",
     "example": 54,
     "start_line": 986,
     "end_line": 990,
@@ -449,7 +449,7 @@
   },
   {
     "markdown": "- foo\n***\n- bar\n",
-    "html": "<ul>\n<li>foo</li>\n</ul>\n<hr />\n<ul>\n<li>bar</li>\n</ul>\n",
+    "html": "<ul>\n<li>foo</li>\n</ul>\n<hr>\n<ul>\n<li>bar</li>\n</ul>\n",
     "example": 57,
     "start_line": 1020,
     "end_line": 1032,
@@ -457,7 +457,7 @@
   },
   {
     "markdown": "Foo\n***\nbar\n",
-    "html": "<p>Foo</p>\n<hr />\n<p>bar</p>\n",
+    "html": "<p>Foo</p>\n<hr>\n<p>bar</p>\n",
     "example": 58,
     "start_line": 1037,
     "end_line": 1045,
@@ -473,7 +473,7 @@
   },
   {
     "markdown": "* Foo\n* * *\n* Bar\n",
-    "html": "<ul>\n<li>Foo</li>\n</ul>\n<hr />\n<ul>\n<li>Bar</li>\n</ul>\n",
+    "html": "<ul>\n<li>Foo</li>\n</ul>\n<hr>\n<ul>\n<li>Bar</li>\n</ul>\n",
     "example": 60,
     "start_line": 1067,
     "end_line": 1079,
@@ -481,7 +481,7 @@
   },
   {
     "markdown": "- Foo\n- * * *\n",
-    "html": "<ul>\n<li>Foo</li>\n<li>\n<hr />\n</li>\n</ul>\n",
+    "html": "<ul>\n<li>Foo</li>\n<li>\n<hr>\n</li>\n</ul>\n",
     "example": 61,
     "start_line": 1084,
     "end_line": 1094,
@@ -609,7 +609,7 @@
   },
   {
     "markdown": "****\n## foo\n****\n",
-    "html": "<hr />\n<h2>foo</h2>\n<hr />\n",
+    "html": "<hr>\n<h2>foo</h2>\n<hr>\n",
     "example": 77,
     "start_line": 1284,
     "end_line": 1292,
@@ -673,7 +673,7 @@
   },
   {
     "markdown": "    Foo\n    ---\n\n    Foo\n---\n",
-    "html": "<pre><code>Foo\n---\n\nFoo\n</code></pre>\n<hr />\n",
+    "html": "<pre><code>Foo\n---\n\nFoo\n</code></pre>\n<hr>\n",
     "example": 85,
     "start_line": 1424,
     "end_line": 1437,
@@ -697,7 +697,7 @@
   },
   {
     "markdown": "Foo\n= =\n\nFoo\n--- -\n",
-    "html": "<p>Foo\n= =</p>\n<p>Foo</p>\n<hr />\n",
+    "html": "<p>Foo\n= =</p>\n<p>Foo</p>\n<hr>\n",
     "example": 88,
     "start_line": 1464,
     "end_line": 1475,
@@ -729,7 +729,7 @@
   },
   {
     "markdown": "> Foo\n---\n",
-    "html": "<blockquote>\n<p>Foo</p>\n</blockquote>\n<hr />\n",
+    "html": "<blockquote>\n<p>Foo</p>\n</blockquote>\n<hr>\n",
     "example": 92,
     "start_line": 1520,
     "end_line": 1528,
@@ -745,7 +745,7 @@
   },
   {
     "markdown": "- Foo\n---\n",
-    "html": "<ul>\n<li>Foo</li>\n</ul>\n<hr />\n",
+    "html": "<ul>\n<li>Foo</li>\n</ul>\n<hr>\n",
     "example": 94,
     "start_line": 1544,
     "end_line": 1552,
@@ -761,7 +761,7 @@
   },
   {
     "markdown": "---\nFoo\n---\nBar\n---\nBaz\n",
-    "html": "<hr />\n<h2>Foo</h2>\n<h2>Bar</h2>\n<p>Baz</p>\n",
+    "html": "<hr>\n<h2>Foo</h2>\n<h2>Bar</h2>\n<p>Baz</p>\n",
     "example": 96,
     "start_line": 1572,
     "end_line": 1584,
@@ -777,7 +777,7 @@
   },
   {
     "markdown": "---\n---\n",
-    "html": "<hr />\n<hr />\n",
+    "html": "<hr>\n<hr>\n",
     "example": 98,
     "start_line": 1601,
     "end_line": 1607,
@@ -785,7 +785,7 @@
   },
   {
     "markdown": "- foo\n-----\n",
-    "html": "<ul>\n<li>foo</li>\n</ul>\n<hr />\n",
+    "html": "<ul>\n<li>foo</li>\n</ul>\n<hr>\n",
     "example": 99,
     "start_line": 1610,
     "end_line": 1618,
@@ -793,7 +793,7 @@
   },
   {
     "markdown": "    foo\n---\n",
-    "html": "<pre><code>foo\n</code></pre>\n<hr />\n",
+    "html": "<pre><code>foo\n</code></pre>\n<hr>\n",
     "example": 100,
     "start_line": 1621,
     "end_line": 1628,
@@ -801,7 +801,7 @@
   },
   {
     "markdown": "> foo\n-----\n",
-    "html": "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />\n",
+    "html": "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr>\n",
     "example": 101,
     "start_line": 1631,
     "end_line": 1639,
@@ -825,7 +825,7 @@
   },
   {
     "markdown": "Foo\nbar\n\n---\n\nbaz\n",
-    "html": "<p>Foo\nbar</p>\n<hr />\n<p>baz</p>\n",
+    "html": "<p>Foo\nbar</p>\n<hr>\n<p>baz</p>\n",
     "example": 104,
     "start_line": 1692,
     "end_line": 1704,
@@ -833,7 +833,7 @@
   },
   {
     "markdown": "Foo\nbar\n* * *\nbaz\n",
-    "html": "<p>Foo\nbar</p>\n<hr />\n<p>baz</p>\n",
+    "html": "<p>Foo\nbar</p>\n<hr>\n<p>baz</p>\n",
     "example": 105,
     "start_line": 1710,
     "end_line": 1720,
@@ -913,7 +913,7 @@
   },
   {
     "markdown": "# Heading\n    foo\nHeading\n------\n    foo\n----\n",
-    "html": "<h1>Heading</h1>\n<pre><code>foo\n</code></pre>\n<h2>Heading</h2>\n<pre><code>foo\n</code></pre>\n<hr />\n",
+    "html": "<h1>Heading</h1>\n<pre><code>foo\n</code></pre>\n<h2>Heading</h2>\n<pre><code>foo\n</code></pre>\n<hr>\n",
     "example": 115,
     "start_line": 1882,
     "end_line": 1897,
@@ -1801,7 +1801,7 @@
   },
   {
     "markdown": "aaa     \nbbb     \n",
-    "html": "<p>aaa<br />\nbbb</p>\n",
+    "html": "<p>aaa<br>\nbbb</p>\n",
     "example": 226,
     "start_line": 3619,
     "end_line": 3625,
@@ -1865,7 +1865,7 @@
   },
   {
     "markdown": "> foo\n---\n",
-    "html": "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />\n",
+    "html": "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr>\n",
     "example": 234,
     "start_line": 3804,
     "end_line": 3812,
@@ -1961,7 +1961,7 @@
   },
   {
     "markdown": "> aaa\n***\n> bbb\n",
-    "html": "<blockquote>\n<p>aaa</p>\n</blockquote>\n<hr />\n<blockquote>\n<p>bbb</p>\n</blockquote>\n",
+    "html": "<blockquote>\n<p>aaa</p>\n</blockquote>\n<hr>\n<blockquote>\n<p>bbb</p>\n</blockquote>\n",
     "example": 246,
     "start_line": 3991,
     "end_line": 4003,
@@ -3784,8 +3784,8 @@
     "section": "Emphasis and strong emphasis"
   },
   {
-    "markdown": "*<img src=\"foo\" title=\"*\"/>\n",
-    "html": "<p>*<img src=\"foo\" title=\"*\"/></p>\n",
+    "markdown": "*<img src=\"foo\" title=\"*\">\n",
+    "html": "<p>*<img src=\"foo\" title=\"*\"></p>\n",
     "example": 474,
     "start_line": 7398,
     "end_line": 7402,
@@ -4121,7 +4121,7 @@
   },
   {
     "markdown": "[![moon](moon.jpg)](/uri)\n",
-    "html": "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n",
+    "html": "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\"></a></p>\n",
     "example": 516,
     "start_line": 7866,
     "end_line": 7870,
@@ -4145,7 +4145,7 @@
   },
   {
     "markdown": "![[[foo](uri1)](uri2)](uri3)\n",
-    "html": "<p><img src=\"uri3\" alt=\"[foo](uri2)\" /></p>\n",
+    "html": "<p><img src=\"uri3\" alt=\"[foo](uri2)\"></p>\n",
     "example": 519,
     "start_line": 7889,
     "end_line": 7893,
@@ -4233,7 +4233,7 @@
   },
   {
     "markdown": "[![moon](moon.jpg)][ref]\n\n[ref]: /uri\n",
-    "html": "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\" /></a></p>\n",
+    "html": "<p><a href=\"/uri\"><img src=\"moon.jpg\" alt=\"moon\"></a></p>\n",
     "example": 530,
     "start_line": 8022,
     "end_line": 8028,
@@ -4561,7 +4561,7 @@
   },
   {
     "markdown": "![foo](/url \"title\")\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\"></p>\n",
     "example": 571,
     "start_line": 8530,
     "end_line": 8534,
@@ -4569,7 +4569,7 @@
   },
   {
     "markdown": "![foo *bar*]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n",
-    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\"></p>\n",
     "example": 572,
     "start_line": 8537,
     "end_line": 8543,
@@ -4577,7 +4577,7 @@
   },
   {
     "markdown": "![foo ![bar](/url)](/url2)\n",
-    "html": "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n",
+    "html": "<p><img src=\"/url2\" alt=\"foo bar\"></p>\n",
     "example": 573,
     "start_line": 8546,
     "end_line": 8550,
@@ -4585,7 +4585,7 @@
   },
   {
     "markdown": "![foo [bar](/url)](/url2)\n",
-    "html": "<p><img src=\"/url2\" alt=\"foo bar\" /></p>\n",
+    "html": "<p><img src=\"/url2\" alt=\"foo bar\"></p>\n",
     "example": 574,
     "start_line": 8553,
     "end_line": 8557,
@@ -4593,7 +4593,7 @@
   },
   {
     "markdown": "![foo *bar*][]\n\n[foo *bar*]: train.jpg \"train & tracks\"\n",
-    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\"></p>\n",
     "example": 575,
     "start_line": 8567,
     "end_line": 8573,
@@ -4601,7 +4601,7 @@
   },
   {
     "markdown": "![foo *bar*][foobar]\n\n[FOOBAR]: train.jpg \"train & tracks\"\n",
-    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\" /></p>\n",
+    "html": "<p><img src=\"train.jpg\" alt=\"foo bar\" title=\"train &amp; tracks\"></p>\n",
     "example": 576,
     "start_line": 8576,
     "end_line": 8582,
@@ -4609,7 +4609,7 @@
   },
   {
     "markdown": "![foo](train.jpg)\n",
-    "html": "<p><img src=\"train.jpg\" alt=\"foo\" /></p>\n",
+    "html": "<p><img src=\"train.jpg\" alt=\"foo\"></p>\n",
     "example": 577,
     "start_line": 8585,
     "end_line": 8589,
@@ -4617,7 +4617,7 @@
   },
   {
     "markdown": "My ![foo bar](/path/to/train.jpg  \"title\"   )\n",
-    "html": "<p>My <img src=\"/path/to/train.jpg\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    "html": "<p>My <img src=\"/path/to/train.jpg\" alt=\"foo bar\" title=\"title\"></p>\n",
     "example": 578,
     "start_line": 8592,
     "end_line": 8596,
@@ -4625,7 +4625,7 @@
   },
   {
     "markdown": "![foo](<url>)\n",
-    "html": "<p><img src=\"url\" alt=\"foo\" /></p>\n",
+    "html": "<p><img src=\"url\" alt=\"foo\"></p>\n",
     "example": 579,
     "start_line": 8599,
     "end_line": 8603,
@@ -4633,7 +4633,7 @@
   },
   {
     "markdown": "![](/url)\n",
-    "html": "<p><img src=\"/url\" alt=\"\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"\"></p>\n",
     "example": 580,
     "start_line": 8606,
     "end_line": 8610,
@@ -4641,7 +4641,7 @@
   },
   {
     "markdown": "![foo][bar]\n\n[bar]: /url\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\"></p>\n",
     "example": 581,
     "start_line": 8615,
     "end_line": 8621,
@@ -4649,7 +4649,7 @@
   },
   {
     "markdown": "![foo][bar]\n\n[BAR]: /url\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\"></p>\n",
     "example": 582,
     "start_line": 8624,
     "end_line": 8630,
@@ -4657,7 +4657,7 @@
   },
   {
     "markdown": "![foo][]\n\n[foo]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\"></p>\n",
     "example": 583,
     "start_line": 8635,
     "end_line": 8641,
@@ -4665,7 +4665,7 @@
   },
   {
     "markdown": "![*foo* bar][]\n\n[*foo* bar]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\"></p>\n",
     "example": 584,
     "start_line": 8644,
     "end_line": 8650,
@@ -4673,7 +4673,7 @@
   },
   {
     "markdown": "![Foo][]\n\n[foo]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"Foo\" title=\"title\"></p>\n",
     "example": 585,
     "start_line": 8655,
     "end_line": 8661,
@@ -4681,7 +4681,7 @@
   },
   {
     "markdown": "![foo] \n[]\n\n[foo]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\" />\n[]</p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\">\n[]</p>\n",
     "example": 586,
     "start_line": 8667,
     "end_line": 8675,
@@ -4689,7 +4689,7 @@
   },
   {
     "markdown": "![foo]\n\n[foo]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo\" title=\"title\"></p>\n",
     "example": 587,
     "start_line": 8680,
     "end_line": 8686,
@@ -4697,7 +4697,7 @@
   },
   {
     "markdown": "![*foo* bar]\n\n[*foo* bar]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"foo bar\" title=\"title\"></p>\n",
     "example": 588,
     "start_line": 8689,
     "end_line": 8695,
@@ -4713,7 +4713,7 @@
   },
   {
     "markdown": "![Foo]\n\n[foo]: /url \"title\"\n",
-    "html": "<p><img src=\"/url\" alt=\"Foo\" title=\"title\" /></p>\n",
+    "html": "<p><img src=\"/url\" alt=\"Foo\" title=\"title\"></p>\n",
     "example": 590,
     "start_line": 8712,
     "end_line": 8718,
@@ -5057,7 +5057,7 @@
   },
   {
     "markdown": "foo  \nbaz\n",
-    "html": "<p>foo<br />\nbaz</p>\n",
+    "html": "<p>foo<br>\nbaz</p>\n",
     "example": 633,
     "start_line": 9212,
     "end_line": 9218,
@@ -5065,7 +5065,7 @@
   },
   {
     "markdown": "foo\\\nbaz\n",
-    "html": "<p>foo<br />\nbaz</p>\n",
+    "html": "<p>foo<br>\nbaz</p>\n",
     "example": 634,
     "start_line": 9224,
     "end_line": 9230,
@@ -5073,7 +5073,7 @@
   },
   {
     "markdown": "foo       \nbaz\n",
-    "html": "<p>foo<br />\nbaz</p>\n",
+    "html": "<p>foo<br>\nbaz</p>\n",
     "example": 635,
     "start_line": 9235,
     "end_line": 9241,
@@ -5081,7 +5081,7 @@
   },
   {
     "markdown": "foo  \n     bar\n",
-    "html": "<p>foo<br />\nbar</p>\n",
+    "html": "<p>foo<br>\nbar</p>\n",
     "example": 636,
     "start_line": 9246,
     "end_line": 9252,
@@ -5089,7 +5089,7 @@
   },
   {
     "markdown": "foo\\\n     bar\n",
-    "html": "<p>foo<br />\nbar</p>\n",
+    "html": "<p>foo<br>\nbar</p>\n",
     "example": 637,
     "start_line": 9255,
     "end_line": 9261,
@@ -5097,7 +5097,7 @@
   },
   {
     "markdown": "*foo  \nbar*\n",
-    "html": "<p><em>foo<br />\nbar</em></p>\n",
+    "html": "<p><em>foo<br>\nbar</em></p>\n",
     "example": 638,
     "start_line": 9267,
     "end_line": 9273,
@@ -5105,7 +5105,7 @@
   },
   {
     "markdown": "*foo\\\nbar*\n",
-    "html": "<p><em>foo<br />\nbar</em></p>\n",
+    "html": "<p><em>foo<br>\nbar</em></p>\n",
     "example": 639,
     "start_line": 9276,
     "end_line": 9282,

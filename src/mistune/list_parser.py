@@ -146,6 +146,10 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
                 )
                 state.cursor = m.end() + 1
                 break
+
+            if tok_type == 'list':
+                break
+
             tok_index = len(state.tokens)
             end_pos = block.parse_method(m, state)
             if end_pos:

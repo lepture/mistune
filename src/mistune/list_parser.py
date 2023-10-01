@@ -13,7 +13,7 @@ LIST_PATTERN = (
     r'(?P<list_3>[ \t]*|[ \t].+)$'
 )
 
-_LINE_HAS_TEXT = re.compile(r'( *)\S')
+_LINE_HAS_TEXT = re.compile(r'(\s*)\S')
 
 
 def parse_list(block, m: re.Match, state: BlockState) -> int:

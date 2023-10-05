@@ -66,14 +66,14 @@ Tidelift will coordinate the fix and disclosure.
 Here is the benchmark score on my computer. Check the `benchmark/bench.py` script.
 
 ```
-mistune (3.0.0) - axt: 13.901472091674805ms
-mistune (slow) - axt: 13.122797012329102ms
-mistune (fast) - axt: 13.248443603515625ms
-mistune (full) - axt: 15.445232391357422ms
-markdown (3.3.7) - axt: 48.41303825378418ms
-markdown2 (2.4.3) - axt: 379.30870056152344ms
-mistletoe (0.8.2) - axt: 25.46215057373047ms
-markdown_it (2.1.0) - axt: 42.37723350524902ms
+mistune (3.0.0) - atx: 13.901472091674805ms
+mistune (slow) - atx: 13.122797012329102ms
+mistune (fast) - atx: 13.248443603515625ms
+mistune (full) - atx: 15.445232391357422ms
+markdown (3.3.7) - atx: 48.41303825378418ms
+markdown2 (2.4.3) - atx: 379.30870056152344ms
+mistletoe (0.8.2) - atx: 25.46215057373047ms
+markdown_it (2.1.0) - atx: 42.37723350524902ms
 mistune (3.0.0) - setext: 8.43048095703125ms
 mistune (slow) - setext: 8.97979736328125ms
 mistune (fast) - setext: 8.122920989990234ms

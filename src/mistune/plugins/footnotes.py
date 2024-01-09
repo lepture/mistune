@@ -1,7 +1,15 @@
 import re
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional, Union
+
 from ..core import BlockState
-from ..util import unikey
 from ..helpers import LINK_LABEL
+from ..util import unikey
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 __all__ = ['footnotes']
 
@@ -18,9 +26,11 @@ REF_FOOTNOTE = (
 INLINE_FOOTNOTE = r'\[\^(?P<footnote_key>' + LINK_LABEL + r')\]'
 
 
-def parse_inline_footnote(inline, m: re.Match, state):
-    key = unikey(m.group('footnote_key'))
-    ref = state.env.get('ref_footnotes')
+def parse_inline_footnote(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> int:
+    key = unikey(m.group("footnote_key"))
+    ref = state.env.get("ref_footnotes")
     if ref and key in ref:
         notes = state.env.get('footnotes')
         if not notes:
@@ -38,8 +48,10 @@ def parse_inline_footnote(inline, m: re.Match, state):
     return m.end()
 
 
-def parse_ref_footnote(block, m: re.Match, state: BlockState):
-    ref = state.env.get('ref_footnotes')
+def parse_ref_footnote(
+    block: "BlockParser", m: Match[str], state: BlockState
+) -> int:
+    ref = state.env.get("ref_footnotes")
     if not ref:
         ref = {}
 
@@ -50,8 +62,12 @@ def parse_ref_footnote(block, m: re.Match, state: BlockState):
     return m.end()
 
 
-def parse_footnote_item(block, key: str, index: int, state: BlockState):
-    ref = state.env.get('ref_footnotes')
+def parse_footnote_item(
+    block: "BlockParser", key: str, index: int, state: BlockState
+) -> Dict[str, Any]:
+    ref = state.env.get("ref_footnotes")
+    if not ref:
+        raise ValueError("Missing 'ref_footnotes'.")
     text = ref[key]
 
     lines = text.splitlines()
@@ -76,8 +92,11 @@ def parse_footnote_item(block, key: str, index: int, state: BlockState):
     }
 
 
-def md_footnotes_hook(md, result: str, state: BlockState):
-    notes = state.env.get('footnotes')
+def md_footnotes_hook(
+    md: "Markdown", result: Union[str, List[Dict[str, Any]]], state: BlockState
+) -> str:
+    assert isinstance(result, str)
+    notes = state.env.get("footnotes")
     if not notes:
         return result
 
@@ -88,27 +107,30 @@ def md_footnotes_hook(md, result: str, state: BlockState):
     state = BlockState()
     state.tokens = [{'type': 'footnotes', 'children': children}]
     output = md.render_state(state)
+    assert isinstance(output, str)
     return result + output
 
 
-def render_footnote_ref(renderer, key: str, index: int):
+def render_footnote_ref(renderer: "BaseRenderer", key: str, index: int) -> str:
     i = str(index)
     html = '<sup class="footnote-ref" id="fnref-' + i + '">'
     return html + '<a href="#fn-' + i + '">' + i + '</a></sup>'
 
 
-def render_footnotes(renderer, text: str):
-    return '<section class="footnotes">\n<ol>\n' + text + '</ol>\n</section>\n'
+def render_footnotes(renderer: "BaseRenderer", text: str) -> str:
+    return '<section class="footnotes">\n<ol>\n' + text + "</ol>\n</section>\n"
 
 
-def render_footnote_item(renderer, text: str, key: str, index: int):
+def render_footnote_item(
+    renderer: "BaseRenderer", text: str, key: str, index: int
+) -> str:
     i = str(index)
     back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
     text = text.rstrip()[:-4] + back + '</p>'
     return '<li id="fn-' + i + '">' + text + '</li>\n'
 
 
-def footnotes(md):
+def footnotes(md: "Markdown") -> None:
     """A mistune plugin to support footnotes, spec defined at
     https://michelf.ca/projects/php-markdown/extra/#footnotes
 

@@ -1,11 +1,18 @@
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+
 from ..util import escape_url
 
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 __all__ = ['url']
 
 URL_LINK_PATTERN = r'''https?:\/\/[^\s<]+[^<.,:;"')\]\s]'''
 
 
-def parse_url_link(inline, m, state):
+def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)
     pos = m.end()
     if state.in_link:
@@ -19,5 +26,5 @@ def parse_url_link(inline, m, state):
     return pos
 
 
-def url(md):
-    md.inline.register('url_link', URL_LINK_PATTERN, parse_url_link)
+def url(md: "Markdown") -> None:
+    md.inline.register("url_link", URL_LINK_PATTERN, parse_url_link)

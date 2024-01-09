@@ -1,5 +1,13 @@
 import re
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional, Pattern
+
 from ..helpers import PREVENT_BACKSLASH
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 __all__ = ["strikethrough", "mark", "insert", "superscript", "subscript"]
 
@@ -11,51 +19,65 @@ SUPERSCRIPT_PATTERN = r'\^(?:' + PREVENT_BACKSLASH + r'\\\^|\S|\\ )+?\^'
 SUBSCRIPT_PATTERN = r'~(?:' + PREVENT_BACKSLASH + r'\\~|\S|\\ )+?~'
 
 
-def parse_strikethrough(inline, m, state):
-    return _parse_to_end(inline, m, state, 'strikethrough', _STRIKE_END)
+def parse_strikethrough(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> Optional[int]:
+    return _parse_to_end(inline, m, state, "strikethrough", _STRIKE_END)
 
 
-def render_strikethrough(renderer, text):
-    return '<del>' + text + '</del>'
+def render_strikethrough(renderer: "BaseRenderer", text: str) -> str:
+    return "<del>" + text + "</del>"
 
 
-def parse_mark(inline, m, state):
-    return _parse_to_end(inline, m, state, 'mark', _MARK_END)
+def parse_mark(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> Optional[int]:
+    return _parse_to_end(inline, m, state, "mark", _MARK_END)
 
 
-def render_mark(renderer, text):
-    return '<mark>' + text + '</mark>'
+def render_mark(renderer: "BaseRenderer", text: str) -> str:
+    return "<mark>" + text + "</mark>"
 
 
-def parse_insert(inline, m, state):
-    return _parse_to_end(inline, m, state, 'insert', _INSERT_END)
+def parse_insert(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> Optional[int]:
+    return _parse_to_end(inline, m, state, "insert", _INSERT_END)
 
 
-def render_insert(renderer, text):
-    return '<ins>' + text + '</ins>'
+def render_insert(renderer: "BaseRenderer", text: str) -> str:
+    return "<ins>" + text + "</ins>"
 
 
-def parse_superscript(inline, m, state):
-    return _parse_script(inline, m, state, 'superscript')
+def parse_superscript(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> int:
+    return _parse_script(inline, m, state, "superscript")
 
 
-def render_superscript(renderer, text):
-    return '<sup>' + text + '</sup>'
+def render_superscript(renderer: "BaseRenderer", text: str) -> str:
+    return "<sup>" + text + "</sup>"
 
 
-def parse_subscript(inline, m, state):
-    return _parse_script(inline, m, state, 'subscript')
+def parse_subscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
+    return _parse_script(inline, m, state, "subscript")
 
 
-def render_subscript(renderer, text):
-    return '<sub>' + text + '</sub>'
+def render_subscript(renderer: "BaseRenderer", text: str) -> str:
+    return "<sub>" + text + "</sub>"
 
 
-def _parse_to_end(inline, m, state, tok_type, end_pattern):
+def _parse_to_end(
+    inline: "InlineParser",
+    m: Match[str],
+    state: "InlineState",
+    tok_type: str,
+    end_pattern: Pattern[str],
+) -> Optional[int]:
     pos = m.end()
     m1 = end_pattern.search(state.src, pos)
     if not m1:
-        return
+        return None
     end_pos = m1.end()
     text = state.src[pos:end_pos-2]
     new_state = state.copy()
@@ -65,7 +87,9 @@ def _parse_to_end(inline, m, state, tok_type, end_pattern):
     return end_pos
 
 
-def _parse_script(inline, m, state, tok_type):
+def _parse_script(
+    inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str
+) -> int:
     text = m.group(0)
     new_state = state.copy()
     new_state.src = text[1:-1].replace('\\ ', ' ')
@@ -77,7 +101,7 @@ def _parse_script(inline, m, state, tok_type):
     return m.end()
 
 
-def strikethrough(md):
+def strikethrough(md: "Markdown") -> None:
     """A mistune plugin to support strikethrough. Spec defined by
     GitHub flavored Markdown and commonly used by many parsers:
 
@@ -103,7 +127,7 @@ def strikethrough(md):
         md.renderer.register('strikethrough', render_strikethrough)
 
 
-def mark(md):
+def mark(md: "Markdown") -> None:
     """A mistune plugin to add ``<mark>`` tag. Spec defined at
     https://facelessuser.github.io/pymdown-extensions/extensions/mark/:
 
@@ -123,7 +147,7 @@ def mark(md):
         md.renderer.register('mark', render_mark)
 
 
-def insert(md):
+def insert(md: "Markdown") -> None:
     """A mistune plugin to add ``<ins>`` tag. Spec defined at
     https://facelessuser.github.io/pymdown-extensions/extensions/caret/#insert:
 
@@ -143,7 +167,7 @@ def insert(md):
         md.renderer.register('insert', render_insert)
 
 
-def superscript(md):
+def superscript(md: "Markdown") -> None:
     """A mistune plugin to add ``<sup>`` tag. Spec defined at
     https://pandoc.org/MANUAL.html#superscripts-and-subscripts:
 
@@ -158,7 +182,7 @@ def superscript(md):
         md.renderer.register('superscript', render_superscript)
 
 
-def subscript(md):
+def subscript(md: "Markdown") -> None:
     """A mistune plugin to add ``<sub>`` tag. Spec defined at
     https://pandoc.org/MANUAL.html#superscripts-and-subscripts:
 

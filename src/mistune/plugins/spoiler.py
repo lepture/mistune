@@ -1,4 +1,11 @@
 import re
+from typing import TYPE_CHECKING, Match, Optional
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 __all__ = ['spoiler']
 
@@ -8,7 +15,9 @@ _BLOCK_SPOILER_MATCH = re.compile(r'^( {0,3}![^\n]*\n)+$')
 INLINE_SPOILER_PATTERN = r'>!\s*(?P<spoiler_text>.+?)\s*!<'
 
 
-def parse_block_spoiler(block, m, state):
+def parse_block_spoiler(
+    block: "BlockParser", m: Match[str], state: "BlockState"
+) -> int:
     text, end_pos = block.extract_block_quote(m, state)
     if not text.endswith('\n'):
         # ensure it endswith \n to make sure
@@ -39,8 +48,10 @@ def parse_block_spoiler(block, m, state):
     return state.cursor
 
 
-def parse_inline_spoiler(inline, m, state):
-    text = m.group('spoiler_text')
+def parse_inline_spoiler(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> int:
+    text = m.group("spoiler_text")
     new_state = state.copy()
     new_state.src = text
     children = inline.render(new_state)
@@ -48,15 +59,15 @@ def parse_inline_spoiler(inline, m, state):
     return m.end()
 
 
-def render_block_spoiler(renderer, text):
-    return '<div class="spoiler">\n' + text + '</div>\n'
+def render_block_spoiler(renderer: "BaseRenderer", text: str) -> str:
+    return '<div class="spoiler">\n' + text + "</div>\n"
 
 
-def render_inline_spoiler(renderer, text):
-    return '<span class="spoiler">' + text + '</span>'
+def render_inline_spoiler(renderer: "BaseRenderer", text: str) -> str:
+    return '<span class="spoiler">' + text + "</span>"
 
 
-def spoiler(md):
+def spoiler(md: "Markdown") -> None:
     """A mistune plugin to support block and inline spoiler. The
     syntax is inspired by stackexchange:
 

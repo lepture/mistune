@@ -1,4 +1,8 @@
 from importlib import import_module
+from typing import TYPE_CHECKING, Dict, Protocol, Union, cast
+
+if TYPE_CHECKING:
+    from ..markdown import Markdown
 
 _plugins = {
     'speedup': 'mistune.plugins.speedup.speedup',
@@ -17,15 +21,22 @@ _plugins = {
     'task_lists': 'mistune.plugins.task_lists.task_lists',
     'spoiler': 'mistune.plugins.spoiler.spoiler',
 }
-_cached_modules = {}
 
 
-def import_plugin(name):
-    if name in _cached_modules:
-        return _cached_modules[name]
+class Plugin(Protocol):
+    def __call__(self, markdown: "Markdown") -> None: ...
 
+_cached_modules: Dict[str, Plugin] = {}
+
+PluginRef = Union[str, Plugin]  # reference to register a plugin
+
+
+def import_plugin(name: PluginRef) -> Plugin:
     if callable(name):
         return name
+
+    if name in _cached_modules:
+        return _cached_modules[name]
 
     if name in _plugins:
         module_path, func_name = _plugins[name].rsplit(".", 1)
@@ -33,6 +44,6 @@ def import_plugin(name):
         module_path, func_name = name.rsplit(".", 1)
 
     module = import_module(module_path)
-    plugin = getattr(module, func_name)
+    plugin = cast(Plugin, getattr(module, func_name))
     _cached_modules[name] = plugin
     return plugin

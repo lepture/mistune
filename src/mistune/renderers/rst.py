@@ -1,8 +1,9 @@
-from typing import Dict, Any
 from textwrap import indent
-from ._list import render_list
+from typing import Any, Dict, Iterable, List, cast
+
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
+from ._list import render_list
 
 
 class RSTRenderer(BaseRenderer):
@@ -20,7 +21,9 @@ class RSTRenderer(BaseRenderer):
     }
     INLINE_IMAGE_PREFIX = 'img-'
 
-    def iter_tokens(self, tokens, state):
+    def iter_tokens(
+        self, tokens: Iterable[Dict[str, Any]], state: BlockState
+    ) -> Iterable[str]:
         prev = None
         for tok in tokens:
             # ignore blank line
@@ -30,14 +33,14 @@ class RSTRenderer(BaseRenderer):
             prev = tok
             yield self.render_token(tok, state)
 
-    def __call__(self, tokens, state: BlockState):
+    def __call__(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
         state.env['inline_images'] = []
         out = self.render_tokens(tokens, state)
         # special handle for line breaks
         out += '\n\n'.join(self.render_referrences(state)) + '\n'
         return strip_end(out)
 
-    def render_referrences(self, state: BlockState):
+    def render_referrences(self, state: BlockState) -> Iterable[str]:
         images = state.env['inline_images']
         for index, token in enumerate(images):
             attrs = token['attrs']
@@ -45,13 +48,13 @@ class RSTRenderer(BaseRenderer):
             ident = self.INLINE_IMAGE_PREFIX + str(index)
             yield '.. |' + ident + '| image:: ' + attrs['url'] + '\n   :alt: ' + alt
 
-    def render_children(self, token, state: BlockState):
+    def render_children(self, token: Dict[str, Any], state: BlockState) -> str:
         children = token['children']
         return self.render_tokens(children, state)
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
-        text = token['raw']
-        return text.replace('|', r'\|')
+        text = cast(str, token["raw"])
+        return text.replace("|", r"\|")
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return '*' + self.render_children(token, state) + '*'
@@ -62,16 +65,16 @@ class RSTRenderer(BaseRenderer):
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token['attrs']
         text = self.render_children(token, state)
-        return '`' + text + ' <' + attrs['url'] + '>`__'
+        return "`" + text + " <" + cast(str, attrs["url"]) + ">`__"
 
     def image(self, token: Dict[str, Any], state: BlockState) -> str:
-        refs: list = state.env['inline_images']
+        refs: List[Dict[str, Any]] = state.env["inline_images"]
         index = len(refs)
         refs.append(token)
         return '|' + self.INLINE_IMAGE_PREFIX + str(index) + '|'
 
     def codespan(self, token: Dict[str, Any], state: BlockState) -> str:
-        return '``' + token['raw'] + '``'
+        return "``" + cast(str, token["raw"]) + "``"
 
     def linebreak(self, token: Dict[str, Any], state: BlockState) -> str:
         return '<linebreak>'
@@ -87,10 +90,10 @@ class RSTRenderer(BaseRenderer):
         children = token['children']
         if len(children) == 1 and children[0]['type'] == 'image':
             image = children[0]
-            attrs = image['attrs']
-            title = attrs.get('title')
+            attrs = image["attrs"]
+            title = cast(str, attrs.get("title"))
             alt = self.render_children(image, state)
-            text = '.. figure:: ' + attrs['url']
+            text = ".. figure:: " + cast(str, attrs["url"])
             if title:
                 text += '\n   :alt: ' + title
             text += '\n\n' + indent(alt, '   ')
@@ -114,9 +117,9 @@ class RSTRenderer(BaseRenderer):
         return self.render_children(token, state) + '\n'
 
     def block_code(self, token: Dict[str, Any], state: BlockState) -> str:
-        attrs = token.get('attrs', {})
-        info = attrs.get('info')
-        code = indent(token['raw'], '   ')
+        attrs = token.get("attrs", {})
+        info = cast(str, attrs.get("info"))
+        code = indent(cast(str, token["raw"]), "   ")
         if info:
             lang = info.split()[0]
             return '.. code:: ' + lang + '\n\n' + code + '\n'

@@ -1,23 +1,27 @@
-import sys
 import argparse
-from .renderers.rst import RSTRenderer
+import sys
+from typing import TYPE_CHECKING, Optional
+
+from . import __version__ as version
+from . import create_markdown
 from .renderers.markdown import MarkdownRenderer
-from . import (
-    create_markdown,
-    __version__ as version
-)
+from .renderers.rst import RSTRenderer
+
+if TYPE_CHECKING:
+    from .core import BaseRenderer
+    from .markdown import Markdown
 
 
-def _md(args):
+def _md(args: argparse.Namespace) -> "Markdown":
     if args.plugin:
         plugins = args.plugin
     else:
         # default plugins
         plugins = ['strikethrough', 'footnotes', 'table', 'speedup']
 
-    if args.renderer == 'rst':
-        renderer = RSTRenderer()
-    elif args.renderer == 'markdown':
+    if args.renderer == "rst":
+        renderer: "BaseRenderer" = RSTRenderer()
+    elif args.renderer == "markdown":
         renderer = MarkdownRenderer()
     else:
         renderer = args.renderer
@@ -29,7 +33,7 @@ def _md(args):
     )
 
 
-def _output(text, args):
+def _output(text: str, args: argparse.Namespace) -> None:
     if args.output:
         with open(args.output, 'w') as f:
             f.write(text)
@@ -52,7 +56,7 @@ Here are some use cases of the command line tool:
 '''
 
 
-def cli():
+def cli() -> None:
     parser = argparse.ArgumentParser(
         prog='python -m mistune',
         description=CMD_HELP,
@@ -102,17 +106,19 @@ def cli():
     if message:
         md = _md(args)
         text = md(message)
+        assert isinstance(text, str)
         _output(text, args)
     elif args.file:
         md = _md(args)
         text = md.read(args.file)[0]
+        assert isinstance(text, str)
         _output(text, args)
     else:
         print('You MUST specify a message or file')
-        return sys.exit(1)
+        sys.exit(1)
 
 
-def read_stdin():
+def read_stdin() -> Optional[str]:
     is_stdin_pipe = not sys.stdin.isatty()
     if is_stdin_pipe:
         return sys.stdin.read()

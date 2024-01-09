@@ -77,7 +77,7 @@ class TestCustomizeToc(BaseTestCase):
 
 
 class TestDirectiveInclude(BaseTestCase):
-    md = create_markdown(escape=False, plugins=[RSTDirective([Include()])])
+    md = create_markdown(escape=False, plugins=[RSTDirective([Include()])])  # type: ignore[list-item]
 
     def test_html_include(self):
         html = self.md.read(os.path.join(ROOT, 'include/text.md'))[0]

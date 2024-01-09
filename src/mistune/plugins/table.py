@@ -1,5 +1,23 @@
 import re
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Match,
+    Optional,
+    Tuple,
+    Union,
+)
+
 from ..helpers import PREVENT_BACKSLASH
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 # https://michelf.ca/projects/php-markdown/extra/#table
 
@@ -24,23 +42,26 @@ ALIGN_LEFT = re.compile(r'^ *:-+ *$')
 ALIGN_RIGHT = re.compile(r'^ *-+: *$')
 
 
-def parse_table(block, m, state):
+def parse_table(
+    block: "BlockParser", m: Match[str], state: "BlockState"
+) -> Optional[int]:
     pos = m.end()
     header = m.group('table_head')
     align = m.group('table_align')
     thead, aligns = _process_thead(header, align)
     if not thead:
-        return
+        return None
+    assert aligns is not None
 
     rows = []
     body = m.group('table_body')
     for text in body.splitlines():
-        m = TABLE_CELL.match(text)
-        if not m:  # pragma: no cover
-            return
-        row = _process_row(m.group(1), aligns)
+        m2 = TABLE_CELL.match(text)
+        if not m2:  # pragma: no cover
+            return None
+        row = _process_row(m2.group(1), aligns)
         if not row:
-            return
+            return None
         rows.append(row)
 
     children = [thead, {'type': 'table_body', 'children': rows}]
@@ -48,19 +69,22 @@ def parse_table(block, m, state):
     return pos
 
 
-def parse_nptable(block, m, state):
-    header = m.group('nptable_head')
-    align = m.group('nptable_align')
+def parse_nptable(
+    block: "BlockParser", m: Match[str], state: "BlockState"
+) -> Optional[int]:
+    header = m.group("nptable_head")
+    align = m.group("nptable_align")
     thead, aligns = _process_thead(header, align)
     if not thead:
-        return
+        return None
+    assert aligns is not None
 
     rows = []
     body = m.group('nptable_body')
     for text in body.splitlines():
         row = _process_row(text, aligns)
         if not row:
-            return
+            return None
         rows.append(row)
 
     children = [thead, {'type': 'table_body', 'children': rows}]
@@ -68,7 +92,9 @@ def parse_nptable(block, m, state):
     return m.end()
 
 
-def _process_thead(header, align):
+def _process_thead(
+    header: str, align: str
+) -> Union[Tuple[None, None], Tuple[Dict[str, Any], List[str]]]:
     headers = CELL_SPLIT.split(header)
     aligns = CELL_SPLIT.split(align)
     if len(headers) != len(aligns):
@@ -96,7 +122,7 @@ def _process_thead(header, align):
     return thead, aligns
 
 
-def _process_row(text, aligns):
+def _process_row(text: str, aligns: List[str]) -> Optional[Dict[str, Any]]:
     cells = CELL_SPLIT.split(text)
     if len(cells) != len(aligns):
         return None
@@ -112,23 +138,25 @@ def _process_row(text, aligns):
     return {'type': 'table_row', 'children': children}
 
 
-def render_table(renderer, text):
-    return '<table>\n' + text + '</table>\n'
+def render_table(renderer: "BaseRenderer", text: str) -> str:
+    return "<table>\n" + text + "</table>\n"
 
 
-def render_table_head(renderer, text):
-    return '<thead>\n<tr>\n' + text + '</tr>\n</thead>\n'
+def render_table_head(renderer: "BaseRenderer", text: str) -> str:
+    return "<thead>\n<tr>\n" + text + "</tr>\n</thead>\n"
 
 
-def render_table_body(renderer, text):
-    return '<tbody>\n' + text + '</tbody>\n'
+def render_table_body(renderer: "BaseRenderer", text: str) -> str:
+    return "<tbody>\n" + text + "</tbody>\n"
 
 
-def render_table_row(renderer, text):
-    return '<tr>\n' + text + '</tr>\n'
+def render_table_row(renderer: "BaseRenderer", text: str) -> str:
+    return "<tr>\n" + text + "</tr>\n"
 
 
-def render_table_cell(renderer, text, align=None, head=False):
+def render_table_cell(
+    renderer: "BaseRenderer", text: str, align: Optional[str] = None, head: bool = False
+) -> str:
     if head:
         tag = 'th'
     else:
@@ -141,7 +169,7 @@ def render_table_cell(renderer, text, align=None, head=False):
     return html + '>' + text + '</' + tag + '>\n'
 
 
-def table(md):
+def table(md: "Markdown") -> None:
     """A mistune plugin to support table, spec defined at
     https://michelf.ca/projects/php-markdown/extra/#table
 
@@ -167,13 +195,13 @@ def table(md):
         md.renderer.register('table_cell', render_table_cell)
 
 
-def table_in_quote(md):
+def table_in_quote(md: "Markdown") -> None:
     """Enable table plugin in block quotes."""
     md.block.insert_rule(md.block.block_quote_rules, 'table', before='paragraph')
     md.block.insert_rule(md.block.block_quote_rules, 'nptable', before='paragraph')
 
 
-def table_in_list(md):
+def table_in_list(md: "Markdown") -> None:
     """Enable table plugin in list."""
     md.block.insert_rule(md.block.list_rules, 'table', before='paragraph')
     md.block.insert_rule(md.block.list_rules, 'nptable', before='paragraph')

@@ -1,12 +1,39 @@
 import re
-from typing import Dict, Any
+from collections.abc import Generator
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Match,
+    MutableMapping,
+    Optional,
+    Pattern,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
+from typing_extensions import Self
 
 _LINE_END = re.compile(r'\n|$')
 
-
 class BlockState:
     """The state to save block parser's cursor and tokens."""
-    def __init__(self, parent=None):
+
+    src: str
+    tokens: List[Dict[str, Any]]
+    cursor: int
+    cursor_max: int
+    list_tight: bool
+    parent: Any
+    env: MutableMapping[str, Any]
+
+    def __init__(self, parent: Optional[Any] = None) -> None:
         self.src = ''
         self.tokens = []
 
@@ -24,49 +51,51 @@ class BlockState:
         else:
             self.env = {'ref_links': {}}
 
-    def child_state(self, src: str):
+    def child_state(self, src: str) -> 'BlockState':
         child = self.__class__(self)
         child.process(src)
         return child
 
-    def process(self, src: str):
+    def process(self, src: str) -> None:
         self.src = src
         self.cursor_max = len(src)
 
-    def find_line_end(self):
+    def find_line_end(self) -> int:
         m = _LINE_END.search(self.src, self.cursor)
+        assert m is not None
         return m.end()
 
-    def get_text(self, end_pos: int):
+    def get_text(self, end_pos: int) -> str:
         return self.src[self.cursor:end_pos]
 
-    def last_token(self):
+    def last_token(self) -> Any:
         if self.tokens:
             return self.tokens[-1]
 
-    def prepend_token(self, token: Dict[str, Any]):
+    def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
-    def append_token(self, token: Dict[str, Any]):
+    def append_token(self, token: Dict[str, Any]) -> None:
         """Add token to the end of token list."""
         self.tokens.append(token)
 
-    def add_paragraph(self, text: str):
+    def add_paragraph(self, text: str) -> None:
         last_token = self.last_token()
         if last_token and last_token['type'] == 'paragraph':
             last_token['text'] += text
         else:
             self.tokens.append({'type': 'paragraph', 'text': text})
 
-    def append_paragraph(self):
+    def append_paragraph(self) -> Optional[int]:
         last_token = self.last_token()
         if last_token and last_token['type'] == 'paragraph':
             pos = self.find_line_end()
             last_token['text'] += self.get_text(pos)
             return pos
+        return None
 
-    def depth(self):
+    def depth(self) -> int:
         d = 0
         parent = self.parent
         while parent:
@@ -77,24 +106,25 @@ class BlockState:
 
 class InlineState:
     """The state to save inline parser's tokens."""
-    def __init__(self, env: Dict[str, Any]):
+
+    def __init__(self, env: MutableMapping[str, Any]):
         self.env = env
         self.src = ''
-        self.tokens = []
+        self.tokens: List[Dict[str, Any]] = []
         self.in_image = False
         self.in_link = False
         self.in_emphasis = False
         self.in_strong = False
 
-    def prepend_token(self, token: Dict[str, Any]):
+    def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""
         self.tokens.insert(len(self.tokens) - 1, token)
 
-    def append_token(self, token: Dict[str, Any]):
+    def append_token(self, token: Dict[str, Any]) -> None:
         """Add token to the end of token list."""
         self.tokens.append(token)
 
-    def copy(self):
+    def copy(self) -> "InlineState":
         """Create a copy of current state."""
         state = self.__class__(self.env)
         state.in_image = self.in_image
@@ -104,21 +134,26 @@ class InlineState:
         return state
 
 
-class Parser:
-    sc_flag = re.M
-    state_cls = BlockState
+ST = TypeVar("ST", InlineState, BlockState)
 
-    SPECIFICATION = {}
-    DEFAULT_RULES = []
+class Parser(Generic[ST]):
+    sc_flag: "re._FlagsType" = re.M
+    state_cls: Type[ST]
 
-    def __init__(self):
+    SPECIFICATION: ClassVar[Dict[str, str]] = {}
+    DEFAULT_RULES: ClassVar[Iterable[str]] = []
+
+    def __init__(self) -> None:
         self.specification = self.SPECIFICATION.copy()
         self.rules = list(self.DEFAULT_RULES)
-        self._methods = {}
+        self._methods: Dict[
+            str,
+            Callable[[Match[str], ST], Optional[int]],
+        ] = {}
 
-        self.__sc = {}
+        self.__sc: Dict[str, Pattern[str]] = {}
 
-    def compile_sc(self, rules=None):
+    def compile_sc(self, rules: Optional[List[str]] = None) -> Pattern[str]:
         if rules is None:
             key = '$'
             rules = self.rules
@@ -134,7 +169,13 @@ class Parser:
         self.__sc[key] = sc
         return sc
 
-    def register(self, name: str, pattern, func, before=None):
+    def register(
+        self,
+        name: str,
+        pattern: Union[str, None],
+        func: Callable[[Self, Match[str], ST], Optional[int]],
+        before: Optional[str] = None,
+    ) -> None:
         """Register a new rule to parse the token. This method is usually used to
         create a new plugin.
 
@@ -149,11 +190,11 @@ class Parser:
         if name not in self.rules:
             self.insert_rule(self.rules, name, before=before)
 
-    def register_rule(self, name, pattern, func):
+    def register_rule(self, name: str, pattern: str, func: Any) -> None:
         raise DeprecationWarning('This plugin is not compatible with mistune v3.')
 
     @staticmethod
-    def insert_rule(rules, name, before=None):
+    def insert_rule(rules: List[str], name: str, before: Optional[str] = None) -> None:
         if before:
             try:
                 index = rules.index(before)
@@ -163,18 +204,20 @@ class Parser:
         else:
             rules.append(name)
 
-    def parse_method(self, m, state):
-        func = self._methods[m.lastgroup]
+    def parse_method(self, m: Match[str], state: ST) -> Optional[int]:
+        lastgroup = m.lastgroup
+        assert lastgroup
+        func = self._methods[lastgroup]
         return func(m, state)
 
 
 class BaseRenderer(object):
-    NAME = 'base'
+    NAME: ClassVar[str] = "base"
 
-    def __init__(self):
-        self.__methods = {}
+    def __init__(self) -> None:
+        self.__methods: Dict[str, Callable[..., str]] = {}
 
-    def register(self, name: str, method):
+    def register(self, name: str, method: Callable[..., str]) -> None:
         """Register a render method for the named token. For example::
 
             def render_wiki(renderer, key, title):
@@ -185,25 +228,27 @@ class BaseRenderer(object):
         # bind self into renderer method
         self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
 
-    def _get_method(self, name):
+    def _get_method(self, name: str) -> Callable[..., str]:
         try:
-            return object.__getattribute__(self, name)
+            return cast(Callable[..., str], object.__getattribute__(self, name))
         except AttributeError:
             method = self.__methods.get(name)
             if not method:
                 raise AttributeError('No renderer "{!r}"'.format(name))
             return method
 
-    def render_token(self, token, state):
+    def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
         func = self._get_method(token['type'])
         return func(token, state)
 
-    def iter_tokens(self, tokens, state):
+    def iter_tokens(
+        self, tokens: Iterable[Dict[str, Any]], state: BlockState
+    ) -> Iterable[str]:
         for tok in tokens:
             yield self.render_token(tok, state)
 
-    def render_tokens(self, tokens, state):
+    def render_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
         return ''.join(self.iter_tokens(tokens, state))
 
-    def __call__(self, tokens, state):
+    def __call__(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
         return self.render_tokens(tokens, state)

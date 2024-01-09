@@ -1,4 +1,11 @@
 import re
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 __all__ = ['task_lists']
 
@@ -6,15 +13,14 @@ __all__ = ['task_lists']
 TASK_LIST_ITEM = re.compile(r'^(\[[ xX]\])\s+')
 
 
-def task_lists_hook(md, state):
+def task_lists_hook(md: "Markdown", state: "BlockState") -> Iterable[Dict[str, Any]]:
     return _rewrite_all_list_items(state.tokens)
 
 
-def render_task_list_item(renderer, text, checked=False):
-    checkbox = (
-        '<input class="task-list-item-checkbox" '
-        'type="checkbox" disabled'
-    )
+def render_task_list_item(
+    renderer: "BaseRenderer", text: str, checked: bool = False
+) -> str:
+    checkbox = '<input class="task-list-item-checkbox" ' 'type="checkbox" disabled'
     if checked:
         checkbox += ' checked/>'
     else:
@@ -28,7 +34,7 @@ def render_task_list_item(renderer, text, checked=False):
     return '<li class="task-list-item">' + text + '</li>\n'
 
 
-def task_lists(md):
+def task_lists(md: "Markdown") -> None:
     """A mistune plugin to support task lists. Spec defined by
     GitHub flavored Markdown and commonly used by many parsers:
 
@@ -44,7 +50,9 @@ def task_lists(md):
         md.renderer.register('task_list_item', render_task_list_item)
 
 
-def _rewrite_all_list_items(tokens):
+def _rewrite_all_list_items(
+    tokens: Iterable[Dict[str, Any]]
+) -> Iterable[Dict[str, Any]]:
     for tok in tokens:
         if tok['type'] == 'list_item':
             _rewrite_list_item(tok)
@@ -53,7 +61,7 @@ def _rewrite_all_list_items(tokens):
     return tokens
 
 
-def _rewrite_list_item(tok):
+def _rewrite_list_item(tok: Dict[str, Any]) -> None:
     children = tok['children']
     if children:
         first_child = children[0]

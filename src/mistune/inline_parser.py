@@ -1,21 +1,34 @@
 import re
-from typing import Optional, List, Dict, Any, Match
-from .core import Parser, InlineState
-from .util import (
-    escape,
-    escape_url,
-    unikey,
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Match,
+    MutableMapping,
+    Optional,
+    Pattern,
+    Tuple,
+    TypeVar,
+    Union,
 )
+
+from typing_extensions import Literal
+
+from .core import InlineState, Parser
 from .helpers import (
+    HTML_ATTRIBUTES,
+    HTML_TAGNAME,
     PREVENT_BACKSLASH,
     PUNCTUATION,
-    HTML_TAGNAME,
-    HTML_ATTRIBUTES,
-    unescape_char,
     parse_link,
     parse_link_label,
     parse_link_text,
+    unescape_char,
 )
+from .util import escape, escape_url, unikey
 
 PAREN_END_RE = re.compile(r'\s*\)')
 
@@ -46,7 +59,7 @@ EMPHASIS_END_RE = {
 }
 
 
-class InlineParser(Parser):
+class InlineParser(Parser[InlineState]):
     sc_flag = 0
     state_cls = InlineState
 
@@ -93,7 +106,7 @@ class InlineParser(Parser):
         'linebreak',
     )
 
-    def __init__(self, hard_wrap: bool=False):
+    def __init__(self, hard_wrap: bool = False) -> None:
         super(InlineParser, self).__init__()
 
         self.hard_wrap = hard_wrap
@@ -107,7 +120,7 @@ class InlineParser(Parser):
             name: getattr(self, 'parse_' + name) for name in self.rules
         }
 
-    def parse_escape(self, m: Match, state: InlineState) -> int:
+    def parse_escape(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
         text = unescape_char(text)
         state.append_token({
@@ -116,7 +129,7 @@ class InlineParser(Parser):
         })
         return m.end()
 
-    def parse_link(self, m: Match, state: InlineState) -> Optional[int]:
+    def parse_link(self, m: Match[str], state: InlineState) -> Optional[int]:
         pos = m.end()
 
         marker = m.group(0)
@@ -133,13 +146,17 @@ class InlineParser(Parser):
         if label is None:
             text, end_pos = parse_link_text(state.src, pos)
             if text is None:
-                return
+                return None
+
+        assert end_pos is not None
 
         if text is None:
             text = label
 
+        assert text is not None
+
         if end_pos >= len(state.src) and label is None:
-            return
+            return None
 
         rules = ['codespan', 'prec_auto_link', 'prec_inline_html']
         prec_pos = self.precedence_scan(m, state, end_pos, rules)
@@ -165,11 +182,11 @@ class InlineParser(Parser):
                         label = label2
 
         if label is None:
-            return
+            return None
 
         ref_links = state.env.get('ref_links')
         if not ref_links:
-            return
+            return None
 
         key = unikey(label)
         env = ref_links.get(key)
@@ -180,8 +197,15 @@ class InlineParser(Parser):
             token['label'] = label
             state.append_token(token)
             return end_pos
+        return None
 
-    def __parse_link_token(self, is_image, text, attrs, state):
+    def __parse_link_token(
+        self,
+        is_image: bool,
+        text: str,
+        attrs: Optional[Dict[str, Any]],
+        state: InlineState,
+    ) -> Dict[str, Any]:
         new_state = state.copy()
         new_state.src = text
         if is_image:
@@ -200,7 +224,7 @@ class InlineParser(Parser):
             }
         return token
 
-    def parse_auto_link(self, m: Match, state: InlineState) -> int:
+    def parse_auto_link(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
         pos = m.end()
         if state.in_link:
@@ -211,7 +235,7 @@ class InlineParser(Parser):
         self._add_auto_link(text, text, state)
         return pos
 
-    def parse_auto_email(self, m: Match, state: InlineState) -> int:
+    def parse_auto_email(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
         pos = m.end()
         if state.in_link:
@@ -223,14 +247,14 @@ class InlineParser(Parser):
         self._add_auto_link(url, text, state)
         return pos
 
-    def _add_auto_link(self, url, text, state):
+    def _add_auto_link(self, url: str, text: str, state: InlineState) -> None:
         state.append_token({
             'type': 'link',
             'children': [{'type': 'text', 'raw': text}],
             'attrs': {'url': escape_url(url)},
         })
 
-    def parse_emphasis(self, m: Match, state: InlineState) -> int:
+    def parse_emphasis(self, m: Match[str], state: InlineState) -> int:
         pos = m.end()
 
         marker = m.group(0)
@@ -279,17 +303,17 @@ class InlineParser(Parser):
             })
         return end_pos
 
-    def parse_codespan(self, m: Match, state: InlineState) -> int:
+    def parse_codespan(self, m: Match[str], state: InlineState) -> int:
         marker = m.group(0)
         # require same marker with same length at end
 
         pattern = re.compile(r'(.*?[^`])' + marker + r'(?!`)', re.S)
 
         pos = m.end()
-        m = pattern.match(state.src, pos)
-        if m:
-            end_pos = m.end()
-            code = m.group(1)
+        m2 = pattern.match(state.src, pos)
+        if m2:
+            end_pos = m2.end()
+            code = m2.group(1)
             # Line endings are treated like spaces
             code = code.replace('\n', ' ')
             if len(code.strip()):
@@ -301,15 +325,15 @@ class InlineParser(Parser):
             state.append_token({'type': 'text', 'raw': marker})
             return pos
 
-    def parse_linebreak(self, m: Match, state: InlineState) -> int:
+    def parse_linebreak(self, m: Match[str], state: InlineState) -> int:
         state.append_token({'type': 'linebreak'})
         return m.end()
 
-    def parse_softbreak(self, m: Match, state: InlineState) -> int:
+    def parse_softbreak(self, m: Match[str], state: InlineState) -> int:
         state.append_token({'type': 'softbreak'})
         return m.end()
 
-    def parse_inline_html(self, m: Match, state: InlineState) -> int:
+    def parse_inline_html(self, m: Match[str], state: InlineState) -> int:
         end_pos = m.end()
         html = m.group(0)
         state.append_token({'type': 'inline_html', 'raw': html})
@@ -319,7 +343,7 @@ class InlineParser(Parser):
             state.in_link = False
         return end_pos
 
-    def process_text(self, text: str, state: InlineState):
+    def process_text(self, text: str, state: InlineState) -> None:
         state.append_token({'type': 'text', 'raw': text})
 
     def parse(self, state: InlineState) -> List[Dict[str, Any]]:
@@ -351,7 +375,13 @@ class InlineParser(Parser):
             self.process_text(state.src[pos:], state)
         return state.tokens
 
-    def precedence_scan(self, m: Match, state: InlineState, end_pos: int, rules=None):
+    def precedence_scan(
+        self,
+        m: Match[str],
+        state: InlineState,
+        end_pos: int,
+        rules: Optional[List[str]] = None,
+    ) -> Optional[int]:
         if rules is None:
             rules = ['codespan', 'link', 'prec_auto_link', 'prec_inline_html']
 
@@ -359,20 +389,23 @@ class InlineParser(Parser):
         sc = self.compile_sc(rules)
         m1 = sc.search(state.src, mark_pos, end_pos)
         if not m1:
-            return
+            return None
 
-        rule_name = m1.lastgroup.replace('prec_', '')
+        lastgroup = m1.lastgroup
+        if not lastgroup:
+            return None
+        rule_name = lastgroup.replace("prec_", "")
         sc = self.compile_sc([rule_name])
         m2 = sc.match(state.src, m1.start())
         if not m2:
-            return
+            return None
 
         func = self._methods[rule_name]
         new_state = state.copy()
         new_state.src = state.src
         m2_pos = func(m2, new_state)
         if not m2_pos or m2_pos < end_pos:
-            return
+            return None
 
         raw_text = state.src[m.start():m2.start()]
         state.append_token({'type': 'text', 'raw': raw_text})
@@ -380,11 +413,11 @@ class InlineParser(Parser):
             state.append_token(token)
         return m2_pos
 
-    def render(self, state: InlineState):
+    def render(self, state: InlineState) -> List[Dict[str, Any]]:
         self.parse(state)
         return state.tokens
 
-    def __call__(self, s, env):
+    def __call__(self, s: str, env: MutableMapping[str, Any]) -> List[Dict[str, Any]]:
         state = self.state_cls(env)
         state.src = s
         return self.render(state)

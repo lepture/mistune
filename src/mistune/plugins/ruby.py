@@ -1,13 +1,21 @@
 import re
-from ..util import unikey
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+
 from ..helpers import parse_link, parse_link_label
+from ..util import unikey
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 
 RUBY_PATTERN = r'\[(?:\w+\(\w+\))+\]'
 _ruby_re = re.compile(RUBY_PATTERN)
 
 
-def parse_ruby(inline, m, state):
+def parse_ruby(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)[1:-2]
     items = text.split(')')
     tokens = []
@@ -38,7 +46,9 @@ def parse_ruby(inline, m, state):
     return end_pos
 
 
-def _parse_ruby_link(inline, state, pos, tokens):
+def _parse_ruby_link(
+    inline: "InlineParser", state: "InlineState", pos: int, tokens: List[Dict[str, Any]]
+) -> Optional[int]:
     c = state.src[pos]
     if c == '(':
         # standard link [text](<url> "title")
@@ -73,13 +83,14 @@ def _parse_ruby_link(inline, state, pos, tokens):
                     'raw': '[' + label + ']',
                 })
             return link_pos
+    return None
 
 
-def render_ruby(renderer, text, rt):
-    return '<ruby><rb>' + text + '</rb><rt>' + rt + '</rt></ruby>'
+def render_ruby(renderer: "BaseRenderer", text: str, rt: str) -> str:
+    return "<ruby><rb>" + text + "</rb><rt>" + rt + "</rt></ruby>"
 
 
-def ruby(md):
+def ruby(md: "Markdown") -> None:
     """A mistune plugin to support ``<ruby>`` tag. The syntax is defined
     at https://lepture.com/en/2022/markdown-ruby-markup:
 

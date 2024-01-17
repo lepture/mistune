@@ -13,19 +13,28 @@
     heading levels writers want to include in the table of contents.
 """
 
-from ._base import DirectivePlugin
+from typing import TYPE_CHECKING, Any, Dict, Match
+
 from ..toc import normalize_toc_item, render_toc_ul
+from ._base import BaseDirective, DirectivePlugin
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState
+    from ..markdown import Markdown
 
 
 class TableOfContents(DirectivePlugin):
-    def __init__(self, min_level=1, max_level=3):
+    def __init__(self, min_level: int = 1, max_level: int = 3) -> None:
         self.min_level = min_level
         self.max_level = max_level
 
-    def generate_heading_id(self, token, index):
+    def generate_heading_id(self, token: Dict[str, Any], index: int) -> str:
         return 'toc_' + str(index + 1)
 
-    def parse(self, block, m, state):
+    def parse(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Dict[str, Any]:
         title = self.parse_title(m)
         options = self.parse_options(m)
         if options:
@@ -51,7 +60,7 @@ class TableOfContents(DirectivePlugin):
         }
         return {'type': 'toc', 'text': title or '', 'attrs': attrs}
 
-    def toc_hook(self, md, state):
+    def toc_hook(self, md: "Markdown", state: "BlockState") -> None:
         sections = []
         headings = []
 
@@ -74,15 +83,17 @@ class TableOfContents(DirectivePlugin):
                 toc = [item for item in toc_items if _min <= item[0] <= _max]
                 sec['attrs']['toc'] = toc
 
-    def __call__(self, directive, md):
-        if md.renderer and md.renderer.NAME == 'html':
+    def __call__(self, directive: BaseDirective, md: "Markdown") -> None:
+        if md.renderer and md.renderer.NAME == "html":
             # only works with HTML renderer
             directive.register('toc', self.parse)
             md.before_render_hooks.append(self.toc_hook)
             md.renderer.register('toc', render_html_toc)
 
 
-def render_html_toc(renderer, title, collapse=False, **attrs):
+def render_html_toc(
+    renderer: "BaseRenderer", title: str, collapse: bool = False, **attrs: Any
+) -> str:
     if not title:
         title = 'Table of Contents'
     toc = attrs['toc']
@@ -95,7 +106,7 @@ def render_html_toc(renderer, title, collapse=False, **attrs):
     return html + content + '</details>\n'
 
 
-def _normalize_level(options, name, default):
+def _normalize_level(options: Dict[str, Any], name: str, default: Any) -> Any:
     level = options.get(name)
     if not level:
         return default

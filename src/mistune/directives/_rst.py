@@ -1,5 +1,12 @@
 import re
-from ._base import DirectiveParser, BaseDirective
+from typing import TYPE_CHECKING, Match, Optional
+
+from ._base import BaseDirective, DirectiveParser
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BlockState
+    from ..markdown import Markdown
 
 __all__ = ['RSTDirective']
 
@@ -15,15 +22,15 @@ class RSTParser(DirectiveParser):
     name = 'rst_directive'
 
     @staticmethod
-    def parse_type(m: re.Match):
+    def parse_type(m: Match[str]) -> str:
         return m.group('type')
 
     @staticmethod
-    def parse_title(m: re.Match):
+    def parse_title(m: Match[str]) -> str:
         return m.group('title')
 
     @staticmethod
-    def parse_content(m: re.Match):
+    def parse_content(m: Match[str]) -> str:
         full_content = m.group(0)
         text = m.group('text')
         pretext = full_content[:-len(text)]
@@ -60,14 +67,16 @@ class RSTDirective(BaseDirective):
     parser = RSTParser
     directive_pattern = r'^\.\. +[a-zA-Z0-9_-]+\:\:'
 
-    def parse_directive(self, block, m, state):
-        m = _directive_re.match(state.src, state.cursor)
-        if not m:
-            return
+    def parse_directive(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Optional[int]:
+        m2 = _directive_re.match(state.src, state.cursor)
+        if not m2:
+            return None
 
-        self.parse_method(block, m, state)
-        return m.end()
+        self.parse_method(block, m2, state)
+        return m2.end()
 
-    def __call__(self, md):
-        super(RSTDirective, self).__call__(md)
-        self.register_block_parser(md)
+    def __call__(self, markdown: "Markdown") -> None:
+        super(RSTDirective, self).__call__(markdown)
+        self.register_block_parser(markdown)

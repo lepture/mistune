@@ -8,16 +8,26 @@
     Documentation: https://mistune.lepture.com/
 """
 
-from .markdown import Markdown
-from .core import BlockState, InlineState, BaseRenderer
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+
+from typing_extensions import Literal
+
 from .block_parser import BlockParser
+from .core import BaseRenderer, BlockState, InlineState
 from .inline_parser import InlineParser
+from .markdown import Markdown
+from .plugins import Plugin, PluginRef, import_plugin
 from .renderers.html import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
-from .plugins import import_plugin
 
+RendererRef = Union[Literal["html", "ast"], BaseRenderer]
 
-def create_markdown(escape: bool=True, hard_wrap: bool=False, renderer='html', plugins=None) -> Markdown:
+def create_markdown(
+    escape: bool = True,
+    hard_wrap: bool = False,
+    renderer: Optional[RendererRef] = "html",
+    plugins: Optional[Iterable[PluginRef]] = None,
+) -> Markdown:
     """Create a Markdown instance based on the given condition.
 
     :param escape: Boolean. If using html renderer, escape html.
@@ -41,9 +51,10 @@ def create_markdown(escape: bool=True, hard_wrap: bool=False, renderer='html', p
         renderer = HTMLRenderer(escape=escape)
 
     inline = InlineParser(hard_wrap=hard_wrap)
+    real_plugins: Optional[Iterable[Plugin]] = None
     if plugins is not None:
-        plugins = [import_plugin(n) for n in plugins]
-    return Markdown(renderer=renderer, inline=inline, plugins=plugins)
+        real_plugins = [import_plugin(n) for n in plugins]
+    return Markdown(renderer=renderer, inline=inline, plugins=real_plugins)
 
 
 html: Markdown = create_markdown(
@@ -52,11 +63,18 @@ html: Markdown = create_markdown(
 )
 
 
-__cached_parsers = {}
+__cached_parsers: Dict[
+    Tuple[bool, Optional[RendererRef], Optional[Iterable[Any]]], Markdown
+] = {}
 
 
-def markdown(text, escape=True, renderer='html', plugins=None) -> str:
-    if renderer == 'ast':
+def markdown(
+    text: str,
+    escape: bool = True,
+    renderer: Optional[RendererRef] = "html",
+    plugins: Optional[Iterable[Any]] = None,
+) -> Union[str, List[Dict[str, Any]]]:
+    if renderer == "ast":
         # explicit and more similar to 2.x's API
         renderer = None
     key = (escape, renderer, plugins)
@@ -77,5 +95,5 @@ __all__ = [
     'html', 'create_markdown', 'markdown',
 ]
 
-__version__ = '3.0.1'
-__homepage__ = 'https://mistune.lepture.com/'
+__version__: str = "3.0.1"
+__homepage__: str = "https://mistune.lepture.com/"

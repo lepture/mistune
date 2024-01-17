@@ -1,30 +1,39 @@
 __all__ = ['math', 'math_in_quote', 'math_in_list']
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 BLOCK_MATH_PATTERN = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>[\s\S]+?)\n\$\$[ \t]*$'
 INLINE_MATH_PATTERN = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'
 
 
-def parse_block_math(block, m, state):
-    text = m.group('math_text')
-    state.append_token({'type': 'block_math', 'raw': text})
+def parse_block_math(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
+    text = m.group("math_text")
+    state.append_token({"type": "block_math", "raw": text})
     return m.end() + 1
 
 
-def parse_inline_math(inline, m, state):
-    text = m.group('math_text')
-    state.append_token({'type': 'inline_math', 'raw': text})
+def parse_inline_math(
+    inline: "InlineParser", m: Match[str], state: "InlineState"
+) -> int:
+    text = m.group("math_text")
+    state.append_token({"type": "inline_math", "raw": text})
     return m.end()
 
 
-def render_block_math(renderer, text):
-    return '<div class="math">$$\n' + text + '\n$$</div>\n'
+def render_block_math(renderer: "BaseRenderer", text: str) -> str:
+    return '<div class="math">$$\n' + text + "\n$$</div>\n"
 
 
-def render_inline_math(renderer, text):
-    return r'<span class="math">\(' + text + r'\)</span>'
+def render_inline_math(renderer: "BaseRenderer", text: str) -> str:
+    return r'<span class="math">\(' + text + r"\)</span>"
 
 
-def math(md):
+def math(md: "Markdown") -> None:
     """A mistune plugin to support math. The syntax is used
     by many markdown extensions:
 
@@ -47,11 +56,11 @@ def math(md):
         md.renderer.register('inline_math', render_inline_math)
 
 
-def math_in_quote(md):
+def math_in_quote(md: "Markdown") -> None:
     """Enable block math plugin in block quote."""
     md.block.insert_rule(md.block.block_quote_rules, 'block_math', before='list')
 
 
-def math_in_list(md):
+def math_in_list(md: "Markdown") -> None:
     """Enable block math plugin in list."""
     md.block.insert_rule(md.block.list_rules, 'block_math', before='list')

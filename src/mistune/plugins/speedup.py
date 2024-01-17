@@ -1,5 +1,12 @@
 import re
 import string
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 # because mismatch is too slow, add parsers for paragraph and text
 
@@ -12,21 +19,20 @@ PARAGRAPH = (
 __all__ = ['speedup']
 
 
-
-def parse_text(inline, m, state):
+def parse_text(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)
     text = HARD_LINEBREAK_RE.sub('\n', text)
     inline.process_text(text, state)
     return m.end()
 
 
-def parse_paragraph(block, m, state):
+def parse_paragraph(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
     text = m.group(0)
     state.add_paragraph(text)
     return m.end()
 
 
-def speedup(md):
+def speedup(md: "Markdown") -> None:
     """Increase the speed of parsing paragraph and inline text."""
     md.block.register('paragraph', PARAGRAPH, parse_paragraph)
 

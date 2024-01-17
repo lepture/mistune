@@ -1,7 +1,15 @@
 import re
 import types
-from ..util import escape
+from typing import TYPE_CHECKING, Match, Optional
+
 from ..helpers import PREVENT_BACKSLASH
+from ..util import escape
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..inline_parser import InlineParser
+    from ..markdown import Markdown
 
 __all__ = ['abbr']
 
@@ -12,8 +20,8 @@ REF_ABBR = (
 )
 
 
-def parse_ref_abbr(block, m, state):
-    ref = state.env.get('ref_abbrs')
+def parse_ref_abbr(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
+    ref = state.env.get("ref_abbrs")
     if not ref:
         ref = {}
     key = m.group('abbr_key')
@@ -25,8 +33,8 @@ def parse_ref_abbr(block, m, state):
     return m.end() + 1
 
 
-def process_text(inline, text, state):
-    ref = state.env.get('ref_abbrs')
+def process_text(inline: "InlineParser", text: str, state: "InlineState") -> None:
+    ref = state.env.get("ref_abbrs")
     if not ref:
         return state.append_token({'type': 'text', 'raw': text})
 
@@ -67,13 +75,13 @@ def process_text(inline, text, state):
         state.append_token({'type': 'text', 'raw': text[pos:]})
 
 
-def render_abbr(renderer, text, title):
+def render_abbr(renderer: "BaseRenderer", text: str, title: str) -> str:
     if not title:
         return '<abbr>' + text + '</abbr>'
     return '<abbr title="' + escape(title) + '">' + text + '</abbr>'
 
 
-def abbr(md):
+def abbr(md: "Markdown") -> None:
     """A mistune plugin to support abbreviations, spec defined at
     https://michelf.ca/projects/php-markdown/extra/#abbr
 
@@ -98,6 +106,6 @@ def abbr(md):
     """
     md.block.register('ref_abbr', REF_ABBR, parse_ref_abbr, before='paragraph')
     # replace process_text
-    md.inline.process_text = types.MethodType(process_text, md.inline)
+    md.inline.process_text = types.MethodType(process_text, md.inline)  # type: ignore[method-assign]
     if md.renderer and md.renderer.NAME == 'html':
         md.renderer.register('abbr', render_abbr)

@@ -1,7 +1,18 @@
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple
+
+from .core import BlockState
 from .util import striptags
 
+if TYPE_CHECKING:
+    from .markdown import Markdown
 
-def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
+
+def add_toc_hook(
+    md: "Markdown",
+    min_level: int = 1,
+    max_level: int = 3,
+    heading_id: Optional[Callable[[Dict[str, Any], int], str]] = None,
+) -> None:
     """Add a hook to save toc items into ``state.env``. This is
     usually helpful for doc generator::
 
@@ -21,10 +32,11 @@ def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
     :param heading_id: a function to generate heading_id
     """
     if heading_id is None:
-        def heading_id(token, index):
+
+        def heading_id(token: Dict[str, Any], index: int) -> str:
             return 'toc_' + str(index + 1)
 
-    def toc_hook(md, state):
+    def toc_hook(md: "Markdown", state: "BlockState") -> None:
         headings = []
 
         for tok in state.tokens:
@@ -44,16 +56,17 @@ def add_toc_hook(md, min_level=1, max_level=3, heading_id=None):
     md.before_render_hooks.append(toc_hook)
 
 
-def normalize_toc_item(md, token):
-    text = token['text']
+def normalize_toc_item(md: "Markdown", token: Dict[str, Any]) -> Tuple[int, str, str]:
+    text = token["text"]
     tokens = md.inline(text, {})
-    html = md.renderer(tokens, {})
+    assert md.renderer is not None
+    html = md.renderer(tokens, BlockState())
     text = striptags(html)
     attrs = token['attrs']
     return attrs['level'], attrs['id'], text
 
 
-def render_toc_ul(toc):
+def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
     """Render a <ul> table of content HTML. The param "toc" should
     be formatted into this structure::
 
@@ -74,7 +87,7 @@ def render_toc_ul(toc):
         return ''
 
     s = '<ul>\n'
-    levels = []
+    levels: List[int] = []
     for level, k, text in toc:
         item = '<a href="#{}">{}</a>'.format(k, text)
         if not levels:

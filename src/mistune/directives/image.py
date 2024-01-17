@@ -1,6 +1,15 @@
 import re
-from ._base import DirectivePlugin
-from ..util import escape as escape_text, escape_url
+from typing import TYPE_CHECKING, Any, Dict, List, Match, Optional
+
+from ..util import escape as escape_text
+from ..util import escape_url
+from ._base import BaseDirective, DirectivePlugin
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BlockState
+    from ..markdown import Markdown
+    from ..renderers.html import HTMLRenderer
 
 __all__ = ['Image', 'Figure']
 
@@ -8,7 +17,7 @@ _num_re = re.compile(r'^\d+(?:\.\d*)?')
 _allowed_aligns = ["top", "middle", "bottom", "left", "center", "right"]
 
 
-def _parse_attrs(options):
+def _parse_attrs(options: Dict[str, Any]) -> Dict[str, Any]:
     attrs = {}
     if 'alt' in options:
         attrs['alt'] = options['alt']
@@ -32,19 +41,29 @@ def _parse_attrs(options):
 class Image(DirectivePlugin):
     NAME = 'image'
 
-    def parse(self, block, m, state):
+    def parse(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Dict[str, Any]:
         options = dict(self.parse_options(m))
         attrs = _parse_attrs(options)
         attrs['src'] = self.parse_title(m)
         return {'type': 'block_image', 'attrs': attrs}
 
-    def __call__(self, directive, md):
+    def __call__(self, directive: "BaseDirective", md: "Markdown") -> None:
         directive.register(self.NAME, self.parse)
+        assert md.renderer is not None
         if md.renderer.NAME == 'html':
             md.renderer.register('block_image', render_block_image)
 
 
-def render_block_image(self, src: str, alt=None, width=None, height=None, **attrs):
+def render_block_image(
+    self: 'HTMLRenderer',
+    src: str,
+    alt: Optional[str] = None,
+    width: Optional[str] = None,
+    height: Optional[str] = None,
+    **attrs: Any,
+) -> str:
     img = '<img src="' + src + '"'
     style = ''
     if alt:
@@ -81,12 +100,14 @@ def render_block_image(self, src: str, alt=None, width=None, height=None, **attr
 class Figure(DirectivePlugin):
     NAME = 'figure'
 
-    def parse_directive_content(self, block, m, state):
+    def parse_directive_content(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Optional[List[Dict[str, Any]]]:
         content = self.parse_content(m)
         if not content:
-            return
+            return None
 
-        tokens = self.parse_tokens(block, content, state)
+        tokens = list(self.parse_tokens(block, content, state))
         caption = tokens[0]
         if caption['type'] == 'paragraph':
             caption['type'] = 'figcaption'
@@ -97,8 +118,11 @@ class Figure(DirectivePlugin):
                     'children': tokens[1:]
                 })
             return children
+        return None
 
-    def parse(self, block, m, state):
+    def parse(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Dict[str, Any]:
         options = dict(self.parse_options(m))
         image_attrs = _parse_attrs(options)
         image_attrs['src'] = self.parse_title(m)
@@ -121,9 +145,10 @@ class Figure(DirectivePlugin):
             'children': children,
         }
 
-    def __call__(self, directive, md):
+    def __call__(self, directive: "BaseDirective", md: "Markdown") -> None:
         directive.register(self.NAME, self.parse)
 
+        assert md.renderer is not None
         if md.renderer.NAME == 'html':
             md.renderer.register('figure', render_figure)
             md.renderer.register('block_image', render_block_image)
@@ -131,8 +156,14 @@ class Figure(DirectivePlugin):
             md.renderer.register('legend', render_legend)
 
 
-def render_figure(self, text, align=None, figwidth=None, figclass=None):
-    _cls = 'figure'
+def render_figure(
+    self: Any,
+    text: str,
+    align: Optional[str] = None,
+    figwidth: Optional[str] = None,
+    figclass: Optional[str] = None,
+) -> str:
+    _cls = "figure"
     if align:
         _cls += ' align-' + align
     if figclass:
@@ -144,9 +175,9 @@ def render_figure(self, text, align=None, figwidth=None, figclass=None):
     return html + '>\n' + text + '</figure>\n'
 
 
-def render_figcaption(self, text):
+def render_figcaption(self: Any, text: str) -> str:
     return '<figcaption>' + text + '</figcaption>\n'
 
 
-def render_legend(self, text):
+def render_legend(self: Any, text: str) -> str:
     return '<div class="legend">\n' + text + '</div>\n'

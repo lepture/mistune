@@ -1,29 +1,38 @@
-from ..core import BaseRenderer
-from ..util import escape as escape_text, striptags, safe_entity
+from typing import Any, ClassVar, Dict, Optional, Tuple
+
+from typing_extensions import Literal
+
+from ..core import BaseRenderer, BlockState
+from ..util import escape as escape_text
+from ..util import safe_entity, striptags
 
 
 class HTMLRenderer(BaseRenderer):
     """A renderer for converting Markdown to HTML."""
-    NAME = 'html'
-    HARMFUL_PROTOCOLS = (
+
+    _escape: bool
+    NAME: ClassVar[Literal["html"]] = "html"
+    HARMFUL_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
         'javascript:',
         'vbscript:',
         'file:',
         'data:',
     )
-    GOOD_DATA_PROTOCOLS = (
+    GOOD_DATA_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
         'data:image/gif;',
         'data:image/png;',
         'data:image/jpeg;',
         'data:image/webp;',
     )
 
-    def __init__(self, escape=True, allow_harmful_protocols=None):
+    def __init__(
+        self, escape: bool = True, allow_harmful_protocols: Optional[bool] = None
+    ) -> None:
         super(HTMLRenderer, self).__init__()
         self._allow_harmful_protocols = allow_harmful_protocols
         self._escape = escape
 
-    def render_token(self, token, state):
+    def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
         # backward compitable with v2
         func = self._get_method(token['type'])
         attrs = token.get('attrs')
@@ -70,13 +79,13 @@ class HTMLRenderer(BaseRenderer):
     def strong(self, text: str) -> str:
         return '<strong>' + text + '</strong>'
 
-    def link(self, text: str, url: str, title=None) -> str:
+    def link(self, text: str, url: str, title: Optional[str] = None) -> str:
         s = '<a href="' + self.safe_url(url) + '"'
         if title:
             s += ' title="' + safe_entity(title) + '"'
         return s + '>' + text + '</a>'
 
-    def image(self, text: str, url: str, title=None) -> str:
+    def image(self, text: str, url: str, title: Optional[str] = None) -> str:
         src = self.safe_url(url)
         alt = escape_text(striptags(text))
         s = '<img src="' + src + '" alt="' + alt + '"'
@@ -101,7 +110,7 @@ class HTMLRenderer(BaseRenderer):
     def paragraph(self, text: str) -> str:
         return '<p>' + text + '</p>\n'
 
-    def heading(self, text: str, level: int, **attrs) -> str:
+    def heading(self, text: str, level: int, **attrs: Any) -> str:
         tag = 'h' + str(level)
         html = '<' + tag
         _id = attrs.get('id')
@@ -118,7 +127,7 @@ class HTMLRenderer(BaseRenderer):
     def block_text(self, text: str) -> str:
         return text
 
-    def block_code(self, code: str, info=None) -> str:
+    def block_code(self, code: str, info: Optional[str] = None) -> str:
         html = '<pre><code'
         if info is not None:
             info = safe_entity(info.strip())
@@ -138,7 +147,7 @@ class HTMLRenderer(BaseRenderer):
     def block_error(self, text: str) -> str:
         return '<div class="error"><pre>' + text + '</pre></div>\n'
 
-    def list(self, text: str, ordered: bool, **attrs) -> str:
+    def list(self, text: str, ordered: bool, **attrs: Any) -> str:
         if ordered:
             html = '<ol'
             start = attrs.get('start')

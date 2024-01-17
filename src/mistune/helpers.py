@@ -1,5 +1,7 @@
 import re
 import string
+from typing import Any, Dict, Tuple, Union
+
 from .util import escape_url
 
 PREVENT_BACKSLASH = r'(?<!\\)(?:\\\\)*'
@@ -47,11 +49,11 @@ _INLINE_SQUARE_BRACKET_RE = re.compile(PREVENT_BACKSLASH + r'[\[\]]')
 _ESCAPE_CHAR_RE = re.compile(r'\\(' + PUNCTUATION + r')')
 
 
-def unescape_char(text):
+def unescape_char(text: str) -> str:
     return _ESCAPE_CHAR_RE.sub(r'\1', text)
 
 
-def parse_link_text(src, pos):
+def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
     level = 1
     found = False
     start_pos = pos
@@ -77,7 +79,9 @@ def parse_link_text(src, pos):
     return None, None
 
 
-def parse_link_label(src, start_pos):
+def parse_link_label(
+    src: str, start_pos: int
+) -> Union[Tuple[str, int], Tuple[None, None]]:
     m = _INLINE_LINK_LABEL_RE.match(src, start_pos)
     if m:
         label = m.group(0)[:-1]
@@ -85,7 +89,9 @@ def parse_link_label(src, start_pos):
     return None, None
 
 
-def parse_link_href(src, start_pos, block=False):
+def parse_link_href(
+    src: str, start_pos: int, block: bool = False
+) -> Union[Tuple[str, int], Tuple[None, None]]:
     m = LINK_BRACKET_START.match(src, start_pos)
     if m:
         start_pos = m.end() - 1
@@ -110,7 +116,9 @@ def parse_link_href(src, start_pos, block=False):
     return href, end_pos - 1
 
 
-def parse_link_title(src, start_pos, max_pos):
+def parse_link_title(
+    src: str, start_pos: int, max_pos: int
+) -> Union[Tuple[str, int], Tuple[None, None]]:
     m = LINK_TITLE_RE.match(src, start_pos, max_pos)
     if m:
         title = m.group(1)[1:-1]
@@ -119,11 +127,13 @@ def parse_link_title(src, start_pos, max_pos):
     return None, None
 
 
-def parse_link(src, pos):
+def parse_link(
+    src: str, pos: int
+) -> Union[Tuple[Dict[str, Any], int], Tuple[None, None]]:
     href, href_pos = parse_link_href(src, pos)
     if href is None:
         return None, None
-
+    assert href_pos is not None
     title, title_pos = parse_link_title(src, href_pos, len(src))
     next_pos = title_pos or href_pos
     m = PAREN_END_RE.match(src, next_pos)

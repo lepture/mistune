@@ -1,11 +1,15 @@
+"""because list is complex, split list parser in a new file"""
+
 import re
-from .core import BlockState
-from .util import (
-    strip_end,
-    expand_tab,
-    expand_leading_tab,
-)
-# because list is complex, split list parser in a new file
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Match
+
+from typing_extensions import Literal
+
+from .util import expand_leading_tab, expand_tab, strip_end
+
+if TYPE_CHECKING:
+    from .block_parser import BlockParser
+    from .core import BlockState
 
 LIST_PATTERN = (
     r'^(?P<list_1> {0,3})'
@@ -16,7 +20,7 @@ LIST_PATTERN = (
 _LINE_HAS_TEXT = re.compile(r'(\s*)\S')
 
 
-def parse_list(block, m: re.Match, state: BlockState) -> int:
+def parse_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
     """Parse tokens for ordered and unordered list."""
     text = m.group('list_3')
     if not text.strip():
@@ -29,7 +33,7 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
     marker = m.group('list_2')
     ordered = len(marker) > 1
     depth = state.depth()
-    token = {
+    token: Dict[str, Any] = {
         'type': 'list',
         'children': [],
         'tight': True,
@@ -50,7 +54,7 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
             token['attrs']['start'] = start
 
     state.cursor = m.end() + 1
-    groups = (m.group('list_1'), marker, text)
+    groups: Optional[Tuple[str, str, str]] = (m.group("list_1"), marker, text)
 
     if depth >= block.max_nested_level - 1:
         rules = list(block.list_rules)
@@ -73,7 +77,7 @@ def parse_list(block, m: re.Match, state: BlockState) -> int:
     return state.cursor
 
 
-def _transform_tight_list(token):
+def _transform_tight_list(token: Dict[str, Any]) -> None:
     if token['tight']:
         # reset tight list item
         for list_item in token['children']:
@@ -84,7 +88,14 @@ def _transform_tight_list(token):
                     _transform_tight_list(tok)
 
 
-def _parse_list_item(block, bullet, groups, token, state, rules):
+def _parse_list_item(
+    block: "BlockParser",
+    bullet: str,
+    groups: Tuple[str, str, str],
+    token: Dict[str, Any],
+    state: "BlockState",
+    rules: List[str],
+) -> Optional[Tuple[str, str, str]]:
     spaces, marker, text = groups
 
     leading_width = len(spaces) + len(marker)
@@ -179,8 +190,10 @@ def _parse_list_item(block, bullet, groups, token, state, rules):
     if next_group:
         return next_group
 
+    return None
 
-def _get_list_bullet(c):
+
+def _get_list_bullet(c: str) -> str:
     if c == '.':
         bullet = r'\d{0,9}\.'
     elif c == ')':
@@ -194,7 +207,7 @@ def _get_list_bullet(c):
     return bullet
 
 
-def _compile_list_item_pattern(bullet, leading_width):
+def _compile_list_item_pattern(bullet: str, leading_width: int) -> str:
     if leading_width > 3:
         leading_width = 3
     return (
@@ -204,7 +217,7 @@ def _compile_list_item_pattern(bullet, leading_width):
     )
 
 
-def _compile_continue_width(text, leading_width):
+def _compile_continue_width(text: str, leading_width: int) -> Tuple[str, int]:
     text = expand_leading_tab(text, 3)
     text = expand_tab(text)
 
@@ -225,7 +238,7 @@ def _compile_continue_width(text, leading_width):
     return text, continue_width
 
 
-def _clean_list_item_text(src, continue_width):
+def _clean_list_item_text(src: str, continue_width: int) -> str:
     # according to Example 7, tab should be treated as 3 spaces
     rv = []
     trim_space = ' ' * continue_width
@@ -243,7 +256,7 @@ def _clean_list_item_text(src, continue_width):
     return '\n'.join(rv)
 
 
-def _is_loose_list(tokens):
+def _is_loose_list(tokens: Iterable[Dict[str, Any]]) -> bool:
     paragraph_count = 0
     for tok in tokens:
         if tok['type'] == 'blank_line':
@@ -252,3 +265,4 @@ def _is_loose_list(tokens):
             paragraph_count += 1
             if paragraph_count > 1:
                 return True
+    return False

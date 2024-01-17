@@ -1,9 +1,16 @@
+from typing import TYPE_CHECKING, Any, Dict, Iterable, cast
+
 from ..util import strip_end
 
+if TYPE_CHECKING:
+    from ..core import BaseRenderer, BlockState
 
-def render_list(renderer, token, state) -> str:
-    attrs = token['attrs']
-    if attrs['ordered']:
+
+def render_list(
+    renderer: "BaseRenderer", token: Dict[str, Any], state: "BlockState"
+) -> str:
+    attrs = token["attrs"]
+    if attrs["ordered"]:
         children = _render_ordered_list(renderer, token, state)
     else:
         children = _render_unordered_list(renderer, token, state)
@@ -17,13 +24,18 @@ def render_list(renderer, token, state) -> str:
     return strip_end(text) + '\n'
 
 
-def _render_list_item(renderer, parent, item, state):
-    leading = parent['leading']
-    text = ''
-    for tok in item['children']:
-        if tok['type'] == 'list':
-            tok['parent'] = parent
-        elif tok['type'] == 'blank_line':
+def _render_list_item(
+    renderer: "BaseRenderer",
+    parent: Dict[str, Any],
+    item: Dict[str, Any],
+    state: "BlockState",
+) -> str:
+    leading = cast(str, parent["leading"])
+    text = ""
+    for tok in item["children"]:
+        if tok["type"] == "list":
+            tok["parent"] = parent
+        elif tok["type"] == "blank_line":
             continue
         text += renderer.render_token(tok, state)
 
@@ -38,11 +50,13 @@ def _render_list_item(renderer, parent, item, state):
     return leading + text
 
 
-def _render_ordered_list(renderer, token, state):
-    attrs = token['attrs']
-    start = attrs.get('start', 1)
-    for item in token['children']:
-        leading = str(start) + token['bullet'] + ' '
+def _render_ordered_list(
+    renderer: "BaseRenderer", token: Dict[str, Any], state: "BlockState"
+) -> Iterable[str]:
+    attrs = token["attrs"]
+    start = attrs.get("start", 1)
+    for item in token["children"]:
+        leading = str(start) + token["bullet"] + " "
         parent = {
             'leading': leading,
             'tight': token['tight'],
@@ -51,7 +65,9 @@ def _render_ordered_list(renderer, token, state):
         start += 1
 
 
-def _render_unordered_list(renderer, token, state):
+def _render_unordered_list(
+    renderer: "BaseRenderer", token: Dict[str, Any], state: "BlockState"
+) -> Iterable[str]:
     parent = {
         'leading': token['bullet'] + ' ',
         'tight': token['tight'],

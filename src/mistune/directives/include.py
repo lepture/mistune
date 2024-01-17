@@ -1,10 +1,18 @@
 import os
-from ._base import DirectivePlugin
+from typing import TYPE_CHECKING, Any, Dict, List, Match, Union
 
+from ._base import BaseDirective, DirectivePlugin
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BaseRenderer, BlockState
+    from ..markdown import Markdown
 
 class Include(DirectivePlugin):
-    def parse(self, block, m, state):
-        source_file = state.env.get('__file__')
+    def parse(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        source_file = state.env.get("__file__")
         if not source_file:
             return {'type': 'block_error', 'raw': 'Missing source file'}
 
@@ -34,8 +42,7 @@ class Include(DirectivePlugin):
             }
 
         with open(dest, 'rb') as f:
-            content = f.read()
-            content = content.decode(encoding)
+            content = f.read().decode(encoding)
 
         ext = os.path.splitext(relpath)[1]
         if ext in {'.md', '.markdown', '.mkd'}:
@@ -55,11 +62,11 @@ class Include(DirectivePlugin):
             'attrs': attrs,
         }
 
-    def __call__(self, directive, md):
-        directive.register('include', self.parse)
-        if md.renderer and md.renderer.NAME == 'html':
-            md.renderer.register('include', render_html_include)
+    def __call__(self, directive: BaseDirective, md: "Markdown") -> None:
+        directive.register("include", self.parse)
+        if md.renderer and md.renderer.NAME == "html":
+            md.renderer.register("include", render_html_include)
 
 
-def render_html_include(renderer, text, **attrs):
-    return '<pre class="directive-include">\n' + text + '</pre>\n'
+def render_html_include(renderer: "BaseRenderer", text: str, **attrs: Any) -> str:
+    return '<pre class="directive-include">\n' + text + "</pre>\n"

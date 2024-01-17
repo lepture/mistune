@@ -1,5 +1,13 @@
 import re
-from ._base import DirectiveParser, BaseDirective
+from typing import TYPE_CHECKING, List, Match, Optional
+
+from ._base import BaseDirective, DirectiveParser, DirectivePlugin
+
+if TYPE_CHECKING:
+    from ..block_parser import BlockParser
+    from ..core import BlockState
+    from ..markdown import Markdown
+
 
 __all__ = ['FencedDirective']
 
@@ -16,15 +24,15 @@ class FencedParser(DirectiveParser):
     name = 'fenced_directive'
 
     @staticmethod
-    def parse_type(m: re.Match):
+    def parse_type(m: Match[str]) -> str:
         return m.group('type')
 
     @staticmethod
-    def parse_title(m: re.Match):
+    def parse_title(m: Match[str]) -> str:
         return m.group('title')
 
     @staticmethod
-    def parse_content(m: re.Match):
+    def parse_content(m: Match[str]) -> str:
         return m.group('text')
 
 
@@ -85,7 +93,7 @@ class FencedDirective(BaseDirective):
     """
     parser = FencedParser
 
-    def __init__(self, plugins, markers='`~'):
+    def __init__(self, plugins: List[DirectivePlugin], markers: str = "`~") -> None:
         super(FencedDirective, self).__init__(plugins)
         self.markers = markers
         _marker_pattern = '|'.join(re.escape(c) for c in markers)
@@ -94,7 +102,9 @@ class FencedDirective(BaseDirective):
             r'\{[a-zA-Z0-9_-]+\}'
         )
 
-    def _process_directive(self, block, marker, start, state):
+    def _process_directive(
+        self, block: "BlockParser", marker: str, start: int, state: "BlockState"
+    ) -> Optional[int]:
         mlen = len(marker)
         cursor_start = start + len(marker)
 
@@ -114,17 +124,21 @@ class FencedDirective(BaseDirective):
 
         m = _directive_re.match(text)
         if not m:
-            return
+            return None
 
         self.parse_method(block, m, state)
         return end_pos
 
-    def parse_directive(self, block, m, state):
-        marker = m.group('fenced_directive_mark')
+    def parse_directive(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Optional[int]:
+        marker = m.group("fenced_directive_mark")
         return self._process_directive(block, marker, m.start(), state)
 
-    def parse_fenced_code(self, block, m, state):
-        info = m.group('fenced_3')
+    def parse_fenced_code(
+        self, block: "BlockParser", m: Match[str], state: "BlockState"
+    ) -> Optional[int]:
+        info = m.group("fenced_3")
         if not info or not _type_re.match(info):
             return block.parse_fenced_code(m, state)
 
@@ -134,7 +148,7 @@ class FencedDirective(BaseDirective):
         marker = m.group('fenced_2')
         return self._process_directive(block, marker, m.start(), state)
 
-    def __call__(self, md):
+    def __call__(self, md: "Markdown") -> None:
         super(FencedDirective, self).__call__(md)
         if self.markers == '`~':
             md.block.register('fenced_code', None, self.parse_fenced_code)

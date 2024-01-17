@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple, Match
+from typing import Optional, List, Tuple, Match, Type, Pattern
 from .util import (
     unikey,
     escape_url,
@@ -33,7 +33,9 @@ _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 _STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')
 
 
-class BlockParser(Parser):
+class BlockParser(Parser[BlockState]):
+    state_cls = BlockState
+
     BLANK_LINE = re.compile(r'(^[ \t\v\f]*\n)+', re.M)
 
     RAW_HTML = (
@@ -109,18 +111,18 @@ class BlockParser(Parser):
             name: getattr(self, 'parse_' + name) for name in self.SPECIFICATION
         }
 
-    def parse_blank_line(self, m: Match, state: BlockState) -> int:
+    def parse_blank_line(self, m: Match[str], state: BlockState) -> int:
         """Parse token for blank lines."""
         state.append_token({'type': 'blank_line'})
         return m.end()
 
-    def parse_thematic_break(self, m: Match, state: BlockState) -> int:
+    def parse_thematic_break(self, m: Match[str], state: BlockState) -> int:
         """Parse token for thematic break, e.g. ``<hr>`` tag in HTML."""
         state.append_token({'type': 'thematic_break'})
         # $ does not count '\n'
         return m.end() + 1
 
-    def parse_indent_code(self, m: Match, state: BlockState) -> int:
+    def parse_indent_code(self, m: Match[str], state: BlockState) -> int:
         """Parse token for code block which is indented by 4 spaces."""
         # it is a part of the paragraph
         end_pos = state.append_paragraph()
@@ -134,7 +136,7 @@ class BlockParser(Parser):
         state.append_token({'type': 'block_code', 'raw': code, 'style': 'indent'})
         return m.end()
 
-    def parse_fenced_code(self, m: Match, state: BlockState) -> Optional[int]:
+    def parse_fenced_code(self, m: Match[str], state: BlockState) -> Optional[int]:
         """Parse token for fenced code block. A fenced code block is started with
         3 or more backtick(`) or tilde(~).
 
@@ -156,7 +158,7 @@ class BlockParser(Parser):
             # CommonMark Example 145
             # Info strings for backtick code blocks cannot contain backticks
             if info.find(c) != -1:
-                return
+                return None
 
         _end = re.compile(
             r'^ {0,3}' + c + '{' + str(len(marker)) + r',}[ \t]*(?:\n|$)', re.M)
@@ -182,7 +184,7 @@ class BlockParser(Parser):
         state.append_token(token)
         return end_pos
 
-    def parse_atx_heading(self, m: Match, state: BlockState) -> int:
+    def parse_atx_heading(self, m: Match[str], state: BlockState) -> int:
         """Parse token for ATX heading. An ATX heading is started with 1 to 6
         symbol of ``#``."""
         level = len(m.group('atx_1'))
@@ -195,7 +197,7 @@ class BlockParser(Parser):
         state.append_token(token)
         return m.end() + 1
 
-    def parse_setex_heading(self, m: Match, state: BlockState) -> Optional[int]:
+    def parse_setex_heading(self, m: Match[str], state: BlockState) -> Optional[int]:
         """Parse token for setex style heading. A setex heading syntax looks like:
 
         .. code-block:: markdown
@@ -212,11 +214,12 @@ class BlockParser(Parser):
             return m.end() + 1
 
         sc = self.compile_sc(['thematic_break', 'list'])
-        m = sc.match(state.src, state.cursor)
-        if m:
-            return self.parse_method(m, state)
+        m2 = sc.match(state.src, state.cursor)
+        if m2:
+            return self.parse_method(m2, state)
+        return None
 
-    def parse_ref_link(self, m: Match, state: BlockState) -> Optional[int]:
+    def parse_ref_link(self, m: Match[str], state: BlockState) -> Optional[int]:
         """Parse link references and save the link information into ``state.env``.
 
         Here is an example of a link reference:
@@ -241,11 +244,13 @@ class BlockParser(Parser):
         label = m.group('reflink_1')
         key = unikey(label)
         if not key:
-            return
+            return None
 
         href, href_pos = parse_link_href(state.src, m.end(), block=True)
         if href is None:
-            return
+            return None
+
+        assert href_pos is not None
 
         _blank = self.BLANK_LINE.search(state.src, href_pos)
         if _blank:
@@ -255,26 +260,27 @@ class BlockParser(Parser):
 
         title, title_pos = parse_link_title(state.src, href_pos, max_pos)
         if title_pos:
-            m = _BLANK_TO_LINE.match(state.src, title_pos)
-            if m:
-                title_pos = m.end()
+            m2 = _BLANK_TO_LINE.match(state.src, title_pos)
+            if m2:
+                title_pos = m2.end()
             else:
                 title_pos = None
                 title = None
 
         if title_pos is None:
-            m = _BLANK_TO_LINE.match(state.src, href_pos)
-            if m:
-                href_pos = m.end()
+            m3 = _BLANK_TO_LINE.match(state.src, href_pos)
+            if m3:
+                href_pos = m3.end()
             else:
                 href_pos = None
                 href = None
 
         end_pos = title_pos or href_pos
         if not end_pos:
-            return
+            return None
 
         if key not in state.env['ref_links']:
+            assert href is not None
             href = unescape_char(href)
             data = {'url': escape_url(href), 'label': label}
             if title:
@@ -282,7 +288,9 @@ class BlockParser(Parser):
             state.env['ref_links'][key] = data
         return end_pos
 
-    def extract_block_quote(self, m: Match, state: BlockState) -> Tuple[str, int]:
+    def extract_block_quote(
+        self, m: Match[str], state: BlockState
+    ) -> Tuple[str, Optional[int]]:
         """Extract text and cursor end position of a block quote."""
 
         # cleanup at first to detect if it is code block
@@ -295,16 +303,16 @@ class BlockParser(Parser):
 
         state.cursor = m.end() + 1
 
-        end_pos = None
+        end_pos: Optional[int] = None
         if require_marker:
-            m = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
-            if m:
-                quote = m.group(0)
+            m2 = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
+            if m2:
+                quote = m2.group(0)
                 quote = _BLOCK_QUOTE_LEADING.sub('', quote)
                 quote = expand_leading_tab(quote, 3)
                 quote = _BLOCK_QUOTE_TRIM.sub('', quote)
                 text += quote
-                state.cursor = m.end()
+                state.cursor = m2.end()
         else:
             prev_blank_line = False
             break_sc = self.compile_sc([
@@ -312,14 +320,14 @@ class BlockParser(Parser):
                 'list', 'block_html',
             ])
             while state.cursor < state.cursor_max:
-                m = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
-                if m:
-                    quote = m.group(0)
+                m3 = _STRICT_BLOCK_QUOTE.match(state.src, state.cursor)
+                if m3:
+                    quote = m3.group(0)
                     quote = _BLOCK_QUOTE_LEADING.sub('', quote)
                     quote = expand_leading_tab(quote, 3)
                     quote = _BLOCK_QUOTE_TRIM.sub('', quote)
                     text += quote
-                    state.cursor = m.end()
+                    state.cursor = m3.end()
                     if not quote.strip():
                         prev_blank_line = True
                     else:
@@ -332,9 +340,9 @@ class BlockParser(Parser):
                     # a block quote and a following paragraph
                     break
 
-                m = break_sc.match(state.src, state.cursor)
-                if m:
-                    end_pos = self.parse_method(m, state)
+                m4 = break_sc.match(state.src, state.cursor)
+                if m4:
+                    end_pos = self.parse_method(m4, state)
                     if end_pos:
                         break
 
@@ -349,7 +357,7 @@ class BlockParser(Parser):
         # treated as 4 spaces
         return expand_tab(text), end_pos
 
-    def parse_block_quote(self, m: Match, state: BlockState) -> int:
+    def parse_block_quote(self, m: Match[str], state: BlockState) -> int:
         """Parse token for block quote. Here is an example of the syntax:
 
         .. code-block:: markdown
@@ -374,14 +382,14 @@ class BlockParser(Parser):
         state.append_token(token)
         return state.cursor
 
-    def parse_list(self, m: Match, state: BlockState) -> int:
+    def parse_list(self, m: Match[str], state: BlockState) -> int:
         """Parse tokens for ordered and unordered list."""
         return parse_list(self, m, state)
 
-    def parse_block_html(self, m: Match, state: BlockState) -> Optional[int]:
+    def parse_block_html(self, m: Match[str], state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)
 
-    def parse_raw_html(self, m: Match, state: BlockState) -> Optional[int]:
+    def parse_raw_html(self, m: Match[str], state: BlockState) -> Optional[int]:
         marker = m.group(0).strip()
 
         # rule 2
@@ -429,6 +437,8 @@ class BlockParser(Parser):
            (close_tag and _CLOSE_TAG_END.match(state.src, start_pos, end_pos)):
             return _parse_html_to_newline(state, self.BLANK_LINE)
 
+        return None
+
     def parse(self, state: BlockState, rules: Optional[List[str]]=None) -> None:
         sc = self.compile_sc(rules)
 
@@ -443,14 +453,14 @@ class BlockParser(Parser):
                 state.add_paragraph(text)
                 state.cursor = end_pos
 
-            end_pos = self.parse_method(m, state)
-            if end_pos:
-                state.cursor = end_pos
+            end_pos2 = self.parse_method(m, state)
+            if end_pos2:
+                state.cursor = end_pos2
             else:
-                end_pos = state.find_line_end()
-                text = state.get_text(end_pos)
+                end_pos3 = state.find_line_end()
+                text = state.get_text(end_pos3)
                 state.add_paragraph(text)
-                state.cursor = end_pos
+                state.cursor = end_pos3
 
         if state.cursor < state.cursor_max:
             text = state.src[state.cursor:]
@@ -458,7 +468,7 @@ class BlockParser(Parser):
             state.cursor = state.cursor_max
 
 
-def _parse_html_to_end(state, end_marker, start_pos):
+def _parse_html_to_end(state: BlockState, end_marker: str, start_pos: int) -> int:
     marker_pos = state.src.find(end_marker, start_pos)
     if marker_pos == -1:
         text = state.src[state.cursor:]
@@ -473,7 +483,7 @@ def _parse_html_to_end(state, end_marker, start_pos):
     return end_pos
 
 
-def _parse_html_to_newline(state, newline):
+def _parse_html_to_newline(state: BlockState, newline: Pattern[str]) -> int:
     m = newline.search(state.src, state.cursor)
     if m:
         end_pos = m.start()

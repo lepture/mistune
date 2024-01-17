@@ -1,13 +1,15 @@
 import re
-from tests import fixtures
+from abc import abstractmethod
 from unittest import TestCase
+
+from tests import fixtures
 
 
 class BaseTestCase(TestCase):
     @classmethod
-    def load_fixtures(cls, case_file):
-        def attach_case(n, text, html):
-            def method(self):
+    def load_fixtures(cls, case_file: str) -> None:
+        def attach_case(n: str, text: str, html: str) -> None:
+            def method(self: 'BaseTestCase') -> None:
                 self.assert_case(n, text, html)
 
             name = 'test_{}'.format(n)
@@ -21,15 +23,18 @@ class BaseTestCase(TestCase):
             attach_case(n, text, html)
 
     @classmethod
-    def ignore_case(cls, name):
+    def ignore_case(cls, name: str) -> bool:
         return False
+    
+    @abstractmethod
+    def parse(self, text: str) -> str: ...
 
-    def assert_case(self, name, text, html):
+    def assert_case(self, name: str, text: str, html: str) -> None:
         result = self.parse(text)
         self.assertEqual(result, html)
 
 
-def normalize_html(html):
+def normalize_html(html: str) -> str:
     html = re.sub(r'>\n+', '>', html)
     html = re.sub(r'\n+<', '<', html)
     return html.strip()

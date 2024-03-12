@@ -33,6 +33,9 @@ Documentation = "https://mistune.lepture.com/"
 Source = "https://github.com/lepture/mistune"
 Donate = "https://github.com/sponsors/lepture"
 
+[project.scripts]
+mistune = "mistune.__main__:cli"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"

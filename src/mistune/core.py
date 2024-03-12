@@ -18,7 +18,11 @@ from typing import (
     Union,
     cast,
 )
-from typing_extensions import Self
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 
 _LINE_END = re.compile(r'\n|$')
 

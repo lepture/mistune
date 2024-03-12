@@ -2,7 +2,9 @@
 name = "mistune"
 description = "A sane and fast Markdown parser with useful plugins and renderers"
 authors = [{name = "Hsiaoming Yang", email="me@lepture.com"}]
-dependencies = []
+dependencies = [
+  'typing_extensions >=4.6, <5; python_version < "3.11"'
+]
 license = {text = "BSD-3-Clause"}
 dynamic = ["version"]
 requires-python = ">=3.7"

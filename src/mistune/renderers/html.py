@@ -1,6 +1,9 @@
 from typing import Any, ClassVar, Dict, Optional, Tuple
 
-from typing_extensions import Literal
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text

@@ -3,7 +3,10 @@
 import re
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Match
 
-from typing_extensions import Literal
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from .util import expand_leading_tab, expand_tab, strip_end
 

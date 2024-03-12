@@ -10,7 +10,10 @@
 
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from typing_extensions import Literal
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 from .block_parser import BlockParser
 from .core import BaseRenderer, BlockState, InlineState

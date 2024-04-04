@@ -103,3 +103,9 @@ class TestMiscCases(TestCase):
         result = md('\u2003\u2003foo\nbar\n\n\u2003\u2003foobar')
         expected = '<p>\u2003\u2003foo<br />\nbar</p>\n<p>\u2003\u2003foobar</p>'
         self.assertEqual(result.strip(), expected)
+
+    def test_html_tag_text_following_list(self):
+        md = mistune.create_markdown(escape=False, hard_wrap=True)
+        result = md('foo\n- bar\n\ntable')
+        expected = '<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n<p>table</p>'
+        self.assertEqual(result.strip(), expected)

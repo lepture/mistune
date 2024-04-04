@@ -27,7 +27,7 @@ _BLOCK_QUOTE_LEADING = re.compile(r'^ *>', flags=re.M)
 _LINE_BLANK_END = re.compile(r'\n[ \t]*\n$')
 _BLANK_TO_LINE = re.compile(r'[ \t]*\n')
 
-_BLOCK_TAGS_PATTERN = '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS)
+_BLOCK_TAGS_PATTERN = '(' + '|'.join(BLOCK_TAGS) + '|' + '|'.join(PRE_TAGS) + ')'
 _OPEN_TAG_END = re.compile(HTML_ATTRIBUTES + r'[ \t]*>[ \t]*(?:\n|$)')
 _CLOSE_TAG_END = re.compile(r'[ \t]*>[ \t]*(?:\n|$)')
 _STRICT_BLOCK_QUOTE = re.compile(r'( {0,3}>[^\n]*(?:\n|$))+')

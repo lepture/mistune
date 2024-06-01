@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.0.2
+-------------
+
+**Released on Sep 30, 2023**
+
+* Fix list parser to avoid RecursionError
+
 Version 3.0.1
 -------------
 

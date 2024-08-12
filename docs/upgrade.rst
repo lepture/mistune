@@ -16,7 +16,7 @@ When customizing renderers, these methods' parameters are changed:
     +    link(self, text, url, title=None)
 
     -    image(self, src, alt="", title=None)
-    +    image(self, alt, url, title=None)
+    +    image(self, text, url, title=None)
 
     -    heading(self, text, level)
     +    heading(self, text, level, **attrs)

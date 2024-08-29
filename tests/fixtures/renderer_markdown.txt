@@ -228,6 +228,18 @@ hello
 > quote
 ````````````````````````````````
 
+> quote
+
+> quote
+> 
+> continuation
+.
+> quote
+
+> quote
+> 
+> continuation
+
 ## list
 
 ```````````````````````````````` example

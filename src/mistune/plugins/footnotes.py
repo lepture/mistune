@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Match, Union
 
 from ..core import BlockState
 from ..helpers import LINK_LABEL
@@ -7,7 +7,7 @@ from ..util import unikey
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser
-    from ..core import BaseRenderer, InlineState, Parser
+    from ..core import BaseRenderer, InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 

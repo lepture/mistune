@@ -96,7 +96,6 @@ def render_html_toc(
 ) -> str:
     if not title:
         title = 'Table of Contents'
-    toc = attrs['toc']
     content = render_toc_ul(attrs['toc'])
 
     html = '<details class="toc"'

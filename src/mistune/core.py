@@ -1,5 +1,4 @@
 import re
-from collections.abc import Generator
 from typing import (
     Any,
     Callable,
@@ -12,7 +11,6 @@ from typing import (
     MutableMapping,
     Optional,
     Pattern,
-    Set,
     Type,
     TypeVar,
     Union,

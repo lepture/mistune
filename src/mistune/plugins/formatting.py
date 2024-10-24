@@ -1,11 +1,10 @@
 import re
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional, Pattern
+from typing import TYPE_CHECKING, Match, Optional, Pattern
 
 from ..helpers import PREVENT_BACKSLASH
 
 if TYPE_CHECKING:
-    from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..core import BaseRenderer, InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 

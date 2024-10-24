@@ -1,21 +1,12 @@
 import re
 from typing import (
     Any,
-    ClassVar,
     Dict,
-    Generic,
-    Iterator,
     List,
     Match,
     MutableMapping,
     Optional,
-    Pattern,
-    Tuple,
-    TypeVar,
-    Union,
 )
-
-from typing_extensions import Literal
 
 from .core import InlineState, Parser
 from .helpers import (

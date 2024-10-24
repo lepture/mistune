@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Match, Optional
+from typing import TYPE_CHECKING, Any, Dict, Match
 
 from ._base import BaseDirective, DirectivePlugin
 

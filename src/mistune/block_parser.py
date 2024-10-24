@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple, Match, Type, Pattern
+from typing import Optional, List, Tuple, Match, Pattern
 from .util import (
     unikey,
     escape_url,

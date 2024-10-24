@@ -1,11 +1,12 @@
-__all__ = ['math', 'math_in_quote', 'math_in_list']
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+from typing import TYPE_CHECKING, Match
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..core import BaseRenderer, BlockState, InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
+
+__all__ = ['math', 'math_in_quote', 'math_in_list']
 
 BLOCK_MATH_PATTERN = r'^ {0,3}\$\$[ \t]*\n(?P<math_text>[\s\S]+?)\n\$\$[ \t]*$'
 INLINE_MATH_PATTERN = r'\$(?!\s)(?P<math_text>.+?)(?!\s)\$'

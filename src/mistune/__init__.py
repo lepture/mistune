@@ -8,7 +8,7 @@
     Documentation: https://mistune.lepture.com/
 """
 
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from typing_extensions import Literal
 

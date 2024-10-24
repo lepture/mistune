@@ -46,6 +46,9 @@ where = ["src"]
 [tool.setuptools.package-data]
 mistune = ["py.typed"]
 
+[tool.ruff]
+line-length = 120
+
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
 testpaths = ["tests"]

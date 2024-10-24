@@ -1,12 +1,12 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional
+from typing import TYPE_CHECKING, Match
 
 from ..util import escape_url
 
 if TYPE_CHECKING:
-    from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..core import InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
+
 __all__ = ['url']
 
 URL_LINK_PATTERN = r'''https?:\/\/[^\s<]+[^<.,:;"')\]\s]'''

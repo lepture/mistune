@@ -1,13 +1,13 @@
 import re
 import types
-from typing import TYPE_CHECKING, Match, Optional
+from typing import TYPE_CHECKING, Match
 
 from ..helpers import PREVENT_BACKSLASH
 from ..util import escape
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState, InlineState, Parser
+    from ..core import BaseRenderer, BlockState, InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 

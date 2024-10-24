@@ -14,9 +14,9 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Self,
     cast,
 )
-from typing_extensions import Self
 
 _LINE_END = re.compile(r'\n|$')
 

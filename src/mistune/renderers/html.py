@@ -1,7 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple
-
-from typing_extensions import Literal
-
+from typing import Any, ClassVar, Dict, Optional, Tuple, Literal
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text
 from ..util import safe_entity, striptags

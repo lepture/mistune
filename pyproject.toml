@@ -7,7 +7,7 @@ dependencies = [
 ]
 license = {text = "BSD-3-Clause"}
 dynamic = ["version"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 readme = "README.rst"
 classifiers = [
   "Development Status :: 4 - Beta",

@@ -14,9 +14,12 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    Self,
     cast,
 )
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 _LINE_END = re.compile(r'\n|$')
 

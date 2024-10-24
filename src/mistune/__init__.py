@@ -8,10 +8,6 @@
     Documentation: https://mistune.lepture.com/
 """
 
-try:
-    import typing_extensions
-except ImportError:
-    pass
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Literal
 from .block_parser import BlockParser
 from .core import BaseRenderer, BlockState, InlineState

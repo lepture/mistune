@@ -91,7 +91,7 @@ class HTMLRenderer(BaseRenderer):
         return s + ' />'
 
     def codespan(self, text: str) -> str:
-        return '<code>' + text + '</code>'
+        return '<code>' + escape_text(text) + '</code>'
 
     def linebreak(self) -> str:
         return '<br />\n'

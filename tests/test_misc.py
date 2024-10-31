@@ -77,7 +77,7 @@ class TestMiscCases(TestCase):
 
     def test_ast_output(self):
         md = mistune.create_markdown(escape=False, renderer=None)
-        text = '# h1\n\nfoo **bar**'
+        text = '# h1\n\nfoo **bar**\n\n`&<>"`'
         result = md(text)
         expected = [
             {
@@ -92,6 +92,13 @@ class TestMiscCases(TestCase):
                 'children': [
                     {'type': 'text', 'raw': 'foo '},
                     {'type': 'strong', 'children': [{'type': 'text', 'raw': 'bar'}]}
+                ]
+            },
+            {'type': 'blank_line'},
+            {
+                'type': 'paragraph',
+                'children': [
+                    {'type': 'codespan', 'raw': '&<>"'},
                 ]
             },
         ]

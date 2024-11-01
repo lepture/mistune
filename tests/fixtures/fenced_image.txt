@@ -81,3 +81,22 @@
 .
 <a class="block-image align-left" href="https://lepture.com"><img src="picture.png" alt="description" width="100" height="50" /></a>
 ````````````````````````````````
+
+## ampersand in source
+
+```````````````````````````````` example
+~~~{image} https://example.com/picture.png?foo=qux&test=me
+~~~
+.
+<div class="block-image"><img src="https://example.com/picture.png?foo=qux&amp;test=me" /></div>
+````````````````````````````````
+
+## ampersand in target
+
+```````````````````````````````` example
+~~~{image} picture.png
+:target: https://example.com/rickroll?a=1&b=2
+~~~
+.
+<a class="block-image" href="https://example.com/rickroll?a=1&amp;b=2"><img src="picture.png" /></a>
+````````````````````````````````

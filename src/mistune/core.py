@@ -1,4 +1,5 @@
 import re
+import sys
 from typing import (
     Any,
     Callable,
@@ -16,9 +17,9 @@ from typing import (
     Union,
     cast,
 )
-try:
+if sys.version_info >= (3, 11):
     from typing import Self
-except ImportError:
+else:
     from typing_extensions import Self
 
 _LINE_END = re.compile(r'\n|$')

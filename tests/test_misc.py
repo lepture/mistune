@@ -104,6 +104,25 @@ class TestMiscCases(TestCase):
         ]
         self.assertEqual(result, expected)
 
+    def test_ast_url(self):
+        md = mistune.create_markdown(escape=False, renderer=None)
+        label = 'hi &<>"'
+        url = 'https://example.com/foo?a=1&b=2'
+        text = '[{}]({})'.format(label, url)
+        result = md(text)
+        expected = [
+            {
+                'type': 'paragraph',
+                'children': [
+                    {
+                        'type': 'link',
+                        'children': [{'type': 'text', 'raw': label}],
+                        'attrs': {'url': url},
+                    },
+                ],
+            },
+        ]
+        self.assertEqual(result, expected)
 
     def test_emsp(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)

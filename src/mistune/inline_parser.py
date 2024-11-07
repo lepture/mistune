@@ -19,7 +19,7 @@ from .helpers import (
     parse_link_text,
     unescape_char,
 )
-from .util import escape, escape_url, unikey
+from .util import escape_url, unikey
 
 PAREN_END_RE = re.compile(r'\s*\)')
 
@@ -310,7 +310,7 @@ class InlineParser(Parser[InlineState]):
             if len(code.strip()):
                 if code.startswith(' ') and code.endswith(' '):
                     code = code[1:-1]
-            state.append_token({'type': 'codespan', 'raw': escape(code)})
+            state.append_token({'type': 'codespan', 'raw': code})
             return end_pos
         else:
             state.append_token({'type': 'text', 'raw': marker})

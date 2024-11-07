@@ -114,7 +114,8 @@ class MarkdownRenderer(BaseRenderer):
         return marker2 + info + "\n" + code + marker2 + "\n\n"
 
     def block_quote(self, token: Dict[str, Any], state: BlockState) -> str:
-        text = indent(self.render_children(token, state), '> ')
+        text = indent(self.render_children(token, state), '> ', lambda _: True)
+        text = text.rstrip("> \n")
         return text + '\n\n'
 
     def block_html(self, token: Dict[str, Any], state: BlockState) -> str:

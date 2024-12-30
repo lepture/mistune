@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.1.0
+-------------
+
+**Released on Dec 30, 2024**
+
+* Fix only HTML-escape URLs when rendering to HTML
+* Add block_quote prefix on empty lines too
+
 Version 3.0.2
 -------------
 

@@ -24,7 +24,7 @@ _plugins = {
 
 
 class Plugin(Protocol):
-    def __call__(self, markdown: "Markdown") -> None: ...
+    def __call__(self, md: "Markdown") -> None: ...
 
 _cached_modules: Dict[str, Plugin] = {}
 

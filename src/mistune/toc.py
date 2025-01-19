@@ -83,6 +83,9 @@ def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
           (1, 'toc-license', 'License'),
         ]
     """
+    toc = tuple(toc)  # if toc is a generator (eg. from filter or map), the
+    # below check will always return true, even in cases such as filter(fn, [])
+    # causing render_toc_ul to output invalid data
     if not toc:
         return ''
 

@@ -22,5 +22,8 @@ class TestTocHook(BaseTestCase):
         html = md('# h1')
         self.assertEqual(html, '<h1 id="t-1">h1</h1>\n')
 
+    def test_render_empty_toc(self):
+        self.assertEqual(render_toc_ul([]), '')
+        self.assertEqual(render_toc_ul(filter(lambda _: False, [])), '')
 
 TestTocHook.load_fixtures('hook_toc.txt')

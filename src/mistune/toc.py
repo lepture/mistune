@@ -86,7 +86,7 @@ def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
     if not toc:
         return ''
 
-    s = '<ul>\n'
+    s = ''
     levels: List[int] = []
     for level, k, text in toc:
         item = '<a href="#{}">{}</a>'.format(k, text)
@@ -121,4 +121,6 @@ def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
         s += '</li>\n</ul>\n'
         levels.pop()
 
-    return s + '</li>\n</ul>\n'
+    if not s:
+        return ''
+    return '<ul>\n' + s + '</li>\n</ul>\n'

@@ -45,6 +45,13 @@ where = ["src"]
 [tool.setuptools.package-data]
 mistune = ["py.typed"]
 
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest",
+    "mypy",
+]
+
 [tool.ruff]
 line-length = 120
 

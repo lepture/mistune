@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.1.1
+-------------
+
+**Released on Jan 28, 2025**
+
+* Fix ``render_toc_ul`` method for empty iterable
+* Fix ruby plugin's regex pattern and HTML rendering
+
 Version 3.1.0
 -------------
 

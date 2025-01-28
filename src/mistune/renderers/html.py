@@ -1,4 +1,5 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple, Literal
+from typing import Any, ClassVar, Dict, Literal, Optional, Tuple
+
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text
 from ..util import safe_entity, striptags
@@ -30,7 +31,7 @@ class HTMLRenderer(BaseRenderer):
         self._escape = escape
 
     def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
-        # backward compitable with v2
+        # backward compatible with v2
         func = self._get_method(token['type'])
         attrs = token.get('attrs')
 
@@ -56,12 +57,14 @@ class HTMLRenderer(BaseRenderer):
             return escape_text(url)
 
         _url = url.lower()
-        if self._allow_harmful_protocols and \
-            _url.startswith(tuple(self._allow_harmful_protocols)):
+        if self._allow_harmful_protocols and _url.startswith(
+            tuple(self._allow_harmful_protocols)
+        ):
             return escape_text(url)
 
-        if _url.startswith(self.HARMFUL_PROTOCOLS) and \
-            not _url.startswith(self.GOOD_DATA_PROTOCOLS):
+        if _url.startswith(self.HARMFUL_PROTOCOLS) and not _url.startswith(
+            self.GOOD_DATA_PROTOCOLS
+        ):
             return '#harmful-link'
         return escape_text(url)
 
@@ -71,27 +74,27 @@ class HTMLRenderer(BaseRenderer):
         return safe_entity(text)
 
     def emphasis(self, text: str) -> str:
-        return '<em>' + text + '</em>'
+        return f'<em>{text}</em>'
 
     def strong(self, text: str) -> str:
-        return '<strong>' + text + '</strong>'
+        return f'<strong>{text}</strong>'
 
     def link(self, text: str, url: str, title: Optional[str] = None) -> str:
-        s = '<a href="' + self.safe_url(url) + '"'
+        s = f'<a href="{self.safe_url(url)}"'
         if title:
-            s += ' title="' + safe_entity(title) + '"'
-        return s + '>' + text + '</a>'
+            s += f' title="{safe_entity(title)}"'
+        return s + f'>{text}</a>'
 
     def image(self, text: str, url: str, title: Optional[str] = None) -> str:
         src = self.safe_url(url)
         alt = escape_text(striptags(text))
-        s = '<img src="' + src + '" alt="' + alt + '"'
+        s = f'<img src="{src}" alt="{alt}"'
         if title:
-            s += ' title="' + safe_entity(title) + '"'
+            s += f' title="{safe_entity(title)}"'
         return s + ' />'
 
     def codespan(self, text: str) -> str:
-        return '<code>' + escape_text(text) + '</code>'
+        return f'<code>{escape_text(text)}</code>'
 
     def linebreak(self) -> str:
         return '<br />\n'
@@ -105,15 +108,14 @@ class HTMLRenderer(BaseRenderer):
         return html
 
     def paragraph(self, text: str) -> str:
-        return '<p>' + text + '</p>\n'
+        return f'<p>{text}</p>\n'
 
     def heading(self, text: str, level: int, **attrs: Any) -> str:
-        tag = 'h' + str(level)
-        html = '<' + tag
-        _id = attrs.get('id')
-        if _id:
-            html += ' id="' + _id + '"'
-        return html + '>' + text + '</' + tag + '>\n'
+        tag = f'h{level}'
+        html = f'<{tag}'
+        if _id := attrs.get('id'):
+            html += f' id="{_id}"'
+        return html + f'>{text}</{tag}>\n'
 
     def blank_line(self) -> str:
         return ''
@@ -130,28 +132,28 @@ class HTMLRenderer(BaseRenderer):
             info = safe_entity(info.strip())
         if info:
             lang = info.split(None, 1)[0]
-            html += ' class="language-' + lang + '"'
-        return html + '>' + escape_text(code) + '</code></pre>\n'
+            html += f' class="language-{lang}"'
+        return html + f'>{escape_text(code)}</code></pre>\n'
 
     def block_quote(self, text: str) -> str:
-        return '<blockquote>\n' + text + '</blockquote>\n'
+        return f'<blockquote>\n{text}</blockquote>\n'
 
     def block_html(self, html: str) -> str:
         if self._escape:
-            return '<p>' + escape_text(html.strip()) + '</p>\n'
+            return f'<p>{escape_text(html.strip())}</p>\n'
         return html + '\n'
 
     def block_error(self, text: str) -> str:
-        return '<div class="error"><pre>' + text + '</pre></div>\n'
+        return f'<div class="error"><pre>{text}</pre></div>\n'
 
     def list(self, text: str, ordered: bool, **attrs: Any) -> str:
         if ordered:
             html = '<ol'
             start = attrs.get('start')
             if start is not None:
-                html += ' start="' + str(start) + '"'
-            return html + '>\n' + text + '</ol>\n'
-        return '<ul>\n' + text + '</ul>\n'
+                html += f' start="{str(start)}"'
+            return html + f'>\n{text}</ol>\n'
+        return f'<ul>\n{text}</ul>\n'
 
     def list_item(self, text: str) -> str:
-        return '<li>' + text + '</li>\n'
+        return f'<li>{text}</li>\n'

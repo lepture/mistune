@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ..markdown import Markdown
 
 
-RUBY_PATTERN = r'\[(?:\w+\(\w+\))+\]'
+RUBY_PATTERN = r'\[(?:\w+\([\w ]+\))+\]'
 _ruby_re = re.compile(RUBY_PATTERN)
 
 
@@ -86,7 +86,7 @@ def _parse_ruby_link(
 
 
 def render_ruby(renderer: "BaseRenderer", text: str, rt: str) -> str:
-    return "<ruby><rb>" + text + "</rb><rt>" + rt + "</rt></ruby>"
+    return "<ruby>" + text + "<rt>" + rt + "</rt></ruby>"
 
 
 def ruby(md: "Markdown") -> None:

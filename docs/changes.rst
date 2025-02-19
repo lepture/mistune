@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.1.2
+-------------
+
+**Released on Feb 19, 2025**
+
+* Fix ``footnotes`` plugin for AST renderer
+
 Version 3.1.1
 -------------
 

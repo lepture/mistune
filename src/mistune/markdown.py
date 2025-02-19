@@ -40,7 +40,7 @@ class Markdown:
         self.before_parse_hooks: List[Callable[["Markdown", BlockState], None]] = []
         self.before_render_hooks: List[Callable[["Markdown", BlockState], Any]] = []
         self.after_render_hooks: List[
-            Callable[["Markdown", Union[str, List[Dict[str, Any]]], BlockState], str]
+            Callable[["Markdown", Union[str, List[Dict[str, Any]]], BlockState], Union[str, List[Dict[str, Any]]]]
         ] = []
 
         if plugins:

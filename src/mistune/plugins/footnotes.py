@@ -94,8 +94,7 @@ def parse_footnote_item(
 
 def md_footnotes_hook(
     md: "Markdown", result: Union[str, List[Dict[str, Any]]], state: BlockState
-) -> str:
-    assert isinstance(result, str)
+) -> Union[str, List[Dict[str, Any]]]:
     notes = state.env.get("footnotes")
     if not notes:
         return result
@@ -107,8 +106,7 @@ def md_footnotes_hook(
     state = BlockState()
     state.tokens = [{'type': 'footnotes', 'children': children}]
     output = md.render_state(state)
-    assert isinstance(output, str)
-    return result + output
+    return result + output  # type: ignore[operator]
 
 
 def render_footnote_ref(renderer: "BaseRenderer", key: str, index: int) -> str:

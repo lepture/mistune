@@ -24,3 +24,4 @@ htmlcov
 .eggs
 coverage.xml
 demo.py
+uv.lock

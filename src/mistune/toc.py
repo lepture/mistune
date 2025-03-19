@@ -34,24 +34,24 @@ def add_toc_hook(
     if heading_id is None:
 
         def heading_id(token: Dict[str, Any], index: int) -> str:
-            return 'toc_' + str(index + 1)
+            return "toc_" + str(index + 1)
 
     def toc_hook(md: "Markdown", state: "BlockState") -> None:
         headings = []
 
         for tok in state.tokens:
-            if tok['type'] == 'heading':
-                level = tok['attrs']['level']
+            if tok["type"] == "heading":
+                level = tok["attrs"]["level"]
                 if min_level <= level <= max_level:
                     headings.append(tok)
 
         toc_items = []
         for i, tok in enumerate(headings):
-            tok['attrs']['id'] = heading_id(tok, i)
+            tok["attrs"]["id"] = heading_id(tok, i)
             toc_items.append(normalize_toc_item(md, tok))
 
         # save items into state
-        state.env['toc_items'] = toc_items
+        state.env["toc_items"] = toc_items
 
     md.before_render_hooks.append(toc_hook)
 
@@ -62,8 +62,8 @@ def normalize_toc_item(md: "Markdown", token: Dict[str, Any]) -> Tuple[int, str,
     assert md.renderer is not None
     html = md.renderer(tokens, BlockState())
     text = striptags(html)
-    attrs = token['attrs']
-    return attrs['level'], attrs['id'], text
+    attrs = token["attrs"]
+    return attrs["level"], attrs["id"], text
 
 
 def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
@@ -84,43 +84,43 @@ def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
         ]
     """
     if not toc:
-        return ''
+        return ""
 
-    s = ''
+    s = ""
     levels: List[int] = []
     for level, k, text in toc:
         item = '<a href="#{}">{}</a>'.format(k, text)
         if not levels:
-            s += '<li>' + item
+            s += "<li>" + item
             levels.append(level)
         elif level == levels[-1]:
-            s += '</li>\n<li>' + item
+            s += "</li>\n<li>" + item
         elif level > levels[-1]:
-            s += '\n<ul>\n<li>' + item
+            s += "\n<ul>\n<li>" + item
             levels.append(level)
         else:
             levels.pop()
             while levels:
                 last_level = levels.pop()
                 if level == last_level:
-                    s += '</li>\n</ul>\n</li>\n<li>' + item
+                    s += "</li>\n</ul>\n</li>\n<li>" + item
                     levels.append(level)
                     break
                 elif level > last_level:
-                    s += '</li>\n<li>' + item
+                    s += "</li>\n<li>" + item
                     levels.append(last_level)
                     levels.append(level)
                     break
                 else:
-                    s += '</li>\n</ul>\n'
+                    s += "</li>\n</ul>\n"
             else:
                 levels.append(level)
-                s += '</li>\n<li>' + item
+                s += "</li>\n<li>" + item
 
     while len(levels) > 1:
-        s += '</li>\n</ul>\n'
+        s += "</li>\n</ul>\n"
         levels.pop()
 
     if not s:
-        return ''
-    return '<ul>\n' + s + '</li>\n</ul>\n'
+        return ""
+    return "<ul>\n" + s + "</li>\n</ul>\n"

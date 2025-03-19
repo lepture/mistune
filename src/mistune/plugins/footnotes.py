@@ -11,60 +11,50 @@ if TYPE_CHECKING:
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 
-__all__ = ['footnotes']
+__all__ = ["footnotes"]
 
-_PARAGRAPH_SPLIT = re.compile(r'\n{2,}')
+_PARAGRAPH_SPLIT = re.compile(r"\n{2,}")
 # https://michelf.ca/projects/php-markdown/extra/#footnotes
 REF_FOOTNOTE = (
-  r'^(?P<footnote_lead> {0,3})'
-  r'\[\^(?P<footnote_key>' + LINK_LABEL + r')]:[ \t]'
-  r'(?P<footnote_text>[^\n]*(?:\n+|$)'
-  r'(?:(?P=footnote_lead) {1,3}(?! )[^\n]*\n+)*'
-  r')'
+    r"^(?P<footnote_lead> {0,3})"
+    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t]"
+    r"(?P<footnote_text>[^\n]*(?:\n+|$)"
+    r"(?:(?P=footnote_lead) {1,3}(?! )[^\n]*\n+)*"
+    r")"
 )
 
-INLINE_FOOTNOTE = r'\[\^(?P<footnote_key>' + LINK_LABEL + r')\]'
+INLINE_FOOTNOTE = r"\[\^(?P<footnote_key>" + LINK_LABEL + r")\]"
 
 
-def parse_inline_footnote(
-    inline: "InlineParser", m: Match[str], state: "InlineState"
-) -> int:
+def parse_inline_footnote(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     key = unikey(m.group("footnote_key"))
     ref = state.env.get("ref_footnotes")
     if ref and key in ref:
-        notes = state.env.get('footnotes')
+        notes = state.env.get("footnotes")
         if not notes:
             notes = []
         if key not in notes:
             notes.append(key)
-            state.env['footnotes'] = notes
-        state.append_token({
-          'type': 'footnote_ref',
-          'raw': key,
-          'attrs': {'index': notes.index(key) + 1}
-        })
+            state.env["footnotes"] = notes
+        state.append_token({"type": "footnote_ref", "raw": key, "attrs": {"index": notes.index(key) + 1}})
     else:
-        state.append_token({'type': 'text', 'raw': m.group(0)})
+        state.append_token({"type": "text", "raw": m.group(0)})
     return m.end()
 
 
-def parse_ref_footnote(
-    block: "BlockParser", m: Match[str], state: BlockState
-) -> int:
+def parse_ref_footnote(block: "BlockParser", m: Match[str], state: BlockState) -> int:
     ref = state.env.get("ref_footnotes")
     if not ref:
         ref = {}
 
-    key = unikey(m.group('footnote_key'))
+    key = unikey(m.group("footnote_key"))
     if key not in ref:
-        ref[key] = m.group('footnote_text')
-        state.env['ref_footnotes'] = ref
+        ref[key] = m.group("footnote_text")
+        state.env["ref_footnotes"] = ref
     return m.end()
 
 
-def parse_footnote_item(
-    block: "BlockParser", key: str, index: int, state: BlockState
-) -> Dict[str, Any]:
+def parse_footnote_item(block: "BlockParser", key: str, index: int, state: BlockState) -> Dict[str, Any]:
     ref = state.env.get("ref_footnotes")
     if not ref:
         raise ValueError("Missing 'ref_footnotes'.")
@@ -77,19 +67,15 @@ def parse_footnote_item(
             break
 
     if second_line:
-      spaces = len(second_line) - len(second_line.lstrip())
-      pattern = re.compile(r'^ {' + str(spaces) + r',}', flags=re.M)
-      text = pattern.sub('', text).strip()
-      items = _PARAGRAPH_SPLIT.split(text)
-      children = [{'type': 'paragraph', 'text': s} for s in items]
+        spaces = len(second_line) - len(second_line.lstrip())
+        pattern = re.compile(r"^ {" + str(spaces) + r",}", flags=re.M)
+        text = pattern.sub("", text).strip()
+        items = _PARAGRAPH_SPLIT.split(text)
+        children = [{"type": "paragraph", "text": s} for s in items]
     else:
-      text = text.strip()
-      children = [{'type': 'paragraph', 'text': text}]
-    return {
-        'type': 'footnote_item',
-        'children': children,
-        'attrs': {'key': key, 'index': index}
-    }
+        text = text.strip()
+        children = [{"type": "paragraph", "text": text}]
+    return {"type": "footnote_item", "children": children, "attrs": {"key": key, "index": index}}
 
 
 def md_footnotes_hook(
@@ -99,12 +85,9 @@ def md_footnotes_hook(
     if not notes:
         return result
 
-    children = [
-        parse_footnote_item(md.block, k, i + 1, state)
-        for i, k in enumerate(notes)
-    ]
+    children = [parse_footnote_item(md.block, k, i + 1, state) for i, k in enumerate(notes)]
     state = BlockState()
-    state.tokens = [{'type': 'footnotes', 'children': children}]
+    state.tokens = [{"type": "footnotes", "children": children}]
     output = md.render_state(state)
     return result + output  # type: ignore[operator]
 
@@ -112,20 +95,18 @@ def md_footnotes_hook(
 def render_footnote_ref(renderer: "BaseRenderer", key: str, index: int) -> str:
     i = str(index)
     html = '<sup class="footnote-ref" id="fnref-' + i + '">'
-    return html + '<a href="#fn-' + i + '">' + i + '</a></sup>'
+    return html + '<a href="#fn-' + i + '">' + i + "</a></sup>"
 
 
 def render_footnotes(renderer: "BaseRenderer", text: str) -> str:
     return '<section class="footnotes">\n<ol>\n' + text + "</ol>\n</section>\n"
 
 
-def render_footnote_item(
-    renderer: "BaseRenderer", text: str, key: str, index: int
-) -> str:
+def render_footnote_item(renderer: "BaseRenderer", text: str, key: str, index: int) -> str:
     i = str(index)
     back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
-    text = text.rstrip()[:-4] + back + '</p>'
-    return '<li id="fn-' + i + '">' + text + '</li>\n'
+    text = text.rstrip()[:-4] + back + "</p>"
+    return '<li id="fn-' + i + '">' + text + "</li>\n"
 
 
 def footnotes(md: "Markdown") -> None:
@@ -154,20 +135,20 @@ def footnotes(md: "Markdown") -> None:
     :param md: Markdown instance
     """
     md.inline.register(
-        'footnote',
+        "footnote",
         INLINE_FOOTNOTE,
         parse_inline_footnote,
-        before='link',
+        before="link",
     )
     md.block.register(
-        'ref_footnote',
+        "ref_footnote",
         REF_FOOTNOTE,
         parse_ref_footnote,
-        before='ref_link',
+        before="ref_link",
     )
     md.after_render_hooks.append(md_footnotes_hook)
 
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('footnote_ref', render_footnote_ref)
-        md.renderer.register('footnote_item', render_footnote_item)
-        md.renderer.register('footnotes', render_footnotes)
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("footnote_ref", render_footnote_ref)
+        md.renderer.register("footnote_item", render_footnote_item)
+        md.renderer.register("footnotes", render_footnotes)

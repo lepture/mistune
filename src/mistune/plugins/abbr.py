@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 
-__all__ = ['abbr']
+__all__ = ["abbr"]
 
 # https://michelf.ca/projects/php-markdown/extra/#abbr
 REF_ABBR = (
-  r'^ {0,3}\*\[(?P<abbr_key>[^\]]+)'+ PREVENT_BACKSLASH + r'\]:'
-  r'(?P<abbr_text>(?:[ \t]*\n(?: {3,}|\t)[^\n]+)|(?:[^\n]*))$'
+    r"^ {0,3}\*\[(?P<abbr_key>[^\]]+)" + PREVENT_BACKSLASH + r"\]:"
+    r"(?P<abbr_text>(?:[ \t]*\n(?: {3,}|\t)[^\n]+)|(?:[^\n]*))$"
 )
 
 
@@ -24,30 +24,30 @@ def parse_ref_abbr(block: "BlockParser", m: Match[str], state: "BlockState") -> 
     ref = state.env.get("ref_abbrs")
     if not ref:
         ref = {}
-    key = m.group('abbr_key')
-    text = m.group('abbr_text')
+    key = m.group("abbr_key")
+    text = m.group("abbr_text")
     ref[key] = text.strip()
-    state.env['ref_abbrs'] = ref
+    state.env["ref_abbrs"] = ref
     # abbr definition can split paragraph
-    state.append_token({'type': 'blank_line'})
+    state.append_token({"type": "blank_line"})
     return m.end() + 1
 
 
 def process_text(inline: "InlineParser", text: str, state: "InlineState") -> None:
     ref = state.env.get("ref_abbrs")
     if not ref:
-        return state.append_token({'type': 'text', 'raw': text})
+        return state.append_token({"type": "text", "raw": text})
 
     if state.tokens:
         last = state.tokens[-1]
-        if last['type'] == 'text':
+        if last["type"] == "text":
             state.tokens.pop()
-            text = last['raw'] + text
+            text = last["raw"] + text
 
-    abbrs_re = state.env.get('abbrs_re')
+    abbrs_re = state.env.get("abbrs_re")
     if not abbrs_re:
-        abbrs_re = re.compile(r'|'.join(re.escape(k) for k in ref.keys()))
-        state.env['abbrs_re'] = abbrs_re
+        abbrs_re = re.compile(r"|".join(re.escape(k) for k in ref.keys()))
+        state.env["abbrs_re"] = abbrs_re
 
     pos = 0
     while pos < len(text):
@@ -58,27 +58,25 @@ def process_text(inline: "InlineParser", text: str, state: "InlineState") -> Non
         end_pos = m.start()
         if end_pos > pos:
             hole = text[pos:end_pos]
-            state.append_token({'type': 'text', 'raw': hole})
+            state.append_token({"type": "text", "raw": hole})
 
         label = m.group(0)
-        state.append_token({
-            'type': 'abbr',
-            'children': [{'type': 'text', 'raw': label}],
-            'attrs': {'title': ref[label]}
-        })
+        state.append_token(
+            {"type": "abbr", "children": [{"type": "text", "raw": label}], "attrs": {"title": ref[label]}}
+        )
         pos = m.end()
 
     if pos == 0:
         # special case, just pure text
-        state.append_token({'type': 'text', 'raw': text})
+        state.append_token({"type": "text", "raw": text})
     elif pos < len(text):
-        state.append_token({'type': 'text', 'raw': text[pos:]})
+        state.append_token({"type": "text", "raw": text[pos:]})
 
 
 def render_abbr(renderer: "BaseRenderer", text: str, title: str) -> str:
     if not title:
-        return '<abbr>' + text + '</abbr>'
-    return '<abbr title="' + escape(title) + '">' + text + '</abbr>'
+        return "<abbr>" + text + "</abbr>"
+    return '<abbr title="' + escape(title) + '">' + text + "</abbr>"
 
 
 def abbr(md: "Markdown") -> None:
@@ -104,8 +102,8 @@ def abbr(md: "Markdown") -> None:
 
     :param md: Markdown instance
     """
-    md.block.register('ref_abbr', REF_ABBR, parse_ref_abbr, before='paragraph')
+    md.block.register("ref_abbr", REF_ABBR, parse_ref_abbr, before="paragraph")
     # replace process_text
     md.inline.process_text = types.MethodType(process_text, md.inline)  # type: ignore[method-assign]
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('abbr', render_abbr)
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("abbr", render_abbr)

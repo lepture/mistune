@@ -9,7 +9,7 @@ def load_renderer(renderer):
         parse = create_markdown(renderer=renderer)
 
     name = renderer.NAME
-    TestRenderer.load_fixtures('renderer_' + name + '.txt')
+    TestRenderer.load_fixtures("renderer_" + name + ".txt")
     globals()["TestRenderer" + name.title()] = TestRenderer
 
 

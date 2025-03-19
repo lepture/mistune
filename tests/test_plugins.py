@@ -6,7 +6,7 @@ from tests import BaseTestCase
 
 def load_plugin(plugin_name):
     md1 = create_markdown(escape=False, plugins=[plugin_name])
-    md2 = create_markdown(escape=False, plugins=[plugin_name, 'speedup'])
+    md2 = create_markdown(escape=False, plugins=[plugin_name, "speedup"])
 
     class TestPlugin1(BaseTestCase):
         parse = md1
@@ -38,29 +38,29 @@ load_plugin("spoiler")
 
 class TestExtraPlugins(BaseTestCase):
     def test_table_in_list(self):
-        text = '''- Cell | Cell\n  ---- | ----\n   1  |  2\n'''
+        text = """- Cell | Cell\n  ---- | ----\n   1  |  2\n"""
         md1 = create_markdown(escape=False)
-        md2 = create_markdown(escape=False, plugins=['table', table_in_list])
-        self.assertNotIn('<table>', md1(text))
-        self.assertIn('<table>', md2(text))
+        md2 = create_markdown(escape=False, plugins=["table", table_in_list])
+        self.assertNotIn("<table>", md1(text))
+        self.assertIn("<table>", md2(text))
 
     def test_table_in_quote(self):
-        text = '''> Cell | Cell\n> ---- | ----\n>  1  |  2\n'''
+        text = """> Cell | Cell\n> ---- | ----\n>  1  |  2\n"""
         md1 = create_markdown(escape=False)
-        md2 = create_markdown(escape=False, plugins=['table', table_in_quote])
-        self.assertNotIn('<table>', md1(text))
-        self.assertIn('<table>', md2(text))
+        md2 = create_markdown(escape=False, plugins=["table", table_in_quote])
+        self.assertNotIn("<table>", md1(text))
+        self.assertIn("<table>", md2(text))
 
     def test_math_in_list(self):
-        text = '''- $$\n  foo\n  $$\n'''
+        text = """- $$\n  foo\n  $$\n"""
         md1 = create_markdown(escape=False)
-        md2 = create_markdown(escape=False, plugins=['math', math_in_list])
+        md2 = create_markdown(escape=False, plugins=["math", math_in_list])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))
 
     def test_math_in_quote(self):
-        text = '''> $$\n> foo\n> $$\n'''
+        text = """> $$\n> foo\n> $$\n"""
         md1 = create_markdown(escape=False)
-        md2 = create_markdown(escape=False, plugins=['math', math_in_quote])
+        md2 = create_markdown(escape=False, plugins=["math", math_in_quote])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))

@@ -11,53 +11,51 @@ if TYPE_CHECKING:
     from ..markdown import Markdown
     from ..renderers.html import HTMLRenderer
 
-__all__ = ['Image', 'Figure']
+__all__ = ["Image", "Figure"]
 
-_num_re = re.compile(r'^\d+(?:\.\d*)?')
+_num_re = re.compile(r"^\d+(?:\.\d*)?")
 _allowed_aligns = ["top", "middle", "bottom", "left", "center", "right"]
 
 
 def _parse_attrs(options: Dict[str, Any]) -> Dict[str, Any]:
     attrs = {}
-    if 'alt' in options:
-        attrs['alt'] = options['alt']
+    if "alt" in options:
+        attrs["alt"] = options["alt"]
 
     # validate align
-    align = options.get('align')
+    align = options.get("align")
     if align and align in _allowed_aligns:
-        attrs['align'] = align
+        attrs["align"] = align
 
-    height = options.get('height')
-    width = options.get('width')
+    height = options.get("height")
+    width = options.get("width")
     if height and _num_re.match(height):
-        attrs['height'] = height
+        attrs["height"] = height
     if width and _num_re.match(width):
-        attrs['width'] = width
-    if 'target' in options:
-        attrs['target'] = escape_url(options['target'])
+        attrs["width"] = width
+    if "target" in options:
+        attrs["target"] = escape_url(options["target"])
     return attrs
 
 
 class Image(DirectivePlugin):
-    NAME = 'image'
+    NAME = "image"
 
-    def parse(
-        self, block: "BlockParser", m: Match[str], state: "BlockState"
-    ) -> Dict[str, Any]:
+    def parse(self, block: "BlockParser", m: Match[str], state: "BlockState") -> Dict[str, Any]:
         options = dict(self.parse_options(m))
         attrs = _parse_attrs(options)
-        attrs['src'] = self.parse_title(m)
-        return {'type': 'block_image', 'attrs': attrs}
+        attrs["src"] = self.parse_title(m)
+        return {"type": "block_image", "attrs": attrs}
 
     def __call__(self, directive: "BaseDirective", md: "Markdown") -> None:
         directive.register(self.NAME, self.parse)
         assert md.renderer is not None
-        if md.renderer.NAME == 'html':
-            md.renderer.register('block_image', render_block_image)
+        if md.renderer.NAME == "html":
+            md.renderer.register("block_image", render_block_image)
 
 
 def render_block_image(
-    self: 'HTMLRenderer',
+    self: "HTMLRenderer",
     src: str,
     alt: Optional[str] = None,
     width: Optional[str] = None,
@@ -65,40 +63,40 @@ def render_block_image(
     **attrs: Any,
 ) -> str:
     img = '<img src="' + escape_text(src) + '"'
-    style = ''
+    style = ""
     if alt:
         img += ' alt="' + escape_text(alt) + '"'
     if width:
         if width.isdigit():
             img += ' width="' + width + '"'
         else:
-            style += 'width:' + width + ';'
+            style += "width:" + width + ";"
     if height:
         if height.isdigit():
             img += ' height="' + height + '"'
         else:
-            style += 'height:' + height + ';'
+            style += "height:" + height + ";"
     if style:
         img += ' style="' + escape_text(style) + '"'
 
-    img += ' />'
+    img += " />"
 
-    _cls = 'block-image'
-    align = attrs.get('align')
+    _cls = "block-image"
+    align = attrs.get("align")
     if align:
-        _cls += ' align-' + align
+        _cls += " align-" + align
 
-    target = attrs.get('target')
+    target = attrs.get("target")
     if target:
         href = self.safe_url(target)
         outer = '<a class="' + _cls + '" href="' + href + '">'
-        return outer + img + '</a>\n'
+        return outer + img + "</a>\n"
     else:
-        return '<div class="' + _cls + '">' + img + '</div>\n'
+        return '<div class="' + _cls + '">' + img + "</div>\n"
 
 
 class Figure(DirectivePlugin):
-    NAME = 'figure'
+    NAME = "figure"
 
     def parse_directive_content(
         self, block: "BlockParser", m: Match[str], state: "BlockState"
@@ -109,51 +107,46 @@ class Figure(DirectivePlugin):
 
         tokens = list(self.parse_tokens(block, content, state))
         caption = tokens[0]
-        if caption['type'] == 'paragraph':
-            caption['type'] = 'figcaption'
+        if caption["type"] == "paragraph":
+            caption["type"] = "figcaption"
             children = [caption]
             if len(tokens) > 1:
-                children.append({
-                    'type': 'legend',
-                    'children': tokens[1:]
-                })
+                children.append({"type": "legend", "children": tokens[1:]})
             return children
         return None
 
-    def parse(
-        self, block: "BlockParser", m: Match[str], state: "BlockState"
-    ) -> Dict[str, Any]:
+    def parse(self, block: "BlockParser", m: Match[str], state: "BlockState") -> Dict[str, Any]:
         options = dict(self.parse_options(m))
         image_attrs = _parse_attrs(options)
-        image_attrs['src'] = self.parse_title(m)
+        image_attrs["src"] = self.parse_title(m)
 
-        align = image_attrs.pop('align', None)
+        align = image_attrs.pop("align", None)
         fig_attrs = {}
         if align:
-            fig_attrs['align'] = align
-        for k in ['figwidth', 'figclass']:
+            fig_attrs["align"] = align
+        for k in ["figwidth", "figclass"]:
             if k in options:
                 fig_attrs[k] = options[k]
 
-        children = [{'type': 'block_image', 'attrs': image_attrs}]
+        children = [{"type": "block_image", "attrs": image_attrs}]
         content = self.parse_directive_content(block, m, state)
         if content:
             children.extend(content)
         return {
-            'type': 'figure',
-            'attrs': fig_attrs,
-            'children': children,
+            "type": "figure",
+            "attrs": fig_attrs,
+            "children": children,
         }
 
     def __call__(self, directive: "BaseDirective", md: "Markdown") -> None:
         directive.register(self.NAME, self.parse)
 
         assert md.renderer is not None
-        if md.renderer.NAME == 'html':
-            md.renderer.register('figure', render_figure)
-            md.renderer.register('block_image', render_block_image)
-            md.renderer.register('figcaption', render_figcaption)
-            md.renderer.register('legend', render_legend)
+        if md.renderer.NAME == "html":
+            md.renderer.register("figure", render_figure)
+            md.renderer.register("block_image", render_block_image)
+            md.renderer.register("figcaption", render_figcaption)
+            md.renderer.register("legend", render_legend)
 
 
 def render_figure(
@@ -165,19 +158,19 @@ def render_figure(
 ) -> str:
     _cls = "figure"
     if align:
-        _cls += ' align-' + align
+        _cls += " align-" + align
     if figclass:
-        _cls += ' ' + figclass
+        _cls += " " + figclass
 
     html = '<figure class="' + _cls + '"'
     if figwidth:
         html += ' style="width:' + figwidth + '"'
-    return html + '>\n' + text + '</figure>\n'
+    return html + ">\n" + text + "</figure>\n"
 
 
 def render_figcaption(self: Any, text: str) -> str:
-    return '<figcaption>' + text + '</figcaption>\n'
+    return "<figcaption>" + text + "</figcaption>\n"
 
 
 def render_legend(self: Any, text: str) -> str:
-    return '<div class="legend">\n' + text + '</div>\n'
+    return '<div class="legend">\n' + text + "</div>\n"

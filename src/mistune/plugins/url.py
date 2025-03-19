@@ -7,9 +7,9 @@ if TYPE_CHECKING:
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
 
-__all__ = ['url']
+__all__ = ["url"]
 
-URL_LINK_PATTERN = r'''https?:\/\/[^\s<]+[^<.,:;"')\]\s]'''
+URL_LINK_PATTERN = r"""https?:\/\/[^\s<]+[^<.,:;"')\]\s]"""
 
 
 def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
@@ -18,11 +18,13 @@ def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") 
     if state.in_link:
         inline.process_text(text, state)
         return pos
-    state.append_token({
-        'type': 'link',
-        'children': [{'type': 'text', 'raw': text}],
-        'attrs': {'url': escape_url(text)},
-    })
+    state.append_token(
+        {
+            "type": "link",
+            "children": [{"type": "text", "raw": text}],
+            "attrs": {"url": escape_url(text)},
+        }
+    )
     return pos
 
 

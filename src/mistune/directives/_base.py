@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 class DirectiveParser(ABCMeta):
-    name = 'directive'
+    name = "directive"
 
     @staticmethod
     @abstractmethod
@@ -39,9 +39,7 @@ class DirectiveParser(ABCMeta):
         raise NotImplementedError()
 
     @classmethod
-    def parse_tokens(
-        cls, block: "BlockParser", text: str, state: "BlockState"
-    ) -> Iterable[Dict[str, Any]]:
+    def parse_tokens(cls, block: "BlockParser", text: str, state: "BlockState") -> Iterable[Dict[str, Any]]:
         if state.depth() >= block.max_nested_level - 1 and cls.name in block.rules:
             rules = list(block.rules)
             rules.remove(cls.name)
@@ -53,18 +51,18 @@ class DirectiveParser(ABCMeta):
 
     @staticmethod
     def parse_options(m: Match[str]) -> List[Tuple[str, str]]:
-        text = m.group('options')
+        text = m.group("options")
         if not text.strip():
             return []
 
         options = []
-        for line in re.split(r'\n+', text):
+        for line in re.split(r"\n+", text):
             line = line.strip()[1:]
             if not line:
                 continue
-            i = line.find(':')
+            i = line.find(":")
             k = line[:i]
-            v = line[i + 1:].strip()
+            v = line[i + 1 :].strip()
             options.append((k, v))
         return options
 
@@ -102,12 +100,12 @@ class BaseDirective(metaclass=ABCMeta):
             try:
                 token = method(block, m, state)
             except ValueError as e:
-                token = {'type': 'block_error', 'raw': str(e)}
+                token = {"type": "block_error", "raw": str(e)}
         else:
             text = m.group(0)
             token = {
-                'type': 'block_error',
-                'raw': text,
+                "type": "block_error",
+                "raw": text,
             }
 
         if isinstance(token, list):
@@ -118,14 +116,10 @@ class BaseDirective(metaclass=ABCMeta):
         return token
 
     @abstractmethod
-    def parse_directive(
-        self, block: "BlockParser", m: Match[str], state: "BlockState"
-    ) -> Optional[int]:
+    def parse_directive(self, block: "BlockParser", m: Match[str], state: "BlockState") -> Optional[int]:
         raise NotImplementedError()
 
-    def register_block_parser(
-        self, md: "Markdown", before: Optional[str] = None
-    ) -> None:
+    def register_block_parser(self, md: "Markdown", before: Optional[str] = None) -> None:
         md.block.register(
             self.parser.name,
             self.directive_pattern,
@@ -156,9 +150,7 @@ class DirectivePlugin:
     def parse_content(self, m: Match[str]) -> str:
         return self.parser.parse_content(m)
 
-    def parse_tokens(
-        self, block: "BlockParser", text: str, state: "BlockState"
-    ) -> Iterable[Dict[str, Any]]:
+    def parse_tokens(self, block: "BlockParser", text: str, state: "BlockState") -> Iterable[Dict[str, Any]]:
         return self.parser.parse_tokens(block, text, state)
 
     def parse(

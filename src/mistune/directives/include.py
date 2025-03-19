@@ -8,20 +8,21 @@ if TYPE_CHECKING:
     from ..core import BaseRenderer, BlockState
     from ..markdown import Markdown
 
+
 class Include(DirectivePlugin):
     def parse(
         self, block: "BlockParser", m: Match[str], state: "BlockState"
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         source_file = state.env.get("__file__")
         if not source_file:
-            return {'type': 'block_error', 'raw': 'Missing source file'}
+            return {"type": "block_error", "raw": "Missing source file"}
 
-        encoding = 'utf-8'
+        encoding = "utf-8"
         options = self.parse_options(m)
         if options:
             attrs = dict(options)
-            if 'encoding' in attrs:
-                encoding = attrs['encoding']
+            if "encoding" in attrs:
+                encoding = attrs["encoding"]
         else:
             attrs = {}
 
@@ -31,35 +32,35 @@ class Include(DirectivePlugin):
 
         if dest == source_file:
             return {
-                'type': 'block_error',
-                'raw': 'Could not include self: ' + relpath,
+                "type": "block_error",
+                "raw": "Could not include self: " + relpath,
             }
 
         if not os.path.isfile(dest):
             return {
-                'type': 'block_error',
-                'raw': 'Could not find file: ' + relpath,
+                "type": "block_error",
+                "raw": "Could not find file: " + relpath,
             }
 
-        with open(dest, 'rb') as f:
+        with open(dest, "rb") as f:
             content = f.read().decode(encoding)
 
         ext = os.path.splitext(relpath)[1]
-        if ext in {'.md', '.markdown', '.mkd'}:
+        if ext in {".md", ".markdown", ".mkd"}:
             new_state = block.state_cls()
-            new_state.env['__file__'] = dest
+            new_state.env["__file__"] = dest
             new_state.process(content)
             block.parse(new_state)
             return new_state.tokens
 
-        elif ext in {'.html', '.xhtml', '.htm'}:
-            return {'type': 'block_html', 'raw': content}
+        elif ext in {".html", ".xhtml", ".htm"}:
+            return {"type": "block_html", "raw": content}
 
-        attrs['filepath'] = dest
+        attrs["filepath"] = dest
         return {
-            'type': 'include',
-            'raw': content,
-            'attrs': attrs,
+            "type": "include",
+            "raw": content,
+            "attrs": attrs,
         }
 
     def __call__(self, directive: BaseDirective, md: "Markdown") -> None:

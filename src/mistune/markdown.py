@@ -56,23 +56,19 @@ class Markdown:
             return self.renderer(data, state)
         return list(data)
 
-    def _iter_render(
-        self, tokens: Iterable[Dict[str, Any]], state: BlockState
-    ) -> Iterable[Dict[str, Any]]:
+    def _iter_render(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> Iterable[Dict[str, Any]]:
         for tok in tokens:
-            if 'children' in tok:
-                children = self._iter_render(tok['children'], state)
-                tok['children'] = list(children)
-            elif 'text' in tok:
-                text = tok.pop('text')
+            if "children" in tok:
+                children = self._iter_render(tok["children"], state)
+                tok["children"] = list(children)
+            elif "text" in tok:
+                text = tok.pop("text")
                 # process inline text
                 # avoid striping emsp or other unicode spaces
-                tok['children'] = self.inline(text.strip(' \r\n\t\f'), state.env)
+                tok["children"] = self.inline(text.strip(" \r\n\t\f"), state.env)
             yield tok
 
-    def parse(
-        self, s: str, state: Optional[BlockState] = None
-    ) -> Tuple[Union[str, List[Dict[str, Any]]], BlockState]:
+    def parse(self, s: str, state: Optional[BlockState] = None) -> Tuple[Union[str, List[Dict[str, Any]]], BlockState]:
         """Parse and convert the given markdown string. If renderer is None,
         the returned **result** will be parsed markdown tokens.
 
@@ -84,10 +80,10 @@ class Markdown:
             state = self.block.state_cls()
 
         # normalize line separator
-        s = s.replace('\r\n', '\n')
-        s = s.replace('\r', '\n')
-        if not s.endswith('\n'):
-            s += '\n'
+        s = s.replace("\r\n", "\n")
+        s = s.replace("\r", "\n")
+        if not s.endswith("\n"):
+            s += "\n"
 
         state.process(s)
 
@@ -111,8 +107,8 @@ class Markdown:
         if state is None:
             state = self.block.state_cls()
 
-        state.env['__file__'] = filepath
-        with open(filepath, 'rb') as f:
+        state.env["__file__"] = filepath
+        with open(filepath, "rb") as f:
             s = f.read()
 
         s2 = s.decode(encoding)
@@ -120,5 +116,5 @@ class Markdown:
 
     def __call__(self, s: str) -> Union[str, List[Dict[str, Any]]]:
         if s is None:
-            s = '\n'
+            s = "\n"
         return self.parse(s)[0]

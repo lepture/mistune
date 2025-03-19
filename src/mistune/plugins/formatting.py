@@ -10,17 +10,15 @@ if TYPE_CHECKING:
 
 __all__ = ["strikethrough", "mark", "insert", "superscript", "subscript"]
 
-_STRIKE_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\~|[^\s~])~~(?!~)')
-_MARK_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\=|[^\s=])==(?!=)')
-_INSERT_END = re.compile(r'(?:' + PREVENT_BACKSLASH + r'\\\^|[^\s^])\^\^(?!\^)')
+_STRIKE_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\~|[^\s~])~~(?!~)")
+_MARK_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\=|[^\s=])==(?!=)")
+_INSERT_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\\^|[^\s^])\^\^(?!\^)")
 
-SUPERSCRIPT_PATTERN = r'\^(?:' + PREVENT_BACKSLASH + r'\\\^|\S|\\ )+?\^'
-SUBSCRIPT_PATTERN = r'~(?:' + PREVENT_BACKSLASH + r'\\~|\S|\\ )+?~'
+SUPERSCRIPT_PATTERN = r"\^(?:" + PREVENT_BACKSLASH + r"\\\^|\S|\\ )+?\^"
+SUBSCRIPT_PATTERN = r"~(?:" + PREVENT_BACKSLASH + r"\\~|\S|\\ )+?~"
 
 
-def parse_strikethrough(
-    inline: "InlineParser", m: Match[str], state: "InlineState"
-) -> Optional[int]:
+def parse_strikethrough(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
     return _parse_to_end(inline, m, state, "strikethrough", _STRIKE_END)
 
 
@@ -28,9 +26,7 @@ def render_strikethrough(renderer: "BaseRenderer", text: str) -> str:
     return "<del>" + text + "</del>"
 
 
-def parse_mark(
-    inline: "InlineParser", m: Match[str], state: "InlineState"
-) -> Optional[int]:
+def parse_mark(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
     return _parse_to_end(inline, m, state, "mark", _MARK_END)
 
 
@@ -38,9 +34,7 @@ def render_mark(renderer: "BaseRenderer", text: str) -> str:
     return "<mark>" + text + "</mark>"
 
 
-def parse_insert(
-    inline: "InlineParser", m: Match[str], state: "InlineState"
-) -> Optional[int]:
+def parse_insert(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
     return _parse_to_end(inline, m, state, "insert", _INSERT_END)
 
 
@@ -48,9 +42,7 @@ def render_insert(renderer: "BaseRenderer", text: str) -> str:
     return "<ins>" + text + "</ins>"
 
 
-def parse_superscript(
-    inline: "InlineParser", m: Match[str], state: "InlineState"
-) -> int:
+def parse_superscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     return _parse_script(inline, m, state, "superscript")
 
 
@@ -78,25 +70,20 @@ def _parse_to_end(
     if not m1:
         return None
     end_pos = m1.end()
-    text = state.src[pos:end_pos-2]
+    text = state.src[pos : end_pos - 2]
     new_state = state.copy()
     new_state.src = text
     children = inline.render(new_state)
-    state.append_token({'type': tok_type, 'children': children})
+    state.append_token({"type": tok_type, "children": children})
     return end_pos
 
 
-def _parse_script(
-    inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str
-) -> int:
+def _parse_script(inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str) -> int:
     text = m.group(0)
     new_state = state.copy()
-    new_state.src = text[1:-1].replace('\\ ', ' ')
+    new_state.src = text[1:-1].replace("\\ ", " ")
     children = inline.render(new_state)
-    state.append_token({
-        'type': tok_type,
-        'children': children
-    })
+    state.append_token({"type": tok_type, "children": children})
     return m.end()
 
 
@@ -117,13 +104,13 @@ def strikethrough(md: "Markdown") -> None:
     :param md: Markdown instance
     """
     md.inline.register(
-        'strikethrough',
-        r'~~(?=[^\s~])',
+        "strikethrough",
+        r"~~(?=[^\s~])",
         parse_strikethrough,
-        before='link',
+        before="link",
     )
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('strikethrough', render_strikethrough)
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("strikethrough", render_strikethrough)
 
 
 def mark(md: "Markdown") -> None:
@@ -137,13 +124,13 @@ def mark(md: "Markdown") -> None:
     :param md: Markdown instance
     """
     md.inline.register(
-        'mark',
-        r'==(?=[^\s=])',
+        "mark",
+        r"==(?=[^\s=])",
         parse_mark,
-        before='link',
+        before="link",
     )
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('mark', render_mark)
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("mark", render_mark)
 
 
 def insert(md: "Markdown") -> None:
@@ -157,13 +144,13 @@ def insert(md: "Markdown") -> None:
     :param md: Markdown instance
     """
     md.inline.register(
-        'insert',
-        r'\^\^(?=[^\s\^])',
+        "insert",
+        r"\^\^(?=[^\s\^])",
         parse_insert,
-        before='link',
+        before="link",
     )
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('insert', render_insert)
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("insert", render_insert)
 
 
 def superscript(md: "Markdown") -> None:
@@ -176,9 +163,9 @@ def superscript(md: "Markdown") -> None:
 
     :param md: Markdown instance
     """
-    md.inline.register('superscript', SUPERSCRIPT_PATTERN, parse_superscript, before='linebreak')
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('superscript', render_superscript)
+    md.inline.register("superscript", SUPERSCRIPT_PATTERN, parse_superscript, before="linebreak")
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("superscript", render_superscript)
 
 
 def subscript(md: "Markdown") -> None:
@@ -191,6 +178,6 @@ def subscript(md: "Markdown") -> None:
 
     :param md: Markdown instance
     """
-    md.inline.register('subscript', SUBSCRIPT_PATTERN, parse_subscript, before='linebreak')
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('subscript', render_subscript)
+    md.inline.register("subscript", SUBSCRIPT_PATTERN, parse_subscript, before="linebreak")
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("subscript", render_subscript)

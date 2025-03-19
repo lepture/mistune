@@ -8,23 +8,23 @@ if TYPE_CHECKING:
     from ..core import BaseRenderer, BlockState
     from ..markdown import Markdown
 
-__all__ = ['def_list']
+__all__ = ["def_list"]
 
 # https://michelf.ca/projects/php-markdown/extra/#def-list
 
 DEF_PATTERN = (
-  r'^(?P<def_list_head>(?:[^\n]+\n)+?)'
-  r'\n?(?:'
-  r'\:[ \t]+.*\n'
-  r'(?:[^\n]+\n)*'  # lazy continue line
-  r'(?:(?:[ \t]*\n)*[ \t]+[^\n]+\n)*'
-  r'(?:[ \t]*\n)*'
-  r')+'
+    r"^(?P<def_list_head>(?:[^\n]+\n)+?)"
+    r"\n?(?:"
+    r"\:[ \t]+.*\n"
+    r"(?:[^\n]+\n)*"  # lazy continue line
+    r"(?:(?:[ \t]*\n)*[ \t]+[^\n]+\n)*"
+    r"(?:[ \t]*\n)*"
+    r")+"
 )
 DEF_RE = re.compile(DEF_PATTERN, re.M)
-DD_START_RE = re.compile(r'^:[ \t]+', re.M)
-TRIM_RE = re.compile(r'^ {0,4}', re.M)
-HAS_BLANK_LINE_RE = re.compile(r'\n[ \t]*\n$')
+DD_START_RE = re.compile(r"^:[ \t]+", re.M)
+TRIM_RE = re.compile(r"^ {0,4}", re.M)
+HAS_BLANK_LINE_RE = re.compile(r"\n[ \t]*\n$")
 
 
 def parse_def_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
@@ -37,10 +37,12 @@ def parse_def_list(block: "BlockParser", m: Match[str], state: "BlockState") -> 
         pos = m2.end()
         m2 = DEF_RE.match(state.src, pos)
 
-    state.append_token({
-        'type': 'def_list',
-        'children': children,
-    })
+    state.append_token(
+        {
+            "type": "def_list",
+            "children": children,
+        }
+    )
     return pos
 
 
@@ -48,8 +50,8 @@ def _parse_def_item(block: "BlockParser", m: Match[str]) -> Iterable[Dict[str, A
     head = m.group("def_list_head")
     for line in head.splitlines():
         yield {
-          'type': 'def_list_head',
-          'text': line,
+            "type": "def_list_head",
+            "text": line,
         }
 
     src = m.group(0)
@@ -58,27 +60,27 @@ def _parse_def_item(block: "BlockParser", m: Match[str]) -> Iterable[Dict[str, A
     m2 = DD_START_RE.search(src, end)
     assert m2 is not None
     start = m2.start()
-    prev_blank_line = src[end:start] == '\n'
+    prev_blank_line = src[end:start] == "\n"
     while m2:
         m2 = DD_START_RE.search(src, start + 1)
         if not m2:
             break
 
         end = m2.start()
-        text = src[start:end].replace(':', ' ', 1)
+        text = src[start:end].replace(":", " ", 1)
         children = _process_text(block, text, prev_blank_line)
         prev_blank_line = bool(HAS_BLANK_LINE_RE.search(text))
         yield {
-          'type': 'def_list_item',
-          'children': children,
+            "type": "def_list_item",
+            "children": children,
         }
         start = end
 
-    text = src[start:].replace(':', ' ', 1)
+    text = src[start:].replace(":", " ", 1)
     children = _process_text(block, text, prev_blank_line)
     yield {
-      'type': 'def_list_item',
-      'children': children,
+        "type": "def_list_item",
+        "children": children,
     }
 
 
@@ -89,8 +91,8 @@ def _process_text(block: "BlockParser", text: str, loose: bool) -> List[Any]:
     # use default list rules
     block.parse(state, block.list_rules)
     tokens = state.tokens
-    if not loose and len(tokens) == 1 and tokens[0]['type'] == 'paragraph':
-        tokens[0]['type'] = 'block_text'
+    if not loose and len(tokens) == 1 and tokens[0]["type"] == "paragraph":
+        tokens[0]["type"] = "block_text"
     return tokens
 
 
@@ -136,8 +138,8 @@ def def_list(md: "Markdown") -> None:
 
     :param md: Markdown instance
     """
-    md.block.register('def_list', DEF_PATTERN, parse_def_list, before='paragraph')
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('def_list', render_def_list)
-        md.renderer.register('def_list_head', render_def_list_head)
-        md.renderer.register('def_list_item', render_def_list_item)
+    md.block.register("def_list", DEF_PATTERN, parse_def_list, before="paragraph")
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("def_list", render_def_list)
+        md.renderer.register("def_list_head", render_def_list_head)
+        md.renderer.register("def_list_item", render_def_list_item)

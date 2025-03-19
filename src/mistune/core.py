@@ -17,12 +17,14 @@ from typing import (
     Union,
     cast,
 )
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
 
-_LINE_END = re.compile(r'\n|$')
+_LINE_END = re.compile(r"\n|$")
+
 
 class BlockState:
     """The state to save block parser's cursor and tokens."""
@@ -36,7 +38,7 @@ class BlockState:
     env: MutableMapping[str, Any]
 
     def __init__(self, parent: Optional[Any] = None) -> None:
-        self.src = ''
+        self.src = ""
         self.tokens = []
 
         # current cursor position
@@ -51,9 +53,9 @@ class BlockState:
         if parent:
             self.env = parent.env
         else:
-            self.env = {'ref_links': {}}
+            self.env = {"ref_links": {}}
 
-    def child_state(self, src: str) -> 'BlockState':
+    def child_state(self, src: str) -> "BlockState":
         child = self.__class__(self)
         child.process(src)
         return child
@@ -68,7 +70,7 @@ class BlockState:
         return m.end()
 
     def get_text(self, end_pos: int) -> str:
-        return self.src[self.cursor:end_pos]
+        return self.src[self.cursor : end_pos]
 
     def last_token(self) -> Any:
         if self.tokens:
@@ -84,16 +86,16 @@ class BlockState:
 
     def add_paragraph(self, text: str) -> None:
         last_token = self.last_token()
-        if last_token and last_token['type'] == 'paragraph':
-            last_token['text'] += text
+        if last_token and last_token["type"] == "paragraph":
+            last_token["text"] += text
         else:
-            self.tokens.append({'type': 'paragraph', 'text': text})
+            self.tokens.append({"type": "paragraph", "text": text})
 
     def append_paragraph(self) -> Optional[int]:
         last_token = self.last_token()
-        if last_token and last_token['type'] == 'paragraph':
+        if last_token and last_token["type"] == "paragraph":
             pos = self.find_line_end()
-            last_token['text'] += self.get_text(pos)
+            last_token["text"] += self.get_text(pos)
             return pos
         return None
 
@@ -111,7 +113,7 @@ class InlineState:
 
     def __init__(self, env: MutableMapping[str, Any]):
         self.env = env
-        self.src = ''
+        self.src = ""
         self.tokens: List[Dict[str, Any]] = []
         self.in_image = False
         self.in_link = False
@@ -138,6 +140,7 @@ class InlineState:
 
 ST = TypeVar("ST", InlineState, BlockState)
 
+
 class Parser(Generic[ST]):
     sc_flag: "re._FlagsType" = re.M
     state_cls: Type[ST]
@@ -157,16 +160,16 @@ class Parser(Generic[ST]):
 
     def compile_sc(self, rules: Optional[List[str]] = None) -> Pattern[str]:
         if rules is None:
-            key = '$'
+            key = "$"
             rules = self.rules
         else:
-            key = '|'.join(rules)
+            key = "|".join(rules)
 
         sc = self.__sc.get(key)
         if sc:
             return sc
 
-        regex = '|'.join(r'(?P<%s>%s)' % (k, self.specification[k]) for k in rules)
+        regex = "|".join(r"(?P<%s>%s)" % (k, self.specification[k]) for k in rules)
         sc = re.compile(regex, self.sc_flag)
         self.__sc[key] = sc
         return sc
@@ -193,7 +196,7 @@ class Parser(Generic[ST]):
             self.insert_rule(self.rules, name, before=before)
 
     def register_rule(self, name: str, pattern: str, func: Any) -> None:
-        raise DeprecationWarning('This plugin is not compatible with mistune v3.')
+        raise DeprecationWarning("This plugin is not compatible with mistune v3.")
 
     @staticmethod
     def insert_rule(rules: List[str], name: str, before: Optional[str] = None) -> None:
@@ -222,10 +225,10 @@ class BaseRenderer(object):
     def register(self, name: str, method: Callable[..., str]) -> None:
         """Register a render method for the named token. For example::
 
-            def render_wiki(renderer, key, title):
-                return f'<a href="/wiki/{key}">{title}</a>'
+        def render_wiki(renderer, key, title):
+            return f'<a href="/wiki/{key}">{title}</a>'
 
-            renderer.register('wiki', render_wiki)
+        renderer.register('wiki', render_wiki)
         """
         # bind self into renderer method
         self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
@@ -240,17 +243,15 @@ class BaseRenderer(object):
             return method
 
     def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
-        func = self._get_method(token['type'])
+        func = self._get_method(token["type"])
         return func(token, state)
 
-    def iter_tokens(
-        self, tokens: Iterable[Dict[str, Any]], state: BlockState
-    ) -> Iterable[str]:
+    def iter_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> Iterable[str]:
         for tok in tokens:
             yield self.render_token(tok, state)
 
     def render_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
-        return ''.join(self.iter_tokens(tokens, state))
+        return "".join(self.iter_tokens(tokens, state))
 
     def __call__(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
         return self.render_tokens(tokens, state)

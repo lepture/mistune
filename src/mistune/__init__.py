@@ -1,11 +1,11 @@
 """
-    mistune
-    ~~~~~~~
+mistune
+~~~~~~~
 
-    A fast yet powerful Python Markdown parser with renderers and
-    plugins, compatible with sane CommonMark rules.
+A fast yet powerful Python Markdown parser with renderers and
+plugins, compatible with sane CommonMark rules.
 
-    Documentation: https://mistune.lepture.com/
+Documentation: https://mistune.lepture.com/
 """
 
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Literal
@@ -18,6 +18,7 @@ from .renderers.html import HTMLRenderer
 from .util import escape, escape_url, safe_entity, unikey
 
 RendererRef = Union[Literal["html", "ast"], BaseRenderer]
+
 
 def create_markdown(
     escape: bool = True,
@@ -41,10 +42,10 @@ def create_markdown(
         # re-use markdown function
         markdown('.... your text ...')
     """
-    if renderer == 'ast':
+    if renderer == "ast":
         # explicit and more similar to 2.x's API
         renderer = None
-    elif renderer == 'html':
+    elif renderer == "html":
         renderer = HTMLRenderer(escape=escape)
 
     inline = InlineParser(hard_wrap=hard_wrap)
@@ -54,15 +55,10 @@ def create_markdown(
     return Markdown(renderer=renderer, inline=inline, plugins=real_plugins)
 
 
-html: Markdown = create_markdown(
-    escape=False,
-    plugins=['strikethrough', 'footnotes', 'table', 'speedup']
-)
+html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table", "speedup"])
 
 
-__cached_parsers: Dict[
-    Tuple[bool, Optional[RendererRef], Optional[Iterable[Any]]], Markdown
-] = {}
+__cached_parsers: Dict[Tuple[bool, Optional[RendererRef], Optional[Iterable[Any]]], Markdown] = {}
 
 
 def markdown(
@@ -85,12 +81,21 @@ def markdown(
 
 
 __all__ = [
-    'Markdown', 'HTMLRenderer',
-    'BlockParser', 'BlockState', 'BaseRenderer',
-    'InlineParser', 'InlineState',
-    'escape', 'escape_url', 'safe_entity', 'unikey',
-    'html', 'create_markdown', 'markdown',
+    "Markdown",
+    "HTMLRenderer",
+    "BlockParser",
+    "BlockState",
+    "BaseRenderer",
+    "InlineParser",
+    "InlineState",
+    "escape",
+    "escape_url",
+    "safe_entity",
+    "unikey",
+    "html",
+    "create_markdown",
+    "markdown",
 ]
 
-__version__ = '3.1.2'
-__homepage__ = 'https://mistune.lepture.com/'
+__version__ = "3.1.2"
+__homepage__ = "https://mistune.lepture.com/"

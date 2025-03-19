@@ -5,26 +5,27 @@ if TYPE_CHECKING:
     from ..markdown import Markdown
 
 _plugins = {
-    'speedup': 'mistune.plugins.speedup.speedup',
-    'strikethrough': 'mistune.plugins.formatting.strikethrough',
-    'mark': 'mistune.plugins.formatting.mark',
-    'insert': 'mistune.plugins.formatting.insert',
-    'superscript': 'mistune.plugins.formatting.superscript',
-    'subscript': 'mistune.plugins.formatting.subscript',
-    'footnotes': 'mistune.plugins.footnotes.footnotes',
-    'table': 'mistune.plugins.table.table',
-    'url': 'mistune.plugins.url.url',
-    'abbr': 'mistune.plugins.abbr.abbr',
-    'def_list': 'mistune.plugins.def_list.def_list',
-    'math': 'mistune.plugins.math.math',
-    'ruby': 'mistune.plugins.ruby.ruby',
-    'task_lists': 'mistune.plugins.task_lists.task_lists',
-    'spoiler': 'mistune.plugins.spoiler.spoiler',
+    "speedup": "mistune.plugins.speedup.speedup",
+    "strikethrough": "mistune.plugins.formatting.strikethrough",
+    "mark": "mistune.plugins.formatting.mark",
+    "insert": "mistune.plugins.formatting.insert",
+    "superscript": "mistune.plugins.formatting.superscript",
+    "subscript": "mistune.plugins.formatting.subscript",
+    "footnotes": "mistune.plugins.footnotes.footnotes",
+    "table": "mistune.plugins.table.table",
+    "url": "mistune.plugins.url.url",
+    "abbr": "mistune.plugins.abbr.abbr",
+    "def_list": "mistune.plugins.def_list.def_list",
+    "math": "mistune.plugins.math.math",
+    "ruby": "mistune.plugins.ruby.ruby",
+    "task_lists": "mistune.plugins.task_lists.task_lists",
+    "spoiler": "mistune.plugins.spoiler.spoiler",
 }
 
 
 class Plugin(Protocol):
     def __call__(self, md: "Markdown") -> None: ...
+
 
 _cached_modules: Dict[str, Plugin] = {}
 

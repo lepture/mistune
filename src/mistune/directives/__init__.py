@@ -13,6 +13,7 @@ class RstDirective(RSTDirective):  # pragma: no cover
     def __init__(self, plugins: List[DirectivePlugin]) -> None:
         super(RstDirective, self).__init__(plugins)
         import warnings
+
         warnings.warn(
             "'RstDirective' is deprecated, please use 'RSTDirective' instead.",
             DeprecationWarning,
@@ -21,13 +22,14 @@ class RstDirective(RSTDirective):  # pragma: no cover
 
 
 __all__ = [
-    'DirectiveParser',
-    'BaseDirective',
-    'DirectivePlugin',
-    'RSTDirective',
-    'FencedDirective',
-    'Admonition',
-    'TableOfContents',
-    'Include',
-    'Image', 'Figure',
+    "DirectiveParser",
+    "BaseDirective",
+    "DirectivePlugin",
+    "RSTDirective",
+    "FencedDirective",
+    "Admonition",
+    "TableOfContents",
+    "Include",
+    "Image",
+    "Figure",
 ]

@@ -10,21 +10,17 @@ if TYPE_CHECKING:
     from ..markdown import Markdown
 
 
-RUBY_PATTERN = r'\[(?:\w+\([\w ]+\))+\]'
+RUBY_PATTERN = r"\[(?:\w+\([\w ]+\))+\]"
 _ruby_re = re.compile(RUBY_PATTERN)
 
 
 def parse_ruby(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)[1:-2]
-    items = text.split(')')
+    items = text.split(")")
     tokens = []
     for item in items:
-        rb, rt = item.split('(')
-        tokens.append({
-            'type': 'ruby',
-            'raw': rb,
-            'attrs': {'rt': rt}
-        })
+        rb, rt = item.split("(")
+        tokens.append({"type": "ruby", "raw": rb, "attrs": {"rt": rt}})
 
     end_pos = m.end()
 
@@ -49,38 +45,44 @@ def _parse_ruby_link(
     inline: "InlineParser", state: "InlineState", pos: int, tokens: List[Dict[str, Any]]
 ) -> Optional[int]:
     c = state.src[pos]
-    if c == '(':
+    if c == "(":
         # standard link [text](<url> "title")
         attrs, link_pos = parse_link(state.src, pos + 1)
         if link_pos:
-            state.append_token({
-                'type': 'link',
-                'children': tokens,
-                'attrs': attrs,
-            })
+            state.append_token(
+                {
+                    "type": "link",
+                    "children": tokens,
+                    "attrs": attrs,
+                }
+            )
             return link_pos
 
-    elif c == '[':
+    elif c == "[":
         # standard ref link [text][label]
         label, link_pos = parse_link_label(state.src, pos + 1)
         if label and link_pos:
-            ref_links = state.env['ref_links']
+            ref_links = state.env["ref_links"]
             key = unikey(label)
             env = ref_links.get(key)
             if env:
-                attrs = {'url': env['url'], 'title': env.get('title')}
-                state.append_token({
-                    'type': 'link',
-                    'children': tokens,
-                    'attrs': attrs,
-                })
+                attrs = {"url": env["url"], "title": env.get("title")}
+                state.append_token(
+                    {
+                        "type": "link",
+                        "children": tokens,
+                        "attrs": attrs,
+                    }
+                )
             else:
                 for tok in tokens:
                     state.append_token(tok)
-                state.append_token({
-                    'type': 'text',
-                    'raw': '[' + label + ']',
-                })
+                state.append_token(
+                    {
+                        "type": "text",
+                        "raw": "[" + label + "]",
+                    }
+                )
             return link_pos
     return None
 
@@ -105,6 +107,6 @@ def ruby(md: "Markdown") -> None:
 
     :param md: Markdown instance
     """
-    md.inline.register('ruby', RUBY_PATTERN, parse_ruby, before='link')
-    if md.renderer and md.renderer.NAME == 'html':
-        md.renderer.register('ruby', render_ruby)
+    md.inline.register("ruby", RUBY_PATTERN, parse_ruby, before="link")
+    if md.renderer and md.renderer.NAME == "html":
+        md.renderer.register("ruby", render_ruby)

@@ -17,7 +17,7 @@ def _md(args: argparse.Namespace) -> "Markdown":
         plugins = args.plugin
     else:
         # default plugins
-        plugins = ['strikethrough', 'footnotes', 'table', 'speedup']
+        plugins = ["strikethrough", "footnotes", "table", "speedup"]
 
     if args.renderer == "rst":
         renderer: "BaseRenderer" = RSTRenderer()
@@ -35,13 +35,13 @@ def _md(args: argparse.Namespace) -> "Markdown":
 
 def _output(text: str, args: argparse.Namespace) -> None:
     if args.output:
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             f.write(text)
     else:
         print(text)
 
 
-CMD_HELP = '''Mistune, a sane and fast python markdown parser.
+CMD_HELP = """Mistune, a sane and fast python markdown parser.
 
 Here are some use cases of the command line tool:
 
@@ -53,50 +53,55 @@ Here are some use cases of the command line tool:
 
     $ cat README.md | python -m mistune
     <p>...
-'''
+"""
 
 
 def cli() -> None:
     parser = argparse.ArgumentParser(
-        prog='python -m mistune',
+        prog="python -m mistune",
         description=CMD_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        '-m', '--message',
-        help='the markdown message to convert',
+        "-m",
+        "--message",
+        help="the markdown message to convert",
     )
     parser.add_argument(
-        '-f', '--file',
-        help='the markdown file to convert',
+        "-f",
+        "--file",
+        help="the markdown file to convert",
     )
     parser.add_argument(
-        '-p', '--plugin',
-        metavar='NAME',
-        action='extend',
-        nargs='+',
-        help='specifiy a plugin to use',
+        "-p",
+        "--plugin",
+        metavar="NAME",
+        action="extend",
+        nargs="+",
+        help="specifiy a plugin to use",
     )
     parser.add_argument(
-        '--escape',
-        action='store_true',
-        help='turn on escape option',
+        "--escape",
+        action="store_true",
+        help="turn on escape option",
     )
     parser.add_argument(
-        '--hardwrap',
-        action='store_true',
-        help='turn on hardwrap option',
+        "--hardwrap",
+        action="store_true",
+        help="turn on hardwrap option",
     )
     parser.add_argument(
-        '-o', '--output',
-        help='write the rendered result into file',
+        "-o",
+        "--output",
+        help="write the rendered result into file",
     )
     parser.add_argument(
-        '-r', '--renderer',
-        default='html',
-        help='specify the output renderer',
+        "-r",
+        "--renderer",
+        default="html",
+        help="specify the output renderer",
     )
-    parser.add_argument('--version', action='version', version='mistune ' + version)
+    parser.add_argument("--version", action="version", version="mistune " + version)
     args = parser.parse_args()
 
     message = args.message
@@ -114,7 +119,7 @@ def cli() -> None:
         assert isinstance(text, str)
         _output(text, args)
     else:
-        print('You MUST specify a message or file')
+        print("You MUST specify a message or file")
         sys.exit(1)
 
 
@@ -126,5 +131,5 @@ def read_stdin() -> Optional[str]:
         return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

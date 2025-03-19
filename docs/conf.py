@@ -40,17 +40,15 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'shibuya'
+html_context = {
+  'source_type': 'github',
+  'source_user': 'lepture',
+  'source_repo': 'mistune',
+}
 html_theme_options = {
+    "accent_color": "indigo",
     "light_logo": "_static/logo-black.svg",
     "dark_logo": "_static/logo-white.svg",
-
-    "light_css_variables": {
-        "--sy-rc-theme": "143, 118, 214",
-    },
-    "dark_css_variables": {
-        "--sy-rc-theme": "130, 80, 223",
-    },
-
     'twitter_site': 'lepture',
     'twitter_creator': 'lepture',
     'twitter_url': 'https://twitter.com/lepture',

@@ -151,6 +151,7 @@ class Parser(Generic[ST]):
     def __init__(self) -> None:
         self.specification = self.SPECIFICATION.copy()
         self.rules = list(self.DEFAULT_RULES)
+        self.rules_set = set(self.DEFAULT_RULES)
         self._methods: Dict[
             str,
             Callable[[Match[str], ST], Optional[int]],
@@ -192,7 +193,8 @@ class Parser(Generic[ST]):
         self._methods[name] = lambda m, state: func(self, m, state)
         if pattern:
             self.specification[name] = pattern
-        if name not in self.rules:
+        if name not in self.rules_set:
+            self.rules_set.add(name)
             self.insert_rule(self.rules, name, before=before)
 
     def register_rule(self, name: str, pattern: str, func: Any) -> None:

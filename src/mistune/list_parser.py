@@ -98,13 +98,20 @@ def _parse_list_item(
     leading_width = len(spaces) + len(marker)
     text, continue_width = _compile_continue_width(text, leading_width)
     item_pattern = _compile_list_item_pattern(bullet, leading_width)
+    list_item_breaks = [
+        "thematic_break",
+        "fenced_code",
+        "atx_heading",
+        "block_quote",
+        "block_html",
+        "list",
+    ]
+    if 'fenced_directive' in block.specification:
+        list_item_breaks.insert(1, "fenced_directive")
+
     pairs = [
-        ("thematic_break", block.specification["thematic_break"]),
-        ("fenced_code", block.specification["fenced_code"]),
-        ("atx_heading", block.specification["atx_heading"]),
-        ("block_quote", block.specification["block_quote"]),
-        ("block_html", block.specification["block_html"]),
-        ("list", block.specification["list"]),
+        (name, block.specification[name])
+        for name in list_item_breaks
     ]
     if leading_width < 3:
         _repl_w = str(leading_width)

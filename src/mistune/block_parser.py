@@ -1,5 +1,6 @@
 import re
 from typing import Optional, List, Tuple, Match, Pattern
+import string
 from .util import (
     unikey,
     escape_url,
@@ -185,7 +186,7 @@ class BlockParser(Parser[BlockState]):
         """Parse token for ATX heading. An ATX heading is started with 1 to 6
         symbol of ``#``."""
         level = len(m.group("atx_1"))
-        text = m.group("atx_2").strip()
+        text = m.group("atx_2").strip(string.whitespace)
         # remove last #
         if text:
             text = _ATX_HEADING_TRIM.sub("", text)

@@ -130,6 +130,12 @@ class TestMiscCases(TestCase):
         expected = "<p>\u2003\u2003foo<br />\nbar</p>\n<p>\u2003\u2003foobar</p>"
         self.assertEqual(result.strip(), expected)
 
+    def test_unicode_whitespace(self):
+        text = "# \u3000\u3000abc"
+        result = mistune.html(text)
+        expected = "<h1>\u3000\u3000abc</h1>\n"
+        self.assertEqual(result, expected)
+
     def test_html_tag_text_following_list(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md("foo\n- bar\n\ntable")

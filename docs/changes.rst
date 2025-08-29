@@ -3,6 +3,21 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.1.4
+-------------
+
+**Released on Aug 29, 2025**
+
+* Add fenced directive break rule in list parser.
+* Prevent removing unicode whitespace when parsing atx heading.
+
+Version 3.1.3
+-------------
+
+**Released on Mar 19, 2025**
+
+* Announce supports for python 3.12 and 3.13
+
 Version 3.1.2
 -------------
 

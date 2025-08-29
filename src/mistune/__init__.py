@@ -97,5 +97,5 @@ __all__ = [
     "markdown",
 ]
 
-__version__ = "3.1.3"
+__version__ = "3.1.4"
 __homepage__ = "https://mistune.lepture.com/"

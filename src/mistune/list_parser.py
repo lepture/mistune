@@ -106,13 +106,10 @@ def _parse_list_item(
         "block_html",
         "list",
     ]
-    if 'fenced_directive' in block.specification:
+    if "fenced_directive" in block.specification:
         list_item_breaks.insert(1, "fenced_directive")
 
-    pairs = [
-        (name, block.specification[name])
-        for name in list_item_breaks
-    ]
+    pairs = [(name, block.specification[name]) for name in list_item_breaks]
     if leading_width < 3:
         _repl_w = str(leading_width)
         pairs = [(n, p.replace("3", _repl_w, 1)) for n, p in pairs]

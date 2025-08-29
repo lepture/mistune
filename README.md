@@ -1,17 +1,21 @@
-# Mistune v3
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo-white.svg" />
+  <img alt="Mistune v3" src="docs/_static/logo-black.svg" height="68" />
+</picture>
 
 A fast yet powerful Python Markdown parser with renderers and plugins.
 
-<a href="https://github.com/lepture/mistune/actions"><img src="https://github.com/lepture/mistune/actions/workflows/tests.yml/badge.svg" /></a>
-<a href="https://codecov.io/gh/lepture/mistune"><img src="https://codecov.io/gh/lepture/mistune/graph/badge.svg?token=mcpitD54Tx" alt="Coverage"></a>
+[![Build Status](https://github.com/lepture/mistune/actions/workflows/tests.yml/badge.svg)](https://github.com/lepture/mistune/actions)
+[![PyPI version](https://img.shields.io/pypi/v/mistune.svg)](https://pypi.org/project/mistune)
+[![conda-forge version](https://img.shields.io/conda/v/conda-forge/mistune.svg?label=conda-forge&colorB=0090ff)](https://anaconda.org/conda-forge/mistune)
+[![PyPI Downloads](https://static.pepy.tech/badge/mistune/month)](https://pepy.tech/projects/mistune)
+[![Code Coverage](https://codecov.io/gh/lepture/mistune/branch/main/graph/badge.svg?token=mcpitD54Tx)](https://codecov.io/gh/lepture/mistune)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lepture_mistune&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=lepture_mistune)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lepture_mistune&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=lepture_mistune)
 
-
-**NOTE: This is the re-designed v3 of mistune.**
-
-Looking for old Mistune? Switch branch to:
-
-- v1
-- v2
+</div>
 
 ## Paid plugins
 

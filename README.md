@@ -67,7 +67,10 @@ Tidelift will coordinate the fix and disclosure.
 
 ## Benchmarks
 
+<details>
+<summary>
 Here is the benchmark score on my computer. Check the `benchmark/bench.py` script.
+</summary>  
 
 ```
 mistune (3.0.0) - atx: 13.901472091674805ms
@@ -191,6 +194,28 @@ markdown2 (2.4.3) - readme: 533.4112644195557ms
 mistletoe (0.8.2) - readme: 110.12959480285645ms
 markdown_it (2.1.0) - readme: 247.9879856109619ms
 ```
+
+</details>
+
+All results are in milliseconds (ms).
+
+| / Parser ➡ Case ⬇       | mistune (3.0.0) | mistune (slow) | mistune (fast) | mistune (full) | markdown (3.3.7) | markdown2 (2.4.3) | mistletoe (0.8.2) | markdown_it (2.1.0) |
+| -------------- | --------------: | -------------: | -------------: | -------------: | ---------------: | ----------------: | ----------------: | ------------------: |
+| **atx**        |           13.90 |      <mark>13.12</mark> |          13.25 |          15.45 |            48.41 |            379.31 |             25.46 |               42.38 |
+| **setext**     |            8.43 |           8.98 |       <mark>8.12</mark> |           9.53 |            30.75 |            218.91 |             20.47 |               27.01 |
+| **normal_ul**  |           60.91 |      <mark>59.70</mark> |          60.41 |          62.89 |            83.79 |            175.36 |             74.82 |              103.01 |
+| **insane_ul**  |          104.19 |         105.83 |         103.04 |         105.80 |           133.83 |            337.24 |            122.10 |           <mark>85.93</mark> |
+| **normal_ol**  |       <mark>25.10</mark> |          25.32 |          25.11 |          25.95 |            43.30 |             75.88 |             33.64 |               40.31 |
+| **insane_ol**  |           46.20 |          49.15 |      <mark>45.97</mark> |          47.54 |            50.15 |            210.49 |             84.08 |               83.62 |
+| **blockquote** |           15.48 |          16.13 |      <mark>15.35</mark> |          16.10 |            63.04 |            702.44 |             28.56 |               37.35 |
+| **blockhtml**  |            7.90 |       <mark>7.08</mark> |           7.41 |           8.56 |            46.66 |            122.10 |             12.24 |               26.84 |
+| **fenced**     |            4.28 |           4.09 |       <mark>4.02</mark> |           4.45 |            33.84 |             92.49 |              9.19 |               12.50 |
+| **paragraph**  |           95.94 |         561.28 |      <mark>93.60</mark> |         110.10 |           304.13 |            267.85 |            779.32 |              825.52 |
+| **emphasis**   |           23.59 |          16.93 |          23.23 |          25.28 |            76.50 |          <mark>9.39</mark> |             33.69 |               60.91 |
+| **auto_links** |            3.80 |       <mark>3.39</mark> |           3.66 |           3.92 |            23.05 |              6.54 |              8.36 |               19.73 |
+| **std_links**  |           21.92 |          17.49 |          19.88 |          24.51 |            39.12 |         <mark>14.52</mark> |             22.85 |               32.61 |
+| **ref_links**  |           47.67 |          39.45 |          44.82 |          52.38 |            87.66 |         <mark>23.12</mark> |             59.14 |               80.45 |
+| **readme**     |           56.61 |          68.82 |      <mark>53.86</mark> |          61.26 |           211.03 |            533.41 |            110.13 |              247.99 |
 
 ## License
 

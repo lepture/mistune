@@ -16,10 +16,10 @@ __all__ = ["footnotes"]
 _PARAGRAPH_SPLIT = re.compile(r"\n{2,}")
 # https://michelf.ca/projects/php-markdown/extra/#footnotes
 REF_FOOTNOTE = (
-    r"^(?P<footnote_lead> {0,3})"
-    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t]"
+    r"^(?P<footnote_lead> {0,4})"
+    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t\n]"
     r"(?P<footnote_text>[^\n]*(?:\n+|$)"
-    r"(?:(?P=footnote_lead) {1,3}(?! )[^\n]*\n+)*"
+    r"(?:(?P=footnote_lead) {1,4}(?! )[^\n]*\n+)*"
     r")"
 )
 

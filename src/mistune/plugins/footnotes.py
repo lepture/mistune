@@ -70,8 +70,11 @@ def parse_footnote_item(block: "BlockParser", key: str, index: int, state: Block
         spaces = len(second_line) - len(second_line.lstrip())
         pattern = re.compile(r"^ {" + str(spaces) + r",}", flags=re.M)
         text = pattern.sub("", text).strip()
-        items = _PARAGRAPH_SPLIT.split(text)
-        children = [{"type": "paragraph", "text": s} for s in items]
+
+        footer_state = BlockState()
+        footer_state.process(text)
+        block.parse(footer_state)
+        children = footer_state.tokens
     else:
         text = text.strip()
         children = [{"type": "paragraph", "text": text}]

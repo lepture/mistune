@@ -31,15 +31,67 @@ multiple lines [^1]
    three
 
     four
+
+     five
 .
 <p>multiple lines <sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></p>
-<pre><code>four</code></pre>
+<pre><code> five</code></pre>
 <section class="footnotes">
 <ol>
 <li id="fn-1"><p>foo</p>
 <p>one</p>
 <p>two</p>
-<p>three<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+<p>three</p>
+<p>four<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+multi-line footnote[^1]
+
+[^1]:
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+    non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+.
+<p>multi-line footnote<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+fenced code block in footnote[^1]
+
+[^1]:
+    first
+
+    ```sh
+    second
+    third
+    ```
+
+    fourth
+.
+<p>fenced code block in footnote<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>first</p>
+<pre><code class="language-sh">second
+third
+</code></pre>
+<p>fourth<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
 </ol>
 </section>
 ````````````````````````````````

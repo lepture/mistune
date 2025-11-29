@@ -16,10 +16,10 @@ __all__ = ["footnotes"]
 _PARAGRAPH_SPLIT = re.compile(r"\n{2,}")
 # https://michelf.ca/projects/php-markdown/extra/#footnotes
 REF_FOOTNOTE = (
-    r"^(?P<footnote_lead> {0,3})"
-    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t]"
+    r"^(?P<footnote_lead> {0,4})"
+    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t\n]"
     r"(?P<footnote_text>[^\n]*(?:\n+|$)"
-    r"(?:(?P=footnote_lead) {1,3}(?! )[^\n]*\n+)*"
+    r"(?:(?P=footnote_lead) {1,4}(?! )[^\n]*\n+)*"
     r")"
 )
 
@@ -70,8 +70,11 @@ def parse_footnote_item(block: "BlockParser", key: str, index: int, state: Block
         spaces = len(second_line) - len(second_line.lstrip())
         pattern = re.compile(r"^ {" + str(spaces) + r",}", flags=re.M)
         text = pattern.sub("", text).strip()
-        items = _PARAGRAPH_SPLIT.split(text)
-        children = [{"type": "paragraph", "text": s} for s in items]
+
+        footer_state = BlockState()
+        footer_state.process(text)
+        block.parse(footer_state)
+        children = footer_state.tokens
     else:
         text = text.strip()
         children = [{"type": "paragraph", "text": text}]

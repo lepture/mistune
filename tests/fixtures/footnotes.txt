@@ -95,3 +95,37 @@ third
 </ol>
 </section>
 ````````````````````````````````
+
+```````````````````````````````` example
+This is a foo [^foo].
+
+This is a bar [^bar].
+
+[^foo]: A foo is beautiful. This is in contrast to a bar [^bar].
+
+[^bar]: A bar is very common.
+.
+<p>This is a foo <sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup>.</p>
+<p>This is a bar <sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>A foo is beautiful. This is in contrast to a bar <sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup>.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+<li id="fn-2"><p>A bar is very common.<a href="#fnref-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+This is body text, and a footnote.[^f]
+
+[^f]: The footnote includes [a link][1].
+
+[1]: https://example.com
+.
+<p>This is body text, and a footnote.<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>The footnote includes <a href="https://example.com">a link</a>.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````

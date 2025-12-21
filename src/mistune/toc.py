@@ -48,7 +48,7 @@ def add_toc_hook(
         toc_items = []
         for i, tok in enumerate(headings):
             tok["attrs"]["id"] = heading_id(tok, i)
-            toc_items.append(normalize_toc_item(md, tok))
+            toc_items.append(normalize_toc_item(md, tok, parent=state))
 
         # save items into state
         state.env["toc_items"] = toc_items
@@ -56,9 +56,9 @@ def add_toc_hook(
     md.before_render_hooks.append(toc_hook)
 
 
-def normalize_toc_item(md: "Markdown", token: Dict[str, Any]) -> Tuple[int, str, str]:
+def normalize_toc_item(md: "Markdown", token: Dict[str, Any], parent: Optional[Any] = None) -> Tuple[int, str, str]:
     text = token["text"]
-    tokens = md.inline(text, {})
+    tokens = md.inline(text, parent.env if parent else {})
     assert md.renderer is not None
     html = md.renderer(tokens, BlockState())
     text = striptags(html)

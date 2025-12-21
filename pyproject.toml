@@ -41,7 +41,7 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
-    "mypy",
+    "mypy<1.19",
     "pytest",
     "pytest-cov",
     "ruff",

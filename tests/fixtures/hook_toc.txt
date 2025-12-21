@@ -103,10 +103,14 @@ content
 
 ```````````````````````````````` example
 # [foo](/bar)
+# [baz][ref]
+[ref]: /quux
 .
 <h1 id="toc_1"><a href="/bar">foo</a></h1>
+<h1 id="toc_2"><a href="/quux">baz</a></h1>
 <ul>
 <li><a href="#toc_1">foo</a></li>
+<li><a href="#toc_2">baz</a></li>
 </ul>
 ````````````````````````````````
 

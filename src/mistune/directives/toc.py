@@ -73,7 +73,7 @@ class TableOfContents(DirectivePlugin):
             # adding ID for each heading
             for i, tok in enumerate(headings):
                 tok["attrs"]["id"] = self.generate_heading_id(tok, i)
-                toc_items.append(normalize_toc_item(md, tok))
+                toc_items.append(normalize_toc_item(md, tok, parent=state))
 
             for sec in sections:
                 _min = sec["attrs"]["min_level"]

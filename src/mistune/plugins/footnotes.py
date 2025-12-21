@@ -89,7 +89,7 @@ def md_footnotes_hook(
         return result
 
     children = [parse_footnote_item(md.block, k, i + 1, state) for i, k in enumerate(notes)]
-    state = BlockState()
+    state = BlockState(parent=state)
     state.tokens = [{"type": "footnotes", "children": children}]
     output = md.render_state(state)
     return result + output  # type: ignore[operator]

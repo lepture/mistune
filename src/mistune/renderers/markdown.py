@@ -51,7 +51,7 @@ class MarkdownRenderer(BaseRenderer):
             return out + "[" + label + "]"
 
         attrs = token["attrs"]
-        url = attrs["url"]
+        url: str = attrs["url"]
         title = attrs.get("title")
         if text == url and not title:
             return "<" + text + ">"

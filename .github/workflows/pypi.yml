@@ -1,9 +1,5 @@
 name: Release to PyPI
 
-permissions:
-  contents: write
-  id-token: write
-
 on:
   push:
     tags:
@@ -34,6 +30,8 @@ jobs:
         if-no-files-found: error
 
   publish:
+    permissions:
+      id-token: write
     environment:
       name: pypi-release
 
@@ -51,6 +49,8 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
 
   release:
+    permissions:
+      contents: write
     name: write release note
     runs-on: ubuntu-latest
     needs: publish

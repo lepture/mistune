@@ -3,6 +3,15 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.2.0
+-------------
+
+**Released on Dec 23, 2025**
+
+* Announce supports for python 3.14
+* Fix footnotes plugins for code blocks, ref links, blockquote and etc.
+* Fix ref links in TOC.
+
 Version 3.1.4
 -------------
 

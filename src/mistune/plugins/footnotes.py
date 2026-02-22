@@ -2,7 +2,6 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Match, Union
 
 from ..core import BlockState
-from ..helpers import LINK_LABEL
 from ..util import unikey
 
 if TYPE_CHECKING:
@@ -14,16 +13,18 @@ if TYPE_CHECKING:
 __all__ = ["footnotes"]
 
 _PARAGRAPH_SPLIT = re.compile(r"\n{2,}")
+# Like LINK_LABEL but disallows whitespace in footnote identifiers
 # https://michelf.ca/projects/php-markdown/extra/#footnotes
+_FOOTNOTE_LABEL = r"(?:[^\\\[\]\s]|\\.){1,500}"
 REF_FOOTNOTE = (
     r"^(?P<footnote_lead> {0,4})"
-    r"\[\^(?P<footnote_key>" + LINK_LABEL + r")]:[ \t\n]"
+    r"\[\^(?P<footnote_key>" + _FOOTNOTE_LABEL + r")]:[ \t\n]"
     r"(?P<footnote_text>[^\n]*(?:\n+|$)"
     r"(?:(?P=footnote_lead) {1,4}(?! )[^\n]*\n+)*"
     r")"
 )
 
-INLINE_FOOTNOTE = r"\[\^(?P<footnote_key>" + LINK_LABEL + r")\]"
+INLINE_FOOTNOTE = r"\[\^(?P<footnote_key>" + _FOOTNOTE_LABEL + r")\]"
 
 
 def parse_inline_footnote(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:

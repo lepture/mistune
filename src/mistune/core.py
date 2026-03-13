@@ -36,8 +36,9 @@ class BlockState:
     list_tight: bool
     parent: Any
     env: MutableMapping[str, Any]
+    container_type: Optional[str]
 
-    def __init__(self, parent: Optional[Any] = None) -> None:
+    def __init__(self, parent: Optional[Any] = None, container_type: Optional[str] = None) -> None:
         self.src = ""
         self.tokens = []
 
@@ -48,6 +49,7 @@ class BlockState:
         # for list and block quote chain
         self.list_tight = True
         self.parent = parent
+        self.container_type = container_type
 
         # for saving def references
         if parent:
@@ -55,8 +57,8 @@ class BlockState:
         else:
             self.env = {"ref_links": {}}
 
-    def child_state(self, src: str) -> "BlockState":
-        child = self.__class__(self)
+    def child_state(self, src: str, container_type: Optional[str] = None) -> "BlockState":
+        child = self.__class__(self, container_type)
         child.process(src)
         return child
 

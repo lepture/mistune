@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Any, Dict, Match
+from ..util import escape as escape_text
 
 from ._base import BaseDirective, DirectivePlugin
 
@@ -64,7 +65,7 @@ def render_admonition(self: Any, text: str, name: str, **attrs: Any) -> str:
     html = '<section class="admonition ' + name
     _cls = attrs.get("class")
     if _cls:
-        html += " " + _cls
+        html += " " + escape_text(_cls)
     return html + '">\n' + text + "</section>\n"
 
 

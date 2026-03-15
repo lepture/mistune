@@ -160,11 +160,11 @@ def render_figure(
     if align:
         _cls += " align-" + align
     if figclass:
-        _cls += " " + figclass
+        _cls += " " + escape_text(figclass)
 
     html = '<figure class="' + _cls + '"'
     if figwidth:
-        html += ' style="width:' + figwidth + '"'
+        html += ' style="width:' + escape_text(figwidth) + '"'
     return html + ">\n" + text + "</figure>\n"
 
 

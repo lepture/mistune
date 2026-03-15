@@ -30,7 +30,7 @@ class Include(DirectivePlugin):
         dest = os.path.join(os.path.dirname(source_file), relpath)
         dest = os.path.normpath(dest)
 
-        if dest == source_file:
+        if os.path.abspath(dest) == os.path.abspath(source_file):
             return {
                 "type": "block_error",
                 "raw": "Could not include self: " + relpath,

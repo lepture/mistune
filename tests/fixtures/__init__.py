@@ -14,12 +14,12 @@ EXAMPLE_PATTERN = re.compile(
 
 
 def load_ast(filename: str) -> Any:
-    with open(os.path.join(ROOT, "ast", filename)) as f:
+    with open(os.path.join(ROOT, "ast", filename), encoding="utf-8") as f:
         return json.load(f)
 
 
 def load_json(filename: str) -> Any:
-    with open(os.path.join(ROOT, filename)) as f:
+    with open(os.path.join(ROOT, filename), encoding="utf-8") as f:
         return json.load(f)
 
 

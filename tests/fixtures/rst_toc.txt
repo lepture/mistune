@@ -50,7 +50,7 @@ none
 .
 <h1>H1</h1>
 <h2>H2</h2>
-<div class="error"><pre>"max-level" option MUST be integer</pre></div>
+<div class="error"><pre>&quot;max-level&quot; option MUST be integer</pre></div>
 ````````````````````````````````
 
 ```````````````````````````````` example
@@ -61,7 +61,7 @@ none
 .
 <h1>H1</h1>
 <h2>H2</h2>
-<div class="error"><pre>"max-level" option MUST be <= 3</pre></div>
+<div class="error"><pre>&quot;max-level&quot; option MUST be &lt;= 3</pre></div>
 ````````````````````````````````
 
 ```````````````````````````````` example
@@ -73,7 +73,7 @@ none
 .
 <h1>H1</h1>
 <h2>H2</h2>
-<div class="error"><pre>"min-level" option MUST be less than "max-level" option</pre></div>
+<div class="error"><pre>&quot;min-level&quot; option MUST be less than &quot;max-level&quot; option</pre></div>
 ````````````````````````````````
 
 

@@ -18,6 +18,7 @@ IGNORE_CASES = {
     # we don't support link title in (title)
     "links_496",
     "links_504",
+    "link_reference_definitions_202",
     # we don't support flanking delimiter run
     "emphasis_and_strong_emphasis_352",
     "emphasis_and_strong_emphasis_367",

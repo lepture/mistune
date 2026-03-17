@@ -55,3 +55,9 @@ with $a\neq b$ such that $f(a)=f(b)$.
 singleton set <span class="math">\(e_G\)</span>, because otherwise <span class="math">\(\exists a,b\in G\)</span>
 with <span class="math">\(a\neq b\)</span> such that <span class="math">\(f(a)=f(b)\)</span>.</p>
 ````````````````````````````````
+
+```````````````````````````````` example
+Escaped dollar sign in math: $x=\$$
+.
+<p>Escaped dollar sign in math: <span class="math">\(x=\$\)</span></p>
+````````````````````````````````

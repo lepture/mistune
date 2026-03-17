@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 __all__ = ["math", "math_in_quote", "math_in_list"]
 
 BLOCK_MATH_PATTERN = r"^ {0,3}\$\$[ \t]*\n(?P<math_text>[\s\S]+?)\n\$\$[ \t]*$"
-INLINE_MATH_PATTERN = r"\$(?!\s)(?P<math_text>.+?)(?!\s)\$"
+INLINE_MATH_PATTERN = r"\$(?!\s)(?P<math_text>(?:[^$\\]|\\.)+?)(?!\s)\$"
 
 
 def parse_block_math(block: "BlockParser", m: Match[str], state: "BlockState") -> int:

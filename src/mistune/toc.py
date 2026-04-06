@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from .core import BlockState
-from .util import striptags
+from .util import striptags, escape
 
 if TYPE_CHECKING:
     from .markdown import Markdown
@@ -89,7 +89,7 @@ def render_toc_ul(toc: Iterable[Tuple[int, str, str]]) -> str:
     s = ""
     levels: List[int] = []
     for level, k, text in toc:
-        item = '<a href="#{}">{}</a>'.format(k, text)
+        item = '<a href="#{}">{}</a>'.format(escape(k), text)
         if not levels:
             s += "<li>" + item
             levels.append(level)

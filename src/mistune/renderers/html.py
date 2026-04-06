@@ -108,7 +108,7 @@ class HTMLRenderer(BaseRenderer):
         html = "<" + tag
         _id = attrs.get("id")
         if _id:
-            html += ' id="' + _id + '"'
+            html += ' id="' + escape_text(_id) + '"'
         return html + ">" + text + "</" + tag + ">\n"
 
     def blank_line(self) -> str:

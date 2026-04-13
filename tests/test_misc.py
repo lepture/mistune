@@ -136,6 +136,19 @@ class TestMiscCases(TestCase):
         expected = "<h1>\u3000\u3000abc</h1>\n"
         self.assertEqual(result, expected)
 
+    def test_image_alt_no_double_encoding(self):
+        result = mistune.html("![dogs & cats](dogs.png)")
+        expected = '<p><img src="dogs.png" alt="dogs &amp; cats" /></p>'
+        self.assertEqual(result.strip(), expected)
+
+        result = mistune.html("![dogs > cats](dogs.png)")
+        expected = '<p><img src="dogs.png" alt="dogs &gt; cats" /></p>'
+        self.assertEqual(result.strip(), expected)
+
+        result = mistune.html('!["quoted"](dogs.png)')
+        expected = '<p><img src="dogs.png" alt="&quot;quoted&quot;" /></p>'
+        self.assertEqual(result.strip(), expected)
+
     def test_html_tag_text_following_list(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md("foo\n- bar\n\ntable")

@@ -25,6 +25,7 @@ def create_markdown(
     hard_wrap: bool = False,
     renderer: Optional[RendererRef] = "html",
     plugins: Optional[Iterable[PluginRef]] = None,
+    enable_enhanced: bool = False,
 ) -> Markdown:
     """Create a Markdown instance based on the given condition.
 
@@ -32,6 +33,7 @@ def create_markdown(
     :param hard_wrap: Boolean. Break every new line into ``<br>``.
     :param renderer: renderer instance, default is HTMLRenderer.
     :param plugins: List of plugins.
+    :param enable_enhanced: Boolean. Enable enhanced features like tabs and tip containers.
 
     This method is used when you want to re-use a Markdown instance::
 
@@ -52,7 +54,7 @@ def create_markdown(
     real_plugins: Optional[Iterable[Plugin]] = None
     if plugins is not None:
         real_plugins = [import_plugin(n) for n in plugins]
-    return Markdown(renderer=renderer, inline=inline, plugins=real_plugins)
+    return Markdown(renderer=renderer, inline=inline, plugins=real_plugins, enable_enhanced=enable_enhanced)
 
 
 html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table", "speedup"])

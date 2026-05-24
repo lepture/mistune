@@ -62,7 +62,7 @@ def render_block_image(
     height: Optional[str] = None,
     **attrs: Any,
 ) -> str:
-    img = '<img src="' + escape_text(src) + '"'
+    img = '<img src="' + self.safe_url(src) + '"'
     style = ""
     if alt:
         img += ' alt="' + escape_text(alt) + '"'

@@ -41,6 +41,34 @@ class TestMiscCases(TestCase):
         expected = '<p><a href="#harmful-link">h</a></p>'
         self.assertEqual(result.strip(), expected)
 
+    def test_harmful_links_variants(self):
+        # entity-decoded, alternate-scheme, and reference-link forms are all
+        # routed to the #harmful-link sentinel.
+        for text in [
+            "[h](javascript:alert)",
+            "[h](&#x6a;avascript:alert)",
+            "[h](javascript&colon;alert)",
+            "[h](vbscript:msgbox)",
+            "[h](file:///etc/passwd)",
+            "[h](data:text/html,xss)",
+            "[h](data:image/svg+xml,xss)",
+            "[h][r]\n\n[r]: javascript:alert",
+        ]:
+            result = mistune.html(text)
+            self.assertIn('href="#harmful-link"', result, text)
+            self.assertNotIn("javascript:alert", result, text)
+
+    def test_control_char_scheme_not_executable(self):
+        # A control char or encoded colon inside the scheme is percent-encoded
+        # by escape_url, so the rendered href is never an executable
+        # javascript: scheme (regardless of the sentinel path).
+        for text in [
+            "[h](<java\tscript:alert>)",
+            "[h](<java&#x09;script:alert>)",
+            "[h](javascript%3Aalert)",
+        ]:
+            self.assertNotIn("javascript:alert", mistune.html(text), text)
+
     def test_ref_link(self):
         result = mistune.html("[link][h]\n\n[h]: /foo")
         expected = '<p><a href="/foo">link</a></p>'

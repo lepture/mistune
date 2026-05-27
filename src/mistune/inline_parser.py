@@ -128,7 +128,11 @@ class InlineParser(Parser[InlineState]):
         if label is None:
             text, end_pos = parse_link_text(state.src, pos)
             if text is None:
-                return None
+                # ← CHANGE: emit skipped content as literal text
+                # so nothing is dropped, then jump ahead to end_pos
+                skipped = state.src[m.start():end_pos]
+                state.append_token({"type": "text", "raw": skipped})
+                return end_pos
 
         assert end_pos is not None
 

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 __all__ = ["Image", "Figure"]
 
-_num_re = re.compile(r"^\d+(?:\.\d*)?(?:px|ch|em|rem|ex|rex|vw|vh|%)?$")
+_num_re = re.compile(r"^\d+(?:\.\d+)?(?:px|ch|em|rem|ex|rex|vw|vh|%)?$")
 _allowed_aligns = ["top", "middle", "bottom", "left", "center", "right"]
 
 
@@ -29,9 +29,9 @@ def _parse_attrs(options: Dict[str, Any]) -> Dict[str, Any]:
 
     height = options.get("height")
     width = options.get("width")
-    if height and _num_re.match(height):
+    if height and _num_re.fullmatch(height):
         attrs["height"] = height
-    if width and _num_re.match(width):
+    if width and _num_re.fullmatch(width):
         attrs["width"] = width
     if "target" in options:
         attrs["target"] = escape_url(options["target"])

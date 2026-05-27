@@ -115,7 +115,7 @@ def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, No
     while pos < len(src):
         m = _INLINE_SQUARE_BRACKET_RE.search(src, pos)
         if not m:
-            pos = len(src)  # ← CHANGE 1: record we scanned to end
+            pos = len(src)  # FIX: record we scanned to end
             break
 
         pos = m.end()
@@ -129,9 +129,9 @@ def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, No
             level += 1
 
     if found:
-        text = src[start_pos : pos - 1]
+        text = src[start_pos: pos - 1]
         return text, pos
-    return None, pos  # ← CHANGE 2: return pos instead of None
+    return None, pos  # FIX: return pos instead of None
 
 
 def parse_link_label(src: str, start_pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:

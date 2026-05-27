@@ -126,13 +126,17 @@ class InlineParser(Parser[InlineState]):
         text = None
         label, end_pos = parse_link_label(state.src, pos)
         if label is None:
+            # FIX: high-water mark — if we already scanned this region
+            # and found no closing ']', skip immediately without rescanning
+            no_close = getattr(state, '_no_close_bracket_before', 0)
+            if pos <= no_close:
+                state.append_token({"type": "text", "raw": marker})
+                return pos
             text, end_pos = parse_link_text(state.src, pos)
             if text is None:
-                # ← CHANGE: emit skipped content as literal text
-                # so nothing is dropped, then jump ahead to end_pos
-                skipped = state.src[m.start():end_pos]
-                state.append_token({"type": "text", "raw": skipped})
-                return end_pos
+                if end_pos is not None and end_pos > no_close:
+                    state._no_close_bracket_before = end_pos
+                return None
 
         assert end_pos is not None
 

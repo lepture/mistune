@@ -119,6 +119,7 @@ class InlineState:
         self.in_link = False
         self.in_emphasis = False
         self.in_strong = False
+        self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
 
     def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""

@@ -107,7 +107,7 @@ def unescape_char(text: str) -> str:
     return _ESCAPE_CHAR_RE.sub(r"\1", text)
 
 
-def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
+def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, int]]:
     level = 1
     found = False
     start_pos = pos

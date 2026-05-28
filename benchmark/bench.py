@@ -14,7 +14,7 @@ def load_case(filename):
         filepath = os.path.join(ROOT_DIR, "../README.md")
     else:
         filepath = os.path.join(ROOT_DIR, "cases", filename)
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
     name = filename.replace(".txt", "")

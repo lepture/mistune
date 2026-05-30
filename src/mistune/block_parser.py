@@ -390,6 +390,38 @@ class BlockParser(Parser[BlockState]):
     def parse_block_html(self, m: Match[str], state: BlockState) -> Optional[int]:
         return self.parse_raw_html(m, state)
 
+    def _process_container_relationships(self, tokens: list, container_stack: list) -> None:
+        """Process tokens to establish parent-child relationships between containers and code blocks."""
+        # Track current container hierarchy
+        current_containers = []
+        
+        for token in tokens:
+            if token is None:
+                continue
+            if 'type' in token:
+                if token['type'] in ['tabs', 'tip']:
+                    # Add this container to the hierarchy
+                    current_containers.append(token)
+                    # Set container level
+                    token['level'] = len(current_containers)
+                    
+                    # Process children recursively
+                    if 'children' in token:
+                        self._process_container_relationships(token['children'], container_stack)
+                    
+                    # Remove from hierarchy when done
+                    current_containers.pop()
+                elif token['type'] == 'block_code':
+                    # For code blocks, associate with current container
+                    if current_containers:
+                        token['container'] = current_containers[-1]['type']
+                        # If in a tabs container, add language information
+                        if current_containers[-1]['type'] == 'tabs':
+                            info = token.get('attrs', {}).get('info', '')
+                            if info:
+                                lang = info.split(None, 1)[0]
+                                token['language'] = lang
+
     def parse_raw_html(self, m: Match[str], state: BlockState) -> Optional[int]:
         marker = m.group(0).strip()
 
@@ -444,6 +476,11 @@ class BlockParser(Parser[BlockState]):
     def parse(self, state: BlockState, rules: Optional[List[str]] = None) -> None:
         sc = self.compile_sc(rules)
 
+        # Track container hierarchy for tabs and code blocks
+        container_stack = []
+        if state.container_type:
+            container_stack.append(state.container_type)
+
         while state.cursor < state.cursor_max:
             m = sc.search(state.src, state.cursor)
             if not m:
@@ -454,6 +491,17 @@ class BlockParser(Parser[BlockState]):
                 text = state.get_text(end_pos)
                 state.add_paragraph(text)
                 state.cursor = end_pos
+
+            # Check if we're entering a new container
+            lastgroup = m.lastgroup
+            if lastgroup == 'enhanced_directive':
+                # Extract directive type from match
+                directive_text = m.group(0)
+                import re
+                directive_match = re.match(r'^:{3,}[ \t]*(\w+)', directive_text)
+                if directive_match:
+                    directive_type = directive_match.group(1)
+                    container_stack.append(directive_type)
 
             end_pos2 = self.parse_method(m, state)
             if end_pos2:
@@ -468,6 +516,9 @@ class BlockParser(Parser[BlockState]):
             text = state.src[state.cursor :]
             state.add_paragraph(text)
             state.cursor = state.cursor_max
+
+        # Post-process tokens to establish parent-child relationships
+        self._process_container_relationships(state.tokens, container_stack)
 
 
 def _parse_html_to_end(state: BlockState, end_marker: str, start_pos: int) -> int:

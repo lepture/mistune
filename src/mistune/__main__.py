@@ -19,6 +19,10 @@ def _md(args: argparse.Namespace) -> "Markdown":
         # default plugins
         plugins = ["strikethrough", "footnotes", "table", "speedup"]
 
+    if args.enhanced:
+        from .directives import EnhancedDirective, TabsDirective, TipDirective
+        plugins.append(EnhancedDirective([TabsDirective(), TipDirective()]))
+
     if args.renderer == "rst":
         renderer: "BaseRenderer" = RSTRenderer()
     elif args.renderer == "markdown":
@@ -30,6 +34,7 @@ def _md(args: argparse.Namespace) -> "Markdown":
         hard_wrap=args.hardwrap,
         renderer=renderer,
         plugins=plugins,
+        enable_enhanced=args.enhanced,
     )
 
 
@@ -100,6 +105,11 @@ def cli() -> None:
         "--renderer",
         default="html",
         help="specify the output renderer",
+    )
+    parser.add_argument(
+        "--enhanced",
+        action="store_true",
+        help="enable enhanced features like tabs and tip containers",
     )
     parser.add_argument("--version", action="version", version="mistune " + version)
     args = parser.parse_args()

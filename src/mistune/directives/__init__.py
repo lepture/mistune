@@ -7,6 +7,7 @@ from .admonition import Admonition
 from .image import Figure, Image
 from .include import Include
 from .toc import TableOfContents
+from .enhanced import EnhancedDirective, TabsDirective, TipDirective
 
 
 class RstDirective(RSTDirective):  # pragma: no cover
@@ -32,4 +33,7 @@ __all__ = [
     "Include",
     "Image",
     "Figure",
+    "EnhancedDirective",
+    "TabsDirective",
+    "TipDirective",
 ]

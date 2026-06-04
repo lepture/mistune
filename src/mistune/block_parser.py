@@ -370,8 +370,14 @@ class BlockParser(Parser[BlockState]):
         # scan children state
         child = state.child_state(text)
         if state.depth() >= self.max_nested_level - 1:
-            rules = list(self.block_quote_rules)
-            rules.remove("block_quote")
+            # At the nesting limit, stop descending into any further container
+            # blocks. Trimming only "block_quote" still allowed block quotes and
+            # lists to recurse into each other without bound (RecursionError).
+            rules = [
+                rule
+                for rule in self.block_quote_rules
+                if rule not in ("block_quote", "list")
+            ]
         else:
             rules = self.block_quote_rules
 

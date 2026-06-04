@@ -182,3 +182,13 @@ class TestMiscCases(TestCase):
         result = md("foo\n- bar\n\ntable")
         expected = "<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n<p>table</p>"
         self.assertEqual(result.strip(), expected)
+
+    def test_deeply_nested_block_quote_and_list(self):
+        # Block quotes and lists each capped their own nesting at the limit but
+        # not each other's, so alternating them recursed without bound. This
+        # must terminate instead of raising RecursionError.
+        text = "".join(">" * i + " " + "- " * i + "item\n" for i in range(1, 300))
+        md = mistune.create_markdown()
+        md(text)
+        ast = mistune.create_markdown(renderer="ast")
+        ast(text)

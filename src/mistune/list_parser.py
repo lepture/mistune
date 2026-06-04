@@ -56,8 +56,12 @@ def parse_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
     groups: Optional[tuple[str, str, str]] = (m.group("list_1"), marker, text)
 
     if depth >= block.max_nested_level - 1:
-        rules = list(block.list_rules)
-        rules.remove("list")
+        # At the nesting limit, stop descending into any further container
+        # blocks. Trimming only "list" still allowed lists and block quotes to
+        # recurse into each other without bound (RecursionError).
+        rules = [
+            rule for rule in block.list_rules if rule not in ("list", "block_quote")
+        ]
     else:
         rules = block.list_rules
 

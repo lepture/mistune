@@ -3,6 +3,11 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Unreleased
+----------
+
+* Write CLI output as UTF-8 so non-Latin characters render without ``UnicodeEncodeError`` on some Windows locales.
+
 Version 3.2.1
 -------------
 

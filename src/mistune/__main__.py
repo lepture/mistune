@@ -35,7 +35,10 @@ def _md(args: argparse.Namespace) -> "Markdown":
 
 def _output(text: str, args: argparse.Namespace) -> None:
     if args.output:
-        with open(args.output, "w") as f:
+        # Markdown is UTF-8; write it as UTF-8 regardless of the platform
+        # default encoding (e.g. cp1251 on some Windows locales), which would
+        # otherwise raise UnicodeEncodeError on non-Latin characters.
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(text)
     else:
         print(text)
@@ -57,6 +60,18 @@ Here are some use cases of the command line tool:
 
 
 def cli() -> None:
+    # Markdown is UTF-8; make the standard streams use it too so that reading
+    # or printing characters outside the platform default encoding (e.g.
+    # cp1251 on some Windows locales) does not raise UnicodeEncodeError /
+    # UnicodeDecodeError.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            try:
+                reconfigure(encoding="utf-8")
+            except (OSError, ValueError):  # detached or already-closed stream
+                pass
+
     parser = argparse.ArgumentParser(
         prog="python -m mistune",
         description=CMD_HELP,

@@ -127,7 +127,7 @@ class RSTRenderer(BaseRenderer):
 
     def block_quote(self, token: Dict[str, Any], state: BlockState) -> str:
         text = indent(self.render_children(token, state), "   ")
-        prev = token["prev"]
+        prev = token.get("prev")
         ignore_blocks = (
             "paragraph",
             "thematic_break",

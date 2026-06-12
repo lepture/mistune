@@ -61,3 +61,39 @@ Escaped dollar sign in math: $x=\$$
 .
 <p>Escaped dollar sign in math: <span class="math">\(x=\$\)</span></p>
 ````````````````````````````````
+
+```````````````````````````````` example
+The $n$th element is valid.
+.
+<p>The <span class="math">\(n\)</span>th element is valid.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+Result is $x^2$.
+.
+<p>Result is <span class="math">\(x^2\)</span>.</p>
+````````````````````````````````
+
+## Currency rejection
+
+```````````````````````````````` example
+Price is $51,300 and cost is $51,300 total.
+.
+<p>Price is $51,300 and cost is $51,300 total.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+The $1.6T valuation narrative.
+.
+<p>The $1.6T valuation narrative.</p>
+````````````````````````````````
+
+## Cross-line rejection
+
+```````````````````````````````` example
+Line one $500
+Line two $600
+.
+<p>Line one $500
+Line two $600</p>
+````````````````````````````````

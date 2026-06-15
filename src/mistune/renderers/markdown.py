@@ -8,6 +8,10 @@ from ._list import render_list
 
 fenced_re = re.compile(r"^[`~]+", re.M)
 
+#: leading markers that would be parsed as a new block (list, heading, block
+#: quote) if they appear unescaped at the start of a line.
+_block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
+
 
 class MarkdownRenderer(BaseRenderer):
     """A renderer to re-format Markdown text."""
@@ -35,7 +39,9 @@ class MarkdownRenderer(BaseRenderer):
         return self.render_tokens(children, state)
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
-        return cast(str, token["raw"])
+        # a backtick always opens a code span, so it must stay escaped to
+        # survive a re-parse as literal text.
+        return cast(str, token["raw"]).replace("`", "\\`")
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"
@@ -87,7 +93,7 @@ class MarkdownRenderer(BaseRenderer):
 
     def paragraph(self, token: Dict[str, Any], state: BlockState) -> str:
         text = self.render_children(token, state)
-        return text + "\n\n"
+        return _escape_block_prefix(text) + "\n\n"
 
     def heading(self, token: Dict[str, Any], state: BlockState) -> str:
         level = cast(int, token["attrs"]["level"])
@@ -99,7 +105,7 @@ class MarkdownRenderer(BaseRenderer):
         return "***\n\n"
 
     def block_text(self, token: Dict[str, Any], state: BlockState) -> str:
-        return self.render_children(token, state) + "\n"
+        return _escape_block_prefix(self.render_children(token, state)) + "\n"
 
     def block_code(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token.get("attrs", {})
@@ -127,6 +133,20 @@ class MarkdownRenderer(BaseRenderer):
 
     def list(self, token: Dict[str, Any], state: BlockState) -> str:
         return render_list(self, token, state)
+
+
+def _escape_block_prefix(text: str) -> str:
+    """Backslash-escape a leading block marker on each line so that literal
+    text is not re-parsed as a list, heading or block quote."""
+    return "\n".join(_escape_line_prefix(line) for line in text.split("\n"))
+
+
+def _escape_line_prefix(line: str) -> str:
+    m = _block_prefix_re.match(line)
+    if not m:
+        return line
+    indent_, marker = m.group(1), m.group(2)
+    return indent_ + marker[:-1] + "\\" + marker[-1] + line[m.end(2) :]
 
 
 def _get_fenced_marker(code: str) -> str:

@@ -41,9 +41,6 @@ jobs:
         pip install pytest pytest-cov
 
     - name: Test with Python ${{ matrix.python }}
-      run: pytest
-
-    - name: Report coverage
       run: pytest --cov=mistune --cov-report=xml
 
     - name: Upload coverage to Codecov

@@ -16,15 +16,20 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
     strategy:
       fail-fast: false
       max-parallel: 6
       matrix:
         python: ["2.7", "3.7", "3.8", "3.9", "3.10", "pypy3"]
+        include:
+          - {python: "2.7", image: "python:2.7"}
+          - {python: "3.7", image: "python:3.7"}
 
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python }}
+      if: ${{ matrix.image == null }}
       uses: actions/setup-python@v2.1.4
       with:
         python-version: ${{ matrix.python }}

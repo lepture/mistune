@@ -30,6 +30,13 @@ def _render_list_item(
 ) -> str:
     leading = cast(str, parent["leading"])
     text = ""
+    # The task_lists plugin rewrites a list_item into a task_list_item and
+    # moves the "[ ] "/"[x] " marker into attrs. Unlike the html renderer, the
+    # markdown and rst renderers render list items here rather than through a
+    # per-token method, so re-emit the checkbox to keep it from being silently
+    # dropped on round-trip.
+    if item["type"] == "task_list_item":
+        text = "[x] " if item["attrs"]["checked"] else "[ ] "
     for tok in item["children"]:
         if tok["type"] == "list":
             tok["parent"] = parent

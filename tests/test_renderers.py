@@ -65,3 +65,41 @@ class TestMarkdownRendererRoundTrip(TestCase):
             "ratio a/b is fine\n",
         ):
             self.assert_round_trip(text)
+
+
+class TestTaskListRoundTrip(TestCase):
+    """The task_lists plugin rewrites a list_item into a task_list_item and
+    moves the checkbox marker into attrs. The markdown and rst renderers must
+    re-emit it instead of silently dropping it (issues #401 and #441)."""
+
+    to_html = create_markdown(escape=False, plugins=["task_lists"])
+    reformat = create_markdown(renderer=MarkdownRenderer(), plugins=["task_lists"])
+    to_rst = create_markdown(renderer=RSTRenderer(), plugins=["task_lists"])
+
+    def assert_round_trip(self, text):
+        self.assertEqual(
+            self.to_html(self.reformat(text)),
+            self.to_html(text),
+        )
+
+    def test_checkbox_preserved(self):
+        # the exact issue example: the checkbox used to disappear entirely
+        self.assertEqual(
+            self.reformat("- [x] done\n- [ ] todo\n"),
+            "- [x] done\n- [ ] todo\n",
+        )
+
+    def test_round_trip_variants(self):
+        for text in (
+            "- [x] done\n- [ ] todo\n",
+            "- [X] upper-x is checked\n",
+            "1. [ ] a\n2. [x] b\n",
+            "- [ ] outer\n  - [x] inner\n",
+            "- [ ] line one\n  line two\n",
+            "- plain item\n- [ ] task item\n",
+        ):
+            self.assert_round_trip(text)
+
+    def test_rst_preserves_checkbox(self):
+        self.assertIn("[x] done", self.to_rst("- [x] done\n"))
+        self.assertIn("[ ] todo", self.to_rst("- [ ] todo\n"))

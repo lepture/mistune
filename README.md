@@ -17,6 +17,14 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 </div>
 
+> [!NOTE]
+>
+> I’ve released [Wenmode](https://github.com/lepture/wenmode), a new Markdown parser inspired by the lessons learned from Mistune.
+>
+> Wenmode focuses on fast CommonMark-style parsing, explicit rule composition, mdast-compatible AST output, safe HTML defaults, streaming output, and pluggable renderers.
+>
+> In the current benchmark suite, Wenmode’s core Markdown-to-HTML path is about 1.5-1.8x as fast as Mistune across the tested documentation corpora. See the [benchmark results](https://wenmode.lepture.com/benchmarks/) for the exact setup and numbers.
+
 ## Paid plugins
 
 You can ask me to create a custom mistune plugin or directive for your needs with GitHub sponsor

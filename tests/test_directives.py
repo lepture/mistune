@@ -85,7 +85,7 @@ class TestDirectiveInclude(BaseTestCase):
         self.assertIn("Could not find file", html)
         self.assertIn("<div>include html</div>", html)
         self.assertIn("<blockquote>", html)
-        self.assertIn("# Table of Contents", html)
+        self.assertIn("Could not include outside source dir", html)
 
     def test_include_missing_source(self):
         s = ".. include:: foo.txt"

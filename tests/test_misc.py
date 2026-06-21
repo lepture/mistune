@@ -154,6 +154,41 @@ class TestMiscCases(TestCase):
         md = mistune.Markdown(mistune.HTMLRenderer())
         md.use(url)
 
+    def test_inline_plugin_refreshes_fast_trigger_cache(self):
+        def parse_at(inline, m, state):
+            state.append_token({"type": "at", "raw": m.group(0)})
+            return m.end()
+
+        def render_at(renderer, text):
+            return "<at>" + text + "</at>"
+
+        def plugin(md):
+            md.inline.register("at", r"@+", parse_at)
+            md.renderer.register("at", render_at)
+
+        md = mistune.create_markdown(escape=False)
+        md("plain text")
+        md.use(plugin)
+
+        self.assertEqual(md("@@").strip(), "<p><at>@@</at></p>")
+
+    def test_inline_plugin_with_untracked_trigger_uses_regex_scanner(self):
+        def parse_x(inline, m, state):
+            state.append_token({"type": "xword", "raw": m.group(0)})
+            return m.end()
+
+        def render_x(renderer, text):
+            return "<x>" + text + "</x>"
+
+        def plugin(md):
+            md.inline.register("xword", r"(?=x)x+", parse_x)
+            md.renderer.register("xword", render_x)
+
+        md = mistune.create_markdown(escape=False)
+        md.use(plugin)
+
+        self.assertEqual(md("xx").strip(), "<p><x>xx</x></p>")
+
     def test_markdown_func(self):
         result = mistune.markdown("**b**")
         expected = "<p><strong>b</strong></p>\n"
@@ -248,11 +283,18 @@ class TestMiscCases(TestCase):
         expected = "<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n<p>table</p>"
         self.assertEqual(result.strip(), expected)
 
+    def test_max_nested_level_setting(self):
+        self.assertEqual(mistune.BlockParser().max_nested_level, 20)
+        self.assertEqual(mistune.create_markdown().block.max_nested_level, 20)
+        md = mistune.Markdown(block=mistune.BlockParser(max_nested_level=7))
+        self.assertEqual(md.block.max_nested_level, 7)
+
     def test_deeply_nested_block_quote_and_list(self):
         # Block quotes and lists each capped their own nesting at the limit but
         # not each other's, so alternating them recursed without bound. This
         # must terminate instead of raising RecursionError.
-        text = "".join(">" * i + " " + "- " * i + "item\n" for i in range(1, 300))
+        max_level = mistune.create_markdown().block.max_nested_level
+        text = "".join(">" * i + " " + "- " * i + "item\n" for i in range(1, max_level + 80))
         md = mistune.create_markdown()
         md(text)
         ast = mistune.create_markdown(renderer="ast")

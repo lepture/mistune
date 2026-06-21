@@ -17,7 +17,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 if sys.version_info >= (3, 11):
@@ -201,6 +200,7 @@ class Parser(Generic[ST]):
         :param before: insert this rule before a built-in rule
         """
         self._methods[name] = lambda m, state: func(self, m, state)
+        self.__sc.clear()
         if pattern:
             self.specification[name] = pattern
         if name not in self.rules:
@@ -246,7 +246,7 @@ class BaseRenderer(object):
 
     def _get_method(self, name: str) -> Callable[..., str]:
         try:
-            return cast(Callable[..., str], object.__getattribute__(self, name))
+            return object.__getattribute__(self, name)
         except AttributeError:
             method = self.__methods.get(name)
             if not method:

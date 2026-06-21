@@ -86,6 +86,8 @@ class InlineParser(Parser[InlineState]):
 
         self.hard_wrap = hard_wrap
         self._fast_trigger_chars: Optional[Set[str]] = None
+        self._fast_trigger_re: Optional[re.Pattern[str]] = None
+        self._fast_trigger_re_chars: Optional[Tuple[str, ...]] = None
         # lazy add linebreak
         if hard_wrap:
             self.specification["linebreak"] = self.HARD_LINEBREAK
@@ -103,6 +105,8 @@ class InlineParser(Parser[InlineState]):
     ) -> None:
         super().register(name, pattern, func, before=before)
         self._fast_trigger_chars = None
+        self._fast_trigger_re = None
+        self._fast_trigger_re_chars = None
 
     def parse_escape(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
@@ -372,24 +376,23 @@ class InlineParser(Parser[InlineState]):
         if chars is None:
             return None
 
-        end_pos: Optional[int] = None
-        for c in chars:
-            if c == "\n":
-                continue
-            p = src.find(c, pos)
-            if p != -1 and (end_pos is None or p < end_pos):
-                end_pos = p
-
-        if "\n" in chars:
-            p = src.find("\n", pos)
-            if p != -1:
-                p = self._find_linebreak_start(src, pos, p)
-                if end_pos is None or p < end_pos:
-                    end_pos = p
-
-        if end_pos is None:
+        trigger_re = self._get_fast_trigger_re(chars)
+        m = trigger_re.search(src, pos)
+        if m is None:
             return len(src)
-        return end_pos
+
+        if m.group(0) == "\n":
+            return self._find_linebreak_start(src, pos, m.start())
+        return m.start()
+
+    def _get_fast_trigger_re(self, chars: Set[str]) -> re.Pattern[str]:
+        key = tuple(sorted(chars))
+        if self._fast_trigger_re is None or self._fast_trigger_re_chars != key:
+            pattern = "[" + re.escape("".join(key)) + "]"
+            self._fast_trigger_re = re.compile(pattern)
+            self._fast_trigger_re_chars = key
+        assert self._fast_trigger_re is not None
+        return self._fast_trigger_re
 
     def _find_linebreak_start(self, src: str, min_pos: int, newline_pos: int) -> int:
         pos = newline_pos

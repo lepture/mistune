@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mistune import create_markdown
+from mistune import BlockState, HTMLRenderer, create_markdown
 from mistune.renderers.rst import RSTRenderer
 from mistune.renderers.markdown import MarkdownRenderer
 from tests import BaseTestCase
@@ -65,3 +65,19 @@ class TestMarkdownRendererRoundTrip(TestCase):
             "ratio a/b is fine\n",
         ):
             self.assert_round_trip(text)
+
+
+class TestRendererMethodRegistration(TestCase):
+    def test_registered_renderer_method(self):
+        renderer = HTMLRenderer(escape=False)
+
+        def render_wiki(renderer, key, title):
+            return f'<a href="/wiki/{key}">{title}</a>'
+
+        renderer.register("wiki", render_wiki)
+        token = {"type": "wiki", "raw": "python", "attrs": {"title": "Python"}}
+
+        self.assertEqual(
+            renderer.render_token(token, BlockState()),
+            '<a href="/wiki/python">Python</a>',
+        )

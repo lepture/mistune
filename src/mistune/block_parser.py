@@ -20,6 +20,8 @@ from .helpers import (
 )
 from .list_parser import parse_list, LIST_PATTERN
 
+DEFAULT_MAX_NESTED_LEVEL = 20
+
 _INDENT_CODE_TRIM = re.compile(r"^ {1,4}", flags=re.M)
 _ATX_HEADING_TRIM = re.compile(r"(\s+|^)#+\s*$")
 _BLOCK_QUOTE_TRIM = re.compile(r"^ ?", flags=re.M)
@@ -92,7 +94,7 @@ class BlockParser(Parser[BlockState]):
         self,
         block_quote_rules: Optional[List[str]] = None,
         list_rules: Optional[List[str]] = None,
-        max_nested_level: int = 100,
+        max_nested_level: int = DEFAULT_MAX_NESTED_LEVEL,
     ):
         super(BlockParser, self).__init__()
 

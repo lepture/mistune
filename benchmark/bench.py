@@ -48,8 +48,7 @@ def get_markdown_parsers():
     )
 
     parsers[f"mistune ({mistune.__version__})"] = mistune.html
-    parsers["mistune (slow)"] = mistune.create_markdown(escape=False)
-    parsers["mistune (fast)"] = mistune.create_markdown(escape=False, plugins=["speedup"])
+    parsers["mistune (core)"] = mistune.create_markdown(escape=False)
     parsers["mistune (full)"] = mistune.create_markdown(
         escape=False,
         plugins=[
@@ -73,7 +72,6 @@ def get_markdown_parsers():
                     Include(),
                 ]
             ),
-            "speedup",
         ],
     )
 

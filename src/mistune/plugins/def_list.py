@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Optional, Tuple
 
 from ..util import strip_end
 
@@ -12,76 +12,43 @@ __all__ = ["def_list"]
 
 # https://michelf.ca/projects/php-markdown/extra/#def-list
 
-DEF_PATTERN = (
-    r"^(?P<def_list_head>(?:[^\n]+\n)+?)"
-    r"\n?(?:"
-    r"\:[ \t]+.*\n"
-    r"(?:[^\n]+\n)*"  # lazy continue line
-    r"(?:(?:[ \t]*\n)*[ \t]+[^\n]+\n)*"
-    r"(?:[ \t]*\n)*"
-    r")+"
-)
-DEF_RE = re.compile(DEF_PATTERN, re.M)
+DEF_PATTERN = r"^:[ \t]+.*(?:\n|$)"
 DD_START_RE = re.compile(r"^:[ \t]+", re.M)
 TRIM_RE = re.compile(r"^ {0,4}", re.M)
 HAS_BLANK_LINE_RE = re.compile(r"\n[ \t]*\n$")
 
 
-def parse_def_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
-    pos = m.end()
-    children = list(_parse_def_item(block, m))
+def parse_def_list(block: "BlockParser", m: Match[str], state: "BlockState") -> Optional[int]:
+    head = _get_previous_paragraph(state)
+    if head is None:
+        return None
 
-    m2 = DEF_RE.match(state.src, pos)
-    while m2:
-        children.extend(list(_parse_def_item(block, m2)))
-        pos = m2.end()
-        m2 = DEF_RE.match(state.src, pos)
+    definitions, end_pos = _collect_definitions(state.src, state.cursor, state.cursor_max, head[1])
+    if not definitions:
+        return None
 
-    state.append_token(
-        {
-            "type": "def_list",
-            "children": children,
-        }
-    )
-    return pos
+    children = list(_parse_def_item(block, head[0], definitions))
+    _replace_previous_paragraph(state, children)
+    return end_pos
 
 
-def _parse_def_item(block: "BlockParser", m: Match[str]) -> Iterable[Dict[str, Any]]:
-    head = m.group("def_list_head")
+def _parse_def_item(
+    block: "BlockParser",
+    head: str,
+    definitions: List[Tuple[str, bool]],
+) -> Iterable[Dict[str, Any]]:
     for line in head.splitlines():
         yield {
             "type": "def_list_head",
             "text": line,
         }
 
-    src = m.group(0)
-    end = len(head)
-
-    m2 = DD_START_RE.search(src, end)
-    assert m2 is not None
-    start = m2.start()
-    prev_blank_line = src[end:start] == "\n"
-    while m2:
-        m2 = DD_START_RE.search(src, start + 1)
-        if not m2:
-            break
-
-        end = m2.start()
-        text = src[start:end].replace(":", " ", 1)
-        children = _process_text(block, text, prev_blank_line)
-        prev_blank_line = bool(HAS_BLANK_LINE_RE.search(text))
+    for text, loose in definitions:
+        children = _process_text(block, text, loose)
         yield {
             "type": "def_list_item",
             "children": children,
         }
-        start = end
-
-    text = src[start:].replace(":", " ", 1)
-    children = _process_text(block, text, prev_blank_line)
-    yield {
-        "type": "def_list_item",
-        "children": children,
-    }
 
 
 def _process_text(block: "BlockParser", text: str, loose: bool) -> List[Any]:
@@ -94,6 +61,91 @@ def _process_text(block: "BlockParser", text: str, loose: bool) -> List[Any]:
     if not loose and len(tokens) == 1 and tokens[0]["type"] == "paragraph":
         tokens[0]["type"] = "block_text"
     return tokens
+
+
+def _get_previous_paragraph(state: "BlockState") -> Optional[Tuple[str, bool]]:
+    if not state.tokens:
+        return None
+
+    last_token = state.tokens[-1]
+    if last_token["type"] == "paragraph":
+        return last_token["text"], False
+
+    if last_token["type"] == "blank_line" and len(state.tokens) > 1:
+        prev_token = state.tokens[-2]
+        if prev_token["type"] == "paragraph":
+            return prev_token["text"], True
+
+    return None
+
+
+def _replace_previous_paragraph(state: "BlockState", children: List[Dict[str, Any]]) -> None:
+    if state.tokens[-1]["type"] == "blank_line":
+        state.tokens.pop()
+    state.tokens.pop()
+
+    if state.tokens and state.tokens[-1]["type"] == "def_list":
+        state.tokens[-1]["children"].extend(children)
+    else:
+        state.append_token(
+            {
+                "type": "def_list",
+                "children": children,
+            }
+        )
+
+
+def _collect_definitions(src: str, pos: int, max_pos: int, loose: bool) -> Tuple[List[Tuple[str, bool]], int]:
+    definitions = []
+    while pos < max_pos:
+        line = _get_line(src, pos, max_pos)
+        if not DD_START_RE.match(line):
+            break
+
+        start = pos
+        pos += len(line)
+        pos = _scan_definition_tail(src, pos, max_pos)
+        text = src[start:pos].replace(":", " ", 1)
+        definitions.append((text, loose))
+        loose = bool(HAS_BLANK_LINE_RE.search(text))
+
+    return definitions, pos
+
+
+def _scan_definition_tail(src: str, pos: int, max_pos: int) -> int:
+    while pos < max_pos:
+        line = _get_line(src, pos, max_pos)
+        if DD_START_RE.match(line):
+            break
+
+        if line.strip():
+            pos += len(line)
+            continue
+
+        while pos < max_pos:
+            line = _get_line(src, pos, max_pos)
+            if line.strip():
+                break
+            pos += len(line)
+
+        if pos >= max_pos:
+            break
+
+        line = _get_line(src, pos, max_pos)
+        if DD_START_RE.match(line):
+            break
+        if line.startswith((" ", "\t")):
+            continue
+        return pos
+
+    return pos
+
+
+def _get_line(src: str, pos: int, max_pos: int) -> str:
+    end = src.find("\n", pos, max_pos)
+    if end == -1:
+        return src[pos:max_pos]
+    return src[pos : end + 1]
 
 
 def render_def_list(renderer: "BaseRenderer", text: str) -> str:

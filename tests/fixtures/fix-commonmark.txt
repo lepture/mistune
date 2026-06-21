@@ -1,9 +1,9 @@
-Fix problems that commonmark has.
+Historical CommonMark edge cases.
 
 
 ## Links
 
-Links can't contain links.
+Autolinks in link text stay literal.
 
 ```````````````````````````````` example
 [<https://example.com>](/foo)
@@ -19,53 +19,31 @@ Links can't contain links.
 
 ## Emphasis
 
-`<em>` doesn't contain `<em>`, `<strong>` doesn't contain `<strong>`.
+CommonMark delimiter handling is the default.
 
 ```````````````````````````````` example
 *_em_* __**strong**__ ______m______
 .
-<p><em>_em_</em> <strong>**strong**</strong> ______m______</p>
+<p><em><em>em</em></em> <strong><strong>strong</strong></strong> <strong><strong><strong>m</strong></strong></strong></p>
 ````````````````````````````````
-
-### Non aggressive emphasis
 
 ```````````````````````````````` example
 *a **b c* d**
 .
-<p><em>a **b c</em> d**</p>
-````````````````````````````````
-
-While CommonMark would render it into:
-
-```
 <p><em>a <em><em>b c</em> d</em></em></p>
-```
+````````````````````````````````
 
 ```````````````````````````````` example
 *a **b c* d**
 .
-<p><em>a **b c</em> d**</p>
-````````````````````````````````
-
-While CommonMark would render it into:
-
-```
 <p><em>a <em><em>b c</em> d</em></em></p>
-```
-
-What if the string is:
+````````````````````````````````
 
 ```````````````````````````````` example
 *a **b c* d
 .
-<p><em>a **b c</em> d</p>
-````````````````````````````````
-
-CommonMark would still be a mess:
-
-```
 <p>*a *<em>b c</em> d</p>
-```
+````````````````````````````````
 
 
 ## Max depth
@@ -80,7 +58,11 @@ CommonMark would still be a mess:
 <blockquote>
 <blockquote>
 <blockquote>
-<p>&gt; &gt; b</p>
+<blockquote>
+<blockquote>
+<p>b</p>
+</blockquote>
+</blockquote>
 </blockquote>
 </blockquote>
 </blockquote>
@@ -106,9 +88,13 @@ CommonMark would still be a mess:
 <li>c<ul>
 <li>d<ul>
 <li>e<ul>
-<li>f
-- g
-- h</li>
+<li>f<ul>
+<li>g<ul>
+<li>h</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

@@ -26,6 +26,56 @@ class TestMiscCases(TestCase):
         result = md("foo\nbar")
         self.assertEqual(result.strip(), expected)
 
+    def test_speedup_plugin_is_compat_noop(self):
+        base = mistune.create_markdown(escape=False)
+        compat = mistune.create_markdown(escape=False, plugins=["speedup"])
+        text = "foo **bar**\n\n[link](https://example.com)\n"
+
+        self.assertEqual(compat(text), base(text))
+        self.assertNotIn("paragraph", compat.block.rules)
+        self.assertNotIn("text", compat.inline.rules)
+
+    def test_block_plain_paragraph_fast_path_interrupts(self):
+        cases = [
+            (
+                mistune.create_markdown(escape=False),
+                "Title\n---\n",
+                "<h2>Title</h2>",
+            ),
+            (
+                mistune.create_markdown(escape=False),
+                "foo\n- bar\n",
+                "<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>",
+            ),
+            (
+                mistune.create_markdown(escape=False, plugins=["table"]),
+                "A | B\n--|--\n1 | 2\n",
+                "<table>\n<thead>\n<tr>\n  <th>A</th>\n  <th>B</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n  <td>1</td>\n  <td>2</td>\n</tr>\n</tbody>\n</table>",
+            ),
+            (
+                mistune.create_markdown(escape=False, plugins=["def_list"]),
+                "Term\n: def\n",
+                "<dl>\n<dt>Term</dt>\n<dd>def</dd>\n</dl>",
+            ),
+        ]
+        for md, text, html in cases:
+            self.assertEqual(md(text).strip(), html)
+
+    def test_block_quote_line_based_boundaries(self):
+        cases = {
+            "> foo\nbar\n": "<blockquote>\n<p>foo\nbar</p>\n</blockquote>",
+            "> foo\n>\nbar\n": "<blockquote>\n<p>foo</p>\n</blockquote>\n<p>bar</p>",
+            "> foo\n>\n> bar\n": "<blockquote>\n<p>foo</p>\n<p>bar</p>\n</blockquote>",
+            "> foo\n---\n": "<blockquote>\n<p>foo</p>\n</blockquote>\n<hr />",
+        }
+        for text, html in cases.items():
+            self.assertEqual(mistune.html(text).strip(), html)
+
+    def test_list_tab_continuation_columns(self):
+        result = mistune.html("-\t\tfoo\n")
+        expected = "<ul>\n<li><pre><code>  foo</code></pre>\n</li>\n</ul>"
+        self.assertEqual(result.strip(), expected)
+
     def test_escape_html(self):
         md = mistune.create_markdown(escape=True)
         result = md("<div>1</div>")
@@ -73,6 +123,16 @@ class TestMiscCases(TestCase):
         result = mistune.html("[link][h]\n\n[h]: /foo")
         expected = '<p><a href="/foo">link</a></p>'
         self.assertEqual(result.strip(), expected)
+
+    def test_link_bracket_cache_cases(self):
+        cases = {
+            "[[a]](/url)": '<p><a href="/url">[a]</a></p>',
+            "[a [b] c](/url)": '<p><a href="/url">a [b] c</a></p>',
+            r"[a\]b](/url)": '<p><a href="/url">a]b</a></p>',
+            "[a [b [c": "<p>[a [b [c</p>",
+        }
+        for text, html in cases.items():
+            self.assertEqual(mistune.html(text).strip(), html)
 
     def test_allow_harmful_protocols(self):
         renderer = mistune.HTMLRenderer(allow_harmful_protocols=True)
@@ -131,6 +191,11 @@ class TestMiscCases(TestCase):
             },
         ]
         self.assertEqual(result, expected)
+
+    def test_emphasis_default(self):
+        result = mistune.html("*_em_* __**strong**__")
+        expected = "<p><em><em>em</em></em> <strong><strong>strong</strong></strong></p>"
+        self.assertEqual(result.strip(), expected)
 
     def test_ast_url(self):
         md = mistune.create_markdown(escape=False, renderer=None)
@@ -192,3 +257,13 @@ class TestMiscCases(TestCase):
         md(text)
         ast = mistune.create_markdown(renderer="ast")
         ast(text)
+
+    def test_table_plugin_redos_candidates(self):
+        md = mistune.create_markdown(escape=False, plugins=["table"])
+        md("|x" + " " * 16000 + "|\n|---|\n")
+        md("|x|\n" + "|" * 32000 + "\n")
+
+    def test_def_list_plugin_redos_candidate(self):
+        md = mistune.create_markdown(escape=False, plugins=["def_list"])
+        result = md("x\n" * 8000)
+        self.assertTrue(result.startswith("<p>x\nx\n"))

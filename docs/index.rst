@@ -9,7 +9,7 @@ Mistune: Python Markdown Parser
 Release v\ |version|.
 
 A fast yet powerful Python Markdown parser with renderers and plugins,
-compatible with sane CommonMark rules.
+compatible with CommonMark 0.31.2.
 
 Using old Mistune? Checkout docs:
 

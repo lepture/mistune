@@ -9,21 +9,7 @@ PUNCTUATION = r"[" + re.escape(string.punctuation) + r"]"
 
 LINK_LABEL = r"(?:[^\\\[\]]|\\.){0,500}"
 
-LINK_BRACKET_START = re.compile(r"[ \t]*\n?[ \t]*<")
-LINK_BRACKET_RE = re.compile(r"<([^<>\n\\\x00]*)>")
-LINK_HREF_BLOCK_RE = re.compile(r"[ \t]*\n?[ \t]*([^\s]+)(?:\s|$)")
-LINK_HREF_INLINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*([^ \t\n]*?)(?:[ \t\n]|"
-    r"(?:" + PREVENT_BACKSLASH + r"\)))"
-)
-
-LINK_TITLE_RE = re.compile(
-    r"[ \t\n]+("
-    r'"(?:\\' + PUNCTUATION + r'|[^"\\\x00])*"|'
-    r"'(?:\\" + PUNCTUATION + r"|[^'\\\x00])*'"
-    r")"
-)
-PAREN_END_RE = re.compile(r"\s*\)")
+ASCII_WHITESPACE = " \t\n\r\f"
 
 HTML_TAGNAME = r"[A-Za-z][A-Za-z0-9-]*"
 HTML_ATTRIBUTES = (
@@ -143,36 +129,70 @@ def parse_link_label(src: str, start_pos: int) -> Union[Tuple[str, int], Tuple[N
 
 
 def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tuple[str, int], Tuple[None, None]]:
-    m = LINK_BRACKET_START.match(src, start_pos)
-    if m:
-        start_pos = m.end() - 1
-        m = LINK_BRACKET_RE.match(src, start_pos)
-        if m:
-            return m.group(1), m.end()
+    pos = _skip_link_start_whitespace(src, start_pos)
+    if pos >= len(src):
         return None, None
 
-    if block:
-        m = LINK_HREF_BLOCK_RE.match(src, start_pos)
-    else:
-        m = LINK_HREF_INLINE_RE.match(src, start_pos)
-
-    if not m:
+    if src[pos] == "<":
+        return _parse_angle_link_href(src, pos)
+    if block and src[pos] in ASCII_WHITESPACE:
         return None, None
 
-    end_pos = m.end()
-    href = m.group(1)
+    start = pos
+    level = 0
+    while pos < len(src):
+        c = src[pos]
+        if c in ASCII_WHITESPACE:
+            break
+        if c == "\x00":
+            return None, None
+        if c == "\\":
+            pos = min(pos + 2, len(src))
+            continue
+        if not block:
+            if c == "(":
+                level += 1
+            elif c == ")":
+                if level == 0:
+                    break
+                level -= 1
+        pos += 1
 
-    if block and src[end_pos - 1] == href[-1]:
-        return href, end_pos
-    return href, end_pos - 1
+    if not block and level != 0:
+        return None, None
+    return src[start:pos], pos
 
 
 def parse_link_title(src: str, start_pos: int, max_pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
-    m = LINK_TITLE_RE.match(src, start_pos, max_pos)
-    if m:
-        title = m.group(1)[1:-1]
-        title = unescape_char(title)
-        return title, m.end()
+    pos = start_pos
+    if pos >= max_pos or src[pos] not in ASCII_WHITESPACE:
+        return None, None
+
+    pos = _skip_ascii_whitespace(src, pos, max_pos)
+    if pos >= max_pos:
+        return None, None
+
+    opener = src[pos]
+    closer = {"'": "'", '"': '"', "(": ")"}.get(opener)
+    if closer is None:
+        return None, None
+
+    pos += 1
+    title = []
+    while pos < max_pos:
+        c = src[pos]
+        if c == "\x00":
+            return None, None
+        if c == "\\":
+            if pos + 1 < max_pos:
+                title.append(src[pos : pos + 2])
+                pos += 2
+                continue
+            return None, None
+        if c == closer:
+            return unescape_char("".join(title)), pos + 1
+        title.append(src[pos])
+        pos += 1
     return None, None
 
 
@@ -183,12 +203,46 @@ def parse_link(src: str, pos: int) -> Union[Tuple[Dict[str, Any], int], Tuple[No
     assert href_pos is not None
     title, title_pos = parse_link_title(src, href_pos, len(src))
     next_pos = title_pos or href_pos
-    m = PAREN_END_RE.match(src, next_pos)
-    if not m:
+    next_pos = _skip_ascii_whitespace(src, next_pos)
+    if next_pos >= len(src) or src[next_pos] != ")":
         return None, None
 
     href = unescape_char(href)
     attrs = {"url": escape_url(href)}
     if title:
         attrs["title"] = title
-    return attrs, m.end()
+    return attrs, next_pos + 1
+
+
+def _skip_ascii_whitespace(src: str, pos: int, max_pos: Union[int, None] = None) -> int:
+    if max_pos is None:
+        max_pos = len(src)
+    while pos < max_pos and src[pos] in ASCII_WHITESPACE:
+        pos += 1
+    return pos
+
+
+def _skip_link_start_whitespace(src: str, pos: int) -> int:
+    while pos < len(src) and src[pos] in " \t":
+        pos += 1
+    if pos < len(src) and src[pos] in "\n\r":
+        if src[pos] == "\r" and pos + 1 < len(src) and src[pos + 1] == "\n":
+            pos += 2
+        else:
+            pos += 1
+        while pos < len(src) and src[pos] in " \t":
+            pos += 1
+    return pos
+
+
+def _parse_angle_link_href(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
+    start = pos + 1
+    pos = start
+    while pos < len(src):
+        c = src[pos]
+        if c == ">":
+            return src[start:pos], pos + 1
+        if c in "<\\\n\r\x00":
+            return None, None
+        pos += 1
+    return None, None

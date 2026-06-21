@@ -12,6 +12,8 @@ from typing import (
     MutableMapping,
     Optional,
     Pattern,
+    Set,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -36,6 +38,7 @@ class BlockState:
     list_tight: bool
     parent: Any
     env: MutableMapping[str, Any]
+    lazy_line_starts: Set[int]
 
     def __init__(self, parent: Optional[Any] = None) -> None:
         self.src = ""
@@ -48,6 +51,7 @@ class BlockState:
         # for list and block quote chain
         self.list_tight = True
         self.parent = parent
+        self.lazy_line_starts = set()
 
         # for saving def references
         if parent:
@@ -55,9 +59,11 @@ class BlockState:
         else:
             self.env = {"ref_links": {}}
 
-    def child_state(self, src: str) -> "BlockState":
+    def child_state(self, src: str, lazy_line_starts: Optional[Set[int]] = None) -> "BlockState":
         child = self.__class__(self)
         child.process(src)
+        if lazy_line_starts:
+            child.lazy_line_starts = lazy_line_starts
         return child
 
     def process(self, src: str) -> None:
@@ -65,12 +71,18 @@ class BlockState:
         self.cursor_max = len(src)
 
     def find_line_end(self) -> int:
-        m = _LINE_END.search(self.src, self.cursor)
+        return self.find_line_end_at(self.cursor)
+
+    def find_line_end_at(self, pos: int) -> int:
+        m = _LINE_END.search(self.src, pos)
         assert m is not None
         return m.end()
 
     def get_text(self, end_pos: int) -> str:
         return self.src[self.cursor : end_pos]
+
+    def get_line(self, start_pos: int) -> str:
+        return self.src[start_pos : self.find_line_end_at(start_pos)]
 
     def last_token(self) -> Any:
         if self.tokens:
@@ -117,9 +129,8 @@ class InlineState:
         self.tokens: List[Dict[str, Any]] = []
         self.in_image = False
         self.in_link = False
-        self.in_emphasis = False
-        self.in_strong = False
         self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
+        self.link_brackets: Dict[int, Tuple[str, Dict[int, int]]] = {}
 
     def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""
@@ -134,8 +145,7 @@ class InlineState:
         state = self.__class__(self.env)
         state.in_image = self.in_image
         state.in_link = self.in_link
-        state.in_emphasis = self.in_emphasis
-        state.in_strong = self.in_strong
+        state.link_brackets = self.link_brackets
         return state
 
 

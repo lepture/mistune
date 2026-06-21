@@ -8,6 +8,12 @@ Built-in Plugins
 
 Mistune offers many built-in plugins, including all the popular markups.
 
+.. note::
+
+    The historical ``speedup`` plugin is kept only for compatibility. Its
+    paragraph and inline text fast paths are now built into the core parsers, so
+    ``plugins=['speedup']`` is accepted but ignored.
+
 .. _strikethrough:
 
 strikethrough

@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
@@ -6,22 +7,23 @@ from typing import (
     Match,
     MutableMapping,
     Optional,
+    Set,
+    Tuple,
 )
 
 from .core import InlineState, Parser
 from .helpers import (
     HTML_ATTRIBUTES,
     HTML_TAGNAME,
-    PREVENT_BACKSLASH,
     PUNCTUATION,
     parse_link,
     parse_link_label,
-    parse_link_text,
     unescape_char,
 )
 from .util import escape_url, unikey
 
-PAREN_END_RE = re.compile(r"\s*\)")
+_REGEX_META_CHARS = set(r"()[]{}?*+|.^$")
+_CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
 
 AUTO_EMAIL = (
     r"""<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"""
@@ -37,15 +39,6 @@ INLINE_HTML = (
     r"<![A-Z][\s\S]+?>|"  # doctype
     r"<!\[CDATA[\s\S]+?\]\]>"  # cdata
 )
-
-EMPHASIS_END_RE = {
-    "*": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\\*|[^\s*])\*(?!\*)"),
-    "_": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\_|[^\s_])_(?!_)\b"),
-    "**": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\\*|[^\s*])\*\*(?!\*)"),
-    "__": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\_|[^\s_])__(?!_)\b"),
-    "***": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\\*|[^\s*])\*\*\*(?!\*)"),
-    "___": re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\_|[^\s_])___(?!_)\b"),
-}
 
 
 class InlineParser(Parser[InlineState]):
@@ -92,6 +85,7 @@ class InlineParser(Parser[InlineState]):
         super(InlineParser, self).__init__()
 
         self.hard_wrap = hard_wrap
+        self._fast_trigger_chars: Optional[Set[str]] = None
         # lazy add linebreak
         if hard_wrap:
             self.specification["linebreak"] = self.HARD_LINEBREAK
@@ -100,15 +94,20 @@ class InlineParser(Parser[InlineState]):
 
         self._methods = {name: getattr(self, "parse_" + name) for name in self.rules}
 
+    def register(
+        self,
+        name: str,
+        pattern: Optional[str],
+        func: Any,
+        before: Optional[str] = None,
+    ) -> None:
+        super().register(name, pattern, func, before=before)
+        self._fast_trigger_chars = None
+
     def parse_escape(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
         text = unescape_char(text)
-        state.append_token(
-            {
-                "type": "text",
-                "raw": text,
-            }
-        )
+        self.process_text(text, state, parse_emphasis=False)
         return m.end()
 
     def parse_link(self, m: Match[str], state: InlineState) -> Optional[int]:
@@ -116,10 +115,7 @@ class InlineParser(Parser[InlineState]):
 
         marker = m.group(0)
         is_image = marker[0] == "!"
-        if is_image and state.in_image:
-            state.append_token({"type": "text", "raw": marker})
-            return pos
-        elif not is_image and state.in_link:
+        if not is_image and state.in_link:
             state.append_token({"type": "text", "raw": marker})
             return pos
 
@@ -129,7 +125,7 @@ class InlineParser(Parser[InlineState]):
             if pos <= state.no_close_bracket_before:
                 state.append_token({"type": "text", "raw": marker})
                 return pos
-            text, end_pos = parse_link_text(state.src, pos)
+            text, end_pos = _parse_link_text(state, pos)
             if text is None:
                 if end_pos > state.no_close_bracket_before:
                     state.no_close_bracket_before = end_pos
@@ -143,6 +139,9 @@ class InlineParser(Parser[InlineState]):
         assert text is not None
 
         if end_pos >= len(state.src) and label is None:
+            return None
+
+        if not is_image and self._contains_nested_link(text, state):
             return None
 
         rules = ["codespan", "prec_auto_link", "prec_inline_html"]
@@ -185,6 +184,28 @@ class InlineParser(Parser[InlineState]):
             state.append_token(token)
             return end_pos
         return None
+
+    def _contains_nested_link(self, text: str, state: InlineState) -> bool:
+        if "[" not in text:
+            return False
+
+        sc = self.compile_sc(["link"])
+        pos = 0
+        while pos < len(text):
+            m = sc.search(text, pos)
+            if not m:
+                return False
+
+            marker = m.group(0)
+            if marker == "[" and (m.start() == 0 or text[m.start() - 1] != "!"):
+                nested_state = state.copy()
+                nested_state.src = text
+                new_pos = self.parse_link(m, nested_state)
+                if new_pos and any(token["type"] == "link" for token in nested_state.tokens):
+                    return True
+            pos = m.start() + 1
+
+        return False
 
     def __parse_link_token(
         self,
@@ -244,52 +265,8 @@ class InlineParser(Parser[InlineState]):
         )
 
     def parse_emphasis(self, m: Match[str], state: InlineState) -> int:
-        pos = m.end()
-
-        marker = m.group(0)
-        mlen = len(marker)
-        if mlen == 1 and state.in_emphasis:
-            state.append_token({"type": "text", "raw": marker})
-            return pos
-        elif mlen == 2 and state.in_strong:
-            state.append_token({"type": "text", "raw": marker})
-            return pos
-
-        _end_re = EMPHASIS_END_RE[marker]
-        m1 = _end_re.search(state.src, pos)
-        if not m1:
-            state.append_token({"type": "text", "raw": marker})
-            return pos
-
-        end_pos = m1.end()
-        text = state.src[pos : end_pos - mlen]
-
-        prec_pos = self.precedence_scan(m, state, end_pos)
-        if prec_pos:
-            return prec_pos
-
-        new_state = state.copy()
-        new_state.src = text
-        if mlen == 1:
-            new_state.in_emphasis = True
-            children = self.render(new_state)
-            state.append_token({"type": "emphasis", "children": children})
-        elif mlen == 2:
-            new_state.in_strong = True
-            children = self.render(new_state)
-            state.append_token({"type": "strong", "children": children})
-        else:
-            new_state.in_emphasis = True
-            new_state.in_strong = True
-
-            children = [{"type": "strong", "children": self.render(new_state)}]
-            state.append_token(
-                {
-                    "type": "emphasis",
-                    "children": children,
-                }
-            )
-        return end_pos
+        self.process_text(m.group(0), state)
+        return m.end()
 
     def parse_codespan(self, m: Match[str], state: InlineState) -> int:
         marker = m.group(0)
@@ -331,15 +308,41 @@ class InlineParser(Parser[InlineState]):
             state.in_link = False
         return end_pos
 
-    def process_text(self, text: str, state: InlineState) -> None:
-        state.append_token({"type": "text", "raw": text})
+    def process_text(self, text: str, state: InlineState, parse_emphasis: bool = True) -> None:
+        if (
+            parse_emphasis
+            and state.tokens
+            and state.tokens[-1]["type"] == "text"
+            and state.tokens[-1].get("_emphasis", True)
+            and not _is_entity_boundary(state.tokens[-1]["raw"], text)
+        ):
+            state.tokens[-1]["raw"] += text
+        else:
+            token: Dict[str, Any] = {"type": "text", "raw": text}
+            if not parse_emphasis:
+                token["_emphasis"] = False
+            state.append_token(token)
 
     def parse(self, state: InlineState) -> List[Dict[str, Any]]:
         pos = 0
         sc = self.compile_sc()
         while pos < len(state.src):
-            m = sc.search(state.src, pos)
+            fast_end = self._find_fast_text_end(state.src, pos)
+            if fast_end is None:
+                m = sc.search(state.src, pos)
+            else:
+                if fast_end > pos:
+                    self.process_text(state.src[pos:fast_end], state)
+                    pos = fast_end
+                if pos >= len(state.src):
+                    break
+                m = sc.match(state.src, pos)
+
             if not m:
+                if fast_end is not None:
+                    self.process_text(state.src[pos : pos + 1], state)
+                    pos += 1
+                    continue
                 break
 
             end_pos = m.start()
@@ -361,7 +364,56 @@ class InlineParser(Parser[InlineState]):
             self.process_text(state.src, state)
         elif pos < len(state.src):
             self.process_text(state.src[pos:], state)
+        state.tokens = _finalize_emphasis_tokens(state.tokens, "emphasis" in self.rules)
         return state.tokens
+
+    def _find_fast_text_end(self, src: str, pos: int) -> Optional[int]:
+        chars = self._get_fast_trigger_chars()
+        if chars is None:
+            return None
+
+        end_pos: Optional[int] = None
+        for c in chars:
+            if c == "\n":
+                continue
+            p = src.find(c, pos)
+            if p != -1 and (end_pos is None or p < end_pos):
+                end_pos = p
+
+        if "\n" in chars:
+            p = src.find("\n", pos)
+            if p != -1:
+                p = self._find_linebreak_start(src, pos, p)
+                if end_pos is None or p < end_pos:
+                    end_pos = p
+
+        if end_pos is None:
+            return len(src)
+        return end_pos
+
+    def _find_linebreak_start(self, src: str, min_pos: int, newline_pos: int) -> int:
+        pos = newline_pos
+        while pos > min_pos and src[pos - 1] == " ":
+            pos -= 1
+        if pos == newline_pos and pos > min_pos and src[pos - 1] == "\\":
+            return pos - 1
+        return pos
+
+    def _get_fast_trigger_chars(self) -> Optional[Set[str]]:
+        chars = self._fast_trigger_chars
+        if chars is not None:
+            return chars
+
+        chars = set()
+        for name in self.rules:
+            pattern = self.specification.get(name)
+            rule_chars = _get_rule_start_chars(name, pattern)
+            if rule_chars is None:
+                self._fast_trigger_chars = None
+                return None
+            chars.update(rule_chars)
+        self._fast_trigger_chars = chars
+        return chars
 
     def precedence_scan(
         self,
@@ -409,3 +461,357 @@ class InlineParser(Parser[InlineState]):
         state = self.state_cls(env)
         state.src = s
         return self.render(state)
+
+
+def _get_rule_start_chars(name: str, pattern: Optional[str]) -> Optional[Set[str]]:
+    known = {
+        "escape": {"\\"},
+        "codespan": {"`"},
+        "emphasis": {"*", "_"},
+        "link": {"!", "["},
+        "auto_link": {"<"},
+        "auto_email": {"<"},
+        "inline_html": {"<"},
+        "linebreak": {"\n"},
+        "softbreak": {"\n"},
+        "prec_auto_link": {"<"},
+        "prec_inline_html": {"<"},
+        # built-in plugins
+        "url_link": {"h"},
+        "strikethrough": {"~"},
+        "mark": {"="},
+        "insert": {"^"},
+        "superscript": {"^"},
+        "subscript": {"~"},
+        "footnote": {"["},
+        "inline_math": {"$"},
+        "ruby": {"["},
+        "inline_spoiler": {">"},
+    }
+    if name in known:
+        return known[name]
+    if not pattern:
+        return set()
+    return _guess_pattern_start_chars(pattern)
+
+
+def _guess_pattern_start_chars(pattern: str) -> Optional[Set[str]]:
+    if not pattern:
+        return set()
+
+    if pattern.startswith("\\") and len(pattern) > 1:
+        c = pattern[1]
+        if c in _REGEX_META_CHARS or c in PUNCTUATION:
+            return {c}
+        return None
+
+    c = pattern[0]
+    if c in _REGEX_META_CHARS or c.isspace():
+        return None
+    return {c}
+
+
+def _is_entity_boundary(left: str, right: str) -> bool:
+    return left.endswith("&") and _CHARREF_PREFIX.match(right) is not None
+
+
+@dataclass
+class _Delimiter:
+    index: int
+    marker: str
+    length: int
+    can_open: bool
+    can_close: bool
+
+
+def _finalize_emphasis_tokens(tokens: List[Dict[str, Any]], enabled: bool) -> List[Dict[str, Any]]:
+    if not enabled:
+        return _clean_emphasis_tokens(tokens)
+    if not _contains_emphasis_marker(tokens):
+        return _clean_emphasis_tokens(tokens)
+
+    parts: List[Dict[str, Any]] = []
+    delimiters: List[_Delimiter] = []
+    source = _emphasis_source_text(tokens)
+    source_pos = 0
+    for token in tokens:
+        if token["type"] == "text" and token.get("_emphasis", True):
+            _split_text_token(token, source, source_pos, parts, delimiters)
+        else:
+            parts.append(_clean_emphasis_token(token))
+        source_pos += _emphasis_source_length(token)
+
+    _process_emphasis_delimiters(parts, delimiters)
+    return _merge_text_tokens(parts)
+
+
+def _contains_emphasis_marker(tokens: List[Dict[str, Any]]) -> bool:
+    for token in tokens:
+        if token["type"] == "text" and token.get("_emphasis", True):
+            raw = token["raw"]
+            if "*" in raw or "_" in raw:
+                return True
+    return False
+
+
+def _clean_emphasis_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [_clean_emphasis_token(token) for token in tokens]
+
+
+def _clean_emphasis_token(token: Dict[str, Any]) -> Dict[str, Any]:
+    if "_emphasis" not in token:
+        return token
+    token = token.copy()
+    token.pop("_emphasis", None)
+    return token
+
+
+def _emphasis_source_text(tokens: List[Dict[str, Any]]) -> str:
+    values = []
+    for token in tokens:
+        if token["type"] == "text":
+            values.append(token["raw"])
+        elif token["type"] in ("softbreak", "linebreak"):
+            values.append("\n")
+        else:
+            values.append("\ufffc")
+    return "".join(values)
+
+
+def _emphasis_source_length(token: Dict[str, Any]) -> int:
+    if token["type"] == "text":
+        return len(token["raw"])
+    return 1
+
+
+def _split_text_token(
+    token: Dict[str, Any],
+    source: str,
+    source_start: int,
+    parts: List[Dict[str, Any]],
+    delimiters: List[_Delimiter],
+) -> None:
+    text = token["raw"]
+    pos = 0
+    while pos < len(text):
+        if text[pos] not in "*_":
+            end = _next_delimiter_run(text, pos)
+            parts.append({"type": "text", "raw": text[pos:end]})
+            pos = end
+            continue
+
+        marker = text[pos]
+        end = pos
+        while end < len(text) and text[end] == marker:
+            end += 1
+        length = end - pos
+        absolute = source_start + pos
+        can_open = _can_open_emphasis(source, absolute, length, marker)
+        can_close = _can_close_emphasis(source, absolute, length, marker)
+        index = len(parts)
+        parts.append({"type": "text", "raw": text[pos:end]})
+        if can_open or can_close:
+            delimiters.append(_Delimiter(index, marker, length, can_open, can_close))
+        pos = end
+
+
+def _next_delimiter_run(text: str, pos: int) -> int:
+    while pos < len(text) and text[pos] not in "*_":
+        pos += 1
+    return pos
+
+
+def _process_emphasis_delimiters(parts: List[Dict[str, Any]], delimiters: List[_Delimiter]) -> None:
+    closer_pos = 0
+    openers_bottom: Dict[Tuple[str, int, bool], int] = {}
+    while closer_pos < len(delimiters):
+        closer = delimiters[closer_pos]
+        if not closer.can_close or closer.length == 0:
+            closer_pos += 1
+            continue
+
+        opener_key = (closer.marker, closer.length % 3, closer.can_open)
+        opener_pos = closer_pos - 1
+        opener_bottom = openers_bottom.get(opener_key, 0)
+        opener = None
+        while opener_pos >= opener_bottom:
+            candidate = delimiters[opener_pos]
+            if (
+                candidate.marker == closer.marker
+                and candidate.can_open
+                and candidate.length > 0
+                and _can_match_emphasis_delimiters(candidate, closer)
+            ):
+                opener = candidate
+                break
+            opener_pos -= 1
+
+        if opener is None:
+            openers_bottom[opener_key] = closer_pos
+            closer_pos += 1
+            continue
+
+        if opener.length >= 2 and closer.length >= 2:
+            use_length = 2
+        else:
+            use_length = 1
+        if use_length == 2 and not _has_strong_enabled(parts, opener, closer):
+            use_length = 1
+        if use_length == 1 and not _has_emphasis_enabled(parts, opener, closer):
+            closer_pos += 1
+            continue
+        if not _has_emphasis_content(parts, opener.index + 1, closer.index):
+            closer_pos += 1
+            continue
+
+        opener_text = parts[opener.index]
+        closer_text = parts[closer.index]
+        if opener_text["type"] != "text" or closer_text["type"] != "text":
+            closer_pos += 1
+            continue
+
+        opener_text["raw"] = opener_text["raw"][:-use_length]
+        closer_text["raw"] = closer_text["raw"][use_length:]
+        children = parts[opener.index + 1 : closer.index]
+        if use_length == 2:
+            node = {"type": "strong", "children": children}
+        else:
+            node = {"type": "emphasis", "children": children}
+
+        old_closer_index = closer.index
+        parts[opener.index + 1 : old_closer_index] = [node]
+
+        removed = old_closer_index - opener.index - 2
+        closer.index = opener.index + 2
+        if removed:
+            for delimiter in delimiters:
+                if opener.index < delimiter.index < old_closer_index:
+                    delimiter.length = 0
+                elif delimiter.index >= old_closer_index:
+                    delimiter.index -= removed
+
+        opener.length -= use_length
+        closer.length -= use_length
+        if opener.length == 0:
+            opener.can_open = False
+        if closer.length == 0:
+            closer.can_close = False
+
+        if opener.can_open or closer.can_close:
+            closer_pos = max(opener_pos, openers_bottom.get(opener_key, 0))
+        else:
+            closer_pos += 1
+
+
+def _has_strong_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
+    return len(_text_raw(parts[opener.index])) >= 2 and len(_text_raw(parts[closer.index])) >= 2
+
+
+def _has_emphasis_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
+    return bool(_text_raw(parts[opener.index]) and _text_raw(parts[closer.index]))
+
+
+def _text_raw(token: Dict[str, Any]) -> str:
+    if token["type"] == "text":
+        return token["raw"]
+    return ""
+
+
+def _has_emphasis_content(parts: List[Dict[str, Any]], start: int, end: int) -> bool:
+    for part in parts[start:end]:
+        if part["type"] != "text" or part["raw"] != "":
+            return True
+    return False
+
+
+def _can_match_emphasis_delimiters(opener: _Delimiter, closer: _Delimiter) -> bool:
+    if opener.can_close or closer.can_open:
+        return (opener.length + closer.length) % 3 != 0 or opener.length % 3 == 0 and closer.length % 3 == 0
+    return True
+
+
+def _can_open_emphasis(text: str, start: int, size: int, marker: str) -> bool:
+    if start > 0:
+        previous = text[start - 1]
+    else:
+        previous = "\n"
+    if start + size < len(text):
+        next_char = text[start + size]
+    else:
+        next_char = "\n"
+    if marker == "_" and previous.isalnum() and next_char.isalnum():
+        return False
+    if next_char.isspace():
+        return False
+    if _is_punctuation(next_char) and not previous.isspace() and not _is_punctuation(previous):
+        return False
+    return True
+
+
+def _can_close_emphasis(text: str, start: int, size: int, marker: str) -> bool:
+    if start > 0:
+        previous = text[start - 1]
+    else:
+        previous = "\n"
+    if start + size < len(text):
+        next_char = text[start + size]
+    else:
+        next_char = "\n"
+    if marker == "_" and previous.isalnum() and next_char.isalnum():
+        return False
+    if previous.isspace():
+        return False
+    if _is_punctuation(previous) and not next_char.isspace() and not _is_punctuation(next_char):
+        return False
+    return True
+
+
+def _is_punctuation(c: str) -> bool:
+    return not c.isspace() and not c.isalnum()
+
+
+def _merge_text_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    result: List[Dict[str, Any]] = []
+    for token in tokens:
+        if token["type"] == "text" and token["raw"] == "":
+            continue
+        if token["type"] == "text" and result and result[-1]["type"] == "text":
+            if not _is_entity_boundary(result[-1]["raw"], token["raw"]):
+                result[-1]["raw"] += token["raw"]
+                continue
+        result.append(_clean_emphasis_token(token))
+    return result
+
+
+def _parse_link_text(state: InlineState, pos: int) -> Tuple[Optional[str], int]:
+    close_pos = _find_closing_bracket(state, pos)
+    if close_pos is None:
+        return None, len(state.src)
+    return state.src[pos:close_pos], close_pos + 1
+
+
+def _find_closing_bracket(state: InlineState, pos: int) -> Optional[int]:
+    cache = state.link_brackets.get(id(state.src))
+    if cache is not None and cache[0] is state.src:
+        return cache[1].get(pos)
+
+    pairs = _build_closing_bracket_map(state.src)
+    state.link_brackets[id(state.src)] = (state.src, pairs)
+    return pairs.get(pos)
+
+
+def _build_closing_bracket_map(src: str) -> Dict[int, int]:
+    pairs: Dict[int, int] = {}
+    stack: List[int] = []
+    pos = 0
+    while pos < len(src):
+        c = src[pos]
+        if c == "\\":
+            pos += 2
+            continue
+        if c == "[":
+            stack.append(pos + 1)
+        elif c == "]" and stack:
+            pairs[stack.pop()] = pos
+        pos += 1
+    return pairs

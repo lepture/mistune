@@ -17,7 +17,7 @@ def _md(args: argparse.Namespace) -> "Markdown":
         plugins = args.plugin
     else:
         # default plugins
-        plugins = ["strikethrough", "footnotes", "table", "speedup"]
+        plugins = ["strikethrough", "footnotes", "table"]
 
     if args.renderer == "rst":
         renderer: "BaseRenderer" = RSTRenderer()

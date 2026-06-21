@@ -3,7 +3,7 @@ mistune
 ~~~~~~~
 
 A fast yet powerful Python Markdown parser with renderers and
-plugins, compatible with sane CommonMark rules.
+plugins, compatible with CommonMark 0.31.2.
 
 Documentation: https://mistune.lepture.com/
 """
@@ -51,11 +51,11 @@ def create_markdown(
     inline = InlineParser(hard_wrap=hard_wrap)
     real_plugins: Optional[Iterable[Plugin]] = None
     if plugins is not None:
-        real_plugins = [import_plugin(n) for n in plugins]
+        real_plugins = [import_plugin(n) for n in plugins if n != "speedup"]
     return Markdown(renderer=renderer, inline=inline, plugins=real_plugins)
 
 
-html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table", "speedup"])
+html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table"])
 
 
 __cached_parsers: Dict[Tuple[bool, Optional[RendererRef], Optional[Iterable[Any]]], Markdown] = {}

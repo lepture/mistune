@@ -16,7 +16,7 @@ INLINE_SPOILER_PATTERN = r">!\s*(?P<spoiler_text>.+?)\s*!<"
 
 
 def parse_block_spoiler(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
-    text, end_pos = block.extract_block_quote(m, state)
+    text, end_pos, lazy_line_starts = block.extract_block_quote(m, state)
     if not text.endswith("\n"):
         # ensure it endswith \n to make sure
         # _BLOCK_SPOILER_MATCH.match works
@@ -30,7 +30,7 @@ def parse_block_spoiler(block: "BlockParser", m: Match[str], state: "BlockState"
         tok_type = "block_quote"
 
     # scan children state
-    child = state.child_state(text)
+    child = state.child_state(text, lazy_line_starts=lazy_line_starts)
     if state.depth() >= block.max_nested_level - 1:
         rules = list(block.block_quote_rules)
         rules.remove("block_quote")

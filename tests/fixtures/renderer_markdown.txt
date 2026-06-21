@@ -26,7 +26,7 @@ this is *em*, **strong**, and `code`
 
 [link]: /url "title"
 .
-[link][link], [link](<https://foo(bar> "title")
+[link][link], [link][link](https://foo(bar "title")
 
 [link]: /url "title"
 ````````````````````````````````

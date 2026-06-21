@@ -69,9 +69,11 @@ def unescape(s: str) -> str:
 
 
 _striptags_re = re.compile(r"(<!--.*?-->|<[^>]*>)")
+_strip_image_re = re.compile(r"<img\b[^>]*\balt=(\"([^\"]*)\"|'([^']*)')[^>]*>")
 
 
 def striptags(s: str) -> str:
+    s = _strip_image_re.sub(lambda m: m.group(2) or m.group(3) or "", s)
     return _striptags_re.sub("", s)
 
 

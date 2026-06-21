@@ -115,11 +115,15 @@ Test with nested admonition
 <p class="admonition-title">Hint</p>
 <section class="admonition danger">
 <p class="admonition-title">Danger</p>
-<pre><code class="language-{attention}">````{important}
-```{error}
-```
-````
-</code></pre>
+<section class="admonition attention">
+<p class="admonition-title">Attention</p>
+<section class="admonition important">
+<p class="admonition-title">Important</p>
+<section class="admonition error">
+<p class="admonition-title">Error</p>
+</section>
+</section>
+</section>
 </section>
 </section>
 </section>

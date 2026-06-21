@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from .core import BlockState
@@ -5,6 +6,8 @@ from .util import striptags, escape
 
 if TYPE_CHECKING:
     from .markdown import Markdown
+
+_HTML_ID_RE = re.compile(r"""\bid\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
 
 
 def add_toc_hook(
@@ -32,12 +35,17 @@ def add_toc_hook(
     :param heading_id: a function to generate heading_id
     """
     if heading_id is None:
+        auto_heading_id = True
 
         def heading_id(token: Dict[str, Any], index: int) -> str:
             return "toc_" + str(index + 1)
 
+    else:
+        auto_heading_id = False
+
     def toc_hook(md: "Markdown", state: "BlockState") -> None:
         headings = []
+        used_ids = _find_html_ids(state.src)
 
         for tok in state.tokens:
             if tok["type"] == "heading":
@@ -47,13 +55,33 @@ def add_toc_hook(
 
         toc_items = []
         for i, tok in enumerate(headings):
-            tok["attrs"]["id"] = heading_id(tok, i)
+            _id = heading_id(tok, i)
+            if auto_heading_id:
+                _id = _unique_id(_id, used_ids)
+            used_ids.add(_id)
+            tok["attrs"]["id"] = _id
             toc_items.append(normalize_toc_item(md, tok, parent=state))
 
         # save items into state
         state.env["toc_items"] = toc_items
 
     md.before_render_hooks.append(toc_hook)
+
+
+def _find_html_ids(src: str) -> set:
+    return {m.group(1) or m.group(2) for m in _HTML_ID_RE.finditer(src)}
+
+
+def _unique_id(value: str, used_ids: set) -> str:
+    if value not in used_ids:
+        return value
+
+    i = 1
+    while True:
+        new_value = value + "_" + str(i)
+        if new_value not in used_ids:
+            return new_value
+        i += 1
 
 
 def normalize_toc_item(md: "Markdown", token: Dict[str, Any], parent: Optional[Any] = None) -> Tuple[int, str, str]:

@@ -17,6 +17,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 if sys.version_info >= (3, 11):
@@ -246,7 +247,7 @@ class BaseRenderer(object):
 
     def _get_method(self, name: str) -> Callable[..., str]:
         try:
-            return object.__getattribute__(self, name)
+            return cast(Callable[..., str], object.__getattribute__(self, name))
         except AttributeError:
             method = self.__methods.get(name)
             if not method:

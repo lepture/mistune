@@ -9,6 +9,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    cast,
 )
 
 from .core import InlineState, Parser
@@ -717,7 +718,7 @@ def _has_emphasis_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, close
 
 def _text_raw(token: Dict[str, Any]) -> str:
     if token["type"] == "text":
-        return token["raw"]
+        return cast(str, token["raw"])
     return ""
 
 

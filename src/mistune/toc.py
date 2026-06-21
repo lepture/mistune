@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 from .core import BlockState
 from .util import striptags, escape
@@ -68,11 +68,11 @@ def add_toc_hook(
     md.before_render_hooks.append(toc_hook)
 
 
-def _find_html_ids(src: str) -> set:
+def _find_html_ids(src: str) -> Set[str]:
     return {m.group(1) or m.group(2) for m in _HTML_ID_RE.finditer(src)}
 
 
-def _unique_id(value: str, used_ids: set) -> str:
+def _unique_id(value: str, used_ids: Set[str]) -> str:
     if value not in used_ids:
         return value
 

@@ -10,6 +10,49 @@ Term
 </dl>
 ````````````````````````````````
 
+## Invalid Definition List
+
+```````````````````````````````` example
+: orphan
+.
+<p>: orphan</p>
+````````````````````````````````
+
+```````````````````````````````` example
+# Term
+: definition
+.
+<h1>Term</h1>
+<p>: definition</p>
+````````````````````````````````
+
+## Definition Separated By Blank Lines
+
+```````````````````````````````` example
+Term
+: foo
+
+: bar
+.
+<dl>
+<dt>Term</dt>
+<dd>foo</dd>
+<dd><p>bar</p>
+</dd>
+</dl>
+````````````````````````````````
+
+```````````````````````````````` example
+Term
+: foo
+
+.
+<dl>
+<dt>Term</dt>
+<dd>foo</dd>
+</dl>
+````````````````````````````````
+
 ```````````````````````````````` example
 Term
 : definition1

@@ -1,0 +1,28 @@
+# Command Line
+
+```````````````````````````````` example
+Hi **Markdown**
+.
+<p>Hi <strong>Markdown</strong></p>
+````````````````````````````````
+
+```````````````````````````````` example
+| A | B |
+| - | - |
+| 1 | 2 |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>2</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````

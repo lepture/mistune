@@ -32,6 +32,121 @@ Content Cell  | Content Cell
 </table>
 ````````````````````````````````
 
+## Invalid Table
+
+```````````````````````````````` example
+| A | B |
+--- | ---
+.
+<p>| A | B |
+--- | ---</p>
+````````````````````````````````
+
+```````````````````````````````` example
+| A | B |
+| - | - |
+| a | b | c |
+paragraph
+.
+<p>| A | B |
+| - | - |
+| a | b | c |
+paragraph</p>
+````````````````````````````````
+
+```````````````````````````````` example
+A | B
+--- | --- | ---
+.
+<p>A | B
+--- | --- | ---</p>
+````````````````````````````````
+
+```````````````````````````````` example
+A | B
+- | -
+a | b | c
+paragraph
+.
+<p>A | B</p>
+<ul>
+<li>| -
+a | b | c
+paragraph</li>
+</ul>
+````````````````````````````````
+
+## Table End
+
+```````````````````````````````` example
+| A | B |
+| - | - |
+| a | b |
+paragraph
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+<p>paragraph</p>
+````````````````````````````````
+
+```````````````````````````````` example
+A | B
+- | -
+a | b
+paragraph
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>b</td>
+</tr>
+</tbody>
+</table>
+<p>paragraph</p>
+````````````````````````````````
+
+## Escaped Pipe
+
+```````````````````````````````` example
+ | A | B |
+ | - | - |
+ | a \| b | c |
+.
+<table>
+<thead>
+<tr>
+  <th>A</th>
+  <th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a | b</td>
+  <td>c</td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
 
 ## table
 

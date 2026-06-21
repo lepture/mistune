@@ -53,6 +53,24 @@ lines</p>
 </blockquote>
 ````````````````````````````````
 
+```````````````````````````````` example
+> > > > > >! secret
+.
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>! secret</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+````````````````````````````````
+
 ## Inline spoiler
 
 ```````````````````````````````` example

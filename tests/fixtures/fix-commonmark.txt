@@ -17,6 +17,15 @@ Autolinks in link text stay literal.
 <p><a href="/foo">&lt;name@example.com&gt;</a></p>
 ````````````````````````````````
 
+```````````````````````````````` example
+[[foo][]][bar]
+
+[foo]: /foo
+[bar]: /bar
+.
+<p>[<a href="/foo">foo</a>]<a href="/bar">bar</a></p>
+````````````````````````````````
+
 ## Emphasis
 
 CommonMark delimiter handling is the default.

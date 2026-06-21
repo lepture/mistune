@@ -309,3 +309,21 @@ class TestMiscCases(TestCase):
         md = mistune.create_markdown(escape=False, plugins=["def_list"])
         result = md("x\n" * 8000)
         self.assertTrue(result.startswith("<p>x\nx\n"))
+
+    def test_cli_output_file_uses_utf8(self):
+        from argparse import Namespace
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        from mistune.__main__ import _output
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "out.html"
+            _output("★", Namespace(output=str(path)))
+            self.assertEqual(path.read_text(encoding="utf-8"), "★")
+
+    def test_project_script_entrypoint(self):
+        from pathlib import Path
+
+        pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('mistune = "mistune.__main__:cli"', pyproject)

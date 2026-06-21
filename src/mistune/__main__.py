@@ -35,9 +35,10 @@ def _md(args: argparse.Namespace) -> "Markdown":
 
 def _output(text: str, args: argparse.Namespace) -> None:
     if args.output:
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(text)
     else:
+        _ensure_stdout_utf8()
         print(text)
 
 
@@ -121,6 +122,12 @@ def cli() -> None:
     else:
         print("You MUST specify a message or file")
         sys.exit(1)
+
+
+def _ensure_stdout_utf8() -> None:
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8")
 
 
 def read_stdin() -> Optional[str]:

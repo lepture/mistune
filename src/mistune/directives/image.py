@@ -124,9 +124,11 @@ class Figure(DirectivePlugin):
         fig_attrs = {}
         if align:
             fig_attrs["align"] = align
-        for k in ["figwidth", "figclass"]:
-            if k in options:
-                fig_attrs[k] = options[k]
+        figwidth = options.get("figwidth")
+        if figwidth and _num_re.fullmatch(figwidth):
+            fig_attrs["figwidth"] = figwidth
+        if "figclass" in options:
+            fig_attrs["figclass"] = options["figclass"]
 
         children = [{"type": "block_image", "attrs": image_attrs}]
         content = self.parse_directive_content(block, m, state)

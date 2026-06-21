@@ -115,7 +115,7 @@ def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, in
             level += 1
 
     if found:
-        text = src[start_pos: pos - 1]
+        text = src[start_pos : pos - 1]
         return text, pos
     return None, pos  # FIX: return pos instead of None
 

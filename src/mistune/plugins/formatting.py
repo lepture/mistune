@@ -85,10 +85,7 @@ def _find_end_marker(src: str, pos: int, marker: str) -> Optional[int]:
         if end > pos:
             prev = src[end - 1]
             escaped_marker_before = (
-                prev == c
-                and end >= pos + 2
-                and src[end - 2] == "\\"
-                and not _has_odd_backslashes(src, end - 2)
+                prev == c and end >= pos + 2 and src[end - 2] == "\\" and not _has_odd_backslashes(src, end - 2)
             )
             if (not prev.isspace() and prev != c) or escaped_marker_before:
                 return marker_end

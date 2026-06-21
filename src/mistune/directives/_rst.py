@@ -31,9 +31,7 @@ class RSTParser(DirectiveParser):
 
     @staticmethod
     def parse_content(m: Match[str]) -> str:
-        full_content = m.group(0)
         text = m.group("text")
-        pretext = full_content[: -len(text)]
         leading = len(m.group(1)) + 2
         return "\n".join(line[leading:] for line in text.splitlines()) + "\n"
 

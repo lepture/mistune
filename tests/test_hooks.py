@@ -1,4 +1,3 @@
-import os
 from mistune import create_markdown
 from mistune.toc import add_toc_hook, render_toc_ul
 from tests import BaseTestCase

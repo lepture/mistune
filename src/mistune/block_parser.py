@@ -372,11 +372,7 @@ class BlockParser(Parser[BlockState]):
             # At the nesting limit, stop descending into any further container
             # blocks. Trimming only "block_quote" still allowed block quotes and
             # lists to recurse into each other without bound (RecursionError).
-            rules = [
-                rule
-                for rule in self.block_quote_rules
-                if rule not in ("block_quote", "list")
-            ]
+            rules = [rule for rule in self.block_quote_rules if rule not in ("block_quote", "list")]
         else:
             rules = self.block_quote_rules
 

@@ -162,7 +162,11 @@ class MarkdownRenderer(BaseRenderer):
 
     def table_head(self, token: Dict[str, Any], state: BlockState) -> str:
         cells = token.get("children", [])
-        return _render_table_row(self, cells, state) + "\n" + _render_table_delimiter([_table_cell_align(c) for c in cells])
+        return (
+            _render_table_row(self, cells, state)
+            + "\n"
+            + _render_table_delimiter([_table_cell_align(c) for c in cells])
+        )
 
     def table_body(self, token: Dict[str, Any], state: BlockState) -> str:
         return "\n".join(self.render_token(row, state).rstrip("\n") for row in token.get("children", []))

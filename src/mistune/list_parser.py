@@ -88,9 +88,7 @@ def parse_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
         # At the nesting limit, stop descending into any further container
         # blocks. Trimming only "list" still allowed lists and block quotes to
         # recurse into each other without bound (RecursionError).
-        rules = [
-            rule for rule in block.list_rules if rule not in ("list", "block_quote")
-        ]
+        rules = [rule for rule in block.list_rules if rule not in ("list", "block_quote")]
     else:
         rules = block.list_rules
 

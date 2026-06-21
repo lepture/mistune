@@ -20,12 +20,8 @@ if TYPE_CHECKING:
 __all__ = ["table", "table_in_quote", "table_in_list"]
 
 
-TABLE_PATTERN = (
-    r"^ {0,3}\|[^\n]*\|[ \t]*(?:\n|$)"
-)
-NP_TABLE_PATTERN = (
-    r"^ {0,3}\S[^\n]*\|[^\n]*(?:\n|$)"
-)
+TABLE_PATTERN = r"^ {0,3}\|[^\n]*\|[ \t]*(?:\n|$)"
+NP_TABLE_PATTERN = r"^ {0,3}\S[^\n]*\|[^\n]*(?:\n|$)"
 
 ALIGN_CENTER = re.compile(r"^ *:-+: *$")
 ALIGN_LEFT = re.compile(r"^ *:-+ *$")
@@ -154,7 +150,7 @@ def _parse_invalid_pipe_table(state: "BlockState", pos: int) -> int:
         if _strip_pipe_table_row(line) is None:
             break
         pos += len(line)
-    state.add_paragraph(state.src[state.cursor:pos])
+    state.add_paragraph(state.src[state.cursor : pos])
     return pos
 
 

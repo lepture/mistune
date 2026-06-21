@@ -22,13 +22,17 @@ def render_list(renderer: "BaseRenderer", token: Dict[str, Any], state: "BlockSt
     return strip_end(text) + "\n"
 
 
-def _render_list_item(
+def render_list_item(
     renderer: "BaseRenderer",
-    parent: Dict[str, Any],
     item: Dict[str, Any],
     state: "BlockState",
+    marker: str = "",
 ) -> str:
-    leading = cast(str, parent["leading"])
+    parent = item.get("parent")
+    if not parent:
+        parent = {"leading": "- ", "tight": False}
+
+    leading = cast(str, parent["leading"]) + marker
     text = ""
     for tok in item["children"]:
         if tok["type"] == "list":
@@ -53,12 +57,15 @@ def _render_ordered_list(renderer: "BaseRenderer", token: Dict[str, Any], state:
     start = attrs.get("start", 1)
     for item in token["children"]:
         leading = str(start) + token["bullet"] + " "
-        parent = {
+        item["parent"] = {
             "leading": leading,
             "tight": token["tight"],
         }
-        yield _render_list_item(renderer, parent, item, state)
-        start += 1
+        try:
+            yield renderer.render_token(item, state)
+        finally:
+            item.pop("parent", None)
+            start += 1
 
 
 def _render_unordered_list(renderer: "BaseRenderer", token: Dict[str, Any], state: "BlockState") -> Iterable[str]:
@@ -67,4 +74,8 @@ def _render_unordered_list(renderer: "BaseRenderer", token: Dict[str, Any], stat
         "tight": token["tight"],
     }
     for item in token["children"]:
-        yield _render_list_item(renderer, parent, item, state)
+        item["parent"] = parent
+        try:
+            yield renderer.render_token(item, state)
+        finally:
+            item.pop("parent", None)

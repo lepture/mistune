@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, cast
 
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
-from ._list import render_list
+from ._list import render_list, render_list_item
 
 fenced_re = re.compile(r"^[`~]+", re.M)
 
@@ -134,6 +134,45 @@ class MarkdownRenderer(BaseRenderer):
     def list(self, token: Dict[str, Any], state: BlockState) -> str:
         return render_list(self, token, state)
 
+    def list_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        return render_list_item(self, token, state)
+
+    def task_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        checked = token.get("attrs", {}).get("checked")
+        marker = "[x] " if checked else "[ ] "
+        return render_list_item(self, token, state, marker)
+
+    def table(self, token: Dict[str, Any], state: BlockState) -> str:
+        children = token.get("children", [])
+        if not children:
+            return "\n"
+
+        head = children[0]
+        body = children[1] if len(children) > 1 else None
+        head_cells = head.get("children", [])
+        align = [_table_cell_align(cell) for cell in head_cells]
+        lines = [
+            _render_table_row(self, head_cells, state),
+            _render_table_delimiter(align),
+        ]
+        if body:
+            for row in body.get("children", []):
+                lines.append(_render_table_row(self, row.get("children", []), state))
+        return "\n".join(lines) + "\n\n"
+
+    def table_head(self, token: Dict[str, Any], state: BlockState) -> str:
+        cells = token.get("children", [])
+        return _render_table_row(self, cells, state) + "\n" + _render_table_delimiter([_table_cell_align(c) for c in cells])
+
+    def table_body(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "\n".join(self.render_token(row, state).rstrip("\n") for row in token.get("children", []))
+
+    def table_row(self, token: Dict[str, Any], state: BlockState) -> str:
+        return _render_table_row(self, token.get("children", []), state) + "\n"
+
+    def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
+        return _render_table_cell(self, token, state)
+
 
 def _escape_block_prefix(text: str) -> str:
     """Backslash-escape a leading block marker on each line so that literal
@@ -168,3 +207,33 @@ def _get_fenced_marker(code: str) -> str:
     if not waves:
         return "~~~"
     return "`" * (max(ticks) + 1)
+
+
+def _render_table_row(renderer: MarkdownRenderer, cells: Iterable[Dict[str, Any]], state: BlockState) -> str:
+    return "| " + " | ".join(_render_table_cell(renderer, cell, state) for cell in cells) + " |"
+
+
+def _render_table_delimiter(aligns: Iterable[Any]) -> str:
+    cells = []
+    for align in aligns:
+        if align == "left":
+            cells.append(":---")
+        elif align == "center":
+            cells.append(":---:")
+        elif align == "right":
+            cells.append("---:")
+        else:
+            cells.append("---")
+    return "| " + " | ".join(cells) + " |"
+
+
+def _render_table_cell(renderer: MarkdownRenderer, token: Dict[str, Any], state: BlockState) -> str:
+    if "children" in token:
+        text = renderer.render_children(token, state)
+    else:
+        text = cast(str, token.get("raw", ""))
+    return text.replace("\n", " ").replace("|", "\\|").strip()
+
+
+def _table_cell_align(token: Dict[str, Any]) -> Any:
+    return token.get("attrs", {}).get("align")

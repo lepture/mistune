@@ -1,5 +1,4 @@
-import re
-from typing import TYPE_CHECKING, Match, Optional, Pattern
+from typing import TYPE_CHECKING, Match, Optional
 
 from ..helpers import PREVENT_BACKSLASH
 
@@ -10,16 +9,12 @@ if TYPE_CHECKING:
 
 __all__ = ["strikethrough", "mark", "insert", "superscript", "subscript"]
 
-_STRIKE_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\~|[^\s~])~~(?!~)")
-_MARK_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\=|[^\s=])==(?!=)")
-_INSERT_END = re.compile(r"(?:" + PREVENT_BACKSLASH + r"\\\^|[^\s^])\^\^(?!\^)")
-
 SUPERSCRIPT_PATTERN = r"\^(?:" + PREVENT_BACKSLASH + r"\\\^|\S|\\ )+?\^"
 SUBSCRIPT_PATTERN = r"~(?:" + PREVENT_BACKSLASH + r"\\~|\S|\\ )+?~"
 
 
 def parse_strikethrough(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
-    return _parse_to_end(inline, m, state, "strikethrough", _STRIKE_END)
+    return _parse_to_end(inline, m, state, "strikethrough", "~~")
 
 
 def render_strikethrough(renderer: "BaseRenderer", text: str) -> str:
@@ -27,7 +22,7 @@ def render_strikethrough(renderer: "BaseRenderer", text: str) -> str:
 
 
 def parse_mark(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
-    return _parse_to_end(inline, m, state, "mark", _MARK_END)
+    return _parse_to_end(inline, m, state, "mark", "==")
 
 
 def render_mark(renderer: "BaseRenderer", text: str) -> str:
@@ -35,7 +30,7 @@ def render_mark(renderer: "BaseRenderer", text: str) -> str:
 
 
 def parse_insert(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
-    return _parse_to_end(inline, m, state, "insert", _INSERT_END)
+    return _parse_to_end(inline, m, state, "insert", "^^")
 
 
 def render_insert(renderer: "BaseRenderer", text: str) -> str:
@@ -63,19 +58,52 @@ def _parse_to_end(
     m: Match[str],
     state: "InlineState",
     tok_type: str,
-    end_pattern: Pattern[str],
+    marker: str,
 ) -> Optional[int]:
     pos = m.end()
-    m1 = end_pattern.search(state.src, pos)
-    if not m1:
+    end_pos = _find_end_marker(state.src, pos, marker)
+    if end_pos is None:
         return None
-    end_pos = m1.end()
     text = state.src[pos : end_pos - 2]
     new_state = state.copy()
     new_state.src = text
     children = inline.render(new_state)
     state.append_token({"type": tok_type, "children": children})
     return end_pos
+
+
+def _find_end_marker(src: str, pos: int, marker: str) -> Optional[int]:
+    c = marker[0]
+    marker_len = len(marker)
+    end = src.find(marker, pos)
+    while end != -1:
+        marker_end = end + marker_len
+        if marker_end < len(src) and src[marker_end] == c and not src.startswith(marker, marker_end):
+            end = src.find(marker, end + 1)
+            continue
+
+        if end > pos:
+            prev = src[end - 1]
+            escaped_marker_before = (
+                prev == c
+                and end >= pos + 2
+                and src[end - 2] == "\\"
+                and not _has_odd_backslashes(src, end - 2)
+            )
+            if (not prev.isspace() and prev != c) or escaped_marker_before:
+                return marker_end
+
+        end = src.find(marker, end + 1)
+    return None
+
+
+def _has_odd_backslashes(src: str, pos: int) -> bool:
+    count = 0
+    pos -= 1
+    while pos >= 0 and src[pos] == "\\":
+        count += 1
+        pos -= 1
+    return count % 2 == 1
 
 
 def _parse_script(inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str) -> int:

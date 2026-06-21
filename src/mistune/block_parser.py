@@ -1,3 +1,4 @@
+from bisect import bisect_left
 import re
 from typing import Optional, List, Tuple, Match, Pattern, Set
 import string
@@ -256,11 +257,11 @@ class BlockParser(Parser[BlockState]):
 
         assert href_pos is not None
 
-        _blank = self.BLANK_LINE.search(state.src, href_pos)
-        if _blank:
-            max_pos = _blank.start()
-        else:
+        blank_pos = _find_next_blank_line(state, href_pos, self.BLANK_LINE)
+        if blank_pos is None:
             max_pos = state.cursor_max
+        else:
+            max_pos = blank_pos
 
         title, title_pos = parse_link_title(state.src, href_pos, max_pos)
         if title_pos:
@@ -535,6 +536,19 @@ def _parse_block_quote_line(line: str) -> Optional[str]:
         return None
     text = expand_leading_tab(m.group(1), 3)
     return _BLOCK_QUOTE_TRIM.sub("", text)
+
+
+def _find_next_blank_line(state: BlockState, pos: int, pattern: Pattern[str]) -> Optional[int]:
+    cache = state.env.get("__blank_line_starts__")
+    if cache is None or cache[0] is not state.src:
+        cache = (state.src, [m.start() for m in pattern.finditer(state.src)])
+        state.env["__blank_line_starts__"] = cache
+
+    positions = cache[1]
+    index = bisect_left(positions, pos)
+    if index < len(positions):
+        return positions[index]
+    return None
 
 
 def _trim_partial_next_line_indent(text: str, end_pos: int) -> int:

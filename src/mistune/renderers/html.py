@@ -1,4 +1,5 @@
 from typing import Any, ClassVar, Dict, Optional, Tuple, Literal
+from urllib.parse import unquote
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text
 from ..util import safe_entity, striptags
@@ -14,6 +15,14 @@ class HTMLRenderer(BaseRenderer):
         "vbscript:",
         "file:",
         "data:",
+        "feed:",
+        "jar:",
+        "livescript:",
+        "mocha:",
+        "ms-its:",
+        "mk:",
+        "res:",
+        "view-source:",
     )
     GOOD_DATA_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
         "data:image/gif;",
@@ -53,7 +62,7 @@ class HTMLRenderer(BaseRenderer):
         if self._allow_harmful_protocols is True:
             return escape_text(url)
 
-        _url = url.lower()
+        _url = _unquote_url(url).lower()
         if self._allow_harmful_protocols and _url.startswith(tuple(self._allow_harmful_protocols)):
             return escape_text(url)
 
@@ -151,3 +160,12 @@ class HTMLRenderer(BaseRenderer):
 
     def list_item(self, text: str) -> str:
         return "<li>" + text + "</li>\n"
+
+
+def _unquote_url(url: str) -> str:
+    for _ in range(3):
+        decoded = unquote(url)
+        if decoded == url:
+            break
+        url = decoded
+    return url

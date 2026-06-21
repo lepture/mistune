@@ -192,8 +192,12 @@ class InlineParser(Parser[InlineState]):
     def _contains_nested_link(self, text: str, state: InlineState) -> bool:
         if "[" not in text:
             return False
+        if "](" not in text and "][" not in text and not state.env.get("ref_links"):
+            return False
 
         sc = self.compile_sc(["link"])
+        nested_state = state.copy()
+        nested_state.src = text
         pos = 0
         while pos < len(text):
             m = sc.search(text, pos)
@@ -202,10 +206,7 @@ class InlineParser(Parser[InlineState]):
 
             marker = m.group(0)
             if marker == "[" and (m.start() == 0 or text[m.start() - 1] != "!"):
-                nested_state = state.copy()
-                nested_state.src = text
-                new_pos = self.parse_link(m, nested_state)
-                if new_pos and any(token["type"] == "link" for token in nested_state.tokens):
+                if _is_link_like(text, m.end(), nested_state):
                     return True
             pos = m.start() + 1
 
@@ -801,6 +802,33 @@ def _find_closing_bracket(state: InlineState, pos: int) -> Optional[int]:
     pairs = _build_closing_bracket_map(state.src)
     state.link_brackets[id(state.src)] = (state.src, pairs)
     return pairs.get(pos)
+
+
+def _is_link_like(src: str, pos: int, state: InlineState) -> bool:
+    label, end_pos = parse_link_label(src, pos)
+    if label is None:
+        label, end_pos = _parse_link_text(state, pos)
+        if label is None:
+            return False
+
+    if end_pos >= len(src):
+        ref_links = state.env.get("ref_links")
+        return bool(ref_links and unikey(label) in ref_links)
+
+    marker = src[end_pos]
+    if marker == "(":
+        _attrs, new_pos = parse_link(src, end_pos + 1)
+        return bool(new_pos)
+
+    if marker == "[":
+        label2, new_pos = parse_link_label(src, end_pos + 1)
+        if not new_pos:
+            return False
+        if label2:
+            label = label2
+
+    ref_links = state.env.get("ref_links")
+    return bool(ref_links and unikey(label) in ref_links)
 
 
 def _build_closing_bracket_map(src: str) -> Dict[int, int]:

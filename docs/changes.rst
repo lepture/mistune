@@ -3,6 +3,22 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.3.0
+-------------
+
+**Released on Jun 21, 2026**
+
+* Improve CommonMark compatibility and parser performance.
+* Add command line entrypoint with UTF-8 output.
+* Support display and backtick math.
+* Render plugin list and table nodes in Markdown renderer.
+* Escape leading block markers in Markdown renderer.
+* Fix RST renderer for block quotes nested in lists.
+* Avoid generated heading ID collisions in TOC.
+* Harden URL, image, figure, and include directive handling.
+* Fix quadratic scans in inline links, reference links, and formatting markers.
+* Fix math escaping, currency pattern matching, and cross-line matching.
+
 Version 3.2.1
 -------------
 

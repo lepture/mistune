@@ -102,36 +102,37 @@ def parse_nptable(block: "BlockParser", m: Match[str], state: "BlockState") -> O
     return pos
 
 
-def _process_thead(header: str, align: str) -> Union[Tuple[None, None], Tuple[Dict[str, Any], List[str]]]:
+def _process_thead(header: str, align: str) -> Union[Tuple[None, None], Tuple[Dict[str, Any], List[Optional[str]]]]:
     headers = _split_table_cells(header)
-    aligns = _split_table_cells(align)
-    if len(headers) != len(aligns):
+    raw_aligns = _split_table_cells(align)
+    if len(headers) != len(raw_aligns):
         return None, None
 
-    for i, v in enumerate(aligns):
+    aligns: List[Optional[str]] = []
+    for v in raw_aligns:
         if ALIGN_CENTER.match(v):
-            aligns[i] = "center"
+            aligns.append("center")
         elif ALIGN_LEFT.match(v):
-            aligns[i] = "left"
+            aligns.append("left")
         elif ALIGN_RIGHT.match(v):
-            aligns[i] = "right"
+            aligns.append("right")
         else:
-            aligns[i] = None
+            aligns.append(None)
 
-    children = [
+    children: List[Dict[str, Any]] = [
         {"type": "table_cell", "text": text.strip(), "attrs": {"align": aligns[i], "head": True}}
         for i, text in enumerate(headers)
     ]
-    thead = {"type": "table_head", "children": children}
+    thead: Dict[str, Any] = {"type": "table_head", "children": children}
     return thead, aligns
 
 
-def _process_row(text: str, aligns: List[str]) -> Optional[Dict[str, Any]]:
+def _process_row(text: str, aligns: List[Optional[str]]) -> Optional[Dict[str, Any]]:
     cells = _split_table_cells(text)
     if len(cells) != len(aligns):
         return None
 
-    children = [
+    children: List[Dict[str, Any]] = [
         {"type": "table_cell", "text": text.strip(), "attrs": {"align": aligns[i], "head": False}}
         for i, text in enumerate(cells)
     ]

@@ -811,6 +811,9 @@ def _is_link_like(src: str, pos: int, state: InlineState) -> bool:
         if label is None:
             return False
 
+    assert label is not None
+    assert end_pos is not None
+
     if end_pos >= len(src):
         ref_links = state.env.get("ref_links")
         return bool(ref_links and unikey(label) in ref_links)

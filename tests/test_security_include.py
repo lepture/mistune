@@ -58,10 +58,10 @@ class TestIncludeSecurity(TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             a = os.path.join(tmpdir, "a.md")
             b = os.path.join(tmpdir, "b.md")
-            with open(a, "w") as f:
-                f.write(".. include:: b.md\n")
-            with open(b, "w") as f:
-                f.write(".. include:: a.md\n")
+            with open(a, "wb") as f:
+                f.write(b".. include:: b.md\r\n")
+            with open(b, "wb") as f:
+                f.write(b".. include:: a.md\r\n")
 
             md = create_markdown(plugins=[RSTDirective([Include()])])
             html = md.read(a)[0]

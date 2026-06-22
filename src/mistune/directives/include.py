@@ -72,6 +72,7 @@ class Include(DirectivePlugin):
 
             ext = os.path.splitext(dest)[1]
             if ext in {".md", ".markdown", ".mkd"}:
+                content = content.replace("\r\n", "\n").replace("\r", "\n")
                 new_state = state.child_state(content)
                 previous_file = new_state.env.get("__file__")
                 new_state.env["__file__"] = dest

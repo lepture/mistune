@@ -3,6 +3,14 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Version 3.3.1
+-------------
+
+**Released on Jun 22, 2026**
+
+* Fix ``abbr`` plugin compatibility with escaped inline text.
+* Normalize included Markdown line endings before parsing directives.
+
 Version 3.3.0
 -------------
 

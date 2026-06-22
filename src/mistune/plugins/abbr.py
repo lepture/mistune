@@ -1,6 +1,6 @@
 import re
 import types
-from typing import TYPE_CHECKING, Match
+from typing import TYPE_CHECKING, List, Match, Tuple
 
 from ..helpers import PREVENT_BACKSLASH
 from ..util import escape
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ..markdown import Markdown
 
 __all__ = ["abbr"]
+TextSegment = Tuple[str, bool]
 
 # https://michelf.ca/projects/php-markdown/extra/#abbr
 REF_ABBR = (
@@ -33,16 +34,50 @@ def parse_ref_abbr(block: "BlockParser", m: Match[str], state: "BlockState") -> 
     return m.end() + 1
 
 
-def process_text(inline: "InlineParser", text: str, state: "InlineState") -> None:
+def _append_text(
+    inline: "InlineParser",
+    text: str,
+    state: "InlineState",
+    parse_emphasis: bool,
+) -> None:
+    type(inline).process_text(inline, text, state, parse_emphasis=parse_emphasis)
+
+
+def _append_text_segments(
+    inline: "InlineParser",
+    segments: List[TextSegment],
+    state: "InlineState",
+    start: int,
+    end: int,
+) -> None:
+    offset = 0
+    for value, parse_emphasis in segments:
+        next_offset = offset + len(value)
+        if start < next_offset and end > offset:
+            part_start = max(start - offset, 0)
+            part_end = min(end - offset, len(value))
+            _append_text(inline, value[part_start:part_end], state, parse_emphasis)
+        offset = next_offset
+
+
+def process_text(
+    inline: "InlineParser",
+    text: str,
+    state: "InlineState",
+    parse_emphasis: bool = True,
+) -> None:
     ref = state.env.get("ref_abbrs")
     if not ref:
-        return state.append_token({"type": "text", "raw": text})
+        return _append_text(inline, text, state, parse_emphasis)
 
+    segments: List[TextSegment] = []
     if state.tokens:
         last = state.tokens[-1]
         if last["type"] == "text":
             state.tokens.pop()
-            text = last["raw"] + text
+            segments.append((last["raw"], last.get("_emphasis", True)))
+    segments.append((text, parse_emphasis))
+    text = "".join(value for value, _ in segments)
 
     abbrs_re = state.env.get("abbrs_re")
     if not abbrs_re:
@@ -57,8 +92,7 @@ def process_text(inline: "InlineParser", text: str, state: "InlineState") -> Non
 
         end_pos = m.start()
         if end_pos > pos:
-            hole = text[pos:end_pos]
-            state.append_token({"type": "text", "raw": hole})
+            _append_text_segments(inline, segments, state, pos, end_pos)
 
         label = m.group(0)
         state.append_token(
@@ -68,9 +102,9 @@ def process_text(inline: "InlineParser", text: str, state: "InlineState") -> Non
 
     if pos == 0:
         # special case, just pure text
-        state.append_token({"type": "text", "raw": text})
+        _append_text_segments(inline, segments, state, 0, len(text))
     elif pos < len(text):
-        state.append_token({"type": "text", "raw": text[pos:]})
+        _append_text_segments(inline, segments, state, pos, len(text))
 
 
 def render_abbr(renderer: "BaseRenderer", text: str, title: str) -> str:

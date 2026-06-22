@@ -9,6 +9,12 @@ HTML
 ````````````````````````````````
 
 ```````````````````````````````` example
+\*a*
+.
+<p>*a*</p>
+````````````````````````````````
+
+```````````````````````````````` example
 HTML
 *[HTML]: Hyper Text Markup Language
 .
@@ -62,6 +68,20 @@ HTML is an abbreviation but nobody knows what it stands for.
 *[HTML]:
 .
 <p><abbr>HTML</abbr> is an abbreviation but nobody knows what it stands for.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+\*HTML
+*[HTML]: Hyper Text Markup Language
+.
+<p>*<abbr title="Hyper Text Markup Language">HTML</abbr></p>
+````````````````````````````````
+
+```````````````````````````````` example
+\*a*
+*[HTML]: Hyper Text Markup Language
+.
+<p>*a*</p>
 ````````````````````````````````
 
 ```````````````````````````````` example

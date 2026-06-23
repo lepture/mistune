@@ -101,7 +101,7 @@ def parse_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
     if end_pos:
         index = token.pop("_tok_index")
         state.tokens.insert(index, token)
-        return end_pos  # type: ignore[no-any-return]
+        return end_pos
 
     state.append_token(token)
     return state.cursor

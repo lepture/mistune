@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Match, Pattern
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Match, Pattern, cast
 from .util import strip_end
 
 if TYPE_CHECKING:
@@ -96,10 +96,10 @@ def parse_list(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
     while item_or_none:
         item_or_none = _parse_list_item(block, bullet, item_or_none, token, state, rules)
 
-    end_pos = token.pop("_end_pos", None)
+    end_pos = cast(Optional[int], token.pop("_end_pos", None))
     _transform_tight_list(token)
     if end_pos:
-        index = token.pop("_tok_index")
+        index = cast(int, token.pop("_tok_index"))
         state.tokens.insert(index, token)
         return end_pos
 

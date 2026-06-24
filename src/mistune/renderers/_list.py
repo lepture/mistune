@@ -34,11 +34,14 @@ def render_list_item(
 
     leading = cast(str, parent["leading"]) + marker
     text = ""
+    prev = None
     for tok in item["children"]:
         if tok["type"] == "list":
             tok["parent"] = parent
         elif tok["type"] == "blank_line":
             continue
+        tok["prev"] = prev
+        prev = tok
         text += renderer.render_token(tok, state)
 
     lines = text.splitlines()

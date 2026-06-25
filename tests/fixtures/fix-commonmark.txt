@@ -54,6 +54,21 @@ CommonMark delimiter handling is the default.
 <p>*a *<em>b c</em> d</p>
 ````````````````````````````````
 
+The multiple-of-3 rule uses the original delimiter run length, so the
+remainder of a partially consumed run can still match a later delimiter.
+
+```````````````````````````````` example
+*a***a*
+.
+<p><em>a</em>*<em>a</em></p>
+````````````````````````````````
+
+```````````````````````````````` example
+*foo***bar*
+.
+<p><em>foo</em>*<em>bar</em></p>
+````````````````````````````````
+
 
 ## Max depth
 

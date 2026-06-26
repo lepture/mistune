@@ -130,6 +130,7 @@ class RSTRenderer(BaseRenderer):
         prev = token.get("prev")
         ignore_blocks = (
             "paragraph",
+            "block_text",
             "thematic_break",
             "linebreak",
             "heading",

@@ -46,6 +46,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_codespan_with_backticks(self):
+        # a code span whose content contains backticks (or is wrapped in
+        # spaces) must be re-fenced so the content survives a re-parse
+        for text in (
+            "``a`b``\n",
+            "`` `code` ``\n",
+            "`` ` ``\n",
+            "`  x  `\n",
+            "```a``b```\n",
+        ):
+            self.assert_round_trip(text)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

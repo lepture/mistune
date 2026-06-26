@@ -7,6 +7,7 @@ from ..util import strip_end
 from ._list import render_list, render_list_item
 
 fenced_re = re.compile(r"^[`~]+", re.M)
+_backtick_run_re = re.compile(r"`+")
 
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
@@ -77,7 +78,17 @@ class MarkdownRenderer(BaseRenderer):
         return "!" + self.link(token, state)
 
     def codespan(self, token: Dict[str, Any], state: BlockState) -> str:
-        return "`" + cast(str, token["raw"]) + "`"
+        raw = cast(str, token["raw"])
+        # fence with one more backtick than the longest run in the content so
+        # an inner run can never be mistaken for the closing delimiter
+        longest = max((len(m.group()) for m in _backtick_run_re.finditer(raw)), default=0)
+        marker = "`" * (longest + 1)
+        # a re-parse strips one leading and trailing space when the content
+        # both begins and ends with a space (and is not all spaces); pad so a
+        # leading/trailing backtick or wrapping space survives that strip
+        if raw.strip() and (raw[0] == "`" or raw[-1] == "`" or (raw[0] == " " and raw[-1] == " ")):
+            raw = " " + raw + " "
+        return marker + raw + marker
 
     def linebreak(self, token: Dict[str, Any], state: BlockState) -> str:
         return "  \n"

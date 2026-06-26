@@ -529,6 +529,9 @@ class _Delimiter:
     length: int
     can_open: bool
     can_close: bool
+    #: original run length, used by the CommonMark multiple-of-3 rule even
+    #: after the run has been partially consumed
+    orig_length: int = 0
 
 
 def _finalize_emphasis_tokens(tokens: List[Dict[str, Any]], enabled: bool) -> List[Dict[str, Any]]:
@@ -618,7 +621,7 @@ def _split_text_token(
         index = len(parts)
         parts.append({"type": "text", "raw": text[pos:end]})
         if can_open or can_close:
-            delimiters.append(_Delimiter(index, marker, length, can_open, can_close))
+            delimiters.append(_Delimiter(index, marker, length, can_open, can_close, length))
         pos = end
 
 
@@ -733,7 +736,12 @@ def _has_emphasis_content(parts: List[Dict[str, Any]], start: int, end: int) -> 
 
 def _can_match_emphasis_delimiters(opener: _Delimiter, closer: _Delimiter) -> bool:
     if opener.can_close or closer.can_open:
-        return (opener.length + closer.length) % 3 != 0 or opener.length % 3 == 0 and closer.length % 3 == 0
+        # CommonMark rules 9 and 10: the multiple-of-3 test uses the lengths of
+        # the original delimiter runs, not the lengths remaining after the runs
+        # have been partially consumed.
+        open_len = opener.orig_length
+        close_len = closer.orig_length
+        return (open_len + close_len) % 3 != 0 or open_len % 3 == 0 and close_len % 3 == 0
     return True
 
 

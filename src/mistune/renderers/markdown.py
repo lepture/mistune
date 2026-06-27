@@ -32,7 +32,7 @@ class MarkdownRenderer(BaseRenderer):
             text = "[" + attrs["label"] + "]: " + attrs["url"]
             title = attrs.get("title")
             if title:
-                text += ' "' + title + '"'
+                text += ' "' + _escape_title(title) + '"'
             yield text
 
     def render_children(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -71,7 +71,7 @@ class MarkdownRenderer(BaseRenderer):
         else:
             out += url
         if title:
-            out += ' "' + title + '"'
+            out += ' "' + _escape_title(title) + '"'
         return out + ")"
 
     def image(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -186,6 +186,13 @@ class MarkdownRenderer(BaseRenderer):
 
     def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
         return _render_table_cell(self, token, state)
+
+
+def _escape_title(title: str) -> str:
+    """Escape a link/image title for emission inside double quotes. The closing
+    quote would otherwise end the title early on a re-parse; a backslash is
+    escaped first so it can't combine with the following character."""
+    return title.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _escape_block_prefix(text: str) -> str:

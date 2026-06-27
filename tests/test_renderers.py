@@ -58,6 +58,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_link_title_containing_quote(self):
+        # a double quote inside a link/image title must be escaped, or the
+        # re-parse closes the title early and drops it
+        for text in (
+            "[t](/u 'say \"hi\"')\n",
+            '[t](/u "say \\"hi\\"")\n',
+            "![a](/u 'say \"hi\"')\n",
+            "[t][r]\n\n[r]: /u 'say \"hi\"'\n",
+            '[t](/u "back\\\\slash \\" quote")\n',
+        ):
+            self.assert_round_trip(text)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

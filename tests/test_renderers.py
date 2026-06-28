@@ -70,6 +70,19 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_block_quote_content_ending_in_gt(self):
+        # a block quote whose content ends with ">" (an autolink, an inline
+        # HTML tag, or a literal ">") must keep that character; it was being
+        # stripped along with the trailing quote marker
+        for text in (
+            "> <https://example.com>\n",
+            "> <b>raw</b>\n",
+            "> ends with a literal &gt; >\n",
+            "> > nested <https://example.com>\n",
+            "> first\n>\n> <https://example.com>\n",
+        ):
+            self.assert_round_trip(text)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

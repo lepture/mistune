@@ -131,8 +131,11 @@ class MarkdownRenderer(BaseRenderer):
         return marker2 + info + "\n" + code + marker2 + "\n\n"
 
     def block_quote(self, token: Dict[str, Any], state: BlockState) -> str:
-        text = indent(self.render_children(token, state), "> ", lambda _: True)
-        text = text.rstrip("> \n")
+        # strip the children's trailing blank lines first so the quote marker is
+        # not added to a dangling empty line; stripping it back off afterwards
+        # would also eat a ">" that ends the content (an autolink or HTML tag).
+        text = self.render_children(token, state).rstrip("\n")
+        text = indent(text, "> ", lambda _: True)
         return text + "\n\n"
 
     def block_html(self, token: Dict[str, Any], state: BlockState) -> str:

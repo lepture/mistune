@@ -130,6 +130,7 @@ class InlineState:
         self.in_image = False
         self.in_link = False
         self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
+        self.no_link_before: int = 0  # high-water mark for failed balanced link candidates
         self.link_brackets: Dict[int, Tuple[str, Dict[int, int]]] = {}
 
     def prepend_token(self, token: Dict[str, Any]) -> None:

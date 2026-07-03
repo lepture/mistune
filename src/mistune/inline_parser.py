@@ -125,6 +125,9 @@ class InlineParser(Parser[InlineState]):
         if not is_image and state.in_link:
             state.append_token({"type": "text", "raw": marker})
             return pos
+        if not is_image and pos <= state.no_link_before:
+            state.append_token({"type": "text", "raw": marker})
+            return pos
 
         text = None
         label, end_pos = parse_link_label(state.src, pos)
@@ -144,11 +147,13 @@ class InlineParser(Parser[InlineState]):
             text = label
 
         assert text is not None
+        body_end_pos = end_pos
 
-        if end_pos >= len(state.src) and label is None:
+        has_nested_link = not is_image and self._contains_nested_link(text, state)
+        if has_nested_link:
             return None
-
-        if not is_image and self._contains_nested_link(text, state):
+        if end_pos >= len(state.src) and label is None:
+            _mark_no_link_before(state, body_end_pos)
             return None
 
         rules = ["codespan", "prec_auto_link", "prec_inline_html"]
@@ -175,10 +180,12 @@ class InlineParser(Parser[InlineState]):
                         label = label2
 
         if label is None:
+            _mark_no_link_before(state, body_end_pos)
             return None
 
         ref_links = state.env.get("ref_links")
         if not ref_links:
+            _mark_no_link_before(state, body_end_pos)
             return None
 
         key = unikey(label)
@@ -190,6 +197,7 @@ class InlineParser(Parser[InlineState]):
             token["label"] = label
             state.append_token(token)
             return end_pos
+        _mark_no_link_before(state, body_end_pos)
         return None
 
     def _contains_nested_link(self, text: str, state: InlineState) -> bool:
@@ -803,6 +811,11 @@ def _parse_link_text(state: InlineState, pos: int) -> Tuple[Optional[str], int]:
     if close_pos is None:
         return None, len(state.src)
     return state.src[pos:close_pos], close_pos + 1
+
+
+def _mark_no_link_before(state: InlineState, end_pos: int) -> None:
+    if end_pos > state.no_link_before:
+        state.no_link_before = end_pos
 
 
 def _find_closing_bracket(state: InlineState, pos: int) -> Optional[int]:

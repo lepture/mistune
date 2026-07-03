@@ -40,9 +40,18 @@ class MarkdownRenderer(BaseRenderer):
         return self.render_tokens(children, state)
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
+        raw = cast(str, token["raw"])
+        # a text token that is made up entirely of "*"/"_" is a literal
+        # emphasis delimiter -- either an escaped marker from the source
+        # (``\*``) or an unmatched leftover -- so every character must stay
+        # escaped, or it would re-parse as emphasis on the round-trip. Prose
+        # punctuation such as ``2 * 3`` or ``snake_case`` arrives mixed with
+        # other characters and is left untouched.
+        if raw and all(c in "*_" for c in raw):
+            return "".join("\\" + c for c in raw)
         # a backtick always opens a code span, so it must stay escaped to
         # survive a re-parse as literal text.
-        return cast(str, token["raw"]).replace("`", "\\`")
+        return raw.replace("`", "\\`")
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"

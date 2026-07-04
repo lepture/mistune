@@ -3,6 +3,12 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Unreleased
+----------
+
+* Escape literal ``*``/``_`` emphasis markers in the Markdown renderer so
+  round-tripping escaped text does not re-introduce emphasis.
+
 Version 3.3.2
 -------------
 

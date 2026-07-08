@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Tuple, Literal
+from typing import Any, ClassVar, Dict, Iterable, Optional, Tuple, Union, Literal
 from urllib.parse import unquote
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text
@@ -9,20 +9,17 @@ class HTMLRenderer(BaseRenderer):
     """A renderer for converting Markdown to HTML."""
 
     _escape: bool
+    _allow_harmful_protocols: Optional[Union[bool, Iterable[str]]]
     NAME: ClassVar[Literal["html"]] = "html"
-    HARMFUL_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
-        "javascript:",
-        "vbscript:",
-        "file:",
-        "data:",
-        "feed:",
-        "jar:",
-        "livescript:",
-        "mocha:",
-        "ms-its:",
-        "mk:",
-        "res:",
-        "view-source:",
+    SAFE_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
+        "http:",
+        "https:",
+        "mailto:",
+        "tel:",
+        "ftp:",
+        "ftps:",
+        "irc:",
+        "ircs:",
     )
     GOOD_DATA_PROTOCOLS: ClassVar[Tuple[str, ...]] = (
         "data:image/gif;",
@@ -31,7 +28,11 @@ class HTMLRenderer(BaseRenderer):
         "data:image/webp;",
     )
 
-    def __init__(self, escape: bool = True, allow_harmful_protocols: Optional[bool] = None) -> None:
+    def __init__(
+        self,
+        escape: bool = True,
+        allow_harmful_protocols: Optional[Union[bool, Iterable[str]]] = None,
+    ) -> None:
         super(HTMLRenderer, self).__init__()
         self._allow_harmful_protocols = allow_harmful_protocols
         self._escape = escape
@@ -59,16 +60,17 @@ class HTMLRenderer(BaseRenderer):
         """Ensure the given URL is safe. This method is used for rendering
         links, images, and etc.
         """
-        if self._allow_harmful_protocols is True:
+        allow_harmful_protocols = self._allow_harmful_protocols
+        if allow_harmful_protocols is True:
             return escape_text(url)
 
-        _url = _unquote_url(url).lower()
-        if self._allow_harmful_protocols and _url.startswith(tuple(self._allow_harmful_protocols)):
+        _url = _unquote_url(url).lower().lstrip()
+        if allow_harmful_protocols and _url.startswith(tuple(allow_harmful_protocols)):
             return escape_text(url)
 
-        if _url.startswith(self.HARMFUL_PROTOCOLS) and not _url.startswith(self.GOOD_DATA_PROTOCOLS):
-            return "#harmful-link"
-        return escape_text(url)
+        if _is_safe_url(_url, self.SAFE_PROTOCOLS, self.GOOD_DATA_PROTOCOLS):
+            return escape_text(url)
+        return "#harmful-link"
 
     def text(self, text: str) -> str:
         if self._escape:
@@ -169,3 +171,13 @@ def _unquote_url(url: str) -> str:
             break
         url = decoded
     return url
+
+
+def _is_safe_url(url: str, safe_protocols: Tuple[str, ...], good_data_protocols: Tuple[str, ...]) -> bool:
+    if url.startswith(safe_protocols):
+        return True
+    if url.startswith(good_data_protocols):
+        return True
+    if url.startswith(("/", "#", "?")):
+        return True
+    return ":" not in url.split("/", 1)[0]

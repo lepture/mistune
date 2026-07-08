@@ -25,22 +25,7 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 >
 > In the current benchmark suite, Wenmode’s core Markdown-to-HTML path is about 1.5-1.8x as fast as Mistune across the tested documentation corpora. See the [benchmark results](https://wenmode.lepture.com/benchmarks/) for the exact setup and numbers.
 
-## Paid plugins
-
-You can ask me to create a custom mistune plugin or directive for your needs with GitHub sponsor
-[one time tier (Mistune enhance)](https://github.com/sponsors/lepture/sponsorships?tier_id=220664)
-
-## Sponsors
-
-<table>
-<tr>
-<td><img align="middle" width="64" src="https://typlog.com/android-chrome-512x512.png"></td>
-<td>Mistune is sponsored by Typlog, a blogging and podcast hosting platform, simple yet powerful. <a href="https://typlog.com/?utm_source=mistune&utm_medium=referral&utm_campaign=readme">Write in Markdown</a>.
-</td>
-</tr>
-</table>
-
-[**Support Me via GitHub Sponsors**](https://github.com/sponsors/lepture).
+Check [benchmark results for Wenmode](https://github.com/lepture/wenmode#benchmark).
 
 ## Install
 

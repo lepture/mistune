@@ -1,7 +1,11 @@
+import platform
 import time
 from unittest import TestCase
 
 from mistune import create_markdown
+
+IS_PYPY = platform.python_implementation() == "PyPy"
+DEADLINE = 1.0 if IS_PYPY else 0.5
 
 
 class TestInlineParserSecurity(TestCase):
@@ -13,7 +17,7 @@ class TestInlineParserSecurity(TestCase):
         html = md(payload)
         elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, 0.5)
+        self.assertLess(elapsed, DEADLINE)
         self.assertIn("[x](y", html)
 
     def test_nested_bracket_link_input_does_not_recurse_forever(self):
@@ -23,7 +27,7 @@ class TestInlineParserSecurity(TestCase):
         html = create_markdown()(text)
         elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, 0.5)
+        self.assertLess(elapsed, DEADLINE)
         self.assertIn("[", html)
 
     def test_failed_outer_bracket_preserves_nested_link(self):
@@ -38,7 +42,7 @@ class TestInlineParserSecurity(TestCase):
         html = create_markdown()(text)
         elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, 0.5)
+        self.assertLess(elapsed, DEADLINE)
         self.assertIn("[missing]", html)
 
     def test_failed_reference_does_not_hide_following_inline_link(self):
@@ -53,5 +57,5 @@ class TestInlineParserSecurity(TestCase):
         html = create_markdown()(text)
         elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, 0.5)
+        self.assertLess(elapsed, DEADLINE)
         self.assertIn("[", html)

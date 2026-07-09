@@ -9,6 +9,17 @@ Unreleased
 * Escape literal ``*``/``_`` emphasis markers in the Markdown renderer so
   round-tripping escaped text does not re-introduce emphasis.
 
+Version 3.3.3
+-------------
+
+**Released on Jul 9, 2026**
+
+* Limit deeply nested emphasis and image parsing to avoid ``RecursionError``.
+* Fix repeated link suffix and unclosed formatting marker performance issues.
+* Fix unclosed inline spoiler performance issues.
+* Avoid recursive parsing for adjacent ruby tokens.
+* Speed up footnote reference indexing.
+
 Version 3.3.2
 -------------
 

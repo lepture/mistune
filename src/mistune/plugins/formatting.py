@@ -61,8 +61,14 @@ def _parse_to_end(
     marker: str,
 ) -> Optional[int]:
     pos = m.end()
+    cache_key = (id(state.src), marker)
+    cache = state.formatting_no_end.get(cache_key)
+    if cache is not None and cache[0] is state.src and pos <= cache[1]:
+        return None
+
     end_pos = _find_end_marker(state.src, pos, marker)
     if end_pos is None:
+        state.formatting_no_end[cache_key] = (state.src, len(state.src))
         return None
     text = state.src[pos : end_pos - 2]
     new_state = state.copy()

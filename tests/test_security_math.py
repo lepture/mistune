@@ -1,6 +1,10 @@
+import platform
+import time
 from unittest import TestCase
 
 from mistune import create_markdown
+
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 class TestMathSecurity(TestCase):
@@ -14,3 +18,18 @@ class TestMathSecurity(TestCase):
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", block_html)
         self.assertNotIn("<script>", inline_html)
         self.assertNotIn("<script>", block_html)
+
+    def test_repeated_inline_math_openers_are_near_linear(self):
+        md = create_markdown(plugins=["math"])
+
+        def render(size):
+            start = time.process_time()
+            md("$a " * size + "\n")
+            return time.process_time() - start
+
+        render(200)
+        small = render(1000)
+        large = render(2000)
+
+        self.assertLess(large, 1.0 if IS_PYPY else 0.5)
+        self.assertLess(large, small * 3)

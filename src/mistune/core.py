@@ -134,6 +134,7 @@ class InlineState:
         self.no_link_before: int = 0  # high-water mark for failed balanced link candidates
         self.link_brackets: Dict[int, Tuple[str, Dict[int, int]]] = {}
         self.link_ranges: Dict[int, Tuple[str, List[int], List[int]]] = {}
+        self.formatting_no_end: Dict[Tuple[int, str], Tuple[str, int]] = {}
 
     def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""
@@ -151,6 +152,7 @@ class InlineState:
         state.in_link = self.in_link
         state.link_brackets = self.link_brackets
         state.link_ranges = self.link_ranges
+        state.formatting_no_end = self.formatting_no_end
         return state
 
 

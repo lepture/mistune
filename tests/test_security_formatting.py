@@ -34,3 +34,25 @@ class TestFormattingSecurity(TestCase):
                 elapsed = time.monotonic() - start
 
                 self.assertLess(elapsed, deadline)
+
+    def test_repeated_unclosed_formatting_markers_are_near_linear(self):
+        cases = [
+            ("strikethrough", "~~a "),
+            ("mark", "==a "),
+            ("insert", "^^a "),
+        ]
+        for plugin, unit in cases:
+            with self.subTest(plugin=plugin):
+                md = create_markdown(plugins=[plugin])
+
+                def render(size):
+                    start = time.process_time()
+                    md(unit * size + "\n")
+                    return time.process_time() - start
+
+                render(200)
+                small = render(1000)
+                large = render(2000)
+
+                self.assertLess(large, 1.0 if IS_PYPY else 0.5)
+                self.assertLess(large, small * 3)

@@ -15,20 +15,15 @@ _ruby_re = re.compile(RUBY_PATTERN)
 
 
 def parse_ruby(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
-    text = m.group(0)[1:-2]
-    items = text.split(")")
-    tokens = []
-    for item in items:
-        rb, rt = item.split("(")
-        tokens.append({"type": "ruby", "raw": rb, "attrs": {"rt": rt}})
-
-    end_pos = m.end()
-
-    next_match = _ruby_re.match(state.src, end_pos)
-    if next_match:
+    while True:
+        tokens = _parse_ruby_tokens(m)
+        end_pos = m.end()
+        next_match = _ruby_re.match(state.src, end_pos)
+        if not next_match:
+            break
         for tok in tokens:
             state.append_token(tok)
-        return parse_ruby(inline, next_match, state)
+        m = next_match
 
     # repeat link logic
     if end_pos < len(state.src):
@@ -39,6 +34,15 @@ def parse_ruby(inline: "InlineParser", m: Match[str], state: "InlineState") -> i
     for tok in tokens:
         state.append_token(tok)
     return end_pos
+
+
+def _parse_ruby_tokens(m: Match[str]) -> List[Dict[str, Any]]:
+    text = m.group(0)[1:-2]
+    tokens = []
+    for item in text.split(")"):
+        rb, rt = item.split("(")
+        tokens.append({"type": "ruby", "raw": rb, "attrs": {"rt": rt}})
+    return tokens
 
 
 def _parse_ruby_link(

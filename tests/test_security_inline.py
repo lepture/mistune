@@ -129,3 +129,28 @@ class TestInlineParserSecurity(TestCase):
 
         self.assertLess(large, DEADLINE)
         self.assertLess(large, small * 3)
+
+    def test_repeated_unclosed_inline_spoilers_are_near_linear(self):
+        md = create_markdown(plugins=["spoiler"])
+
+        def render(size):
+            text = ">! a " * size + "\n"
+            start = time.process_time()
+            md(text)
+            return time.process_time() - start
+
+        render(200)
+        small = render(1000)
+        large = render(2000)
+
+        self.assertLess(large, DEADLINE)
+        self.assertLess(large, small * 3)
+
+    def test_adjacent_ruby_tokens_do_not_recurse_forever(self):
+        text = "[a(b)]" * 3000 + "\n"
+
+        start = time.monotonic()
+        create_markdown(plugins=["ruby"])(text)
+        elapsed = time.monotonic() - start
+
+        self.assertLess(elapsed, DEADLINE)

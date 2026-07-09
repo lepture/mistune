@@ -59,3 +59,16 @@ class TestInlineParserSecurity(TestCase):
 
         self.assertLess(elapsed, DEADLINE)
         self.assertIn("[", html)
+
+    def test_deep_emphasis_input_does_not_recurse_forever(self):
+        marks = "*" * 1000
+        text = marks + "a" + marks
+
+        start = time.monotonic()
+        html = create_markdown()(text)
+        ast = create_markdown(renderer="ast")(text)
+        elapsed = time.monotonic() - start
+
+        self.assertLess(elapsed, DEADLINE)
+        self.assertLessEqual(html.count("<strong>") + html.count("<em>"), 20)
+        self.assertTrue(ast)

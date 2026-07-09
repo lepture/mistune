@@ -27,6 +27,7 @@ from .util import escape_url, unikey
 
 _REGEX_META_CHARS = set(r"()[]{}?*+|.^$")
 _CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
+DEFAULT_MAX_EMPHASIS_DEPTH = 20
 
 AUTO_EMAIL = (
     r"""<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"""
@@ -84,10 +85,11 @@ class InlineParser(Parser[InlineState]):
         "linebreak",
     )
 
-    def __init__(self, hard_wrap: bool = False) -> None:
+    def __init__(self, hard_wrap: bool = False, max_emphasis_depth: int = DEFAULT_MAX_EMPHASIS_DEPTH) -> None:
         super(InlineParser, self).__init__()
 
         self.hard_wrap = hard_wrap
+        self.max_emphasis_depth = max_emphasis_depth
         self._fast_trigger_chars: Optional[Set[str]] = None
         self._fast_trigger_re: Optional[re.Pattern[str]] = None
         self._fast_trigger_re_chars: Optional[Tuple[str, ...]] = None
@@ -380,7 +382,11 @@ class InlineParser(Parser[InlineState]):
             self.process_text(state.src, state)
         elif pos < len(state.src):
             self.process_text(state.src[pos:], state)
-        state.tokens = _finalize_emphasis_tokens(state.tokens, "emphasis" in self.rules)
+        state.tokens = _finalize_emphasis_tokens(
+            state.tokens,
+            "emphasis" in self.rules,
+            self.max_emphasis_depth,
+        )
         return state.tokens
 
     def _find_fast_text_end(self, src: str, pos: int) -> Optional[int]:
@@ -542,7 +548,11 @@ class _Delimiter:
     orig_length: int = 0
 
 
-def _finalize_emphasis_tokens(tokens: List[Dict[str, Any]], enabled: bool) -> List[Dict[str, Any]]:
+def _finalize_emphasis_tokens(
+    tokens: List[Dict[str, Any]],
+    enabled: bool,
+    max_depth: int = DEFAULT_MAX_EMPHASIS_DEPTH,
+) -> List[Dict[str, Any]]:
     if not enabled:
         return _clean_emphasis_tokens(tokens)
     if not _contains_emphasis_marker(tokens):
@@ -559,7 +569,7 @@ def _finalize_emphasis_tokens(tokens: List[Dict[str, Any]], enabled: bool) -> Li
             parts.append(_clean_emphasis_token(token))
         source_pos += _emphasis_source_length(token)
 
-    _process_emphasis_delimiters(parts, delimiters)
+    _process_emphasis_delimiters(parts, delimiters, max_depth)
     return _merge_text_tokens(parts)
 
 
@@ -639,7 +649,11 @@ def _next_delimiter_run(text: str, pos: int) -> int:
     return pos
 
 
-def _process_emphasis_delimiters(parts: List[Dict[str, Any]], delimiters: List[_Delimiter]) -> None:
+def _process_emphasis_delimiters(
+    parts: List[Dict[str, Any]],
+    delimiters: List[_Delimiter],
+    max_depth: int,
+) -> None:
     closer_pos = 0
     openers_bottom: Dict[Tuple[str, int, bool], int] = {}
     while closer_pos < len(delimiters):
@@ -688,9 +702,12 @@ def _process_emphasis_delimiters(parts: List[Dict[str, Any]], delimiters: List[_
             closer_pos += 1
             continue
 
+        children = parts[opener.index + 1 : closer.index]
+        if max_depth > 0 and _emphasis_depth(children) >= max_depth:
+            closer_pos += 1
+            continue
         opener_text["raw"] = opener_text["raw"][:-use_length]
         closer_text["raw"] = closer_text["raw"][use_length:]
-        children = parts[opener.index + 1 : closer.index]
         if use_length == 2:
             node = {"type": "strong", "children": children}
         else:
@@ -719,6 +736,21 @@ def _process_emphasis_delimiters(parts: List[Dict[str, Any]], delimiters: List[_
             closer_pos = max(opener_pos, openers_bottom.get(opener_key, 0))
         else:
             closer_pos += 1
+
+
+def _emphasis_depth(tokens: List[Dict[str, Any]]) -> int:
+    max_depth = 0
+    stack = [(token, 0) for token in tokens]
+    while stack:
+        token, depth = stack.pop()
+        token_type = token["type"]
+        if token_type in ("emphasis", "strong"):
+            depth += 1
+            if depth > max_depth:
+                max_depth = depth
+        for child in token.get("children", ()):
+            stack.append((child, depth))
+    return max_depth
 
 
 def _has_strong_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:

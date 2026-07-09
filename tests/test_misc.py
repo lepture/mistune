@@ -289,6 +289,12 @@ class TestMiscCases(TestCase):
         md = mistune.Markdown(block=mistune.BlockParser(max_nested_level=7))
         self.assertEqual(md.block.max_nested_level, 7)
 
+    def test_max_emphasis_depth_setting(self):
+        self.assertEqual(mistune.InlineParser().max_emphasis_depth, 20)
+        self.assertEqual(mistune.create_markdown().inline.max_emphasis_depth, 20)
+        md = mistune.Markdown(inline=mistune.InlineParser(max_emphasis_depth=7))
+        self.assertEqual(md.inline.max_emphasis_depth, 7)
+
     def test_deeply_nested_block_quote_and_list(self):
         # Block quotes and lists each capped their own nesting at the limit but
         # not each other's, so alternating them recursed without bound. This

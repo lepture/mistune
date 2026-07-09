@@ -113,3 +113,19 @@ class TestInlineParserSecurity(TestCase):
         elapsed = time.monotonic() - start
 
         self.assertLess(elapsed, DEADLINE)
+
+    def test_repeated_link_suffixes_are_near_linear(self):
+        md = create_markdown()
+
+        def render(size):
+            text = "[" * size + "a" + "](/u)" * size + "\n"
+            start = time.process_time()
+            md(text)
+            return time.process_time() - start
+
+        render(200)
+        small = render(1000)
+        large = render(2000)
+
+        self.assertLess(large, DEADLINE)
+        self.assertLess(large, small * 3)

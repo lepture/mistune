@@ -28,6 +28,7 @@ from .util import escape_url, unikey
 _REGEX_META_CHARS = set(r"()[]{}?*+|.^$")
 _CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
 DEFAULT_MAX_EMPHASIS_DEPTH = 20
+DEFAULT_MAX_IMAGE_DEPTH = 20
 
 AUTO_EMAIL = (
     r"""<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"""
@@ -85,11 +86,17 @@ class InlineParser(Parser[InlineState]):
         "linebreak",
     )
 
-    def __init__(self, hard_wrap: bool = False, max_emphasis_depth: int = DEFAULT_MAX_EMPHASIS_DEPTH) -> None:
+    def __init__(
+        self,
+        hard_wrap: bool = False,
+        max_emphasis_depth: int = DEFAULT_MAX_EMPHASIS_DEPTH,
+        max_image_depth: int = DEFAULT_MAX_IMAGE_DEPTH,
+    ) -> None:
         super(InlineParser, self).__init__()
 
         self.hard_wrap = hard_wrap
         self.max_emphasis_depth = max_emphasis_depth
+        self.max_image_depth = max_image_depth
         self._fast_trigger_chars: Optional[Set[str]] = None
         self._fast_trigger_re: Optional[re.Pattern[str]] = None
         self._fast_trigger_re_chars: Optional[Tuple[str, ...]] = None
@@ -124,6 +131,9 @@ class InlineParser(Parser[InlineState]):
 
         marker = m.group(0)
         is_image = marker[0] == "!"
+        if is_image and self.max_image_depth > 0 and state.image_depth >= self.max_image_depth:
+            state.append_token({"type": "text", "raw": marker})
+            return pos
         if not is_image and state.in_link:
             state.append_token({"type": "text", "raw": marker})
             return pos
@@ -236,6 +246,7 @@ class InlineParser(Parser[InlineState]):
         new_state.src = text
         if is_image:
             new_state.in_image = True
+            new_state.image_depth += 1
             token = {
                 "type": "image",
                 "children": self.render(new_state),

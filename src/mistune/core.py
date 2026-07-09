@@ -128,6 +128,7 @@ class InlineState:
         self.src = ""
         self.tokens: List[Dict[str, Any]] = []
         self.in_image = False
+        self.image_depth = 0
         self.in_link = False
         self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
         self.no_link_before: int = 0  # high-water mark for failed balanced link candidates
@@ -145,6 +146,7 @@ class InlineState:
         """Create a copy of current state."""
         state = self.__class__(self.env)
         state.in_image = self.in_image
+        state.image_depth = self.image_depth
         state.in_link = self.in_link
         state.link_brackets = self.link_brackets
         return state

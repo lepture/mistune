@@ -9,6 +9,16 @@ DEADLINE = 1.0 if IS_PYPY else 0.5
 
 
 class TestInlineParserSecurity(TestCase):
+    def assert_max_token_depth(self, tokens, token_type, max_depth):
+        stack = [(token, 0) for token in tokens]
+        while stack:
+            token, depth = stack.pop()
+            if token["type"] == token_type:
+                depth += 1
+                self.assertLessEqual(depth, max_depth)
+            for child in token.get("children", ()):
+                stack.append((child, depth))
+
     def test_link_title_redos_payload_returns_quickly(self):
         md = create_markdown()
         payload = '[x](y "' + "\\!" * 24 + ")"
@@ -72,3 +82,34 @@ class TestInlineParserSecurity(TestCase):
         self.assertLess(elapsed, DEADLINE)
         self.assertLessEqual(html.count("<strong>") + html.count("<em>"), 20)
         self.assertTrue(ast)
+
+    def test_deep_image_input_does_not_recurse_forever(self):
+        text = "![" * 1000 + "a" + "](u)" * 1000
+
+        start = time.monotonic()
+        create_markdown()(text)
+        ast = create_markdown(renderer="ast")(text)
+        elapsed = time.monotonic() - start
+
+        self.assertLess(elapsed, DEADLINE)
+        self.assert_max_token_depth(ast, "image", 20)
+
+    def test_link_with_deep_image_input_does_not_recurse_forever(self):
+        text = "[" + "![" * 1000 + "a" + "](u)" * 1000 + "](u)"
+
+        start = time.monotonic()
+        create_markdown()(text)
+        ast = create_markdown(renderer="ast")(text)
+        elapsed = time.monotonic() - start
+
+        self.assertLess(elapsed, DEADLINE)
+        self.assert_max_token_depth(ast, "image", 20)
+
+    def test_deep_link_input_does_not_recurse_forever(self):
+        text = "[" * 1000 + "a" + "](u)" * 1000
+
+        start = time.monotonic()
+        create_markdown(renderer="ast")(text)
+        elapsed = time.monotonic() - start
+
+        self.assertLess(elapsed, DEADLINE)

@@ -39,11 +39,13 @@ def import_plugin(name: PluginRef) -> Plugin:
     if name in _cached_modules:
         return _cached_modules[name]
 
-    if name in _plugins:
-        module_path, func_name = _plugins[name].rsplit(".", 1)
-    else:
-        module_path, func_name = name.rsplit(".", 1)
+    if name not in _plugins:
+        raise ValueError(
+            f"Unknown plugin {name!r}. "
+            f"Allowed plugins: {', '.join(sorted(_plugins))}"
+        )
 
+    module_path, func_name = _plugins[name].rsplit(".", 1)
     module = import_module(module_path)
     plugin = cast(Plugin, getattr(module, func_name))
     _cached_modules[name] = plugin

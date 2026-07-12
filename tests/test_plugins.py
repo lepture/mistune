@@ -38,29 +38,68 @@ load_plugin("spoiler")
 
 class TestExtraPlugins(BaseTestCase):
     def test_table_in_list(self):
-        text = """- Cell | Cell\n  ---- | ----\n   1  |  2\n"""
+        text = """- Cell | Cell
+  ---- | ----
+   1  |  2
+"""
         md1 = create_markdown(escape=False)
         md2 = create_markdown(escape=False, plugins=["table", table_in_list])
         self.assertNotIn("<table>", md1(text))
         self.assertIn("<table>", md2(text))
 
     def test_table_in_quote(self):
-        text = """> Cell | Cell\n> ---- | ----\n>  1  |  2\n"""
+        text = """> Cell | Cell
+> ---- | ----
+>  1  |  2
+"""
         md1 = create_markdown(escape=False)
         md2 = create_markdown(escape=False, plugins=["table", table_in_quote])
         self.assertNotIn("<table>", md1(text))
         self.assertIn("<table>", md2(text))
 
     def test_math_in_list(self):
-        text = """- $$\n  foo\n  $$\n"""
+        text = """- $$
+  foo
+  $$
+"""
         md1 = create_markdown(escape=False)
         md2 = create_markdown(escape=False, plugins=["math", math_in_list])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))
 
     def test_math_in_quote(self):
-        text = """> $$\n> foo\n> $$\n"""
+        text = """> $$
+> foo
+> $$
+"""
         md1 = create_markdown(escape=False)
         md2 = create_markdown(escape=False, plugins=["math", math_in_quote])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))
+
+
+class TestImportPluginSecurity(BaseTestCase):
+    """Tests that import_plugin rejects arbitrary module names (CVE fix)."""
+
+    def test_known_plugin_accepted(self):
+        from mistune.plugins import import_plugin
+        plugin = import_plugin("table")
+        self.assertTrue(callable(plugin))
+
+    def test_unknown_plugin_raises(self):
+        from mistune.plugins import import_plugin
+        with self.assertRaises(ValueError) as ctx:
+            import_plugin("os.getcwd")
+        self.assertIn("Unknown plugin", str(ctx.exception))
+
+    def test_unknown_plugin_not_cached(self):
+        from mistune.plugins import import_plugin, _cached_modules
+        evil_name = "subprocess.check_output"
+        _cached_modules.pop(evil_name, None)
+        with self.assertRaises(ValueError):
+            import_plugin(evil_name)
+        self.assertNotIn(evil_name, _cached_modules)
+
+    def test_create_markdown_rejects_unknown_plugin(self):
+        with self.assertRaises(ValueError):
+            create_markdown(plugins=["os.getcwd"])

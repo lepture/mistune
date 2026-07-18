@@ -134,6 +134,14 @@ class TestMiscCases(TestCase):
         for text, html in cases.items():
             self.assertEqual(mistune.html(text).strip(), html)
 
+    def test_angle_link_escaped_backslash(self):
+        cases = {
+            r"[link](<foo\*bar>)": '<p><a href="foo*bar">link</a></p>',
+            "[x]: <a\\*b>\n\n[x]": '<p><a href="a*b">x</a></p>',
+        }
+        for text, html in cases.items():
+            self.assertEqual(mistune.html(text).strip(), html, text)
+
     def test_allow_harmful_protocols(self):
         renderer = mistune.HTMLRenderer(allow_harmful_protocols=True)
         md = mistune.Markdown(renderer)

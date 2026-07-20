@@ -112,6 +112,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_multiline_setext_heading(self):
+        # a setext heading may span several lines; re-emitting it as an ATX
+        # heading ("# ...") drops every line after the first out of the
+        # heading, because an ATX heading is a single line
+        for text in (
+            "Foo\nBar\n===\n",
+            "Foo\nBar\n---\n",
+            "one\ntwo\nthree\n===\n",
+            "Foo *bar\nbaz*\n====\n",
+        ):
+            self.assert_round_trip(text)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

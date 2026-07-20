@@ -116,8 +116,17 @@ class MarkdownRenderer(BaseRenderer):
 
     def heading(self, token: Dict[str, Any], state: BlockState) -> str:
         level = cast(int, token["attrs"]["level"])
-        marker = "#" * level
         text = self.render_children(token, state)
+        # An ATX heading ("# ...") occupies a single line, so a heading whose
+        # rendered text spans several lines -- a multi-line setext heading --
+        # must be re-emitted in setext form. As ATX the continuation lines
+        # would fall out of the heading and become a paragraph on a re-parse.
+        # Only levels 1 and 2 reach this branch, since an ATX heading never
+        # contains a line break.
+        if "\n" in text and level in (1, 2):
+            underline = "=" if level == 1 else "-"
+            return text + "\n" + underline * 3 + "\n\n"
+        marker = "#" * level
         return marker + " " + text + "\n\n"
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:

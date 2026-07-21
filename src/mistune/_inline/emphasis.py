@@ -72,7 +72,7 @@ class _DelimiterIndex:
 def finalize_emphasis_tokens(
     tokens: List[Dict[str, Any]],
     enabled: bool,
-    max_depth: int = 20,
+    max_depth: int,
 ) -> List[Dict[str, Any]]:
     if not enabled:
         return _clean_emphasis_tokens(tokens)

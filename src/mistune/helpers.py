@@ -146,7 +146,7 @@ def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tupl
             break
         if c == "\x00":
             return None, None
-        if c == "\\":
+        if c == "\\" and pos + 1 < len(src) and src[pos + 1] in string.punctuation:
             pos = min(pos + 2, len(src))
             continue
         if not block:

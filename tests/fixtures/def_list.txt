@@ -213,3 +213,16 @@ Term
 </dd>
 </dl>
 ````````````````````````````````
+
+
+## Tab-Marked Definition
+
+```````````````````````````````` example
+Term
+:	Tab-marked def
+.
+<dl>
+<dt>Term</dt>
+<dd>Tab-marked def</dd>
+</dl>
+````````````````````````````````

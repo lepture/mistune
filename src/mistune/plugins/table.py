@@ -26,6 +26,7 @@ NP_TABLE_PATTERN = r"^ {0,3}\S[^\n]*\|[^\n]*(?:\n|$)"
 ALIGN_CENTER = re.compile(r"^ *:-+: *$")
 ALIGN_LEFT = re.compile(r"^ *:-+ *$")
 ALIGN_RIGHT = re.compile(r"^ *-+: *$")
+ALIGN_NONE = re.compile(r"^ *-+ *$")
 
 
 def parse_table(block: "BlockParser", m: Match[str], state: "BlockState") -> Optional[int]:
@@ -112,8 +113,12 @@ def _process_thead(header: str, align: str) -> Union[Tuple[None, None], Tuple[Di
             aligns.append("left")
         elif ALIGN_RIGHT.match(v):
             aligns.append("right")
-        else:
+        elif ALIGN_NONE.match(v) or not v.strip():
             aligns.append(None)
+        else:
+            # a delimiter cell must be dashes (optionally colon-flanked) or empty;
+            # anything else means this is not a delimiter row, so not a table
+            return None, None
 
     children: List[Dict[str, Any]] = [
         {"type": "table_cell", "text": text.strip(), "attrs": {"align": aligns[i], "head": True}}

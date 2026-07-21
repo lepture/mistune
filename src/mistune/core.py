@@ -151,8 +151,6 @@ class InlineState:
         state.in_image = self.in_image
         state.image_depth = self.image_depth
         state.in_link = self.in_link
-        state.no_link_before = self.no_link_before
-        state.no_image_before = self.no_image_before
         state.link_brackets = self.link_brackets
         state.link_ranges = self.link_ranges
         state.formatting_no_end = self.formatting_no_end

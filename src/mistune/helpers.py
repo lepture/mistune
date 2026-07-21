@@ -146,7 +146,7 @@ def _parse_link_href(
     if src[pos] == "<":
         href, href_pos = _parse_angle_link_href(src, pos)
         if href is None:
-            return None, None, len(src)
+            return None, None, pos
         assert href_pos is not None
         return href, href_pos, href_pos
     if block and src[pos] in ASCII_WHITESPACE:

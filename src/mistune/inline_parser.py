@@ -884,14 +884,6 @@ def _emphasis_depth(tokens: List[Dict[str, Any]]) -> int:
     return max_depth
 
 
-def _has_strong_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
-    return _has_strong_enabled_at(parts, opener.index, closer.index)
-
-
-def _has_emphasis_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
-    return _has_emphasis_enabled_at(parts, opener.index, closer.index)
-
-
 def _has_strong_enabled_at(parts: List[Dict[str, Any]], opener_index: int, closer_index: int) -> bool:
     return len(_text_raw(parts[opener_index])) >= 2 and len(_text_raw(parts[closer_index])) >= 2
 

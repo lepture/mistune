@@ -1,9 +1,10 @@
 import re
-from html import _replace_charref  # type: ignore[attr-defined]
-from typing import Match
+import html
+from typing import Callable, Match, cast
 from urllib.parse import quote
 
 _expand_tab_re = re.compile(r"^( {0,3})\t", flags=re.M)
+_replace_charref = cast(Callable[[Match[str]], str], getattr(html, "_replace_charref"))
 
 
 def expand_leading_tab(text: str, width: int = 4) -> str:

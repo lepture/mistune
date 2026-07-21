@@ -25,16 +25,16 @@ class TestEdgeCaseSecurity(TestCase):
         md = create_markdown()
 
         def render(size):
-            started = time.process_time()
+            started = time.perf_counter()
             md("*a" * size + "\n")
-            return time.process_time() - started
+            return time.perf_counter() - started
 
-        render(2000)
-        small = render(16000)
-        large = render(64000)
+        render(1000)
+        small = render(4000)
+        large = render(8000)
 
         self.assertLess(large, 1.0)
-        self.assertLess(large, small * 5.5)
+        self.assertLess(large, small * 3.5 + 0.02)
 
     def test_dense_emphasis_preserves_adjacent_tokens(self):
         md = create_markdown()

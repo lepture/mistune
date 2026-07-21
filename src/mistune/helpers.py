@@ -129,14 +129,28 @@ def parse_link_label(src: str, start_pos: int) -> Union[Tuple[str, int], Tuple[N
 
 
 def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tuple[str, int], Tuple[None, None]]:
+    href, href_pos, _end_pos = _parse_link_href(src, start_pos, block=block)
+    if href is None:
+        return None, None
+    assert href_pos is not None
+    return href, href_pos
+
+
+def _parse_link_href(
+    src: str, start_pos: int, block: bool = False
+) -> Tuple[Union[str, None], Union[int, None], int]:
     pos = _skip_link_start_whitespace(src, start_pos)
     if pos >= len(src):
-        return None, None
+        return None, None, pos
 
     if src[pos] == "<":
-        return _parse_angle_link_href(src, pos)
+        href, href_pos = _parse_angle_link_href(src, pos)
+        if href is None:
+            return None, None, len(src)
+        assert href_pos is not None
+        return href, href_pos, href_pos
     if block and src[pos] in ASCII_WHITESPACE:
-        return None, None
+        return None, None, pos
 
     start = pos
     level = 0
@@ -145,7 +159,7 @@ def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tupl
         if c in ASCII_WHITESPACE:
             break
         if c == "\x00":
-            return None, None
+            return None, None, pos
         if c == "\\" and pos + 1 < len(src) and src[pos + 1] in string.punctuation:
             pos = min(pos + 2, len(src))
             continue
@@ -159,8 +173,8 @@ def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tupl
         pos += 1
 
     if not block and level != 0:
-        return None, None
-    return src[start:pos], pos
+        return None, None, pos
+    return src[start:pos], pos, pos
 
 
 def parse_link_title(src: str, start_pos: int, max_pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
@@ -197,21 +211,31 @@ def parse_link_title(src: str, start_pos: int, max_pos: int) -> Union[Tuple[str,
 
 
 def parse_link(src: str, pos: int) -> Union[Tuple[Dict[str, Any], int], Tuple[None, None]]:
-    href, href_pos = parse_link_href(src, pos)
-    if href is None:
+    attrs, next_pos, _end_pos = parse_link_with_end(src, pos)
+    if attrs is None:
         return None, None
+    assert next_pos is not None
+    return attrs, next_pos
+
+
+def parse_link_with_end(
+    src: str, pos: int
+) -> Tuple[Union[Dict[str, Any], None], Union[int, None], int]:
+    href, href_pos, scan_end = _parse_link_href(src, pos)
+    if href is None:
+        return None, None, scan_end
     assert href_pos is not None
     title, title_pos = parse_link_title(src, href_pos, len(src))
     next_pos = title_pos or href_pos
     next_pos = _skip_ascii_whitespace(src, next_pos)
     if next_pos >= len(src) or src[next_pos] != ")":
-        return None, None
+        return None, None, next_pos
 
     href = unescape_char(href)
     attrs = {"url": escape_url(href)}
     if title:
         attrs["title"] = title
-    return attrs, next_pos + 1
+    return attrs, next_pos + 1, next_pos + 1
 
 
 def _skip_ascii_whitespace(src: str, pos: int, max_pos: Union[int, None] = None) -> int:

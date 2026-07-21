@@ -132,6 +132,7 @@ class InlineState:
         self.in_link = False
         self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
         self.no_link_before: int = 0  # high-water mark for failed balanced link candidates
+        self.no_image_before: int = 0  # high-water mark for failed image candidates
         self.link_brackets: Dict[int, Tuple[str, Dict[int, int]]] = {}
         self.link_ranges: Dict[int, Tuple[str, List[int], List[int]]] = {}
         self.formatting_no_end: Dict[Tuple[int, str], Tuple[str, int]] = {}
@@ -150,6 +151,8 @@ class InlineState:
         state.in_image = self.in_image
         state.image_depth = self.image_depth
         state.in_link = self.in_link
+        state.no_link_before = self.no_link_before
+        state.no_image_before = self.no_image_before
         state.link_brackets = self.link_brackets
         state.link_ranges = self.link_ranges
         state.formatting_no_end = self.formatting_no_end

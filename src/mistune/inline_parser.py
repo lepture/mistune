@@ -21,6 +21,7 @@ from .helpers import (
     HTML_TAGNAME,
     PUNCTUATION,
     parse_link,
+    parse_link_with_end,
     parse_link_label,
     unescape_char,
 )
@@ -141,6 +142,9 @@ class InlineParser(Parser[InlineState]):
         if not is_image and pos <= state.no_link_before:
             state.append_token({"type": "text", "raw": marker})
             return pos
+        if is_image and pos <= state.no_image_before:
+            state.append_token({"type": "text", "raw": marker})
+            return pos
 
         text = None
         text_start = pos
@@ -175,22 +179,28 @@ class InlineParser(Parser[InlineState]):
             _mark_no_link_before(state, body_end_pos)
             return None
 
-        rules = ["codespan", "prec_auto_link", "prec_inline_html"]
-        prec_pos = self.precedence_scan(m, state, end_pos, rules)
-        if prec_pos:
-            return prec_pos
+        if not is_image:
+            rules = ["codespan", "prec_auto_link", "prec_inline_html"]
+            prec_pos = self.precedence_scan(m, state, end_pos, rules)
+            if prec_pos:
+                return prec_pos
 
         if end_pos < len(state.src):
             c = state.src[end_pos]
             if c == "(":
                 # standard link [text](<url> "title")
-                attrs, pos2 = parse_link(state.src, end_pos + 1)
+                attrs, pos2, scan_end = parse_link_with_end(state.src, end_pos + 1)
                 if pos2:
                     if text is None:
                         text = state.src[text_start:text_end]
                     token = self.__parse_link_token(is_image, text, attrs, state)
                     state.append_token(token)
                     return pos2
+                if scan_end > body_end_pos:
+                    if is_image:
+                        _mark_no_image_before(state, scan_end)
+                    else:
+                        _mark_no_link_before(state, scan_end)
 
             elif c == "[":
                 # standard ref link [text][label]
@@ -557,6 +567,54 @@ class _Delimiter:
     #: original run length, used by the CommonMark multiple-of-3 rule even
     #: after the run has been partially consumed
     orig_length: int = 0
+    order: int = 0
+
+
+class _DelimiterIndex:
+    """Track part positions without rewriting every delimiter after a splice."""
+
+    def __init__(self, delimiters: List[_Delimiter], part_count: int) -> None:
+        self._tree = [0] * (part_count + 1)
+        self._next = list(range(len(delimiters) + 1))
+
+    def current(self, delimiter: _Delimiter) -> int:
+        index = delimiter.index
+        total = 0
+        cursor = index + 1
+        while cursor:
+            total += self._tree[cursor]
+            cursor -= cursor & -cursor
+        return index - total
+
+    def collapse(self, closer: _Delimiter, removed: int) -> None:
+        if not removed:
+            return
+        cursor = closer.index + 1
+        while cursor < len(self._tree):
+            self._tree[cursor] += removed
+            cursor += cursor & -cursor
+
+    def deactivate(self, order: int) -> None:
+        self._next[order] = self._find(order + 1)
+
+    def deactivate_range(
+        self, delimiters: List[_Delimiter], start: int, end: int
+    ) -> None:
+        order = self._find(start)
+        while order < end:
+            delimiters[order].length = 0
+            self._next[order] = self._find(order + 1)
+            order = self._find(order)
+
+    def _find(self, order: int) -> int:
+        root = order
+        while self._next[root] != root:
+            root = self._next[root]
+        while self._next[order] != order:
+            parent = self._next[order]
+            self._next[order] = root
+            order = parent
+        return root
 
 
 def _finalize_emphasis_tokens(
@@ -711,7 +769,7 @@ def _split_text_token(
         index = len(parts)
         parts.append({"type": "text", "raw": text[pos:end]})
         if can_open or can_close:
-            delimiters.append(_Delimiter(index, marker, length, can_open, can_close, length))
+            delimiters.append(_Delimiter(index, marker, length, can_open, can_close, length, len(delimiters)))
         pos = end
 
 
@@ -726,6 +784,7 @@ def _process_emphasis_delimiters(
     delimiters: List[_Delimiter],
     max_depth: int,
 ) -> None:
+    index_map = _DelimiterIndex(delimiters, len(parts))
     closer_pos = 0
     openers_bottom: Dict[Tuple[str, int, bool], int] = {}
     while closer_pos < len(delimiters):
@@ -755,26 +814,28 @@ def _process_emphasis_delimiters(
             closer_pos += 1
             continue
 
+        opener_index = index_map.current(opener)
+        closer_index = index_map.current(closer)
         if opener.length >= 2 and closer.length >= 2:
             use_length = 2
         else:
             use_length = 1
-        if use_length == 2 and not _has_strong_enabled(parts, opener, closer):
+        if use_length == 2 and not _has_strong_enabled_at(parts, opener_index, closer_index):
             use_length = 1
-        if use_length == 1 and not _has_emphasis_enabled(parts, opener, closer):
+        if use_length == 1 and not _has_emphasis_enabled_at(parts, opener_index, closer_index):
             closer_pos += 1
             continue
-        if not _has_emphasis_content(parts, opener.index + 1, closer.index):
+        if not _has_emphasis_content(parts, opener_index + 1, closer_index):
             closer_pos += 1
             continue
 
-        opener_text = parts[opener.index]
-        closer_text = parts[closer.index]
+        opener_text = parts[opener_index]
+        closer_text = parts[closer_index]
         if opener_text["type"] != "text" or closer_text["type"] != "text":
             closer_pos += 1
             continue
 
-        children = parts[opener.index + 1 : closer.index]
+        children = parts[opener_index + 1 : closer_index]
         if max_depth > 0 and _emphasis_depth(children) >= max_depth:
             closer_pos += 1
             continue
@@ -785,24 +846,22 @@ def _process_emphasis_delimiters(
         else:
             node = {"type": "emphasis", "children": children}
 
-        old_closer_index = closer.index
-        parts[opener.index + 1 : old_closer_index] = [node]
+        old_closer_index = closer_index
+        parts[opener_index + 1 : old_closer_index] = [node]
 
-        removed = old_closer_index - opener.index - 2
-        closer.index = opener.index + 2
+        removed = old_closer_index - opener_index - 2
         if removed:
-            for delimiter in delimiters:
-                if opener.index < delimiter.index < old_closer_index:
-                    delimiter.length = 0
-                elif delimiter.index >= old_closer_index:
-                    delimiter.index -= removed
+            index_map.deactivate_range(delimiters, opener_pos + 1, closer_pos)
+            index_map.collapse(closer, removed)
 
         opener.length -= use_length
         closer.length -= use_length
         if opener.length == 0:
             opener.can_open = False
+            index_map.deactivate(opener.order)
         if closer.length == 0:
             closer.can_close = False
+            index_map.deactivate(closer.order)
 
         if opener.can_open or closer.can_close:
             closer_pos = max(opener_pos, openers_bottom.get(opener_key, 0))
@@ -826,11 +885,19 @@ def _emphasis_depth(tokens: List[Dict[str, Any]]) -> int:
 
 
 def _has_strong_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
-    return len(_text_raw(parts[opener.index])) >= 2 and len(_text_raw(parts[closer.index])) >= 2
+    return _has_strong_enabled_at(parts, opener.index, closer.index)
 
 
 def _has_emphasis_enabled(parts: List[Dict[str, Any]], opener: _Delimiter, closer: _Delimiter) -> bool:
-    return bool(_text_raw(parts[opener.index]) and _text_raw(parts[closer.index]))
+    return _has_emphasis_enabled_at(parts, opener.index, closer.index)
+
+
+def _has_strong_enabled_at(parts: List[Dict[str, Any]], opener_index: int, closer_index: int) -> bool:
+    return len(_text_raw(parts[opener_index])) >= 2 and len(_text_raw(parts[closer_index])) >= 2
+
+
+def _has_emphasis_enabled_at(parts: List[Dict[str, Any]], opener_index: int, closer_index: int) -> bool:
+    return bool(_text_raw(parts[opener_index]) and _text_raw(parts[closer_index]))
 
 
 def _text_raw(token: Dict[str, Any]) -> str:
@@ -913,6 +980,11 @@ def _merge_text_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def _mark_no_link_before(state: InlineState, end_pos: int) -> None:
     if end_pos > state.no_link_before:
         state.no_link_before = end_pos
+
+
+def _mark_no_image_before(state: InlineState, end_pos: int) -> None:
+    if end_pos > state.no_image_before:
+        state.no_image_before = end_pos
 
 
 def _find_closing_bracket(state: InlineState, pos: int) -> Optional[int]:

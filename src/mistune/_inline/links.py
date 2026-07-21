@@ -79,7 +79,7 @@ def parse_link(inline: "InlineParser", m: Match[str], state: InlineState) -> Opt
             if pos2:
                 if text is None:
                     text = state.src[text_start:text_end]
-                token = inline._parse_link_token(is_image, text, attrs, state)
+                token = build_link_token(inline, is_image, text, attrs, state)
                 state.append_token(token)
                 return pos2
             if scan_end > body_end_pos:
@@ -113,13 +113,38 @@ def parse_link(inline: "InlineParser", m: Match[str], state: InlineState) -> Opt
         if text is None:
             text = state.src[text_start:text_end]
         attrs = {"url": env["url"], "title": env.get("title")}
-        token = inline._parse_link_token(is_image, text, attrs, state)
+        token = build_link_token(inline, is_image, text, attrs, state)
         token["ref"] = key
         token["label"] = label
         state.append_token(token)
         return end_pos
     mark_no_link_before(state, body_end_pos)
     return None
+
+
+def build_link_token(
+    inline: "InlineParser",
+    is_image: bool,
+    text: str,
+    attrs: Optional[Dict[str, object]],
+    state: InlineState,
+) -> Dict[str, object]:
+    new_state = state.copy()
+    new_state.src = text
+    if is_image:
+        new_state.in_image = True
+        new_state.image_depth += 1
+        return {
+            "type": "image",
+            "children": inline.render(new_state),
+            "attrs": attrs,
+        }
+    new_state.in_link = True
+    return {
+        "type": "link",
+        "children": inline.render(new_state),
+        "attrs": attrs,
+    }
 
 
 def mark_no_link_before(state: InlineState, end_pos: int) -> None:

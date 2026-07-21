@@ -126,32 +126,6 @@ class InlineParser(Parser[InlineState]):
     def parse_link(self, m: Match[str], state: InlineState) -> Optional[int]:
         return parse_inline_link(self, m, state)
 
-    def _parse_link_token(
-        self,
-        is_image: bool,
-        text: str,
-        attrs: Optional[Dict[str, Any]],
-        state: InlineState,
-    ) -> Dict[str, Any]:
-        new_state = state.copy()
-        new_state.src = text
-        if is_image:
-            new_state.in_image = True
-            new_state.image_depth += 1
-            token = {
-                "type": "image",
-                "children": self.render(new_state),
-                "attrs": attrs,
-            }
-        else:
-            new_state.in_link = True
-            token = {
-                "type": "link",
-                "children": self.render(new_state),
-                "attrs": attrs,
-            }
-        return token
-
     def parse_auto_link(self, m: Match[str], state: InlineState) -> int:
         text = m.group(0)
         pos = m.end()

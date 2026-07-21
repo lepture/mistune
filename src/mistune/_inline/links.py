@@ -21,8 +21,8 @@ def parse_link(inline: "InlineParser", m: Match[str], state: InlineState) -> Opt
     marker = m.group(0)
     is_image = marker[0] == "!"
     if is_image and inline.max_image_depth > 0 and state.image_depth >= inline.max_image_depth:
-        state.append_token({"type": "text", "raw": marker})
-        return pos
+        state.append_token({"type": "text", "raw": marker + state.src[pos:]})
+        return len(state.src)
     if not is_image and state.in_link:
         state.append_token({"type": "text", "raw": marker})
         return pos

@@ -617,8 +617,8 @@ def _process_dense_emphasis(
         ):
             return False
 
-    processed: List[Dict[str, Any]] = parts[: delimiters[0].index]
     pair_count = len(delimiters) // 2
+    processed: List[Dict[str, Any]] = []
     for pair_index in range(pair_count):
         opener = delimiters[pair_index * 2]
         closer = delimiters[pair_index * 2 + 1]
@@ -631,12 +631,11 @@ def _process_dense_emphasis(
             return False
 
         if pair_index:
-            previous_closer = delimiters[pair_index * 2 - 1]
-            processed.extend(parts[previous_closer.index + 1 : opener.index])
+            processed.append(parts[opener.index - 1])
         processed.append(
             {
                 "type": "emphasis",
-                "children": parts[opener.index + 1 : closer.index],
+                "children": [parts[opener.index + 1]],
             }
         )
 

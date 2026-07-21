@@ -12,7 +12,7 @@ from typing import (
     Tuple,
 )
 
-from ._inline.emphasis import _is_entity_boundary, finalize_emphasis_tokens
+from ._inline.emphasis import finalize_emphasis_tokens, is_entity_boundary
 from ._inline.links import parse_link as parse_inline_link
 from .core import InlineState, Parser
 from .helpers import (
@@ -216,7 +216,7 @@ class InlineParser(Parser[InlineState]):
             and state.tokens
             and state.tokens[-1]["type"] == "text"
             and state.tokens[-1].get("_emphasis", True)
-            and not _is_entity_boundary(state.tokens[-1]["raw"], text)
+            and not is_entity_boundary(state.tokens[-1]["raw"], text)
         ):
             state.tokens[-1]["raw"] += text
         else:

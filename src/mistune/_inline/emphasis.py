@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, cast
 _CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
 
 
-def _is_entity_boundary(left: str, right: str) -> bool:
+def is_entity_boundary(left: str, right: str) -> bool:
     return left.endswith("&") and _CHARREF_PREFIX.match(right) is not None
 
 
@@ -388,7 +388,7 @@ def _merge_text_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if token["type"] == "text" and token["raw"] == "":
             continue
         if token["type"] == "text" and result and result[-1]["type"] == "text":
-            if not _is_entity_boundary(result[-1]["raw"], token["raw"]):
+            if not is_entity_boundary(result[-1]["raw"], token["raw"]):
                 result[-1]["raw"] += token["raw"]
                 continue
         result.append(_clean_emphasis_token(token))

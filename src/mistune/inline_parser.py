@@ -286,7 +286,15 @@ class InlineParser(Parser[InlineState]):
         )
 
     def parse_emphasis(self, m: Match[str], state: InlineState) -> int:
-        self.process_text(m.group(0), state)
+        # Keep a delimiter run separate from the preceding text token.  The
+        # emphasis finalizer needs to inspect these markers later, and merging
+        # one-character markers with a growing text token makes inputs such as
+        # ``*a*a*a`` repeatedly copy the whole accumulated string.
+        marker = m.group(0)
+        if len(marker) == 1:
+            state.append_token({"type": "text", "raw": marker})
+        else:
+            self.process_text(marker, state)
         return m.end()
 
     def parse_codespan(self, m: Match[str], state: InlineState) -> int:
@@ -572,8 +580,70 @@ def _finalize_emphasis_tokens(
             parts.append(_clean_emphasis_token(token))
         source_pos += _emphasis_source_length(token)
 
+    if _process_dense_emphasis(parts, delimiters):
+        return _merge_text_tokens(parts)
+
     _process_emphasis_delimiters(parts, delimiters, max_depth)
     return _merge_text_tokens(parts)
+
+
+def _process_dense_emphasis(
+    parts: List[Dict[str, Any]],
+    delimiters: List[_Delimiter],
+) -> bool:
+    """Process a flat run such as ``*a*a*a`` without repeated list scans.
+
+    The general delimiter algorithm must support nested tokens and partially
+    consumed delimiter runs.  A dense run of single-character delimiters
+    separated only by text has no such structure: CommonMark pairs adjacent
+    delimiters from left to right.  Handling this shape directly avoids the
+    repeated delimiter/index work that otherwise makes very large runs
+    superlinear.
+    """
+    if len(delimiters) < 4:
+        return False
+
+    marker = delimiters[0].marker
+    if marker not in ("*", "_") or len(parts) != len(delimiters) * 2:
+        return False
+
+    for index, delimiter in enumerate(delimiters):
+        if (
+            delimiter.marker != marker
+            or delimiter.length != 1
+            or delimiter.index != index * 2
+            or parts[delimiter.index]["type"] != "text"
+            or parts[delimiter.index + 1]["type"] != "text"
+        ):
+            return False
+
+    processed: List[Dict[str, Any]] = parts[: delimiters[0].index]
+    pair_count = len(delimiters) // 2
+    for pair_index in range(pair_count):
+        opener = delimiters[pair_index * 2]
+        closer = delimiters[pair_index * 2 + 1]
+        if (
+            not opener.can_open
+            or not closer.can_close
+            or not _can_match_emphasis_delimiters(opener, closer)
+            or not _has_emphasis_content(parts, opener.index + 1, closer.index)
+        ):
+            return False
+
+        if pair_index:
+            previous_closer = delimiters[pair_index * 2 - 1]
+            processed.extend(parts[previous_closer.index + 1 : opener.index])
+        processed.append(
+            {
+                "type": "emphasis",
+                "children": parts[opener.index + 1 : closer.index],
+            }
+        )
+
+    if pair_count:
+        last_close = delimiters[pair_count * 2 - 1].index
+        parts[:] = processed + parts[last_close + 1 :]
+    return True
 
 
 def _contains_emphasis_marker(tokens: List[Dict[str, Any]]) -> bool:

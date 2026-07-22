@@ -1,9 +1,11 @@
+import platform
 import time
 from unittest import TestCase
 
 from mistune import create_markdown
 
-DEADLINE = 1.0
+IS_PYPY = platform.python_implementation() == "PyPy"
+DEADLINE = 1.2 if IS_PYPY else 1.0
 
 
 class TestInlineParserSecurity(TestCase):

@@ -6,6 +6,16 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+Version 3.3.4
+-------------
+
+**Released on Jul 22, 2026**
+
+* Harden inline parsing against deeply nested and adversarial link, image,
+  emphasis, formatting, math, and reference inputs.
+* Improve performance for repeated link suffixes, dense emphasis, unclosed
+  formatting markers, inline spoilers, and adjacent ruby tokens.
+* Refactor the inline parser into dedicated emphasis and link modules.
 * Escape literal ``*``/``_`` emphasis markers in the Markdown renderer so
   round-tripping escaped text does not re-introduce emphasis.
 

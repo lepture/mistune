@@ -1,6 +1,6 @@
+import json
 import os
 import re
-import json
 from typing import Any, Iterable, Tuple
 
 ROOT = os.path.join(os.path.dirname(__file__))

@@ -1,18 +1,6 @@
 import re
 from abc import ABCMeta, abstractmethod
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Match,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Match, Optional, Tuple, Type, Union
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser

@@ -1,25 +1,21 @@
-from bisect import bisect_left
 import re
-from typing import Optional, List, Tuple, Match, Pattern, Set
 import string
-from .util import (
-    unikey,
-    escape_url,
-    expand_tab,
-    expand_leading_tab,
-)
-from .core import Parser, BlockState
+from bisect import bisect_left
+from typing import List, Match, Optional, Pattern, Set, Tuple
+
+from .core import BlockState, Parser
 from .helpers import (
-    LINK_LABEL,
-    HTML_TAGNAME,
-    HTML_ATTRIBUTES,
     BLOCK_TAGS,
+    HTML_ATTRIBUTES,
+    HTML_TAGNAME,
+    LINK_LABEL,
     PRE_TAGS,
-    unescape_char,
     parse_link_href,
     parse_link_title,
+    unescape_char,
 )
-from .list_parser import parse_list, LIST_PATTERN
+from .list_parser import LIST_PATTERN, parse_list
+from .util import escape_url, expand_leading_tab, expand_tab, unikey
 
 DEFAULT_MAX_NESTED_LEVEL = 20
 

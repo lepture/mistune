@@ -4,11 +4,8 @@ from bisect import bisect_left
 from typing import TYPE_CHECKING, Dict, List, Match, Optional, Tuple
 
 from ..core import InlineState
-from ..helpers import (
-    parse_link as parse_link_destination,
-    parse_link_label,
-    parse_link_with_end,
-)
+from ..helpers import parse_link as parse_link_destination
+from ..helpers import parse_link_label, parse_link_with_end
 from ..util import unikey
 
 if TYPE_CHECKING:

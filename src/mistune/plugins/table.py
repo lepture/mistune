@@ -1,14 +1,5 @@
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Match,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Match, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser

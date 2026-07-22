@@ -1,6 +1,6 @@
 from mistune import create_markdown
-from mistune.plugins.table import table_in_list, table_in_quote
 from mistune.plugins.math import math_in_list, math_in_quote
+from mistune.plugins.table import table_in_list, table_in_quote
 from tests import BaseTestCase
 
 

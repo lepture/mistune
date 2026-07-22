@@ -1,26 +1,12 @@
 from __future__ import annotations
 
 import re
-from typing import (
-    Any,
-    Dict,
-    List,
-    Match,
-    MutableMapping,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import Any, Dict, List, Match, MutableMapping, Optional, Set, Tuple
 
 from ._inline.emphasis import finalize_emphasis_tokens, is_entity_boundary
 from ._inline.links import parse_link as parse_inline_link
 from .core import InlineState, Parser
-from .helpers import (
-    HTML_ATTRIBUTES,
-    HTML_TAGNAME,
-    PUNCTUATION,
-    unescape_char,
-)
+from .helpers import HTML_ATTRIBUTES, HTML_TAGNAME, PUNCTUATION, unescape_char
 from .util import escape_url
 
 _REGEX_META_CHARS = set(r"()[]{}?*+|.^$")

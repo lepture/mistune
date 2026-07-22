@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Match
+
 from ..util import escape as escape_text
 
 if TYPE_CHECKING:

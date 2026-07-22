@@ -1,14 +1,7 @@
 import os
+
 from mistune import create_markdown
-from mistune.directives import (
-    RSTDirective,
-    FencedDirective,
-    Admonition,
-    TableOfContents,
-    Include,
-    Image,
-    Figure,
-)
+from mistune.directives import Admonition, FencedDirective, Figure, Image, Include, RSTDirective, TableOfContents
 from tests import BaseTestCase
 from tests.fixtures import ROOT
 

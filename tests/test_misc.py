@@ -1,5 +1,6 @@
-import mistune
 from unittest import TestCase
+
+import mistune
 
 
 class TestMiscCases(TestCase):

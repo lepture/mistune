@@ -2,7 +2,7 @@ import re
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 from .core import BlockState
-from .util import striptags, escape
+from .util import escape, striptags
 
 if TYPE_CHECKING:
     from .markdown import Markdown

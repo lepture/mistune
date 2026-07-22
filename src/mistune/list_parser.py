@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Match, Pattern, cast
+from typing import TYPE_CHECKING, Any, Iterable, Match, Optional, Pattern, cast
+
 from .util import strip_end
 
 if TYPE_CHECKING:

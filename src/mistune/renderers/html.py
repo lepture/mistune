@@ -1,5 +1,6 @@
-from typing import Any, ClassVar, Dict, Iterable, Optional, Tuple, Union, Literal
+from typing import Any, ClassVar, Dict, Iterable, Literal, Optional, Tuple, Union
 from urllib.parse import unquote
+
 from ..core import BaseRenderer, BlockState
 from ..util import escape as escape_text
 from ..util import safe_entity, striptags

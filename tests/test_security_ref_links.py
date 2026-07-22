@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from mistune import create_markdown
 
+
 class TestRefLinkSecurity(TestCase):
     def test_many_reference_links_return_quickly(self):
         repetitions = 3000

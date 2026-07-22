@@ -1,5 +1,5 @@
-import re
 import html
+import re
 from typing import Callable, Match, cast
 from urllib.parse import quote
 

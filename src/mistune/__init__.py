@@ -8,7 +8,8 @@ plugins, compatible with CommonMark 0.31.2.
 Documentation: https://mistune.lepture.com/
 """
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Literal
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union
+
 from .block_parser import BlockParser
 from .core import BaseRenderer, BlockState, InlineState
 from .inline_parser import InlineParser

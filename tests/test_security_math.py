@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from mistune import create_markdown
 
+
 class TestMathSecurity(TestCase):
     def test_math_plugin_escapes_math_content(self):
         md = create_markdown(escape=True, plugins=["math"])

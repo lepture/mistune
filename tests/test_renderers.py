@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from mistune import BlockState, HTMLRenderer, create_markdown
-from mistune.renderers.rst import RSTRenderer
 from mistune.renderers.markdown import MarkdownRenderer
+from mistune.renderers.rst import RSTRenderer
 from tests import BaseTestCase
 
 

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, Match
-from ..util import escape as escape_text
 
+from ..util import escape as escape_text
 from ._base import BaseDirective, DirectivePlugin
 
 if TYPE_CHECKING:

@@ -266,7 +266,10 @@ def _parse_angle_link_href(src: str, pos: int) -> Union[Tuple[str, int], Tuple[N
         c = src[pos]
         if c == ">":
             return src[start:pos], pos + 1
-        if c in "<\\\n\r\x00":
+        if c == "\\":
+            pos = min(pos + 2, len(src))
+            continue
+        if c in "<\n\r\x00":
             return None, None
         pos += 1
     return None, None

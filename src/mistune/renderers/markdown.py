@@ -152,7 +152,7 @@ class MarkdownRenderer(BaseRenderer):
         # strip the children's trailing blank lines first so the quote marker is
         # not added to a dangling empty line; stripping it back off afterwards
         # would also eat a ">" that ends the content (an autolink or HTML tag).
-        text = self.render_children(token, state).rstrip("\n")
+        text = _render_block_quote_children(self, token, state).rstrip("\n")
         text = indent(text, "> ", lambda _: True)
         return text + "\n\n"
 
@@ -214,6 +214,19 @@ def _escape_title(title: str) -> str:
     quote would otherwise end the title early on a re-parse; a backslash is
     escaped first so it can't combine with the following character."""
     return title.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _render_block_quote_children(renderer: MarkdownRenderer, token: Dict[str, Any], state: BlockState) -> str:
+    children = token["children"]
+    parts: list[str] = []
+    previous_type = ""
+    for child in children:
+        child_type = child["type"]
+        if parts and previous_type != "blank_line" and child_type != "blank_line":
+            parts[-1] = parts[-1].rstrip("\n") + "\n"
+        parts.append(renderer.render_token(child, state))
+        previous_type = child_type
+    return "".join(parts)
 
 
 def _escape_block_prefix(text: str) -> str:

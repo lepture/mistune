@@ -112,6 +112,13 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_block_quote_adjacent_child_blocks(self):
+        reformat = create_markdown(renderer=MarkdownRenderer())
+        self.assertEqual(
+            reformat("> #### Lorem\n> Ipsum"),
+            "> #### Lorem\n> Ipsum\n",
+        )
+
     def test_multiline_setext_heading(self):
         # a setext heading may span several lines; re-emitting it as an ATX
         # heading ("# ...") drops every line after the first out of the

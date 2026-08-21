@@ -20,10 +20,16 @@ class MarkdownRenderer(BaseRenderer):
     NAME = "markdown"
 
     def __call__(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
-        out = self.render_tokens(tokens, state)
+        tokens = list(tokens)
+        leading = ""
+        i = 0
+        while i < len(tokens) and tokens[i]["type"] == "blank_line" and "newlines" in tokens[i]:
+            leading += "\n" * tokens[i]["newlines"]
+            i += 1
+        out = self.render_tokens(tokens[i:], state)
         # special handle for line breaks
         out += "\n\n".join(self.render_referrences(state)) + "\n"
-        return strip_end(out)
+        return strip_end(leading + out)
 
     def render_referrences(self, state: BlockState) -> Iterable[str]:
         ref_links = state.env["ref_links"]

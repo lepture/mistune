@@ -46,6 +46,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_escaped_backslash(self):
+        # a literal backslash was re-emitted bare and the re-parse consumed it
+        # as an escape for the character behind it: KaTeX's "\\(...\\)" came back
+        # as plain "(...)", and one ending a line became a hard line break
+        for text in (
+            r"(2) \\(2^n\\)" + "\n",
+            r"a *b* c \\(d\\) e" + "\n",
+            r"escaped \\\\ pair" + "\n",
+            "para line one " + r"\\" + "\nline two\n",
+        ):
+            self.assert_round_trip(text)
+
     def test_escaped_emphasis_markers(self):
         # an escaped "*"/"_" is a literal delimiter, not emphasis; re-emitting
         # it unescaped would turn plain text back into <em>/<strong>
@@ -59,6 +71,38 @@ class TestMarkdownRendererRoundTrip(TestCase):
             r"trailing star\*" + "\n",
             r"\*leading star" + "\n",
         ):
+            self.assert_round_trip(text)
+
+    def test_escaped_marker_alongside_real_emphasis(self):
+        # an escaped marker keeps its own text token only while the paragraph
+        # has no real emphasis; once it does, the inline parser hands the
+        # renderer one merged token ("a *b* c \*d\* e" -> emphasis + " c *d* e"),
+        # and the literal markers were re-emitted bare and re-parsed as emphasis
+        for text in (
+            r"a *b* c \*d\* e" + "\n",
+            r"\*baz\* *bar*" + "\n",
+            r"*bar* \_baz\_" + "\n",
+        ):
+            self.assert_round_trip(text)
+
+    def test_literal_markers_escaped_only_where_they_could_delimit(self):
+        # assert_round_trip compares HTML, which cannot see a stray backslash,
+        # so pin the emitted Markdown: a run with a space either side, and an
+        # intraword "_", cannot open or close emphasis and must stay bare
+        self.assertEqual(
+            self.reformat("2 * 3 = 6 and snake_case_var\n"),
+            "2 * 3 = 6 and snake_case_var\n",
+        )
+        self.assertEqual(self.reformat(r"*bar* \*baz\*" + "\n"), r"*bar* \*baz\*" + "\n")
+
+    def test_autolink_url_containing_a_marker(self):
+        # the "<url>" form takes no escapes, so escaping the text must not
+        # demote an autolink to a verbose inline link with backslashes in it
+        for text in (
+            "<https://en.wikipedia.org/wiki/Foo_(bar)>\n",
+            "<https://example.com/a/__init__.py>\n",
+        ):
+            self.assertEqual(self.reformat(text), text)
             self.assert_round_trip(text)
 
     def test_real_emphasis_not_over_escaped(self):

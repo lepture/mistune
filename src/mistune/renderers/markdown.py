@@ -13,6 +13,10 @@ _backtick_run_re = re.compile(r"`+")
 #: quote) if they appear unescaped at the start of a line.
 _block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
 
+#: a run of "*"/"_" that would be re-parsed as an emphasis delimiter unless
+#: it is escaped.
+_emphasis_run_re = re.compile(r"\*+|_+")
+
 
 class MarkdownRenderer(BaseRenderer):
     """A renderer to re-format Markdown text."""
@@ -41,14 +45,14 @@ class MarkdownRenderer(BaseRenderer):
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
         raw = cast(str, token["raw"])
-        # a text token that is made up entirely of "*"/"_" is a literal
-        # emphasis delimiter -- either an escaped marker from the source
-        # (``\*``) or an unmatched leftover -- so every character must stay
-        # escaped, or it would re-parse as emphasis on the round-trip. Prose
-        # punctuation such as ``2 * 3`` or ``snake_case`` arrives mixed with
-        # other characters and is left untouched.
-        if raw and all(c in "*_" for c in raw):
-            return "".join("\\" + c for c in raw)
+        # a backslash in a text token is literal and must stay escaped, or the
+        # re-parse consumes it (``\\(`` comes back as ``(``). Each escape is its
+        # own token, so there is no neighbour here to make this conditional on.
+        raw = raw.replace("\\", "\\\\")
+        # "*"/"_" in a text token are literal -- an escaped marker from the
+        # source (``\*``) or an unmatched leftover -- and must stay escaped, or
+        # they would re-parse as emphasis on the round-trip.
+        raw = _emphasis_run_re.sub(_escape_emphasis_run, raw)
         # a backtick always opens a code span, so it must stay escaped to
         # survive a re-parse as literal text.
         return raw.replace("`", "\\`")
@@ -69,10 +73,12 @@ class MarkdownRenderer(BaseRenderer):
         attrs = token["attrs"]
         url: str = attrs["url"]
         title = attrs.get("title")
-        if text == url and not title:
-            return "<" + text + ">"
-        elif "mailto:" + text == url and not title:
-            return "<" + text + ">"
+        # an autolink renders its own URL as its text, and the "<url>" form takes
+        # no escapes, so match on the raw text rather than the escaped render
+        children = token["children"]
+        raw = "".join(cast(str, c["raw"]) for c in children) if all(c["type"] == "text" for c in children) else ""
+        if raw and not title and url in (raw, "mailto:" + raw):
+            return "<" + raw + ">"
 
         out += "("
         if "(" in url or ")" in url:
@@ -207,6 +213,25 @@ class MarkdownRenderer(BaseRenderer):
 
     def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
         return _render_table_cell(self, token, state)
+
+
+def _escape_emphasis_run(match: "re.Match[str]") -> str:
+    """Escape a run of literal "*"/"_" unless it could not delimit emphasis.
+
+    A run needs a non-space character on one side to open or close emphasis,
+    and a "_" run also cannot do so from inside a word. ``match.string`` is the
+    token's own raw text, so a run at a token edge has no neighbour to inspect
+    and is escaped: the adjacent inline element is not known to be a space.
+    """
+    run = match.group(0)
+    text = match.string
+    before = text[match.start() - 1] if match.start() else ""
+    after = text[match.end()] if match.end() < len(text) else ""
+    if before.isspace() and after.isspace():
+        return run
+    if run[0] == "_" and before.isalnum() and after.isalnum():
+        return run
+    return "".join("\\" + c for c in run)
 
 
 def _escape_title(title: str) -> str:

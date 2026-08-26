@@ -46,6 +46,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_escaped_backslash(self):
+        # a literal backslash was re-emitted bare and the re-parse consumed it
+        # as an escape for the character behind it: KaTeX's "\\(...\\)" came back
+        # as plain "(...)", and one ending a line became a hard line break
+        for text in (
+            r"(2) \\(2^n\\)" + "\n",
+            r"a *b* c \\(d\\) e" + "\n",
+            r"escaped \\\\ pair" + "\n",
+            "para line one " + r"\\" + "\nline two\n",
+        ):
+            self.assert_round_trip(text)
+
     def test_escaped_emphasis_markers(self):
         # an escaped "*"/"_" is a literal delimiter, not emphasis; re-emitting
         # it unescaped would turn plain text back into <em>/<strong>

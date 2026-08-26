@@ -45,6 +45,10 @@ class MarkdownRenderer(BaseRenderer):
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
         raw = cast(str, token["raw"])
+        # a backslash in a text token is literal and must stay escaped, or the
+        # re-parse consumes it (``\\(`` comes back as ``(``). Each escape is its
+        # own token, so there is no neighbour here to make this conditional on.
+        raw = raw.replace("\\", "\\\\")
         # "*"/"_" in a text token are literal -- an escaped marker from the
         # source (``\*``) or an unmatched leftover -- and must stay escaped, or
         # they would re-parse as emphasis on the round-trip.

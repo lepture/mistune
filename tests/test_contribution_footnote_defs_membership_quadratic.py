@@ -13,5 +13,11 @@ SRC = Path(__file__).resolve().parents[1] / 'src'
 
 
 def test_footnote_defs_membership_quadratic_regression() -> None:
-    proc = subprocess.run([sys.executable, str(REPRO), str(SRC)], capture_output=True, text=True)
-    assert proc.returncode == 0, proc.stderr[-400:]
+    proc = subprocess.run(
+        [sys.executable, str(REPRO), str(SRC)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    diagnostics = f"stdout:\n{proc.stdout[-400:]}\nstderr:\n{proc.stderr[-400:]}"
+    assert proc.returncode == 0, diagnostics

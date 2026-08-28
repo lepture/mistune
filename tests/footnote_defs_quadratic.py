@@ -4,7 +4,10 @@ Discovered autonomously by blackhole_agent.upstream_discovery. Runs a doubling
 ladder against the source tree given as argv[1]; exits 1 while the defect is
 present, 0 once repaired. Usage: python <this file> <path-to-src-dir>
 """
-import json, math, sys, time
+import json
+import math
+import sys
+import time
 
 sys.path.insert(0, sys.argv[1])
 PLUGINS = ['footnotes']

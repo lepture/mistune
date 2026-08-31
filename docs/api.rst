@@ -1,7 +1,7 @@
 API Reference
 =============
 
-Here are the list of API reference; it might be helpful for developers.
+This page lists the public API for developers.
 
 .. module:: mistune
 
@@ -10,9 +10,9 @@ Basic
 
 .. function:: html(text: str)
 
-    :param text: markdown formatted text
+    :param text: Markdown-formatted text
 
-    Turn markdown text into HTML without escaping. For instance::
+    Convert Markdown text to HTML without escaping. For example::
 
         text = '**hello** <span>world</span>'
         mistune.html(text)

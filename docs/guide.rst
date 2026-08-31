@@ -1,46 +1,43 @@
 How to Use Mistune
 ==================
 
-Mistune is super easy to use. Here is how you can convert Markdown formatted
-text into HTML::
+Use ``mistune.html()`` to convert Markdown text to HTML::
 
     import mistune
 
     mistune.html(YOUR_MARKDOWN_TEXT)
 
-The ``.html()`` methods has enabled all the features you might want
-by default:
+The ``mistune.html()`` function enables these features by default:
 
-* No escape of HTML tags
-* With **strikethrough** plugin
-* With **table** plugin
-* With **footnote** plugin
+* It does not escape HTML tags.
+* It uses the **strikethrough** plugin.
+* It uses the **table** plugin.
+* It uses the **footnote** plugin.
 
 
 Customize Mistune
 -----------------
 
-Mistune provides a function to create Markdown instance easily::
+Use ``create_markdown()`` to create a Markdown instance::
 
     import mistune
 
     markdown = mistune.create_markdown()
 
-This method will create a "escaped" Markdown instance without any plugins,
-which means::
+This function creates an escaped Markdown instance with no plugins::
 
     markdown('<div>hello</div>')
     # ==>
     '<p>&lt;div&gt;hello&lt;/div&gt;</p>'
 
-Non escaped version::
+Create a non-escaped instance::
 
     markdown = mistune.create_markdown(escape=False)
     markdown('<div>hello</div>')
     # ==>
     '<div>hello</div>'
 
-Adding plugins::
+Add plugins::
 
     markdown = mistune.create_markdown()
     markdown('~~s~~')
@@ -52,14 +49,14 @@ Adding plugins::
     # ==>
     '<p><del>s</del></p>'
 
-Find out what plugins mistune has built-in in :ref:`plugins` sections.
+For the list of built-in plugins, see :ref:`plugins`.
 
 
 Customize Renderer
 ------------------
 
-Mistune supports renderer feature which enables developers to customize
-the output. For instance, to add code syntax highlight::
+Mistune lets you customize output with renderers. For example, this
+renderer adds syntax highlighting to fenced code blocks::
 
     import mistune
     from pygments import highlight
@@ -79,8 +76,8 @@ the output. For instance, to add code syntax highlight::
 
     print(markdown('```python\nassert 1 == 1\n```'))
 
-In this way, we can use Pygments to highlight the fenced code. Learn more
-at :ref:`renderers`.
+This renderer uses Pygments to highlight fenced code blocks. For more
+renderer details, see :ref:`renderers`.
 
 
 .. _abstract-syntax-tree:
@@ -88,11 +85,11 @@ at :ref:`renderers`.
 Abstract syntax tree
 --------------------
 
-Mistune can produce AST by default without any renderer::
+Mistune can produce AST tokens without a renderer::
 
     markdown = mistune.create_markdown(renderer=None)
 
-This ``markdown`` function will generate a list of tokens instead of HTML::
+This ``markdown`` function returns a list of tokens instead of HTML::
 
     text = 'hello **world**'
     markdown(text)
@@ -107,7 +104,7 @@ This ``markdown`` function will generate a list of tokens instead of HTML::
         }
     ]
 
-It is also possible to pass ``renderer='ast'`` to create the markdown instance::
+You can also pass ``renderer='ast'`` when you create the Markdown instance::
 
     markdown = mistune.create_markdown(renderer='ast')
 

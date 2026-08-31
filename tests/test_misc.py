@@ -1,3 +1,4 @@
+from time import perf_counter
 from unittest import TestCase
 
 import mistune
@@ -90,6 +91,13 @@ class TestMiscCases(TestCase):
         result = mistune.html("-\t\tfoo\n")
         expected = "<ul>\n<li><pre><code>  foo</code></pre>\n</li>\n</ul>"
         self.assertEqual(result.strip(), expected)
+
+    def test_deeply_indented_list_does_not_scale_quadratically(self):
+        payload = "\n".join("  " * i + "- item" for i in range(1000))
+        start = perf_counter()
+        result = mistune.create_markdown()(payload)
+        self.assertTrue(result.startswith("<ul>"))
+        self.assertLess(perf_counter() - start, 2.0)
 
     def test_escape_html(self):
         md = mistune.create_markdown(escape=True)

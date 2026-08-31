@@ -6,13 +6,13 @@ Built-in Plugins
 .. meta::
     :description: List of Mistune built-in plugins, their syntax and how to enable them.
 
-Mistune offers many built-in plugins, including all the popular markups.
+Mistune includes many built-in plugins, including common markup extensions.
 
 .. note::
 
-    The historical ``speedup`` plugin is kept only for compatibility. Its
-    paragraph and inline text fast paths are now built into the core parsers, so
-    ``plugins=['speedup']`` is accepted but ignored.
+    Mistune keeps the historical ``speedup`` plugin only for compatibility.
+    The core parsers now include its paragraph and inline text fast paths.
+    Thus, Mistune accepts ``plugins=['speedup']`` but ignores it.
 
 .. _strikethrough:
 
@@ -23,12 +23,12 @@ strikethrough
 
     ~~here is the content~~
 
-``mistune.html()`` has enabled strikethrough plugin by default. To create
-a markdown instance your own::
+``mistune.html()`` enables the strikethrough plugin by default. To create
+a Markdown instance with this plugin::
 
     markdown = mistune.create_markdown(plugins=['strikethrough'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.formatting import strikethrough
 
@@ -46,12 +46,12 @@ footnotes
     [^1]: footnote explain
 
 
-``mistune.html()`` has enabled footnote plugin by default. To create
-a markdown instance your own::
+``mistune.html()`` enables the footnotes plugin by default. To create
+a Markdown instance with this plugin::
 
     markdown = mistune.create_markdown(plugins=['footnotes'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.footnotes import footnotes
 
@@ -86,19 +86,19 @@ Align formatted table:
 
      Left Header |  Center Header  | Right Header
     :----------- | :-------------: | ------------:
-     Conent Cell |  Content Cell   | Content Cell
+     Content Cell |  Content Cell   | Content Cell
 
 
     | Left Header |  Center Header  | Right Header  |
     | :---------- | :-------------: | ------------: |
-    | Conent Cell |  Content Cell   | Content Cell  |
+    | Content Cell |  Content Cell   | Content Cell  |
 
-``mistune.html()`` has enabled table plugin by default. To create
-a markdown instance your own::
+``mistune.html()`` enables the table plugin by default. To create
+a Markdown instance with this plugin::
 
     markdown = mistune.create_markdown(plugins=['table'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.table import table
 
@@ -109,30 +109,30 @@ Another way to create your own Markdown instance::
 url
 ---
 
-URL plugin enables creating link with raw URL by default:
+The URL plugin creates links from raw URLs:
 
 .. code-block:: text
 
     For instance, https://typlog.com/
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
-    <p>For instance, <a href="https://typlog.com/>https://typlog.com/</a></p>
+    <p>For instance, <a href="https://typlog.com/">https://typlog.com/</a></p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. Mistune
-values explicit, and we suggest writers to write links in:
+``mistune.html()`` does not enable this plugin by default. Mistune keeps
+raw URLs explicit. We suggest that writers use this link syntax:
 
 .. code-block:: text
 
     <https://typlog.com/>
 
-To enable **url** plugin with your own markdown instance::
+To enable the **url** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['url'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.url import url
 
@@ -142,14 +142,14 @@ Another way to create your own Markdown instance::
 task_lists
 ----------
 
-Task lists plugin enables creating GitHub todo items:
+The task lists plugin creates GitHub-style task list items:
 
 .. code-block:: text
 
     - [x] item 1
     - [ ] item 2
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
@@ -159,12 +159,12 @@ Will be converted into:
     </ul>
 
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**task_lists** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **task_lists** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['task_lists'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.task_lists import task_lists
 
@@ -174,7 +174,7 @@ Another way to create your own Markdown instance::
 def_list
 --------
 
-def_list plugin enables creating html definition lists:
+The def_list plugin creates HTML definition lists:
 
 .. code-block:: text
 
@@ -185,7 +185,7 @@ def_list plugin enables creating html definition lists:
     Second term
     : Third definition
     
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
@@ -198,12 +198,12 @@ Will be converted into:
     </dl>
 
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**def_list** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **def_list** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['def_list'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.def_list import def_list
 
@@ -213,7 +213,7 @@ Another way to create your own Markdown instance::
 abbr
 ----
 
-abbr plugin enables creating abbreviations:
+The abbr plugin creates abbreviations:
 
 .. code-block:: text
 
@@ -223,19 +223,19 @@ abbr plugin enables creating abbreviations:
     *[HTML]: Hyper Text Markup Language
     *[W3C]: World Wide Web Consortium
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     The <abbr title="Hyper Text Markup Language">HTML</abbr> specification
     is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**abbr** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **abbr** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['abbr'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.abbr import abbr
 
@@ -246,24 +246,24 @@ Another way to create your own Markdown instance::
 mark
 ----
 
-mark plugin adds the ability to insert ``<mark>`` tags. To mark some text, simply surround the text with ``==``:
+The mark plugin adds ``<mark>`` tags. To mark text, surround it with ``==``:
 
 .. code-block:: text
 
     ==mark me== ==mark with\=\=equal==
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <mark>mark me</mark> <mark>mark with==equal</mark>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**mark** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **mark** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['mark'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.formatting import mark
 
@@ -274,24 +274,24 @@ Another way to create your own Markdown instance::
 insert
 ------
 
-insert plugin adds the ability to insert ``<ins>`` tags. To insert some text, simply surround the text with ``^^``:
+The insert plugin adds ``<ins>`` tags. To insert text, surround it with ``^^``:
 
 .. code-block:: text
 
     ^^insert me^^ ^^insert\^\^me^^
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <ins>insert me</ins> <ins>insert^^me</ins>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**insert** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **insert** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['insert'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.formatting import insert
 
@@ -301,24 +301,24 @@ Another way to create your own Markdown instance::
 superscript
 -----------
 
-superscript plugin adds the ability to insert ``<sup>`` tags. The syntax looks like:
+The superscript plugin adds ``<sup>`` tags. The syntax is:
 
 .. code-block:: text
 
     Hello^superscript^
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <p>Hello<sup>superscript</sup></p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**superscript** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **superscript** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['superscript'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.formatting import superscript
 
@@ -328,7 +328,7 @@ Another way to create your own Markdown instance::
 subscript
 ---------
 
-subscript plugin adds the ability to insert ``<sub>`` tags. The syntax looks like:
+The subscript plugin adds ``<sub>`` tags. The syntax is:
 
 .. code-block:: text
 
@@ -336,19 +336,19 @@ subscript plugin adds the ability to insert ``<sub>`` tags. The syntax looks lik
 
     CH~3~CH~2~OH
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <p>Hello<sub>subscript</sub></p>
     <p>CH<sub>3</sub>CH<sub>2</sub>OH</p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**subscript** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **subscript** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['subscript'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.formatting import subscript
 
@@ -358,10 +358,10 @@ Another way to create your own Markdown instance::
 math
 ----
 
-Math plugin wraps ``<div>`` for block level math syntax, and ``<span>`` for inline level
-math syntax.
+The math plugin wraps block-level math syntax in ``<div>``. It wraps
+inline-level math syntax in ``<span>``.
 
-A block math is surrounded with ``$$``:
+Block math uses ``$$`` markers:
 
 .. code-block:: text
 
@@ -369,7 +369,7 @@ A block math is surrounded with ``$$``:
     \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
     $$
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
@@ -377,24 +377,24 @@ Will be converted into:
     \operatorname{ker} f=\{g\in G:f(g)=e_{H}\}{\mbox{.}}
     $$</div>
 
-An inline math is surrounded with ``$`` inline:
+Inline math uses ``$`` markers:
 
 .. code-block:: text
 
     function $f$
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <p>function <span class="math">$f$</span></p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**math** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **math** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['math'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.math import math
 
@@ -404,7 +404,7 @@ Another way to create your own Markdown instance::
 ruby
 ----
 
-insert plugin adds the ability to insert ``<ruby>`` tags. Here are some examples for ruby syntax:
+The ruby plugin adds ``<ruby>`` tags. These examples show ruby syntax:
 
 .. code-block:: text
 
@@ -418,7 +418,7 @@ insert plugin adds the ability to insert ``<ruby>`` tags. Here are some examples
 
     [漢(ㄏㄢˋ)字(ㄗˋ)]
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
@@ -427,12 +427,12 @@ Will be converted into:
     <p><a href="/url"><ruby><rb>漢字</rb><rt>ㄏㄢˋㄗˋ</rt></ruby></a></p>
     <p><ruby><rb>漢</rb><rt>ㄏㄢˋ</rt></ruby><ruby><rb>字</rb><rt>ㄗˋ</rt></ruby></p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**ruby** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **ruby** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['ruby'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.ruby import ruby
 
@@ -445,10 +445,10 @@ Blog post: https://lepture.com/en/2022/markdown-ruby-markup
 spoiler
 -------
 
-Spoiler plugin wraps ``<div class="spoiler">`` for block level syntax,
-and ``<span class="spoiler">`` for inline level syntax.
+The spoiler plugin wraps block-level syntax in ``<div class="spoiler">``.
+It wraps inline-level syntax in ``<span class="spoiler">``.
 
-A block level spoiler looks like block quote, but the marker is ``>!``:
+A block-level spoiler is like a block quote, but it uses the ``>!`` marker:
 
 .. code-block:: text
 
@@ -456,7 +456,7 @@ A block level spoiler looks like block quote, but the marker is ``>!``:
     >!
     >! it will be hidden
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
@@ -471,18 +471,18 @@ An inline spoiler is surrounded with ``>!`` and ``!<``:
 
     this is the >! hidden text !<
 
-Will be converted into:
+This input produces:
 
 .. code-block:: html
 
     <p>this is the <span class="spoiler">hidden text</span></p>
 
-This plugin is **NOT ENABLED** by default in ``mistune.html()``. To enable
-**spoiler** plugin with your own markdown instance::
+``mistune.html()`` does not enable this plugin by default. To enable
+the **spoiler** plugin with your Markdown instance::
 
     markdown = mistune.create_markdown(plugins=['spoiler'])
 
-Another way to create your own Markdown instance::
+You can also pass the plugin function directly::
 
     from mistune.plugins.spoiler import spoiler
 

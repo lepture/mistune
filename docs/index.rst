@@ -8,10 +8,10 @@ Mistune: Python Markdown Parser
 
 Release v\ |version|.
 
-A fast yet powerful Python Markdown parser with renderers and plugins,
-compatible with CommonMark 0.31.2.
+Mistune is a fast Python Markdown parser. It includes renderers and
+plugins, and it is compatible with CommonMark 0.31.2.
 
-Using old Mistune? Checkout docs:
+Do you use an old Mistune release? See these documents:
 
 - https://mistune.lepture.com/en/v0.8.4/
 - https://mistune.lepture.com/en/v2/
@@ -19,7 +19,7 @@ Using old Mistune? Checkout docs:
 Installation
 ------------
 
-Installing Mistune is quite easy with `pip <http://www.pip-installer.org/>`_.
+Install Mistune with `pip <http://www.pip-installer.org/>`_.
 
 .. parsed-literal::
 

@@ -439,9 +439,17 @@ class BlockParser(Parser[BlockState]):
         return None
 
     def parse(self, state: BlockState, rules: Optional[List[str]] = None) -> None:
+        if rules is None:
+            rules = self.rules
         sc = self.compile_sc(rules)
 
         while state.cursor < state.cursor_max:
+            if "indent_code" in rules:
+                end_pos = self._parse_indent_code_fast(state)
+                if end_pos is not None:
+                    state.cursor = end_pos
+                    continue
+
             m = sc.match(state.src, state.cursor)
             if not m and self._parse_plain_paragraph(state, sc):
                 continue
@@ -470,6 +478,23 @@ class BlockParser(Parser[BlockState]):
             text = state.src[state.cursor :]
             state.add_paragraph(text)
             state.cursor = state.cursor_max
+
+    def _parse_indent_code_fast(self, state: BlockState) -> Optional[int]:
+        line_end = state.find_line_end()
+        line = state.get_text(line_end)
+        if not _is_indent_code_line(line):
+            return None
+
+        if state.last_token() and state.last_token()["type"] == "paragraph":
+            return state.append_paragraph()
+
+        end_pos = _find_indent_code_end(state.src, line_end, state.cursor_max)
+        code = state.get_text(end_pos)
+        code = expand_leading_tab(code)
+        code = _INDENT_CODE_TRIM.sub("", code)
+        code = code.strip("\n")
+        state.append_token({"type": "block_code", "raw": code, "style": "indent"})
+        return end_pos
 
     def _parse_plain_paragraph(self, state: BlockState, sc: Pattern[str]) -> bool:
         if not _is_plain_paragraph_start(state.src, state.cursor):
@@ -552,6 +577,32 @@ def _trim_partial_next_line_indent(text: str, end_pos: int) -> int:
     if suffix and suffix.strip(" \t") == "" and len(suffix.expandtabs(4)) < 4:
         return end_pos - len(suffix)
     return end_pos
+
+
+def _is_indent_code_line(line: str) -> bool:
+    if line.endswith("\n"):
+        line = line[:-1]
+
+    if len(line) > 4 and line.startswith("    "):
+        return True
+
+    index = 0
+    while index < len(line) and line[index] == " ":
+        index += 1
+    return index + 1 < len(line) and line[index] == "\t"
+
+
+def _find_indent_code_end(src: str, start: int, end: int) -> int:
+    pos = start
+    while pos < end:
+        newline = src.find("\n", pos, end)
+        line_end = end if newline < 0 else newline + 1
+        line = src[pos:line_end]
+        if _is_indent_code_line(line) or not line.strip():
+            pos = line_end
+            continue
+        break
+    return pos
 
 
 def _is_plain_paragraph_start(src: str, pos: int) -> bool:

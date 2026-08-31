@@ -3,19 +3,18 @@
 Directives
 ==========
 
-A directive is a generic block of explicit markup that is powerful
-and extensible. In mistune v3, there are 2 styles of directives for
-now:
+A directive is an explicit markup block. It is extensible. Mistune v3
+supports two directive styles:
 
 1. reStructuredText style
 2. fenced style
 
 .. versionchanged:: 3.0
 
-    Fenced style directive is added in 3.0. Because v3 has multiple
-    styles of directives, developers can not add each directive into
-    ``plugins`` parameter of ``mistune.create_markdown`` directly.
-    Instead, each directive should be wrapped by::
+    Fenced-style directives were added in 3.0. Mistune v3 supports
+    multiple directive styles. Thus, do not add each directive directly
+    to the ``plugins`` parameter of ``mistune.create_markdown``. Wrap
+    each directive in a directive style object instead::
 
         import mistune
         from mistune.directives import FencedDirective, RSTDirective
@@ -41,8 +40,7 @@ now:
             ]),
         ])
 
-A **reStructuredText** style of directive is inspired by reStructuredText_,
-and the syntax looks like:
+A **reStructuredText** directive uses syntax from reStructuredText_:
 
 .. code-block:: text
 
@@ -53,8 +51,8 @@ and the syntax looks like:
        content text here
 
 
-A **fenced** style of directive looks like a fenced code block, it is
-inspired by `markdown-it-docutils`_. The syntax looks like:
+A **fenced** directive looks like a fenced code block. It uses syntax
+from `markdown-it-docutils`_:
 
 .. code-block:: text
 
@@ -70,7 +68,7 @@ inspired by `markdown-it-docutils`_. The syntax looks like:
 .. _`markdown-it-docutils`: https://executablebooks.github.io/markdown-it-docutils/
 
 
-Developers can choose the directive style in their own favor.
+Choose the directive style that is best for your project.
 
 Admonitions
 -----------
@@ -93,7 +91,7 @@ The fenced style syntax:
     [stable](/stable/) documentation instead.
     ```
 
-Admonitions contains a group of ``directive-name``:
+Admonitions support these ``directive-name`` values:
 
 .. code-block:: text
 
@@ -122,8 +120,8 @@ Table of Contents
     .. toc:: Table of Contents
        :max-level: 3
 
-TOC plugin is based on directive. It can add a table of contents section in
-the documentation. Let's take an example:
+The TOC plugin is a directive. It adds a table of contents to the
+document. This example puts the TOC before the headings:
 
 .. code-block:: text
 
@@ -137,8 +135,8 @@ the documentation. Let's take an example:
 
    # H1 title
 
-The rendered HTML will show a TOC at the ``.. toc::`` position. To enable
-TOC plugin::
+The rendered HTML contains the TOC at the ``.. toc::`` position. To enable
+the TOC plugin::
 
     import mistune
     from mistune.directives import RSTDirective, TableOfContents
@@ -157,8 +155,8 @@ Include
 
     .. include:: hello.md
 
-``include`` is a powerful plugin for documentation generator. With this
-plugin, we can embed contents from other files.
+The ``include`` plugin embeds content from other files. Use it for
+documentation generators.
 
 
 Image

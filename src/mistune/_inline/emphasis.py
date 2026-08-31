@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 _CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
 
@@ -235,79 +235,130 @@ def _process_emphasis_delimiters(
             continue
 
         opener_key = (closer.marker, closer.length % 3, closer.can_open)
-        opener_pos = closer_pos - 1
         opener_bottom = openers_bottom.get(opener_key, 0)
-        opener = None
-        while opener_pos >= opener_bottom:
-            candidate = delimiters[opener_pos]
-            if (
-                candidate.marker == closer.marker
-                and candidate.can_open
-                and candidate.length > 0
-                and _can_match_emphasis_delimiters(candidate, closer)
-            ):
-                opener = candidate
-                break
-            opener_pos -= 1
-
-        if opener is None:
+        match = _find_emphasis_opener(delimiters, closer_pos, closer, opener_bottom)
+        if match is None:
             openers_bottom[opener_key] = closer_pos
             closer_pos += 1
             continue
+        opener_pos, opener = match
 
         opener_index = index_map.current(opener)
         closer_index = index_map.current(closer)
-        if opener.length >= 2 and closer.length >= 2:
-            use_length = 2
-        else:
-            use_length = 1
-        if use_length == 2 and not _has_strong_enabled(parts, opener_index, closer_index):
-            use_length = 1
-        if use_length == 1 and not _has_emphasis_enabled(parts, opener_index, closer_index):
-            closer_pos += 1
-            continue
-        if not _has_emphasis_content(parts, opener_index + 1, closer_index):
+        use_length = _get_emphasis_use_length(parts, opener, closer, opener_index, closer_index)
+        children = _get_emphasis_children(parts, opener_index, closer_index, max_depth)
+        if use_length is None or children is None:
             closer_pos += 1
             continue
 
-        opener_text = parts[opener_index]
-        closer_text = parts[closer_index]
-        if opener_text["type"] != "text" or closer_text["type"] != "text":
-            closer_pos += 1
-            continue
-
-        children = parts[opener_index + 1 : closer_index]
-        if max_depth > 0 and _emphasis_depth(children) >= max_depth:
-            closer_pos += 1
-            continue
-        opener_text["raw"] = opener_text["raw"][:-use_length]
-        closer_text["raw"] = closer_text["raw"][use_length:]
-        if use_length == 2:
-            node = {"type": "strong", "children": children}
-        else:
-            node = {"type": "emphasis", "children": children}
-
-        old_closer_index = closer_index
-        parts[opener_index + 1 : old_closer_index] = [node]
-
-        removed = old_closer_index - opener_index - 2
-        if removed:
-            index_map.deactivate_range(delimiters, opener_pos + 1, closer_pos)
-            index_map.collapse(closer, removed)
-
-        opener.length -= use_length
-        closer.length -= use_length
-        if opener.length == 0:
-            opener.can_open = False
-            index_map.deactivate(opener.order)
-        if closer.length == 0:
-            closer.can_close = False
-            index_map.deactivate(closer.order)
+        _apply_emphasis_match(
+            parts,
+            delimiters,
+            index_map,
+            opener,
+            closer,
+            opener_pos,
+            closer_pos,
+            opener_index,
+            closer_index,
+            use_length,
+            children,
+        )
 
         if opener.can_open or closer.can_close:
             closer_pos = max(opener_pos, openers_bottom.get(opener_key, 0))
         else:
             closer_pos += 1
+
+
+def _find_emphasis_opener(
+    delimiters: List[_Delimiter],
+    closer_pos: int,
+    closer: _Delimiter,
+    opener_bottom: int,
+) -> Optional[Tuple[int, _Delimiter]]:
+    opener_pos = closer_pos - 1
+    while opener_pos >= opener_bottom:
+        opener = delimiters[opener_pos]
+        if (
+            opener.marker == closer.marker
+            and opener.can_open
+            and opener.length > 0
+            and _can_match_emphasis_delimiters(opener, closer)
+        ):
+            return opener_pos, opener
+        opener_pos -= 1
+    return None
+
+
+def _get_emphasis_use_length(
+    parts: List[Dict[str, Any]],
+    opener: _Delimiter,
+    closer: _Delimiter,
+    opener_index: int,
+    closer_index: int,
+) -> Optional[int]:
+    use_length = 2 if opener.length >= 2 and closer.length >= 2 else 1
+    if use_length == 2 and not _has_strong_enabled(parts, opener_index, closer_index):
+        use_length = 1
+    if use_length == 1 and not _has_emphasis_enabled(parts, opener_index, closer_index):
+        return None
+    return use_length
+
+
+def _get_emphasis_children(
+    parts: List[Dict[str, Any]],
+    opener_index: int,
+    closer_index: int,
+    max_depth: int,
+) -> Optional[List[Dict[str, Any]]]:
+    if not _has_emphasis_content(parts, opener_index + 1, closer_index):
+        return None
+
+    opener_text = parts[opener_index]
+    closer_text = parts[closer_index]
+    if opener_text["type"] != "text" or closer_text["type"] != "text":
+        return None
+
+    children = parts[opener_index + 1 : closer_index]
+    if max_depth > 0 and _emphasis_depth(children) >= max_depth:
+        return None
+    return children
+
+
+def _apply_emphasis_match(
+    parts: List[Dict[str, Any]],
+    delimiters: List[_Delimiter],
+    index_map: _DelimiterIndex,
+    opener: _Delimiter,
+    closer: _Delimiter,
+    opener_pos: int,
+    closer_pos: int,
+    opener_index: int,
+    closer_index: int,
+    use_length: int,
+    children: List[Dict[str, Any]],
+) -> None:
+    opener_text = parts[opener_index]
+    closer_text = parts[closer_index]
+    opener_text["raw"] = opener_text["raw"][:-use_length]
+    closer_text["raw"] = closer_text["raw"][use_length:]
+    node_type = "strong" if use_length == 2 else "emphasis"
+    parts[opener_index + 1 : closer_index] = [{"type": node_type, "children": children}]
+
+    removed = closer_index - opener_index - 2
+    if removed:
+        index_map.deactivate_range(delimiters, opener_pos + 1, closer_pos)
+        index_map.collapse(closer, removed)
+
+    opener.length -= use_length
+    closer.length -= use_length
+    if opener.length == 0:
+        opener.can_open = False
+        index_map.deactivate(opener.order)
+    if closer.length == 0:
+        closer.can_close = False
+        index_map.deactivate(closer.order)
 
 
 def _emphasis_depth(tokens: List[Dict[str, Any]]) -> int:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from bisect import bisect_left
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Match, Optional, Tuple
 
 from ..core import InlineState
@@ -10,6 +11,16 @@ from ..util import unikey
 
 if TYPE_CHECKING:
     from ..inline_parser import InlineParser
+
+
+@dataclass
+class _LinkBody:
+    label: Optional[str]
+    text: Optional[str]
+    text_start: int
+    text_end: int
+    end_pos: int
+    body_end_pos: int
 
 
 def parse_link(inline: "InlineParser", m: Match[str], state: InlineState) -> Optional[int]:
@@ -30,93 +41,126 @@ def parse_link(inline: "InlineParser", m: Match[str], state: InlineState) -> Opt
         state.append_token({"type": "text", "raw": marker})
         return pos
 
-    text = None
-    text_start = pos
-    text_end = pos
     label, end_pos = parse_link_label(state.src, pos)
+    if label is None and pos <= state.no_close_bracket_before:
+        state.append_token({"type": "text", "raw": marker})
+        return pos
+
+    body = _parse_link_body(state, pos, label, end_pos)
+    if body is None:
+        return None
+
+    has_nested_link = not is_image and label_contains_link(state, body.text_start, body.text_end)
+    if has_nested_link:
+        return None
+    if body.end_pos >= len(state.src) and body.label is None:
+        mark_no_link_before(state, body.body_end_pos)
+        return None
+
+    direct_pos = _try_parse_direct_link(inline, m, state, is_image, body)
+    if direct_pos is not None:
+        return direct_pos
+    return _parse_reference_link(inline, state, is_image, body)
+
+
+def _parse_link_body(
+    state: InlineState,
+    pos: int,
+    label: Optional[str],
+    end_pos: Optional[int],
+) -> Optional[_LinkBody]:
     if label is None:
-        if pos <= state.no_close_bracket_before:
-            state.append_token({"type": "text", "raw": marker})
-            return pos
         close_pos = find_closing_bracket(state, pos)
         if close_pos is None:
             if len(state.src) > state.no_close_bracket_before:
                 state.no_close_bracket_before = len(state.src)
             return None
-        text_start = pos
-        text_end = close_pos
         end_pos = close_pos + 1
+        return _LinkBody(None, None, pos, close_pos, end_pos, end_pos)
 
     assert end_pos is not None
+    return _LinkBody(label, label, pos, end_pos - 1, end_pos, end_pos)
 
-    if label is not None:
-        text = label
-        text_start = pos
-        text_end = end_pos - 1
 
-    body_end_pos = end_pos
-
-    has_nested_link = not is_image and label_contains_link(state, text_start, text_end)
-    if has_nested_link:
-        return None
-    if end_pos >= len(state.src) and label is None:
-        mark_no_link_before(state, body_end_pos)
-        return None
-
+def _try_parse_direct_link(
+    inline: "InlineParser",
+    m: Match[str],
+    state: InlineState,
+    is_image: bool,
+    body: _LinkBody,
+) -> Optional[int]:
     if not is_image:
         rules = ["codespan", "prec_auto_link", "prec_inline_html"]
-        prec_pos = inline.precedence_scan(m, state, end_pos, rules)
+        prec_pos = inline.precedence_scan(m, state, body.end_pos, rules)
         if prec_pos:
             return prec_pos
 
-    if end_pos < len(state.src):
-        char = state.src[end_pos]
-        if char == "(":
-            attrs, pos2, scan_end = parse_link_with_end(state.src, end_pos + 1)
-            if pos2:
-                if text is None:
-                    text = state.src[text_start:text_end]
-                token = build_link_token(inline, is_image, text, attrs, state)
-                state.append_token(token)
-                return pos2
-            if scan_end > body_end_pos:
-                if is_image:
-                    mark_no_image_before(state, scan_end)
-                else:
-                    mark_no_link_before(state, scan_end)
-        elif char == "[":
-            label2, pos2 = parse_link_label(state.src, end_pos + 1)
-            if pos2:
-                end_pos = pos2
-                if label2:
-                    label = label2
+    if body.end_pos >= len(state.src):
+        return None
+    char = state.src[body.end_pos]
+    if char == "(":
+        attrs, pos, scan_end = parse_link_with_end(state.src, body.end_pos + 1)
+        if pos:
+            state.append_token(_build_body_token(inline, state, is_image, body, attrs))
+            return pos
+        if scan_end > body.body_end_pos:
+            if is_image:
+                mark_no_image_before(state, scan_end)
+            else:
+                mark_no_link_before(state, scan_end)
+    elif char == "[":
+        label, pos = parse_link_label(state.src, body.end_pos + 1)
+        if pos:
+            body.end_pos = pos
+            if label:
+                body.label = label
+    return None
 
-    if label is None:
-        ref_links = state.env.get("ref_links")
-        if not ref_links:
-            mark_no_link_before(state, body_end_pos)
-            return None
-        if text is None:
-            text = state.src[text_start:text_end]
-        label = text
+
+def _parse_reference_link(
+    inline: "InlineParser",
+    state: InlineState,
+    is_image: bool,
+    body: _LinkBody,
+) -> Optional[int]:
     ref_links = state.env.get("ref_links")
+    if body.label is None:
+        if not ref_links:
+            mark_no_link_before(state, body.body_end_pos)
+            return None
+        body.label = _get_link_text(state, body)
+
     if not ref_links:
-        mark_no_link_before(state, body_end_pos)
+        mark_no_link_before(state, body.body_end_pos)
         return None
 
-    key = unikey(label)
+    key = unikey(body.label)
     env = ref_links.get(key)
     if env:
-        if text is None:
-            text = state.src[text_start:text_end]
         attrs = {"url": env["url"], "title": env.get("title")}
-        token = build_link_token(inline, is_image, text, attrs, state)
+        token = _build_body_token(inline, state, is_image, body, attrs)
         token["ref"] = key
-        token["label"] = label
+        token["label"] = body.label
         state.append_token(token)
-        return end_pos
-    mark_no_link_before(state, body_end_pos)
+        return body.end_pos
+    mark_no_link_before(state, body.body_end_pos)
     return None
+
+
+def _get_link_text(state: InlineState, body: _LinkBody) -> str:
+    if body.text is None:
+        body.text = state.src[body.text_start : body.text_end]
+    return body.text
+
+
+def _build_body_token(
+    inline: "InlineParser",
+    state: InlineState,
+    is_image: bool,
+    body: _LinkBody,
+    attrs: Optional[Dict[str, object]],
+) -> Dict[str, object]:
+    return build_link_token(inline, is_image, _get_link_text(state, body), attrs, state)
 
 
 def build_link_token(

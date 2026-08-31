@@ -25,9 +25,6 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import Self
 
-_LINE_END = re.compile(r"\n|$")
-
-
 class BlockState:
     """The state to save block parser's cursor and tokens."""
 
@@ -74,9 +71,10 @@ class BlockState:
         return self.find_line_end_at(self.cursor)
 
     def find_line_end_at(self, pos: int) -> int:
-        m = _LINE_END.search(self.src, pos)
-        assert m is not None
-        return m.end()
+        end = self.src.find("\n", pos)
+        if end < 0:
+            return len(self.src)
+        return end + 1
 
     def get_text(self, end_pos: int) -> str:
         return self.src[self.cursor : end_pos]

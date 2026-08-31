@@ -3,16 +3,15 @@ Command line tools
 
 .. meta::
     :description: How to use the command line tools of Mistune
-        to convert Markdown to HTML, RST, and etc.
+        to convert Markdown to HTML, Markdown, and reStructuredText.
 
-A command line tool to convert markdown content into HTML, learn
-about the options of the command line tool::
+Mistune includes a command line tool. Use ``-h`` to show its options::
 
     $ python -m mistune -h
 
-    Mistune, a sane and fast python markdown parser.
+    Mistune, a sane and fast Python Markdown parser.
 
-    Here are some use cases of the command line tool:
+    Examples:
 
         $ python -m mistune -m "Hi **Markdown**"
         <p>Hi <strong>Markdown</strong></p>
@@ -23,49 +22,46 @@ about the options of the command line tool::
         $ cat README.md | python -m mistune
         <p>...
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
-      -m MESSAGE, --message MESSAGE
-                            the markdown message to convert
-      -f FILE, --file FILE  the markdown file to convert
-      -p NAME [NAME ...], --plugin NAME [NAME ...]
-                            specifiy a plugin to use
-      --escape              turn on escape option
-      --hardwrap            turn on hardwrap option
-      -o OUTPUT, --output OUTPUT
-                            write the rendered result into file
-      -r RENDERER, --renderer RENDERER
+      -m, --message MESSAGE
+                            the Markdown message to convert
+      -f, --file FILE       the Markdown file to convert
+      -p, --plugin NAME [NAME ...]
+                            specify a plugin to use
+      --escape              enable the escape option
+      --hardwrap            enable the hardwrap option
+      -o, --output OUTPUT   write the rendered result into file
+      -r, --renderer RENDERER
                             specify the output renderer
       --version             show program's version number and exit
 
 Convert Markdown to HTML
 ------------------------
 
-By default, the command line tool of mistune will convert markdown text
-to HTML text::
+By default, the command line tool converts Markdown text to HTML::
 
     $ python -m mistune -f README.md
 
-Convert Markdown to RestructuredText
+Convert Markdown to reStructuredText
 ------------------------------------
 
-Mistune has a built-in RestructuredText formatter, specify the renderer
-with ``-r rst``::
+Mistune includes a reStructuredText renderer. Specify it with ``-r rst``::
 
     $ python -m mistune -f README.md -r rst
 
 Reformat Markdown
 -----------------
 
-You can reformat the markdown file with a markdown renderer::
+Use the Markdown renderer to reformat a Markdown file::
 
     $ python -m mistune -f README.md -r markdown -o README.md
 
-This command will reformat the text in ``README.md``.
+This command reformats the text in ``README.md``.
 
-Unix PIPE
----------
+UNIX Pipes
+----------
 
-The command line tool supports unix PIPE. For instance::
+The command line tool supports UNIX pipes. For example::
 
     $ echo "foo **bar**" | python -m mistune

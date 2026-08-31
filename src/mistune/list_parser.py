@@ -337,14 +337,43 @@ def _clean_list_item_text(src: str, continue_width: int) -> str:
 
 
 def _has_continuation_indent(line: str, columns: int) -> bool:
-    return _count_indent(line) >= columns
+    width = 0
+    for char in line:
+        if char == " ":
+            width += 1
+        elif char == "\t":
+            width += 4 - width % 4
+        else:
+            break
+        if width >= columns:
+            return True
+    return False
 
 
 def _strip_continuation_indent(line: str, columns: int) -> str:
-    expanded = _expand_leading_tabs(line)
-    if len(expanded) >= columns:
-        return expanded[columns:]
-    return ""
+    width = 0
+    index = 0
+    while index < len(line) and width < columns:
+        char = line[index]
+        if char == " ":
+            width += 1
+        elif char == "\t":
+            width += 4 - width % 4
+        else:
+            break
+        index += 1
+
+    if width < columns:
+        return ""
+
+    prefix = " " * (width - columns)
+    if index < len(line) and line[index] == " ":
+        if "\t" not in line[index:]:
+            return prefix + line[index:]
+    elif index == len(line) or line[index] != "\t":
+        return prefix + line[index:]
+
+    return prefix + _expand_leading_tabs(line[index:], width)
 
 
 def _expand_leading_tabs(line: str, start_column: int = 0) -> str:

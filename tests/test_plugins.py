@@ -1,4 +1,5 @@
 from mistune import create_markdown
+from mistune.plugins import import_plugin
 from mistune.plugins.math import math_in_list, math_in_quote
 from mistune.plugins.table import table_in_list, table_in_quote
 from tests import BaseTestCase
@@ -64,3 +65,22 @@ class TestExtraPlugins(BaseTestCase):
         md2 = create_markdown(escape=False, plugins=["math", math_in_quote])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))
+
+    def test_import_plugin_rejects_unknown_names(self):
+        # A plugin name that isn't one of the built-in ones used to be
+        # treated as an importable "module.function" path, so anyone able
+        # to influence the plugins list could get import_plugin to import
+        # and call arbitrary code (see GH-461). Nothing outside the
+        # whitelist should be accepted this way.
+        with self.assertRaises(ValueError):
+            import_plugin("os.getcwd")
+        with self.assertRaises(ValueError):
+            import_plugin("subprocess.check_output")
+
+    def test_import_plugin_still_accepts_known_names_and_callables(self):
+        self.assertTrue(callable(import_plugin("table")))
+
+        def my_plugin(md):
+            pass
+
+        self.assertIs(import_plugin(my_plugin), my_plugin)

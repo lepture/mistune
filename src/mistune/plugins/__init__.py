@@ -39,11 +39,17 @@ def import_plugin(name: PluginRef) -> Plugin:
     if name in _cached_modules:
         return _cached_modules[name]
 
-    if name in _plugins:
-        module_path, func_name = _plugins[name].rsplit(".", 1)
-    else:
-        module_path, func_name = name.rsplit(".", 1)
+    if name not in _plugins:
+        # `name` used to be treated as an arbitrary dotted module path here,
+        # so anyone able to influence the plugins list (e.g. from a config
+        # file or an HTTP parameter) could import and call any importable
+        # object, not just a real Markdown plugin. Nothing in the docs
+        # documents that as a supported way to register a plugin, since a
+        # custom plugin is meant to be passed as the callable itself, so
+        # this path is just rejected outright now.
+        raise ValueError(f"Unknown plugin: {name!r}")
 
+    module_path, func_name = _plugins[name].rsplit(".", 1)
     module = import_module(module_path)
     plugin = cast(Plugin, getattr(module, func_name))
     _cached_modules[name] = plugin

@@ -109,6 +109,33 @@ class TestMiscCases(TestCase):
         expected = "<p>&lt;em&gt;1&lt;/em&gt;</p>"
         self.assertEqual(result.strip(), expected)
 
+    def test_custom_element_block_keeps_markdown_raw(self):
+        text = (
+            '<py-script data-mode="worker">\n\n'
+            "# a Python comment\n"
+            'value = "**not emphasis**"\n'
+            "</PY-SCRIPT>\n\n"
+            "# A Markdown heading\n"
+        )
+        expected = (
+            '<py-script data-mode="worker">\n\n'
+            "# a Python comment\n"
+            'value = "**not emphasis**"\n'
+            "</PY-SCRIPT>\n\n"
+            "<h1>A Markdown heading</h1>"
+        )
+        self.assertEqual(mistune.html(text).strip(), expected)
+
+    def test_custom_element_block_requires_matching_close(self):
+        unmatched = "<py-script>\n\n# heading\n</other-tag>\n"
+        self.assertIn("<h1>heading</h1>", mistune.html(unmatched))
+
+        ordinary_unknown = "<widget>\n\n# heading\n</widget>\n"
+        self.assertIn("<h1>heading</h1>", mistune.html(ordinary_unknown))
+
+        self_closing = "<my-widget />\n\n# heading\n"
+        self.assertIn("<h1>heading</h1>", mistune.html(self_closing))
+
     def test_harmful_links(self):
         result = mistune.html("[h](javAscript:alert)")
         expected = '<p><a href="#harmful-link">h</a></p>'

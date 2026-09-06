@@ -6,6 +6,9 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Keep paired custom elements, such as ``<py-script>``, as raw HTML blocks
+  across blank lines.
+
 Version 3.3.4
 -------------
 

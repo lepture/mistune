@@ -423,6 +423,17 @@ class BlockParser(Parser[BlockState]):
             if open_tag in BLOCK_TAGS:
                 return _parse_html_to_newline(state, self.BLANK_LINE)
 
+            # A paired custom element is an opaque block. Custom element names
+            # contain a hyphen, which keeps ordinary unknown tags on the
+            # CommonMark type 7 path below.
+            line_end = state.find_line_end()
+            opening = _OPEN_TAG_END.match(state.src, m.end(), line_end)
+            if "-" in open_tag and opening and not opening.group(0).rstrip().endswith("/>"):
+                closing_tag_re = re.compile(r"</" + re.escape(open_tag) + r"[ \t]*>", re.I)
+                end_match = closing_tag_re.search(state.src, opening.end())
+                if end_match:
+                    return _parse_html_to_end(state, end_match.group(0), end_match.start())
+
         # Blocks of type 7 may not interrupt a paragraph.
         end_pos = state.append_paragraph()
         if end_pos:

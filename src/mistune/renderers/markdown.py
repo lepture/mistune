@@ -69,9 +69,9 @@ class MarkdownRenderer(BaseRenderer):
         attrs = token["attrs"]
         url: str = attrs["url"]
         title = attrs.get("title")
-        if text == url and not title:
+        if token["type"] == "link" and text == url and not title:
             return "<" + text + ">"
-        elif "mailto:" + text == url and not title:
+        elif token["type"] == "link" and "mailto:" + text == url and not title:
             return "<" + text + ">"
 
         out += "("

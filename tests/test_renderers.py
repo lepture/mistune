@@ -87,6 +87,19 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_codespan_edge_spaces(self):
+        for text in (
+            "`  x  `",
+            "`   x   `",
+            "`  x `",
+            "` x  `",
+            "` `",
+            "`   `",
+            "``  a ` b  ``",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_link_title_containing_quote(self):
         # a double quote inside a link/image title must be escaped, or the
         # re-parse closes the title early and drops it

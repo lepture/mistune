@@ -29,7 +29,9 @@ class MarkdownRenderer(BaseRenderer):
         ref_links = state.env["ref_links"]
         for key in ref_links:
             attrs = ref_links[key]
-            text = "[" + attrs["label"] + "]: " + attrs["url"]
+            # An empty destination must be explicit in a reference definition.
+            url = attrs["url"] or "<>"
+            text = "[" + attrs["label"] + "]: " + url
             title = attrs.get("title")
             if title:
                 text += ' "' + _escape_title(title) + '"'

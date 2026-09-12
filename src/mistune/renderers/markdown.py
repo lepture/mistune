@@ -6,7 +6,7 @@ from ..core import BaseRenderer, BlockState
 from ..util import strip_end
 from ._list import render_list, render_list_item
 
-fenced_re = re.compile(r"^[`~]+", re.M)
+fenced_re = re.compile(r"^ {0,3}([`~]+)", re.M)
 _backtick_run_re = re.compile(r"`+")
 
 #: leading markers that would be parsed as a new block (list, heading, block

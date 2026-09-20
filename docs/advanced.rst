@@ -136,7 +136,7 @@ Add default HTML renderers for your plugin. A renderer function has this form:
 
     def render_link(renderer, text, **attrs):
         # token with type, text or raw, and attrs
-        href = attrs['href']
+        href = renderer.safe_url(attrs['url'])
         return f'<a href="{href}">{text}</a>'
 
 If the current Markdown instance uses an HTML renderer, register the plugin

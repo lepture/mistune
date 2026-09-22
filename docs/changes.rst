@@ -6,6 +6,9 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve literal brackets in the Markdown renderer so reformatting does not
+  introduce links or break link and image labels.
+
 Version 3.3.4
 -------------
 

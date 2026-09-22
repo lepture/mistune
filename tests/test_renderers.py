@@ -46,6 +46,28 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_literal_link_brackets(self):
+        for text in (
+            r"\[label](/url)",
+            r"[label\](/url)",
+            r"!\[alt](/image.png)",
+            r"\[label][ref]" + "\n\n[ref]: /url",
+            r"*emphasis* and \[label](/url)",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text + "\n")
+
+    def test_literal_brackets_in_link_labels(self):
+        for text in (
+            r"[a \] bracket](/url)",
+            r"[a \[ bracket](/url)",
+            r"![a \] bracket](/image.png)",
+            r"[a \] bracket][ref]" + "\n\n[ref]: /url",
+            r"[outer [inner] label](/url)",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text + "\n")
+
     def test_escaped_emphasis_markers(self):
         # an escaped "*"/"_" is a literal delimiter, not emphasis; re-emitting
         # it unescaped would turn plain text back into <em>/<strong>

@@ -348,21 +348,24 @@ Plugin elements
             },
             {
                 'type': 'table_body',
-                'children': {
-                    'type': 'table_row',
-                    'children': [
-                        {
-                            'type': 'table_cell',
-                            'children': list[dict],
-                            'attrs': {
-                                # 'align' is 'center', 'left', 'right', or None
-                                'align': str | None,
-                                'head': False
-                            }
-                        },
-                        ...
-                    ]
-                }
+                'children': [
+                    {
+                        'type': 'table_row',
+                        'children': [
+                            {
+                                'type': 'table_cell',
+                                'children': list[dict],
+                                'attrs': {
+                                    # 'align' is 'center', 'left', 'right', or None
+                                    'align': str | None,
+                                    'head': False
+                                }
+                            },
+                            ...
+                        ]
+                    },
+                    ...
+                ]
             }
         ]
     }

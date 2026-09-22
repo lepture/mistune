@@ -49,9 +49,9 @@ class MarkdownRenderer(BaseRenderer):
         # other characters and is left untouched.
         if raw and all(c in "*_" for c in raw):
             return "".join("\\" + c for c in raw)
-        # a backtick always opens a code span, so it must stay escaped to
-        # survive a re-parse as literal text.
-        return raw.replace("`", "\\`")
+        # Keep literal code-span and link delimiters escaped. Real links and
+        # images add their own brackets after rendering their children.
+        return raw.replace("`", "\\`").replace("[", "\\[").replace("]", "\\]")
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"

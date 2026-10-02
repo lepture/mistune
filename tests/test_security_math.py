@@ -16,6 +16,11 @@ class TestMathSecurity(TestCase):
         self.assertNotIn("<script>", inline_html)
         self.assertNotIn("<script>", block_html)
 
+    def test_math_plugin_escapes_content_when_raw_html_is_enabled(self):
+        md = create_markdown(escape=False, plugins=["math"])
+
+        self.assertIn("&lt;marker&gt;", md("$<marker>$\n"))
+
     def test_repeated_inline_math_openers_are_near_linear(self):
         md = create_markdown(plugins=["math"])
 

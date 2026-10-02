@@ -222,6 +222,33 @@ class TestRendererMethodRegistration(TestCase):
             '<a href="/wiki/python">Python</a>',
         )
 
+    def test_html_safety_helpers(self):
+        renderer = HTMLRenderer(escape=False)
+
+        self.assertFalse(renderer.escape_enabled)
+        self.assertEqual(renderer.escape_raw("<b>raw</b>"), "<b>raw</b>")
+        self.assertEqual(renderer.escape_attribute('a"<b>'), "a&quot;&lt;b&gt;")
+        self.assertEqual(
+            renderer.render_attrs({"class": 'a"b', "hidden": True, "empty": False, "missing": None}),
+            ' class="a&quot;b" hidden',
+        )
+        self.assertEqual(renderer.sanitize_url("javascript:marker"), "#harmful-link")
+        self.assertEqual(renderer.safe_url('https://example.com/?q="x"'), "https://example.com/?q=&quot;x&quot;")
+
+        renderer.escape_enabled = True
+        self.assertEqual(renderer.escape_raw("<b>raw</b>"), "&lt;b&gt;raw&lt;/b&gt;")
+
+        with self.assertRaises(ValueError):
+            renderer.render_attrs({'class" onclick': "marker"})
+
+    def test_escape_false_only_allows_raw_html(self):
+        md = create_markdown(escape=False)
+        html = md('<b>raw</b> [link](javascript:marker "a\\\"b")')
+
+        self.assertIn("<b>raw</b>", html)
+        self.assertIn('href="#harmful-link"', html)
+        self.assertIn('title="a&quot;b"', html)
+
 
 class TestMarkdownRendererPlugins(TestCase):
     def test_task_list_item_can_be_overridden(self):

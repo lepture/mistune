@@ -52,7 +52,7 @@ def create_markdown(
         renderer = HTMLRenderer(escape=True if escape is None else escape)
     elif escape is not None and isinstance(renderer, HTMLRenderer):
         # a renderer instance was given, honor the explicit escape flag
-        renderer._escape = escape
+        renderer.escape_enabled = escape
 
     inline = InlineParser(hard_wrap=hard_wrap)
     real_plugins: Optional[Iterable[Plugin]] = None

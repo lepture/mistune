@@ -47,7 +47,9 @@ jobs:
         run: python -m pip install --upgrade uv
 
       - name: Build documentation without remote inventories
-        run: uv run --locked --group docs sphinx-build -W -b dummy -D extensions=sphinx.ext.autodoc docs /tmp/mistune-docs
+        env:
+          MISTUNE_DOCS_OFFLINE: "1"
+        run: uv run --locked --group docs sphinx-build -W -b dummy docs /tmp/mistune-docs
 
   test:
     needs: lint

@@ -1,3 +1,5 @@
+import os
+
 import mistune
 
 project = "Mistune"
@@ -21,9 +23,12 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-}
+if os.environ.get("MISTUNE_DOCS_OFFLINE") == "1":
+    intersphinx_mapping = {}
+else:
+    intersphinx_mapping = {
+        "python": ("https://docs.python.org/3", None),
+    }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

@@ -8,6 +8,7 @@ plugins, compatible with CommonMark 0.31.2.
 Documentation: https://mistune.lepture.com/
 """
 
+from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 from .block_parser import BlockParser
@@ -63,7 +64,12 @@ def create_markdown(
 html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table"])
 
 
-__cached_parsers: Dict[Tuple[bool, Optional[RendererRef], Optional[Iterable[Any]]], Markdown] = {}
+BuiltinRendererRef = Optional[Literal["html", "ast"]]
+
+
+@lru_cache(maxsize=128)
+def _cached_markdown(escape: bool, renderer: BuiltinRendererRef, plugins: Tuple[str, ...]) -> Markdown:
+    return create_markdown(escape=escape, renderer=renderer, plugins=plugins)
 
 
 def markdown(
@@ -72,16 +78,13 @@ def markdown(
     renderer: Optional[RendererRef] = "html",
     plugins: Optional[Iterable[Any]] = None,
 ) -> Union[str, List[Dict[str, Any]]]:
-    if renderer == "ast":
-        # explicit and more similar to 2.x's API
-        renderer = None
-    key = (escape, renderer, plugins)
-    if key in __cached_parsers:
-        return __cached_parsers[key](text)
-
-    md = create_markdown(escape=escape, renderer=renderer, plugins=plugins)
-    # improve the speed for markdown parser creation
-    __cached_parsers[key] = md
+    plugin_refs = tuple(plugins) if plugins is not None else ()
+    if (renderer is None or renderer == "html" or renderer == "ast") and all(
+        isinstance(plugin, str) for plugin in plugin_refs
+    ):
+        md = _cached_markdown(escape, renderer, plugin_refs)
+    else:
+        md = create_markdown(escape=escape, renderer=renderer, plugins=plugin_refs)
     return md(text)
 
 

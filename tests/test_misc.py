@@ -242,6 +242,44 @@ class TestMiscCases(TestCase):
         result = mistune.markdown("**b**")
         self.assertEqual(result, expected)
 
+    def test_markdown_func_accepts_plugin_iterables(self):
+        expected = (
+            "<table>\n<thead>\n<tr>\n  <th>A</th>\n  <th>B</th>\n</tr>\n</thead>\n"
+            "<tbody>\n<tr>\n  <td>1</td>\n  <td>2</td>\n</tr>\n</tbody>\n</table>\n"
+        )
+        text = "A | B\n--|--\n1 | 2\n"
+
+        self.assertEqual(mistune.markdown(text, plugins=["table"]), expected)
+        self.assertEqual(mistune.markdown(text, plugins=("table",)), expected)
+
+        consumed = 0
+
+        def plugin_names():
+            nonlocal consumed
+            consumed += 1
+            yield "table"
+
+        self.assertEqual(mistune.markdown(text, plugins=plugin_names()), expected)
+        self.assertEqual(consumed, 1)
+
+    def test_markdown_func_does_not_cache_custom_renderer(self):
+        renderer = mistune.HTMLRenderer()
+        text = "<b>hi</b>"
+
+        self.assertEqual(mistune.markdown(text, escape=True, renderer=renderer).strip(), "<p>&lt;b&gt;hi&lt;/b&gt;</p>")
+        self.assertEqual(mistune.markdown(text, escape=False, renderer=renderer).strip(), "<p><b>hi</b></p>")
+        self.assertEqual(mistune.markdown(text, escape=True, renderer=renderer).strip(), "<p>&lt;b&gt;hi&lt;/b&gt;</p>")
+
+    def test_markdown_func_cache_eviction_preserves_output(self):
+        expected = "<p><strong>b</strong></p>\n"
+        self.assertEqual(mistune.markdown("**b**"), expected)
+
+        for size in range(129):
+            plugins = ("speedup",) * size
+            self.assertEqual(mistune.markdown("plain", plugins=plugins), "<p>plain</p>\n")
+
+        self.assertEqual(mistune.markdown("**b**"), expected)
+
     def test_ast_output(self):
         md = mistune.create_markdown(escape=False, renderer=None)
         text = '# h1\n\nfoo **bar**\n\n`&<>"`'

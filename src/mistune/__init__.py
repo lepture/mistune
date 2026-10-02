@@ -64,11 +64,11 @@ def create_markdown(
 html: Markdown = create_markdown(escape=False, plugins=["strikethrough", "footnotes", "table"])
 
 
-BuiltinRendererRef = Optional[Literal["html", "ast"]]
+_BuiltinRendererRef = Optional[Literal["html", "ast"]]
 
 
 @lru_cache(maxsize=128)
-def _cached_markdown(escape: bool, renderer: BuiltinRendererRef, plugins: Tuple[str, ...]) -> Markdown:
+def _cached_markdown(escape: bool, renderer: _BuiltinRendererRef, plugins: Tuple[str, ...]) -> Markdown:
     return create_markdown(escape=escape, renderer=renderer, plugins=plugins)
 
 
@@ -79,7 +79,7 @@ def markdown(
     plugins: Optional[Iterable[Any]] = None,
 ) -> Union[str, List[Dict[str, Any]]]:
     plugin_refs = tuple(plugins) if plugins is not None else ()
-    if (renderer is None or renderer == "html" or renderer == "ast") and all(
+    if (renderer is None or (isinstance(renderer, str) and renderer in ("html", "ast"))) and all(
         isinstance(plugin, str) for plugin in plugin_refs
     ):
         md = _cached_markdown(escape, renderer, plugin_refs)

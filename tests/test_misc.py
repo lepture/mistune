@@ -337,6 +337,17 @@ class TestMiscCases(TestCase):
         self.assertEqual(mistune.markdown(text, escape=False, renderer=renderer).strip(), "<p><b>hi</b></p>")
         self.assertEqual(mistune.markdown(text, escape=True, renderer=renderer).strip(), "<p>&lt;b&gt;hi&lt;/b&gt;</p>")
 
+    def test_markdown_func_does_not_treat_equal_renderer_as_builtin(self):
+        class EqualRenderer(mistune.HTMLRenderer):
+            __hash__ = None
+
+            def __eq__(self, other):
+                return other == "html"
+
+        renderer = EqualRenderer()
+
+        self.assertEqual(mistune.markdown("<b>x</b>", renderer=renderer).strip(), "<p>&lt;b&gt;x&lt;/b&gt;</p>")
+
     def test_markdown_func_cache_eviction_preserves_output(self):
         expected = "<p><strong>b</strong></p>\n"
         self.assertEqual(mistune.markdown("**b**"), expected)

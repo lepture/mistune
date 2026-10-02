@@ -1,7 +1,7 @@
-import time
 from unittest import TestCase
 
 from mistune import create_markdown
+from tests.perf_utils import assert_near_linear
 
 
 class TestMathSecurity(TestCase):
@@ -25,12 +25,7 @@ class TestMathSecurity(TestCase):
         md = create_markdown(plugins=["math"])
 
         def render(size):
-            start = time.perf_counter()
-            md("$a " * size + "\n")
-            return time.perf_counter() - start
+            return md("$a " * size + "\n")
 
-        render(200)
-        small = render(1000)
-        large = render(2000)
-
-        self.assertLess(large, small * 3.5 + 0.02)
+        _small, html = assert_near_linear(self, render, 1000, 2000)
+        self.assertIn('<span class="math">', html)

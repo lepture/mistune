@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Match, MutableMapping, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, List, Match, MutableMapping, Optional, Set, Tuple, Union
 
 from ._inline.emphasis import finalize_emphasis_tokens, is_entity_boundary
 from ._inline.links import parse_link as parse_inline_link
@@ -9,9 +9,33 @@ from .core import InlineState, Parser
 from .helpers import HTML_ATTRIBUTES, HTML_TAGNAME, PUNCTUATION, unescape_char
 from .util import escape_url
 
-_REGEX_META_CHARS = set(r"()[]{}?*+|.^$")
 DEFAULT_MAX_EMPHASIS_DEPTH = 20
 DEFAULT_MAX_IMAGE_DEPTH = 20
+
+_KNOWN_RULE_START_CHARS = {
+    "escape": {"\\"},
+    "codespan": {"`"},
+    "emphasis": {"*", "_"},
+    "link": {"!", "["},
+    "auto_link": {"<"},
+    "auto_email": {"<"},
+    "inline_html": {"<"},
+    "linebreak": {"\n"},
+    "softbreak": {"\n"},
+    "prec_auto_link": {"<"},
+    "prec_inline_html": {"<"},
+    # built-in plugins
+    "url_link": {"h"},
+    "strikethrough": {"~"},
+    "mark": {"="},
+    "insert": {"^"},
+    "superscript": {"^"},
+    "subscript": {"~"},
+    "footnote": {"["},
+    "inline_math": {"$"},
+    "ruby": {"["},
+    "inline_spoiler": {">"},
+}
 
 AUTO_EMAIL = (
     r"""<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"""
@@ -83,6 +107,7 @@ class InlineParser(Parser[InlineState]):
         self._fast_trigger_chars: Optional[Set[str]] = None
         self._fast_trigger_re: Optional[re.Pattern[str]] = None
         self._fast_trigger_re_chars: Optional[Tuple[str, ...]] = None
+        self._rule_start_chars: Dict[str, Set[str]] = {}
         # lazy add linebreak
         if hard_wrap:
             self.specification["linebreak"] = self.HARD_LINEBREAK
@@ -97,7 +122,13 @@ class InlineParser(Parser[InlineState]):
         pattern: Optional[str],
         func: Any,
         before: Optional[str] = None,
+        *,
+        start_chars: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
+        """Register an inline rule with optional exhaustive start characters."""
+        self._rule_start_chars.pop(name, None)
+        if start_chars is not None:
+            self._rule_start_chars[name] = _normalize_start_chars(start_chars)
         super().register(name, pattern, func, before=before)
         self._fast_trigger_chars = None
         self._fast_trigger_re = None
@@ -297,8 +328,7 @@ class InlineParser(Parser[InlineState]):
 
         chars = set()
         for name in self.rules:
-            pattern = self.specification.get(name)
-            rule_chars = _get_rule_start_chars(name, pattern)
+            rule_chars = self._rule_start_chars.get(name, _KNOWN_RULE_START_CHARS.get(name))
             if rule_chars is None:
                 self._fast_trigger_chars = None
                 return None
@@ -354,49 +384,12 @@ class InlineParser(Parser[InlineState]):
         return self.render(state)
 
 
-def _get_rule_start_chars(name: str, pattern: Optional[str]) -> Optional[Set[str]]:
-    known = {
-        "escape": {"\\"},
-        "codespan": {"`"},
-        "emphasis": {"*", "_"},
-        "link": {"!", "["},
-        "auto_link": {"<"},
-        "auto_email": {"<"},
-        "inline_html": {"<"},
-        "linebreak": {"\n"},
-        "softbreak": {"\n"},
-        "prec_auto_link": {"<"},
-        "prec_inline_html": {"<"},
-        # built-in plugins
-        "url_link": {"h"},
-        "strikethrough": {"~"},
-        "mark": {"="},
-        "insert": {"^"},
-        "superscript": {"^"},
-        "subscript": {"~"},
-        "footnote": {"["},
-        "inline_math": {"$"},
-        "ruby": {"["},
-        "inline_spoiler": {">"},
-    }
-    if name in known:
-        return known[name]
-    if not pattern:
-        return set()
-    return _guess_pattern_start_chars(pattern)
+def _normalize_start_chars(start_chars: Union[str, Iterable[str]]) -> Set[str]:
+    if isinstance(start_chars, str):
+        values = [start_chars]
+    else:
+        values = list(start_chars)
 
-
-def _guess_pattern_start_chars(pattern: str) -> Optional[Set[str]]:
-    if not pattern:
-        return set()
-
-    if pattern.startswith("\\") and len(pattern) > 1:
-        c = pattern[1]
-        if c in _REGEX_META_CHARS or c in PUNCTUATION:
-            return {c}
-        return None
-
-    c = pattern[0]
-    if c in _REGEX_META_CHARS or c.isspace():
-        return None
-    return {c}
+    if not values or any(not isinstance(value, str) or len(value) != 1 for value in values):
+        raise ValueError("start_chars must contain one or more single-character strings")
+    return set(values)

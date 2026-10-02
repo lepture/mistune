@@ -207,7 +207,7 @@ class TestMiscCases(TestCase):
             return "<at>" + text + "</at>"
 
         def plugin(md):
-            md.inline.register("at", r"@+", parse_at)
+            md.inline.register("at", r"@+", parse_at, start_chars="@")
             md.renderer.register("at", render_at)
 
         md = mistune.create_markdown(escape=False)
@@ -232,6 +232,73 @@ class TestMiscCases(TestCase):
         md.use(plugin)
 
         self.assertEqual(md("xx").strip(), "<p><x>xx</x></p>")
+
+    def test_inline_plugin_alternation_without_start_hints(self):
+        def parse_word(inline, m, state):
+            state.append_token({"type": "word", "raw": m.group(0)})
+            return m.end()
+
+        def render_word(renderer, text):
+            return "<word>" + text + "</word>"
+
+        def plugin(md):
+            md.inline.register("word", r"foo|bar", parse_word)
+            md.renderer.register("word", render_word)
+
+        md = mistune.create_markdown(escape=False, plugins=[plugin])
+
+        self.assertEqual(md("foo bar").strip(), "<p><word>foo</word> <word>bar</word></p>")
+
+    def test_inline_plugin_alternation_with_start_hints(self):
+        def parse_word(inline, m, state):
+            state.append_token({"type": "word", "raw": m.group(0)})
+            return m.end()
+
+        def render_word(renderer, text):
+            return "<word>" + text + "</word>"
+
+        def plugin(md):
+            md.inline.register("word", r"foo|bar", parse_word, start_chars={"f", "b"})
+            md.renderer.register("word", render_word)
+
+        md = mistune.create_markdown(escape=False, plugins=[plugin])
+
+        self.assertEqual(md("foo bar").strip(), "<p><word>foo</word> <word>bar</word></p>")
+
+    def test_inline_plugin_rejects_invalid_start_hints(self):
+        def parse_word(inline, m, state):
+            return m.end()
+
+        inline = mistune.InlineParser()
+        for start_chars in ("", "ab", [], ["a", "bc"]):
+            with self.subTest(start_chars=start_chars):
+                with self.assertRaises(ValueError):
+                    inline.register("word", r"foo|bar", parse_word, start_chars=start_chars)
+
+    def test_inline_rules_with_shared_hint_preserve_registration_order(self):
+        def parse_first(inline, m, state):
+            state.append_token({"type": "first", "raw": m.group(0)})
+            return m.end()
+
+        def parse_second(inline, m, state):
+            state.append_token({"type": "second", "raw": m.group(0)})
+            return m.end()
+
+        def render_first(renderer, text):
+            return "<first>" + text + "</first>"
+
+        def render_second(renderer, text):
+            return "<second>" + text + "</second>"
+
+        def plugin(md):
+            md.inline.register("first", r"@+", parse_first, before="linebreak", start_chars="@")
+            md.inline.register("second", r"@+", parse_second, before="linebreak", start_chars="@")
+            md.renderer.register("first", render_first)
+            md.renderer.register("second", render_second)
+
+        md = mistune.create_markdown(escape=False, plugins=[plugin])
+
+        self.assertEqual(md("@@").strip(), "<p><first>@@</first></p>")
 
     def test_markdown_func(self):
         result = mistune.markdown("**b**")

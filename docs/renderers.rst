@@ -25,7 +25,8 @@ To render this syntax, create a subclass of ``mistune.HTMLRenderer``:
 
 .. code-block:: python
 
-    from mistune import HTMLRenderer
+    import mistune
+    from mistune import HTMLRenderer, escape
 
     class MyRenderer(HTMLRenderer):
         def codespan(self, text):
@@ -36,6 +37,31 @@ To render this syntax, create a subclass of ``mistune.HTMLRenderer``:
     # use the custom renderer
     markdown = mistune.create_markdown(renderer=MyRenderer())
     print(markdown('hi `$a^2=4$`'))
+
+HTML safety methods
+~~~~~~~~~~~~~~~~~~~
+
+``HTMLRenderer`` exposes output-context helpers for custom renderers and
+plugins:
+
+* ``escape_enabled`` reports and controls whether raw HTML tokens are escaped.
+* ``escape_raw(value)`` conditionally escapes a raw HTML token.
+* ``escape_attribute(value)`` always escapes an HTML attribute value.
+* ``render_attrs(attrs)`` renders fixed attribute names, omits ``None`` and
+  ``False`` values, and escapes every non-boolean value. Invalid attribute
+  names raise ``ValueError``.
+* ``sanitize_url(url)`` applies the renderer's URL protocol policy and returns
+  either the original URL or ``#harmful-link``.
+
+Keep URL filtering separate from attribute escaping. For example::
+
+    class LinkRenderer(HTMLRenderer):
+        def link(self, text, url, title=None):
+            attrs = {'href': self.sanitize_url(url), 'title': title}
+            return '<a' + self.render_attrs(attrs) + '>' + text + '</a>'
+
+``safe_url(url)`` remains available for compatibility and returns an
+attribute-escaped result.
 
 Available methods
 ~~~~~~~~~~~~~~~~~

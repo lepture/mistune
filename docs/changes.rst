@@ -8,6 +8,13 @@ Unreleased
 
 * Preserve literal backslashes, image introducers, HTML delimiters and entity
   prefixes when rendering Markdown for a round trip.
+* Bound the global convenience-parser cache and avoid retaining caller-owned
+  renderers and plugin objects.
+* Add public HTML output helpers for raw HTML, attributes, and URL policy.
+* Share collision-safe default heading IDs between both TOC APIs.
+* Add explicit start-character hints for custom inline rules; unhinted custom
+  rules now use the correctness-first regular-expression scanner.
+* Consolidate adversarial parser growth tests and document the security model.
 
 Version 3.3.4
 -------------

@@ -46,6 +46,32 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_literal_inline_markers(self):
+        for text in (
+            r"\![label](https://example.com)" + "\n",
+            r"\\*emphasis*" + "\n",
+            r"\<b>text\</b>" + "\n",
+            r"\<https://example.com>" + "\n",
+            r"\&copy;" + "\n",
+            r"\&#65;" + "\n",
+            r"\&#x41;" + "\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
+    def test_inline_punctuation_and_real_markup_controls(self):
+        for text in (
+            "Tom & Jerry!\n",
+            "Entities: &copy; &#65; &#x41; &notanentity;\n",
+            "C# and a.b.c, (parentheses), [unmatched brackets]\n",
+            "*emphasis* and `code &copy;`\n",
+            "![image](https://example.com/image.png)\n",
+            "<b>real HTML</b>\n",
+            "<https://example.com/?a=1&b=2>\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_escaped_emphasis_markers(self):
         # an escaped "*"/"_" is a literal delimiter, not emphasis; re-emitting
         # it unescaped would turn plain text back into <em>/<strong>

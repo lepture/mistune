@@ -11,7 +11,8 @@ _backtick_run_re = re.compile(r"`+")
 
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
-_block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
+_block_prefix_re = re.compile(r"^(\s*)(>|(?:[-+*]|#{1,6}|\d{1,9}[.)])(?=\s|$))")
+_underline_prefix_re = re.compile(r"^(\s*)(-+|=+)\s*$")
 
 
 class MarkdownRenderer(BaseRenderer):
@@ -223,7 +224,7 @@ def _escape_block_prefix(text: str) -> str:
 
 
 def _escape_line_prefix(line: str) -> str:
-    m = _block_prefix_re.match(line)
+    m = _block_prefix_re.match(line) or _underline_prefix_re.match(line)
     if not m:
         return line
     indent_, marker = m.group(1), m.group(2)

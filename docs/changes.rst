@@ -6,6 +6,8 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve literal quote markers without following spaces and literal heading/thematic-break underlines when reformatting Markdown.
+
 Version 3.3.4
 -------------
 

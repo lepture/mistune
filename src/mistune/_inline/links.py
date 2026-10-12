@@ -217,9 +217,18 @@ def get_link_range_index(state: InlineState) -> Tuple[List[int], List[int]]:
         return cache[1], cache[2]
 
     pairs = get_closing_bracket_map(state)
+    image_reference_labels = set()
+    for label_start, close_pos in pairs.items():
+        opener = label_start - 1
+        if opener > 0 and state.src[opener - 1] == "!" and close_pos + 1 < len(state.src):
+            if state.src[close_pos + 1] == "[":
+                # ``![alt][ref]`` — the second label belongs to the image, not a nested link.
+                image_reference_labels.add(close_pos + 2)
     ranges: List[Tuple[int, int]] = []
     for label_start, close_pos in pairs.items():
         opener = label_start - 1
+        if label_start in image_reference_labels:
+            continue
         if opener > 0 and state.src[opener - 1] == "!":
             continue
         link_end = find_link_range_end(state.src, label_start, close_pos, state)

@@ -6,6 +6,9 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Only recognize task list markers in a list item's leading paragraph,
+  preserving literal markers in headings.
+
 Version 3.3.4
 -------------
 

@@ -87,6 +87,17 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_indented_code_containing_fences(self):
+        parse = create_markdown(renderer="ast")
+        for indentation in range(4):
+            for markers in (("```",), ("~~~",), ("```", "~~~"), ("````", "~~~")):
+                with self.subTest(indentation=indentation, markers=markers):
+                    lines = ["before"] + [" " * indentation + marker for marker in markers] + ["after"]
+                    source = "".join("    " + line + "\n" for line in lines)
+                    tokens = parse(self.reformat(source))
+                    self.assertEqual([token["type"] for token in tokens], ["block_code"])
+                    self.assertEqual(tokens[0]["raw"], "\n".join(lines) + "\n")
+
     def test_link_title_containing_quote(self):
         # a double quote inside a link/image title must be escaped, or the
         # re-parse closes the title early and drops it

@@ -110,6 +110,31 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_empty_reference_link_destination(self):
+        for reference in ("[text][r]", "[r][]", "[r]"):
+            for title in ("", ' "title"', " 'say \"hi\"'"):
+                with self.subTest(reference=reference, title=title):
+                    text = reference + "\n\n[r]: <>" + title + "\n"
+                    self.assertIn('href=""', self.to_html(text))
+                    self.assert_round_trip(text)
+
+    def test_empty_reference_image_destination(self):
+        for title in ("", ' "title"', " 'say \"hi\"'"):
+            with self.subTest(title=title):
+                text = "![alt][r]\n\n[r]: <>" + title + "\n"
+                self.assertIn('src=""', self.to_html(text))
+                self.assert_round_trip(text)
+
+    def test_unused_empty_reference_destination(self):
+        self.assertEqual(self.reformat("[r]: <>\n"), "[r]: <>\n")
+        self.assertEqual(self.reformat('[r]: <> "title"\n'), '[r]: <> "title"\n')
+
+    def test_nonempty_reference_destination_format(self):
+        for destination in ("/url", "https://example.com", "/path(a)"):
+            with self.subTest(destination=destination):
+                text = '[text][r]\n\n[r]: ' + destination + ' "title"\n'
+                self.assertEqual(self.reformat(text), text)
+
     def test_block_quote_content_ending_in_gt(self):
         # a block quote whose content ends with ">" (an autolink, an inline
         # HTML tag, or a literal ">") must keep that character; it was being

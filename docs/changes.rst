@@ -6,6 +6,9 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve literal backslashes, image introducers, HTML delimiters and entity
+  prefixes when rendering Markdown for a round trip.
+
 Version 3.3.4
 -------------
 

@@ -26,6 +26,25 @@ Autolinks in link text stay literal.
 <p>[<a href="/foo">foo</a>]<a href="/bar">bar</a></p>
 ````````````````````````````````
 
+The label of a full reference image is not a link of its own.
+
+```````````````````````````````` example
+[![moon][img]](/uri)
+
+[img]: moon.jpg
+.
+<p><a href="/uri"><img src="moon.jpg" alt="moon" /></a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[![moon][img]][ref]
+
+[img]: moon.jpg
+[ref]: /uri
+.
+<p><a href="/uri"><img src="moon.jpg" alt="moon" /></a></p>
+````````````````````````````````
+
 ## Emphasis
 
 CommonMark delimiter handling is the default.

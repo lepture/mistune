@@ -106,3 +106,59 @@ over two lines</li>
 </ul>
 </blockquote>
 ````````````````````````````````
+
+# Leading headings are not task list paragraphs
+
+```````````````````````````````` example
+- # [ ] unchecked heading
+- ## [x] checked heading
+- ### [X] uppercase checked heading
+.
+<ul>
+<li><h1>[ ] unchecked heading</h1>
+</li>
+<li><h2>[x] checked heading</h2>
+</li>
+<li><h3>[X] uppercase checked heading</h3>
+</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- [x] setext heading
+  ==================
+- [ ] setext heading
+  ------------------
+.
+<ul>
+<li><h1>[x] setext heading</h1>
+</li>
+<li><h2>[ ] setext heading</h2>
+</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- # [x] heading
+
+  [ ] paragraph after heading
+.
+<ul>
+<li><h1>[x] heading</h1>
+<p>[ ] paragraph after heading</p>
+</li>
+</ul>
+````````````````````````````````
+
+```````````````````````````````` example
+- # [x] heading
+  - [x] nested task
+.
+<ul>
+<li><h1>[x] heading</h1>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled checked/>nested task</li>
+</ul>
+</li>
+</ul>
+````````````````````````````````

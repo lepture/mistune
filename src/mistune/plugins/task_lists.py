@@ -59,6 +59,8 @@ def _rewrite_list_item(tok: Dict[str, Any]) -> None:
     children = tok["children"]
     if children:
         first_child = children[0]
+        if first_child["type"] not in ("paragraph", "block_text"):
+            return
         text = first_child.get("text", "")
         m = TASK_LIST_ITEM.match(text)
         if m:

@@ -6,6 +6,8 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve literal backslashes, image introducers, HTML delimiters and entity
+  prefixes when rendering Markdown for a round trip.
 * Only recognize task list markers in a list item's leading paragraph,
   preserving literal markers in headings.
 

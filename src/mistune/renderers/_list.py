@@ -44,7 +44,8 @@ def render_list_item(
         prev = tok
         text += renderer.render_token(tok, state)
 
-    lines = text.splitlines()
+    # Markdown normalizes line endings to LF; other separators are content.
+    lines = text.removesuffix("\n").split("\n")
     text = (lines[0] if lines else "") + "\n"
     prefix = " " * len(leading)
     for line in lines[1:]:

@@ -207,6 +207,48 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.assert_round_trip(text)
 
 
+class TestRendererListLineEndings(TestCase):
+    non_line_breaks = ("\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029")
+
+    def test_markdown_list_content(self):
+        reformat = create_markdown(renderer=MarkdownRenderer())
+        to_html = create_markdown(escape=False)
+        for separator in self.non_line_breaks:
+            content = "before" + separator + "after"
+            for template in (
+                "- {}\n",
+                "1. {}\n",
+                "- parent\n  - {}\n",
+                "- first\n\n- {}\n",
+                "- `{}`\n",
+                "- item\n\n  ```\n  {}\n  ```\n",
+            ):
+                with self.subTest(separator=repr(separator), template=template):
+                    source = template.format(content)
+                    result = reformat(source)
+                    self.assertIn(content, result)
+                    self.assertEqual(to_html(result), to_html(source))
+
+    def test_rst_list_content(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for separator in self.non_line_breaks:
+            content = "before" + separator + "after"
+            for source, expected in (
+                ("- " + content + "\n", "- " + content + "\n"),
+                ("1. " + content + "\n", "1. " + content + "\n"),
+                ("- `" + content + "`\n", "- ``" + content + "``\n"),
+            ):
+                with self.subTest(separator=repr(separator), source=source):
+                    self.assertEqual(render(source), expected)
+
+    def test_markdown_list_line_endings(self):
+        reformat = create_markdown(renderer=MarkdownRenderer())
+        expected = "- first\n  continued\n- second\n"
+        for ending in ("\n", "\r", "\r\n"):
+            with self.subTest(ending=repr(ending)):
+                self.assertEqual(reformat(expected.replace("\n", ending)), expected)
+
+
 class TestRendererMethodRegistration(TestCase):
     def test_registered_renderer_method(self):
         renderer = HTMLRenderer(escape=False)

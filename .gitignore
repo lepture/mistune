@@ -18,6 +18,7 @@ cover/
 *.c
 *.so
 .venv/
+plans/
 .python-version
 .coverage
 htmlcov

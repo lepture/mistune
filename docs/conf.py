@@ -21,7 +21,9 @@ release = version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    "shibuya.sponsors",
 ]
+sponsors_json_url = "https://cdn.jsdelivr.net/gh/lepture/lepture/sponsors.json"
 
 if os.environ.get("MISTUNE_DOCS_OFFLINE") == "1":
     intersphinx_mapping = {}
@@ -89,7 +91,7 @@ html_theme_options = {
                 },
             ],
         },
-        {"title": "Sponsor me", "url": "https://github.com/sponsors/lepture"},
+        {"title": "Sponsors", "url": "/sponsors"},
     ],
 }
 

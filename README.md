@@ -27,6 +27,17 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 Check [benchmark results for Wenmode](https://github.com/lepture/wenmode#benchmark).
 
+## Sponsors
+
+<table>
+<tr>
+<td><img align="middle" width="68" height="68" src="https://cdn.jsdelivr.net/gh/lepture/lepture/static/e-iceblue.svg"></td>
+<td>Convert Word, Excel, and text-based PDF files to Markdown—or turn Markdown into Word, Excel,
+and PDF—with <a href="https://www.e-iceblue.com/Introduce/office-for-python.html">Spire.Office for Python</a>. Automate document conversion directly in Python, without
+requiring Microsoft Office.</td>
+</tr>
+</table>
+
 ## Install
 
 To install mistune:
@@ -60,7 +71,7 @@ the repository's [security policy](.github/SECURITY.md) to report it privately.
 <details>
 <summary>
 Here is the benchmark score on my computer. Check the `benchmark/bench.py` script.
-</summary>  
+</summary>
 
 ```
 mistune (3.0.0) - atx: 13.901472091674805ms

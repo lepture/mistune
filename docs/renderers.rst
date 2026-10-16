@@ -38,6 +38,36 @@ To render this syntax, create a subclass of ``mistune.HTMLRenderer``:
     markdown = mistune.create_markdown(renderer=MyRenderer())
     print(markdown('hi `$a^2=4$`'))
 
+Customize plugin output
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also override methods supplied by plugins. Enable the plugin to
+parse its syntax, then define the matching method on your ``HTMLRenderer``
+subclass. For example, add a CSS class to tables:
+
+.. code-block:: python
+
+    import mistune
+
+    class TableRenderer(mistune.HTMLRenderer):
+        def table(self, text):
+            return '<table class="data-table">\n' + text + '</table>\n'
+
+    markdown = mistune.create_markdown(
+        renderer=TableRenderer(), plugins=['table'],
+    )
+    print(markdown('| Name | Count |\n| --- | ---: |\n| Apples | 3 |'))
+
+The subclass method takes precedence over the plugin's registered renderer.
+The other table methods keep their default behavior, including header cells
+and column alignment. ``text`` already contains the rendered child HTML;
+do not escape it again.
+
+Plugin methods are registered on the renderer instance, not defined on
+``HTMLRenderer`` itself, so ``super().table(text)`` is not available. To
+reuse the default table output inside an override, import ``render_table``
+from ``mistune.plugins.table`` and call ``render_table(self, text)``.
+
 HTML safety methods
 ~~~~~~~~~~~~~~~~~~~
 

@@ -279,7 +279,9 @@ def _render_table_cell(renderer: MarkdownRenderer, token: Dict[str, Any], state:
         text = renderer.render_children(token, state)
     else:
         text = cast(str, token.get("raw", ""))
-    return text.replace("\n", " ").replace("|", "\\|").strip()
+    # Code spans can already contain escaped pipes; keep an odd escape count.
+    text = re.sub(r"\\.|[|]", lambda m: r"\|" if m[0] == "|" else m[0], text)
+    return text.replace("\n", " ").strip()
 
 
 def _table_cell_align(token: Dict[str, Any]) -> Any:

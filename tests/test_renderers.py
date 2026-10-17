@@ -197,6 +197,20 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_heading_literal_trailing_hashes(self):
+        for text in (
+            "foo #\n---\n",
+            "foo ###\n===\n",
+            "# foo \\#\n",
+            "###### \\###\n",
+            "foo\t###\n---\n",
+            "foo#\n---\n",
+            "# C#\n",
+            "# `foo #`\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_prose_not_over_escaped(self):
         for text in (
             "snake_case_var\n",

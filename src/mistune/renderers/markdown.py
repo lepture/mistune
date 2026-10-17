@@ -132,6 +132,7 @@ class MarkdownRenderer(BaseRenderer):
             underline = "=" if level == 1 else "-"
             return text + "\n" + underline * 3 + "\n\n"
         marker = "#" * level
+        text = re.sub(r"(^|[ \t])(#+)$", r"\1\\\2", text)
         return marker + " " + text + "\n\n"
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:

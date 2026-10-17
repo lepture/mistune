@@ -206,6 +206,12 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_leading_blank_lines_preserved(self):
+        # blank_line tokens at the start of the document were rendered as
+        # empty strings, so leading newlines disappeared on reformat
+        self.assertEqual(self.reformat("\nabc"), "\nabc\n")
+        self.assertEqual(self.reformat("\n\n\n\nabc"), "\n\n\n\nabc\n")
+
 
 class TestRendererMethodRegistration(TestCase):
     def test_registered_renderer_method(self):

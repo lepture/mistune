@@ -12,9 +12,9 @@ __all__ = ["def_list"]
 
 # https://michelf.ca/projects/php-markdown/extra/#def-list
 
-DEF_PATTERN = r"^:[ \t]+.*(?:\n|$)"
-DD_START_RE = re.compile(r"^:[ \t]+", re.M)
-DD_MARKER_RE = re.compile(r"^:[ \t]")
+DEF_PATTERN = r"^ {0,3}:[ \t]+.*(?:\n|$)"
+DD_START_RE = re.compile(r"^ {0,3}:[ \t]+", re.M)
+DD_MARKER_RE = re.compile(r"^ {0,3}:[ \t]")
 TRIM_RE = re.compile(r"^ {0,4}", re.M)
 HAS_BLANK_LINE_RE = re.compile(r"\n[ \t]*\n$")
 
@@ -106,7 +106,7 @@ def _collect_definitions(src: str, pos: int, max_pos: int, loose: bool) -> Tuple
         start = pos
         pos += len(line)
         pos = _scan_definition_tail(src, pos, max_pos)
-        # drop the ':' marker plus its trailing space or tab; a tab here would
+        # drop marker indentation and ':' plus its trailing space or tab; a tab here would
         # otherwise survive TRIM_RE (spaces only) and make the line a code block
         text = DD_MARKER_RE.sub("  ", src[start:pos], count=1)
         definitions.append((text, loose))

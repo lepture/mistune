@@ -32,6 +32,14 @@ class TestMiscCases(TestCase):
         md = mistune.create_markdown(renderer=CustomRenderer(escape=False))
         self.assertEqual(md("<b>hi</b>").strip(), "<p><b>hi</b></p>")
 
+    def test_link_around_full_reference_image(self):
+        text = "[![moon][img]](/uri)\n\n[img]: moon.jpg\n"
+        expected = '<p><a href="/uri"><img src="moon.jpg" alt="moon" /></a></p>'
+        self.assertEqual(mistune.html(text).strip(), expected)
+
+        reference = "[![moon][img]][ref]\n\n[img]: moon.jpg\n\n[ref]: /uri\n"
+        self.assertEqual(mistune.html(reference).strip(), expected)
+
     def test_hard_wrap(self):
         md = mistune.create_markdown(escape=False, hard_wrap=True)
         result = md("foo\nbar")

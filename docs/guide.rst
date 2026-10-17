@@ -91,6 +91,34 @@ renderer adds syntax highlighting to fenced code blocks::
 This renderer uses Pygments to highlight fenced code blocks. For more
 renderer details, see :ref:`renderers`.
 
+Per-document renderer context
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``state.env`` to pass context for one document. The HTML rendering methods
+receive text and token attributes, rather than the state itself. Override
+``render_token`` to read the context before delegating to the HTML renderer.
+For example, this renderer prefixes image URLs for each document::
+
+    class ImagePrefixRenderer(mistune.HTMLRenderer):
+        def render_token(self, token, state):
+            if token['type'] == 'image':
+                attrs = dict(token['attrs'])
+                attrs['url'] = state.env.get('image_prefix', '') + attrs['url']
+                token = dict(token, attrs=attrs)
+            return super().render_token(token, state)
+
+    markdown = mistune.create_markdown(renderer=ImagePrefixRenderer())
+    state = markdown.block.state_cls()
+    state.env['image_prefix'] = '/assets/'
+    html, state = markdown.parse('![Logo](logo.png)', state=state)
+    print(html.strip())
+    # <p><img src="/assets/logo.png" alt="Logo" /></p>
+
+Create a fresh state for each document. This keeps the context out of mutable
+renderer attributes. Copying the image token and its attributes also leaves
+the original parsed URL intact. Delegating to ``HTMLRenderer`` retains its
+normal escaping and URL-scheme checks.
+
 
 .. _abstract-syntax-tree:
 

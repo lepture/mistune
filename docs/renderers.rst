@@ -202,14 +202,18 @@ adds the :ref:`strikethrough` plugin:
 
 .. code-block:: python
 
+    import mistune
     from mistune.renderers.markdown import MarkdownRenderer
 
     class MyRenderer(MarkdownRenderer):
         def strikethrough(self, token, state):
             return '~~' + self.render_children(token, state) + '~~'
 
-    format_markdown = mistune.create_markdown(renderer=MarkdownRenderer(), plugins=['strikethrough'])
-    format_markdown(your_markdown_text)
+    format_markdown = mistune.create_markdown(renderer=MyRenderer(), plugins=['strikethrough'])
+    print(format_markdown('~~text~~'))
+    # ~~text~~
+
+Pass the custom renderer instance so that its plugin methods are used.
 
 Default methods
 ~~~~~~~~~~~~~~~

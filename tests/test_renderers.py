@@ -268,6 +268,11 @@ class TestMarkdownRendererPlugins(TestCase):
         result = md("| A | B |\n|---|---|\n| 1 | 2 |\n")
         self.assertEqual(result, "| A | B |\n| --- | --- |\n| 1 | 2 |\n")
 
+    def test_formatting_plugins_markdown(self):
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=["strikethrough", "mark", "insert"])
+        self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")
+        self.assertEqual(md("~~a **b** c~~\n"), "~~a **b** c~~\n")
+
     def test_standalone_list_item(self):
         renderer = MarkdownRenderer()
         token = {

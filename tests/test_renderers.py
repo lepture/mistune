@@ -19,6 +19,17 @@ load_renderer(RSTRenderer())
 load_renderer(MarkdownRenderer())
 
 
+class TestRSTRendererLineBreaks(TestCase):
+    def test_tight_list_hard_breaks(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for text, expected in (
+            ("- first  \n  second\n", "- | first\n  | second\n"),
+            ("1. first\\\n   second\n", "1. | first\n   | second\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
+
+
 class TestMarkdownRendererRoundTrip(TestCase):
     """Reformatting valid Markdown must not change its meaning: rendering the
     reformatted source to HTML must match rendering the original source."""

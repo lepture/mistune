@@ -91,7 +91,7 @@ html_theme_options = {
                 },
             ],
         },
-        {"title": "Sponsors", "url": "/sponsors"},
+        {"title": "Sponsors", "url": "sponsors"},
     ],
 }
 

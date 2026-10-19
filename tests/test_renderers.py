@@ -137,6 +137,25 @@ class TestMarkdownRendererRoundTrip(TestCase):
             with self.subTest(text=text):
                 self.assert_round_trip(text)
 
+    def test_image_alt_matching_url_stays_an_image(self):
+        for text in (
+            "![https://example.com](https://example.com)",
+            "![user@example.com](mailto:user@example.com)",
+            "[![https://example.com](https://example.com)](/target)",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
+    def test_link_autolinks_still_render(self):
+        self.assertEqual(
+            self.reformat("[https://example.com](https://example.com)"),
+            "<https://example.com>\n",
+        )
+        self.assertEqual(
+            self.reformat("[user@example.com](mailto:user@example.com)"),
+            "<user@example.com>\n",
+        )
+
     def test_indented_code_containing_fences(self):
         parse = create_markdown(renderer="ast")
         for indentation in range(4):

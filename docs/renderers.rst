@@ -25,7 +25,8 @@ To render this syntax, create a subclass of ``mistune.HTMLRenderer``:
 
 .. code-block:: python
 
-    from mistune import HTMLRenderer
+    import mistune
+    from mistune import HTMLRenderer, escape
 
     class MyRenderer(HTMLRenderer):
         def codespan(self, text):
@@ -36,6 +37,61 @@ To render this syntax, create a subclass of ``mistune.HTMLRenderer``:
     # use the custom renderer
     markdown = mistune.create_markdown(renderer=MyRenderer())
     print(markdown('hi `$a^2=4$`'))
+
+Customize plugin output
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also override methods supplied by plugins. Enable the plugin to
+parse its syntax, then define the matching method on your ``HTMLRenderer``
+subclass. For example, add a CSS class to tables:
+
+.. code-block:: python
+
+    import mistune
+
+    class TableRenderer(mistune.HTMLRenderer):
+        def table(self, text):
+            return '<table class="data-table">\n' + text + '</table>\n'
+
+    markdown = mistune.create_markdown(
+        renderer=TableRenderer(), plugins=['table'],
+    )
+    print(markdown('| Name | Count |\n| --- | ---: |\n| Apples | 3 |'))
+
+The subclass method takes precedence over the plugin's registered renderer.
+The other table methods keep their default behavior, including header cells
+and column alignment. ``text`` already contains the rendered child HTML;
+do not escape it again.
+
+Plugin methods are registered on the renderer instance, not defined on
+``HTMLRenderer`` itself, so ``super().table(text)`` is not available. To
+reuse the default table output inside an override, import ``render_table``
+from ``mistune.plugins.table`` and call ``render_table(self, text)``.
+
+HTML safety methods
+~~~~~~~~~~~~~~~~~~~
+
+``HTMLRenderer`` exposes output-context helpers for custom renderers and
+plugins:
+
+* ``escape_enabled`` reports and controls whether raw HTML tokens are escaped.
+* ``escape_raw(value)`` conditionally escapes a raw HTML token.
+* ``escape_attribute(value)`` always escapes an HTML attribute value.
+* ``render_attrs(attrs)`` renders fixed attribute names, omits ``None`` and
+  ``False`` values, and escapes every non-boolean value. Invalid attribute
+  names raise ``ValueError``.
+* ``sanitize_url(url)`` applies the renderer's URL protocol policy and returns
+  either the original URL or ``#harmful-link``.
+
+Keep URL filtering separate from attribute escaping. For example::
+
+    class LinkRenderer(HTMLRenderer):
+        def link(self, text, url, title=None):
+            attrs = {'href': self.sanitize_url(url), 'title': title}
+            return '<a' + self.render_attrs(attrs) + '>' + text + '</a>'
+
+``safe_url(url)`` remains available for compatibility and returns an
+attribute-escaped result.
 
 Available methods
 ~~~~~~~~~~~~~~~~~

@@ -1,7 +1,7 @@
-import time
 from unittest import TestCase
 
 from mistune import create_markdown
+from tests.perf_utils import assert_near_linear
 
 
 class TestMathSecurity(TestCase):
@@ -16,16 +16,16 @@ class TestMathSecurity(TestCase):
         self.assertNotIn("<script>", inline_html)
         self.assertNotIn("<script>", block_html)
 
+    def test_math_plugin_escapes_content_when_raw_html_is_enabled(self):
+        md = create_markdown(escape=False, plugins=["math"])
+
+        self.assertIn("&lt;marker&gt;", md("$<marker>$\n"))
+
     def test_repeated_inline_math_openers_are_near_linear(self):
         md = create_markdown(plugins=["math"])
 
         def render(size):
-            start = time.perf_counter()
-            md("$a " * size + "\n")
-            return time.perf_counter() - start
+            return md("$a " * size + "\n")
 
-        render(200)
-        small = render(1000)
-        large = render(2000)
-
-        self.assertLess(large, small * 3.5 + 0.02)
+        _small, html = assert_near_linear(self, render, 1000, 2000)
+        self.assertIn('<span class="math">', html)

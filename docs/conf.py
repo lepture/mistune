@@ -1,3 +1,5 @@
+import os
+
 import mistune
 
 project = "Mistune"
@@ -19,11 +21,16 @@ release = version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    "shibuya.sponsors",
 ]
+sponsors_json_url = "https://cdn.jsdelivr.net/gh/lepture/lepture/sponsors.json"
 
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-}
+if os.environ.get("MISTUNE_DOCS_OFFLINE") == "1":
+    intersphinx_mapping = {}
+else:
+    intersphinx_mapping = {
+        "python": ("https://docs.python.org/3", None),
+    }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -84,7 +91,7 @@ html_theme_options = {
                 },
             ],
         },
-        {"title": "Sponsor me", "url": "https://github.com/sponsors/lepture"},
+        {"title": "Sponsors", "url": "/sponsors"},
     ],
 }
 

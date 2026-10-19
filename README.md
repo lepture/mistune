@@ -27,6 +27,17 @@ A fast yet powerful Python Markdown parser with renderers and plugins.
 
 Check [benchmark results for Wenmode](https://github.com/lepture/wenmode#benchmark).
 
+## Sponsors
+
+<table>
+<tr>
+<td><img align="middle" width="68" height="68" src="https://cdn.jsdelivr.net/gh/lepture/lepture/static/e-iceblue.svg"></td>
+<td>Convert Word, Excel, and text-based PDF files to Markdown—or turn Markdown into Word, Excel,
+and PDF—with <a href="https://www.e-iceblue.com/Introduce/office-for-python.html">Spire.Office for Python</a>. Automate document conversion directly in Python, without
+requiring Microsoft Office.</td>
+</tr>
+</table>
+
 ## Install
 
 To install mistune:
@@ -42,28 +53,25 @@ Convert Markdown to HTML with ease:
 ```python
 import mistune
 
-mistune.html(your_markdown_text)
+markdown = mistune.create_markdown()
+markdown(your_markdown_text)
 ```
+
+`create_markdown()` escapes raw HTML by default. For compatibility,
+`mistune.html(trusted_markdown_text)` enables raw HTML and several plugins; use
+that legacy helper only for trusted input or sanitize its output externally.
 
 ## Security Reporting
 
-If you found security bugs, please do not send a public issue or patch.
-You can send me email at <me@lepture.com>. Attachment with patch is welcome.
-My PGP Key fingerprint is:
-
-```
-72F8 E895 A70C EBDF 4F2A DFE0 7E55 E3E0 118B 2B4C
-```
-
-Or, you can use the [Tidelift security contact](https://tidelift.com/security).
-Tidelift will coordinate the fix and disclosure.
+If you find a security bug, please do not send a public issue or patch. Follow
+the repository's [security policy](.github/SECURITY.md) to report it privately.
 
 ## Benchmarks
 
 <details>
 <summary>
 Here is the benchmark score on my computer. Check the `benchmark/bench.py` script.
-</summary>  
+</summary>
 
 ```
 mistune (3.0.0) - atx: 13.901472091674805ms

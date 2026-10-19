@@ -1,13 +1,13 @@
 import os
 from typing import TYPE_CHECKING, Any, Dict, List, Match, Union
 
-from ..util import escape as escape_text
 from ._base import BaseDirective, DirectivePlugin
 
 if TYPE_CHECKING:
     from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState
+    from ..core import BlockState
     from ..markdown import Markdown
+    from ..renderers.html import HTMLRenderer
 
 
 class Include(DirectivePlugin):
@@ -105,7 +105,5 @@ class Include(DirectivePlugin):
             md.renderer.register("include", render_html_include)
 
 
-def render_html_include(renderer: "BaseRenderer", text: str, **attrs: Any) -> str:
-    if getattr(renderer, "_escape", True):
-        text = escape_text(text)
-    return '<pre class="directive-include">\n' + text + "</pre>\n"
+def render_html_include(renderer: "HTMLRenderer", text: str, **attrs: Any) -> str:
+    return '<pre class="directive-include">\n' + renderer.escape_raw(text) + "</pre>\n"

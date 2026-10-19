@@ -136,7 +136,7 @@ Add default HTML renderers for your plugin. A renderer function has this form:
 
     def render_link(renderer, text, **attrs):
         # token with type, text or raw, and attrs
-        href = attrs['href']
+        href = renderer.safe_url(attrs['url'])
         return f'<a href="{href}">{text}</a>'
 
 If the current Markdown instance uses an HTML renderer, register the plugin
@@ -348,21 +348,24 @@ Plugin elements
             },
             {
                 'type': 'table_body',
-                'children': {
-                    'type': 'table_row',
-                    'children': [
-                        {
-                            'type': 'table_cell',
-                            'children': list[dict],
-                            'attrs': {
-                                # 'align' is 'center', 'left', 'right', or None
-                                'align': str | None,
-                                'head': False
-                            }
-                        },
-                        ...
-                    ]
-                }
+                'children': [
+                    {
+                        'type': 'table_row',
+                        'children': [
+                            {
+                                'type': 'table_cell',
+                                'children': list[dict],
+                                'attrs': {
+                                    # 'align' is 'center', 'left', 'right', or None
+                                    'align': str | None,
+                                    'head': False
+                                }
+                            },
+                            ...
+                        ]
+                    },
+                    ...
+                ]
             }
         ]
     }

@@ -54,6 +54,9 @@ SPOILER = markdown_factory(plugins=["spoiler"])
 MATH = markdown_factory(plugins=["math"])
 FOOTNOTES = markdown_factory(plugins=["footnotes"])
 GITHUB = markdown_factory(plugins=["table", "task_lists"])
+STRIKETHROUGH = markdown_factory(plugins=["strikethrough"])
+MARK = markdown_factory(plugins=["mark"])
+INSERT = markdown_factory(plugins=["insert"])
 
 
 EDGE_CASES = {
@@ -74,6 +77,12 @@ EDGE_CASES = {
     ),
     "nested-image-labels": EdgeCase(
         "nested-image-labels", "inline", lambda n: "![" * n + "text" + "](/url)" * n + "\n", CORE, (200, 1000, 5000)
+    ),
+    "repeated-link-suffixes": EdgeCase(
+        "repeated-link-suffixes", "inline", lambda n: "[" * n + "a" + "](/u)" * n + "\n", CORE, (200, 1000, 5000)
+    ),
+    "unclosed-inline-title": EdgeCase(
+        "unclosed-inline-title", "inline", lambda n: '[x](y "' + "\\!" * n + ")", CORE, (1000, 5000, 10000)
     ),
     "dense-emphasis": EdgeCase("dense-emphasis", "inline", lambda n: "*a" * n + "\n", CORE, (1000, 10000, 100000)),
     "long-code-span-runs": EdgeCase(
@@ -97,6 +106,13 @@ EDGE_CASES = {
     ),
     "invalid-inline-math-closers": EdgeCase(
         "invalid-inline-math-closers", "inline", lambda n: "$x" + "$5" * n + "\n", MATH, (1000, 5000, 10000)
+    ),
+    "unclosed-strikethrough": EdgeCase(
+        "unclosed-strikethrough", "inline", lambda n: "~~a " * n + "\n", STRIKETHROUGH, (1000, 5000, 10000)
+    ),
+    "unclosed-mark": EdgeCase("unclosed-mark", "inline", lambda n: "==a " * n + "\n", MARK, (1000, 5000, 10000)),
+    "unclosed-insert": EdgeCase(
+        "unclosed-insert", "inline", lambda n: "^^a " * n + "\n", INSERT, (1000, 5000, 10000)
     ),
     "long-list-spacing": EdgeCase(
         "long-list-spacing", "blocks", lambda n: "- " + " " * n + "text\n", CORE, (1000, 10000, 100000)

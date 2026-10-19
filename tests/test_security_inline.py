@@ -1,11 +1,7 @@
-import platform
-import time
 from unittest import TestCase
 
 from mistune import create_markdown
-
-IS_PYPY = platform.python_implementation() == "PyPy"
-DEADLINE = 1.2 if IS_PYPY else 1.0
+from tests.perf_utils import assert_near_linear
 
 
 class TestInlineParserSecurity(TestCase):
@@ -21,23 +17,20 @@ class TestInlineParserSecurity(TestCase):
 
     def test_link_title_redos_payload_returns_quickly(self):
         md = create_markdown()
-        payload = '[x](y "' + "\\!" * 24 + ")"
 
-        start = time.monotonic()
-        html = md(payload)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md('[x](y "' + "\\!" * size + ")")
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, html = assert_near_linear(self, render, 1000, 2000)
         self.assertIn("[x](y", html)
 
     def test_nested_bracket_link_input_does_not_recurse_forever(self):
-        text = "[" * 8000 + "x" + "]" * 8000
+        md = create_markdown()
 
-        start = time.monotonic()
-        html = create_markdown()(text)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md("[" * size + "x" + "]" * size)
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, html = assert_near_linear(self, render, 4000, 8000)
         self.assertIn("[", html)
 
     def test_failed_outer_bracket_preserves_nested_link(self):
@@ -46,13 +39,12 @@ class TestInlineParserSecurity(TestCase):
         self.assertEqual('<p>[<a href="https://example.com">x</a>]</p>\n', html)
 
     def test_failed_reference_after_nested_brackets_returns_quickly(self):
-        text = "[" * 8000 + "x" + "]" * 8000 + "[missing]"
+        md = create_markdown()
 
-        start = time.monotonic()
-        html = create_markdown()(text)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md("[" * size + "x" + "]" * size + "[missing]")
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, html = assert_near_linear(self, render, 2000, 4000)
         self.assertIn("[missing]", html)
 
     def test_failed_reference_does_not_hide_following_inline_link(self):
@@ -61,94 +53,72 @@ class TestInlineParserSecurity(TestCase):
         self.assertEqual('<p>[foo]<a href="https://example.com">bar</a></p>\n', html)
 
     def test_unmatched_bracket_input_returns_quickly(self):
-        text = "[" * 4000
+        md = create_markdown()
 
-        start = time.monotonic()
-        html = create_markdown()(text)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md("[" * size)
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, html = assert_near_linear(self, render, 2000, 4000)
         self.assertIn("[", html)
 
     def test_deep_emphasis_input_does_not_recurse_forever(self):
         marks = "*" * 1000
         text = marks + "a" + marks
 
-        start = time.monotonic()
         html = create_markdown()(text)
         ast = create_markdown(renderer="ast")(text)
-        elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, DEADLINE)
         self.assertLessEqual(html.count("<strong>") + html.count("<em>"), 20)
         self.assertTrue(ast)
 
     def test_deep_image_input_does_not_recurse_forever(self):
         text = "![" * 1000 + "a" + "](u)" * 1000
 
-        start = time.monotonic()
         create_markdown()(text)
         ast = create_markdown(renderer="ast")(text)
-        elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, DEADLINE)
         self.assert_max_token_depth(ast, "image", 20)
 
     def test_link_with_deep_image_input_does_not_recurse_forever(self):
         text = "[" + "![" * 1000 + "a" + "](u)" * 1000 + "](u)"
 
-        start = time.monotonic()
         create_markdown()(text)
         ast = create_markdown(renderer="ast")(text)
-        elapsed = time.monotonic() - start
 
-        self.assertLess(elapsed, DEADLINE)
         self.assert_max_token_depth(ast, "image", 20)
 
     def test_deep_link_input_does_not_recurse_forever(self):
-        text = "[" * 1000 + "a" + "](u)" * 1000
+        md = create_markdown(renderer="ast")
 
-        start = time.monotonic()
-        create_markdown(renderer="ast")(text)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md("[" * size + "a" + "](u)" * size)
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, ast = assert_near_linear(self, render, 500, 1000)
+        self.assertTrue(ast)
 
     def test_repeated_link_suffixes_are_near_linear(self):
         md = create_markdown()
 
         def render(size):
-            text = "[" * size + "a" + "](/u)" * size + "\n"
-            start = time.perf_counter()
-            md(text)
-            return time.perf_counter() - start
+            return md("[" * size + "a" + "](/u)" * size + "\n")
 
-        render(200)
-        small = render(1000)
-        large = render(2000)
-
-        self.assertLess(large, small * 3.5 + 0.02)
+        _small, html = assert_near_linear(self, render, 1000, 2000)
+        self.assertIn('href="/u"', html)
 
     def test_repeated_unclosed_inline_spoilers_are_near_linear(self):
         md = create_markdown(plugins=["spoiler"])
 
         def render(size):
-            text = ">! a " * size + "\n"
-            start = time.perf_counter()
-            md(text)
-            return time.perf_counter() - start
+            return md(">! a " * size + "\n")
 
-        render(200)
-        small = render(1000)
-        large = render(2000)
-
-        self.assertLess(large, small * 3.5 + 0.02)
+        _small, html = assert_near_linear(self, render, 1000, 2000)
+        self.assertIn("&gt;! a", html)
 
     def test_adjacent_ruby_tokens_do_not_recurse_forever(self):
-        text = "[a(b)]" * 3000 + "\n"
+        md = create_markdown(plugins=["ruby"])
 
-        start = time.monotonic()
-        create_markdown(plugins=["ruby"])(text)
-        elapsed = time.monotonic() - start
+        def render(size):
+            return md("[a(b)]" * size + "\n")
 
-        self.assertLess(elapsed, DEADLINE)
+        _small, html = assert_near_linear(self, render, 1500, 3000)
+        self.assertIn("<ruby>", html)

@@ -1,7 +1,7 @@
-import time
 from unittest import TestCase
 
 from mistune import create_markdown
+from tests.perf_utils import assert_near_linear
 
 
 class TestFormattingSecurity(TestCase):
@@ -19,17 +19,11 @@ class TestFormattingSecurity(TestCase):
         for plugin, unit in cases:
             with self.subTest(plugin=plugin):
                 md = create_markdown(plugins=[plugin])
-                md(unit)
+                def render(size):
+                    return md(unit * size)
 
-                repetitions = 3000
-                deadline = 1.0
-                text = unit * repetitions
-
-                start = time.monotonic()
-                md(text)
-                elapsed = time.monotonic() - start
-
-                self.assertLess(elapsed, deadline)
+                _small, html = assert_near_linear(self, render, 1500, 3000)
+                self.assertEqual(html.count("</"), 3001)
 
     def test_repeated_unclosed_formatting_markers_are_near_linear(self):
         cases = [
@@ -42,12 +36,7 @@ class TestFormattingSecurity(TestCase):
                 md = create_markdown(plugins=[plugin])
 
                 def render(size):
-                    start = time.perf_counter()
-                    md(unit * size + "\n")
-                    return time.perf_counter() - start
+                    return md(unit * size + "\n")
 
-                render(200)
-                small = render(1000)
-                large = render(2000)
-
-                self.assertLess(large, small * 3.5 + 0.02)
+                _small, html = assert_near_linear(self, render, 1000, 2000)
+                self.assertIn(unit.strip(), html)

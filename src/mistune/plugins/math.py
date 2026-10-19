@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING, Match
 
-from ..util import escape as escape_text
-
 if TYPE_CHECKING:
     from ..block_parser import BlockParser
-    from ..core import BaseRenderer, BlockState, InlineState
+    from ..core import BlockState, InlineState
     from ..inline_parser import InlineParser
     from ..markdown import Markdown
+    from ..renderers.html import HTMLRenderer
 
 __all__ = ["math", "math_in_quote", "math_in_list"]
 
@@ -44,12 +43,12 @@ def parse_inline_math(inline: "InlineParser", m: Match[str], state: "InlineState
     return m.end()
 
 
-def render_block_math(renderer: "BaseRenderer", text: str) -> str:
-    return '<div class="math">$$\n' + escape_text(text) + "\n$$</div>\n"
+def render_block_math(renderer: "HTMLRenderer", text: str) -> str:
+    return '<div class="math">$$\n' + renderer.escape_attribute(text) + "\n$$</div>\n"
 
 
-def render_inline_math(renderer: "BaseRenderer", text: str) -> str:
-    return r'<span class="math">\(' + escape_text(text) + r"\)</span>"
+def render_inline_math(renderer: "HTMLRenderer", text: str) -> str:
+    return r'<span class="math">\(' + renderer.escape_attribute(text) + r"\)</span>"
 
 
 def math(md: "Markdown") -> None:

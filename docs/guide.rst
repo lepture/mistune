@@ -1,18 +1,30 @@
 How to Use Mistune
 ==================
 
-Use ``mistune.html()`` to convert Markdown text to HTML::
+Create a reusable parser to convert untrusted Markdown text to HTML safely::
 
     import mistune
 
-    mistune.html(YOUR_MARKDOWN_TEXT)
+    markdown = mistune.create_markdown()
+    markdown(YOUR_MARKDOWN_TEXT)
 
-The ``mistune.html()`` function enables these features by default:
+``create_markdown()`` escapes raw HTML and rejects unsafe URL schemes by
+default. See :doc:`security` for the complete trust model.
+
+Legacy convenience parser
+-------------------------
+
+The ``mistune.html()`` compatibility helper enables these features by default:
 
 * It does not escape HTML tags.
 * It uses the **strikethrough** plugin.
 * It uses the **table** plugin.
 * It uses the **footnote** plugin.
+
+Use it only for trusted Markdown or when an external HTML sanitizer processes
+the result::
+
+    mistune.html(TRUSTED_MARKDOWN_TEXT)
 
 
 Customize Mistune

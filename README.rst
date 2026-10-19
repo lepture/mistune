@@ -11,7 +11,13 @@ Convert Markdown to HTML with ease:
 .. code-block:: python
 
     import mistune
-    mistune.html(your_markdown_text)
+
+    markdown = mistune.create_markdown()
+    markdown(your_markdown_text)
+
+``create_markdown()`` escapes raw HTML by default. The legacy
+``mistune.html(trusted_markdown_text)`` helper enables raw HTML and several
+plugins; use it only for trusted input or sanitize its output externally.
 
 Useful Links
 ------------

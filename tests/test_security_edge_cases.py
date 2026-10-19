@@ -1,11 +1,7 @@
-import time
 from unittest import TestCase
 
 from mistune import create_markdown
-
-
-def _best_time(render, size):
-    return min(render(size) for _ in range(3))
+from tests.perf_utils import assert_near_linear
 
 
 class TestEdgeCaseSecurity(TestCase):
@@ -13,30 +9,19 @@ class TestEdgeCaseSecurity(TestCase):
         md = create_markdown()
 
         def render(size):
-            text = "- first\n" + "\n" * size + "  last\n"
-            started = time.perf_counter()
-            md(text)
-            return time.perf_counter() - started
+            return md("- first\n" + "\n" * size + "  last\n")
 
-        render(500)
-        small = render(2000)
-        large = render(8000)
-
-        self.assertLess(large, small * 8 + 0.02)
+        _small, html = assert_near_linear(self, render, 2000, 4000)
+        self.assertIn("last", html)
 
     def test_dense_emphasis_is_near_linear(self):
         md = create_markdown()
 
         def render(size):
-            started = time.perf_counter()
-            md("*a" * size + "\n")
-            return time.perf_counter() - started
+            return md("*a" * size + "\n")
 
-        render(1000)
-        small = _best_time(render, 4000)
-        large = _best_time(render, 8000)
-
-        self.assertLess(large, small * 3.5 + 0.02)
+        _small, html = assert_near_linear(self, render, 4000, 8000, warmup_size=1000)
+        self.assertIn("<em>", html)
 
     def test_dense_emphasis_preserves_adjacent_tokens(self):
         md = create_markdown()
@@ -49,43 +34,28 @@ class TestEdgeCaseSecurity(TestCase):
         md = create_markdown()
 
         def render(size):
-            started = time.perf_counter()
-            md("*a_b" * size)
-            return time.perf_counter() - started
+            return md("*a_b" * size)
 
-        render(500)
-        small = _best_time(render, 2000)
-        large = _best_time(render, 4000)
-
-        self.assertLess(large, small * 3 + 0.05)
+        _small, html = assert_near_linear(self, render, 2000, 4000, warmup_size=500)
+        self.assertIn("a_b", html)
 
     def test_malformed_images_are_near_linear(self):
         md = create_markdown()
 
         def render(size):
-            started = time.perf_counter()
-            md("![" * size + "x" + "]" * size)
-            return time.perf_counter() - started
+            return md("![" * size + "x" + "]" * size)
 
-        render(500)
-        small = _best_time(render, 2000)
-        large = _best_time(render, 4000)
-
-        self.assertLess(large, small * 3 + 0.05)
+        _small, html = assert_near_linear(self, render, 2000, 4000, warmup_size=500)
+        self.assertIn("![", html)
 
     def test_unclosed_link_destinations_are_near_linear(self):
         md = create_markdown()
 
         def render(size):
-            started = time.perf_counter()
-            md("[](" * size)
-            return time.perf_counter() - started
+            return md("[](" * size)
 
-        render(500)
-        small = _best_time(render, 2000)
-        large = _best_time(render, 4000)
-
-        self.assertLess(large, small * 3 + 0.05)
+        _small, html = assert_near_linear(self, render, 2000, 4000, warmup_size=500)
+        self.assertIn("[](", html)
 
     def test_failed_parent_destination_does_not_hide_nested_images(self):
         md = create_markdown()

@@ -113,9 +113,14 @@ class MarkdownRenderer(BaseRenderer):
         # inside the content, otherwise the content would close the span early.
         longest = max((len(run) for run in _backtick_run_re.findall(code)), default=0)
         fence = "`" * (longest + 1)
-        # A space on each side keeps the delimiter from merging with a leading or
-        # trailing backtick; the parser strips this padding back off.
-        if code.startswith("`") or code.endswith("`"):
+        # Padding separates edge backticks from the delimiter and protects
+        # meaningful spaces at both ends from the parser's space normalization.
+        # All-space content is exempt from that normalization.
+        if (
+            code.startswith("`")
+            or code.endswith("`")
+            or (code.startswith(" ") and code.endswith(" ") and code.strip(" "))
+        ):
             return fence + " " + code + " " + fence
         return fence + code + fence
 

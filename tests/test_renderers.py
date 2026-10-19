@@ -124,6 +124,19 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_codespan_edge_spaces(self):
+        for text in (
+            "`  x  `",
+            "`   x   `",
+            "`  x `",
+            "` x  `",
+            "` `",
+            "`   `",
+            "``  a ` b  ``",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_image_alt_matching_url_stays_an_image(self):
         for text in (
             "![https://example.com](https://example.com)",

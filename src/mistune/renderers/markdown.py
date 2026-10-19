@@ -64,6 +64,16 @@ class MarkdownRenderer(BaseRenderer):
     def strong(self, token: Dict[str, Any], state: BlockState) -> str:
         return "**" + self.render_children(token, state) + "**"
 
+    # Inline formatting plugins (strikethrough, mark, insert)
+    def strikethrough(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "~~" + self.render_children(token, state) + "~~"
+
+    def mark(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "==" + self.render_children(token, state) + "=="
+
+    def insert(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "^^" + self.render_children(token, state) + "^^"
+
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         label = cast(str, token.get("label"))
         text = self.render_children(token, state)

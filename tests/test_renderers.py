@@ -46,6 +46,32 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_literal_inline_markers(self):
+        for text in (
+            r"\![label](https://example.com)" + "\n",
+            r"\\*emphasis*" + "\n",
+            r"\<b>text\</b>" + "\n",
+            r"\<https://example.com>" + "\n",
+            r"\&copy;" + "\n",
+            r"\&#65;" + "\n",
+            r"\&#x41;" + "\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
+    def test_inline_punctuation_and_real_markup_controls(self):
+        for text in (
+            "Tom & Jerry!\n",
+            "Entities: &copy; &#65; &#x41; &notanentity;\n",
+            "C# and a.b.c, (parentheses), [unmatched brackets]\n",
+            "*emphasis* and `code &copy;`\n",
+            "![image](https://example.com/image.png)\n",
+            "<b>real HTML</b>\n",
+            "<https://example.com/?a=1&b=2>\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_escaped_emphasis_markers(self):
         # an escaped "*"/"_" is a literal delimiter, not emphasis; re-emitting
         # it unescaped would turn plain text back into <em>/<strong>
@@ -106,6 +132,17 @@ class TestMarkdownRendererRoundTrip(TestCase):
             "<user@example.com>\n",
         )
 
+    def test_indented_code_containing_fences(self):
+        parse = create_markdown(renderer="ast")
+        for indentation in range(4):
+            for markers in (("```",), ("~~~",), ("```", "~~~"), ("````", "~~~")):
+                with self.subTest(indentation=indentation, markers=markers):
+                    lines = ["before"] + [" " * indentation + marker for marker in markers] + ["after"]
+                    source = "".join("    " + line + "\n" for line in lines)
+                    tokens = parse(self.reformat(source))
+                    self.assertEqual([token["type"] for token in tokens], ["block_code"])
+                    self.assertEqual(tokens[0]["raw"], "\n".join(lines) + "\n")
+
     def test_link_title_containing_quote(self):
         # a double quote inside a link/image title must be escaped, or the
         # re-parse closes the title early and drops it
@@ -117,6 +154,31 @@ class TestMarkdownRendererRoundTrip(TestCase):
             '[t](/u "back\\\\slash \\" quote")\n',
         ):
             self.assert_round_trip(text)
+
+    def test_empty_reference_link_destination(self):
+        for reference in ("[text][r]", "[r][]", "[r]"):
+            for title in ("", ' "title"', " 'say \"hi\"'"):
+                with self.subTest(reference=reference, title=title):
+                    text = reference + "\n\n[r]: <>" + title + "\n"
+                    self.assertIn('href=""', self.to_html(text))
+                    self.assert_round_trip(text)
+
+    def test_empty_reference_image_destination(self):
+        for title in ("", ' "title"', " 'say \"hi\"'"):
+            with self.subTest(title=title):
+                text = "![alt][r]\n\n[r]: <>" + title + "\n"
+                self.assertIn('src=""', self.to_html(text))
+                self.assert_round_trip(text)
+
+    def test_unused_empty_reference_destination(self):
+        self.assertEqual(self.reformat("[r]: <>\n"), "[r]: <>\n")
+        self.assertEqual(self.reformat('[r]: <> "title"\n'), '[r]: <> "title"\n')
+
+    def test_nonempty_reference_destination_format(self):
+        for destination in ("/url", "https://example.com", "/path(a)"):
+            with self.subTest(destination=destination):
+                text = '[text][r]\n\n[r]: ' + destination + ' "title"\n'
+                self.assertEqual(self.reformat(text), text)
 
     def test_block_quote_content_ending_in_gt(self):
         # a block quote whose content ends with ">" (an autolink, an inline
@@ -178,6 +240,33 @@ class TestRendererMethodRegistration(TestCase):
             renderer.render_token(token, BlockState()),
             '<a href="/wiki/python">Python</a>',
         )
+
+    def test_html_safety_helpers(self):
+        renderer = HTMLRenderer(escape=False)
+
+        self.assertFalse(renderer.escape_enabled)
+        self.assertEqual(renderer.escape_raw("<b>raw</b>"), "<b>raw</b>")
+        self.assertEqual(renderer.escape_attribute('a"<b>'), "a&quot;&lt;b&gt;")
+        self.assertEqual(
+            renderer.render_attrs({"class": 'a"b', "hidden": True, "empty": False, "missing": None}),
+            ' class="a&quot;b" hidden',
+        )
+        self.assertEqual(renderer.sanitize_url("javascript:marker"), "#harmful-link")
+        self.assertEqual(renderer.safe_url('https://example.com/?q="x"'), "https://example.com/?q=&quot;x&quot;")
+
+        renderer.escape_enabled = True
+        self.assertEqual(renderer.escape_raw("<b>raw</b>"), "&lt;b&gt;raw&lt;/b&gt;")
+
+        with self.assertRaises(ValueError):
+            renderer.render_attrs({'class" onclick': "marker"})
+
+    def test_escape_false_only_allows_raw_html(self):
+        md = create_markdown(escape=False)
+        html = md('<b>raw</b> [link](javascript:marker "a\\\"b")')
+
+        self.assertIn("<b>raw</b>", html)
+        self.assertIn('href="#harmful-link"', html)
+        self.assertIn('title="a&quot;b"', html)
 
 
 class TestMarkdownRendererPlugins(TestCase):

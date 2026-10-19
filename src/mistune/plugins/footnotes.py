@@ -38,7 +38,7 @@ def parse_inline_footnote(inline: "InlineParser", m: Match[str], state: "InlineS
         if not indexes:
             indexes = {note_key: index for index, note_key in enumerate(notes)}
             state.env["footnote_indexes"] = indexes
-        if key not in notes:
+        if key not in indexes:
             notes.append(key)
             indexes[key] = len(notes) - 1
             state.env["footnotes"] = notes

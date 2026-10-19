@@ -35,6 +35,7 @@ User Guide
    :maxdepth: 2
 
    guide
+   security
    cli
    renderers
    plugins

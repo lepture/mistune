@@ -6,8 +6,9 @@ from ..core import BaseRenderer, BlockState
 from ..util import strip_end
 from ._list import render_list, render_list_item
 
-fenced_re = re.compile(r"^[`~]+", re.M)
+fenced_re = re.compile(r"^ {0,3}([`~]+)", re.M)
 _backtick_run_re = re.compile(r"`+")
+_literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&])")
 
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
@@ -29,7 +30,9 @@ class MarkdownRenderer(BaseRenderer):
         ref_links = state.env["ref_links"]
         for key in ref_links:
             attrs = ref_links[key]
-            text = "[" + attrs["label"] + "]: " + attrs["url"]
+            # An empty destination must be explicit in a reference definition.
+            url = attrs["url"] or "<>"
+            text = "[" + attrs["label"] + "]: " + url
             title = attrs.get("title")
             if title:
                 text += ' "' + _escape_title(title) + '"'
@@ -49,9 +52,11 @@ class MarkdownRenderer(BaseRenderer):
         # other characters and is left untouched.
         if raw and all(c in "*_" for c in raw):
             return "".join("\\" + c for c in raw)
-        # a backtick always opens a code span, so it must stay escaped to
-        # survive a re-parse as literal text.
-        return raw.replace("`", "\\`")
+        # Keep literal escapes, code delimiters, image introducers, HTML
+        # delimiters and entity prefixes from becoming markup on re-parse.
+        # Complete entity references already in this token keep their meaning;
+        # escaped ampersands arrive in a separate text token.
+        return _literal_inline_markers_re.sub(lambda m: "\\" + m[1] if m[1] else m[0], raw)
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"

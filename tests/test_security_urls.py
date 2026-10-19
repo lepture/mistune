@@ -74,3 +74,10 @@ class TestSafeUrlSecurity(TestCase):
         ]:
             rendered = html(f"[h]({url})")
             self.assertIn(f'href="{url}"', rendered, url)
+
+    def test_attribute_escaping_is_independent_of_raw_html_mode(self):
+        md = create_markdown(escape=False)
+        rendered = md('![a"<b>](https://example.com/image.png "t\\\"itle")')
+
+        self.assertIn('alt="a&quot;"', rendered)
+        self.assertIn('title="t&quot;itle"', rendered)

@@ -4,17 +4,9 @@ on:
   push:
     branches-ignore:
       - 'wip-*'
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
   pull_request:
     branches-ignore:
       - 'wip-*'
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
   workflow_dispatch:
 
 
@@ -38,6 +30,26 @@ jobs:
 
       - name: mypy lint
         run: uv run --locked --group lint mypy
+
+  docs:
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade uv
+
+      - name: Build documentation without remote inventories
+        env:
+          MISTUNE_DOCS_OFFLINE: "1"
+        run: uv run --locked --group docs sphinx-build -W -b dummy docs /tmp/mistune-docs
 
   test:
     needs: lint

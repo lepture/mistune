@@ -3,9 +3,39 @@ Changelog
 
 Here is the full history of mistune v3.
 
-Unreleased
-----------
+Version 3.4.0
+-------------
 
+**Released on Oct 19, 2026**
+
+* Add Python 3.15 support and include it in the CI test matrix.
+* Require Python 3.10 or later.
+* Parse inline links with an opening-bracket stack and replace per-syntax
+  failure caches with source-local delimiter scanning.
+* Share one inline nesting budget across images, links, emphasis, and plugins.
+  Expose ``InlineParser.max_nested_level``; the older ``max_emphasis_depth``
+  and ``max_image_depth`` settings configure the same limit.
+* Preserve later valid syntax when a candidate fails or reaches a nesting
+  limit, rather than treating the remaining input as unparsed text.
+* Enforce CommonMark's 999-character reference label limit, balanced and
+  bounded destination parentheses, and link title constraints.
+* Improve performance for unclosed inline HTML, unmatched code delimiters,
+  deeply nested images, and repeated text fragments.
+* Recognize inline HTML comments permitted by CommonMark 0.31.2.
+* Parse links containing full reference images without treating the image's
+  reference label as a nested link.
+* Preserve reference definitions parsed inside multi-paragraph footnotes.
+* Accept definition-list markers indented by up to three spaces.
+* Prefer longer registered abbreviation matches over shorter prefixes.
+* Require at least one digit in ordered list continuation markers.
+* Add Markdown rendering for strikethrough, mark, and insert plugins.
+* Preserve escaped pipes in table code spans, literal trailing heading hashes,
+  meaningful code span edge spaces, and leading blank lines in Markdown output.
+* Keep images whose alt text matches their URL from becoming autolinks.
+* Preserve non-line-break separator characters in rendered lists and hard line
+  breaks in tight ReST list items.
+* Document per-document renderer context and correct the custom Markdown
+  renderer example.
 * Preserve literal backslashes, image introducers, HTML delimiters and entity
   prefixes when rendering Markdown for a round trip.
 * Only recognize task list markers in a list item's leading paragraph,

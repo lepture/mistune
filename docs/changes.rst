@@ -8,6 +8,8 @@ Unreleased
 
 * Preserve literal backslashes, image introducers, HTML delimiters and entity
   prefixes when rendering Markdown for a round trip.
+* Only recognize task list markers in a list item's leading paragraph,
+  preserving literal markers in headings.
 * Bound the global convenience-parser cache and avoid retaining caller-owned
   renderers and plugin objects.
 * Add public HTML output helpers for raw HTML, attributes, and URL policy.

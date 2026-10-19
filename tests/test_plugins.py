@@ -64,3 +64,35 @@ class TestExtraPlugins(BaseTestCase):
         md2 = create_markdown(escape=False, plugins=["math", math_in_quote])
         self.assertNotIn('class="math"', md1(text))
         self.assertIn('class="math"', md2(text))
+
+
+class TestFootnoteReferenceDefinitions(BaseTestCase):
+    def test_definition_before_another_paragraph(self):
+        text = (
+            "Text[^one].\n\n[^one]: See [link][ref].\n\n"
+            "    [ref]: /url\n\n    Final paragraph.\n"
+        )
+        result = create_markdown(plugins=["footnotes"])(text)
+        self.assertIn('<a href="/url">link</a>', result)
+        self.assertIn("Final paragraph.", result)
+        self.assertNotIn("[ref]", result)
+
+    def test_definition_at_end_of_footnote(self):
+        text = "Text[^one].\n\n[^one]: See [link][ref].\n\n    [ref]: /url\n"
+        result = create_markdown(plugins=["footnotes"])(text)
+        self.assertIn('<a href="/url">link</a>', result)
+        self.assertNotIn("[ref]", result)
+
+    def test_existing_document_definition_takes_precedence(self):
+        text = (
+            "Text[^one].\n\n[ref]: /original\n\n"
+            "[^one]: See [link][ref].\n\n    [ref]: /replacement\n"
+        )
+        result = create_markdown(plugins=["footnotes"])(text)
+        self.assertIn('<a href="/original">link</a>', result)
+        self.assertNotIn("replacement", result)
+
+    def test_missing_reference_stays_literal(self):
+        text = "Text[^one].\n\n[^one]: See [link][missing].\n\n    Another paragraph.\n"
+        result = create_markdown(plugins=["footnotes"])(text)
+        self.assertIn("[link][missing]", result)

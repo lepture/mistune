@@ -97,3 +97,27 @@ Untrusted HTML should be escaped.
 .
 <p>Untrusted <abbr title="&lt;p&gt;This is some HTML&lt;/p&gt;">HTML</abbr> should be escaped.</p>
 ````````````````````````````````
+
+```````````````````````````````` example
+HTML5 and HTML
+*[HTML]: Hyper Text Markup Language
+*[HTML5]: Hyper Text Markup Language 5
+.
+<p><abbr title="Hyper Text Markup Language 5">HTML5</abbr> and <abbr title="Hyper Text Markup Language">HTML</abbr></p>
+````````````````````````````````
+
+```````````````````````````````` example
+New York City and New York
+*[New York]: State
+*[New York City]: City
+.
+<p><abbr title="City">New York City</abbr> and <abbr title="State">New York</abbr></p>
+````````````````````````````````
+
+```````````````````````````````` example
+HTML5 and HTML
+*[HTML5]: Hyper Text Markup Language 5
+*[HTML]: Hyper Text Markup Language
+.
+<p><abbr title="Hyper Text Markup Language 5">HTML5</abbr> and <abbr title="Hyper Text Markup Language">HTML</abbr></p>
+````````````````````````````````

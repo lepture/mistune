@@ -46,7 +46,7 @@ AUTO_EMAIL = (
 INLINE_HTML = (
     r"<" + HTML_TAGNAME + HTML_ATTRIBUTES + r"\s*/?>|"  # open tag
     r"</" + HTML_TAGNAME + r"\s*>|"  # close tag
-    r"<!--(?!>|->)(?:(?!--)[\s\S])+?(?<!-)-->|"  # comment
+    r"<!-->|<!--->|<!--(?:(?!-->)[\s\S])*?-->|"  # comment
     r"<\?[\s\S]+?\?>|"  # script like <?php?>
     r"<![A-Z][\s\S]+?>|"  # doctype
     r"<!\[CDATA[\s\S]+?\]\]>"  # cdata

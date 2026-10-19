@@ -64,6 +64,16 @@ class MarkdownRenderer(BaseRenderer):
     def strong(self, token: Dict[str, Any], state: BlockState) -> str:
         return "**" + self.render_children(token, state) + "**"
 
+    # Inline formatting plugins (strikethrough, mark, insert)
+    def strikethrough(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "~~" + self.render_children(token, state) + "~~"
+
+    def mark(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "==" + self.render_children(token, state) + "=="
+
+    def insert(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "^^" + self.render_children(token, state) + "^^"
+
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         label = cast(str, token.get("label"))
         text = self.render_children(token, state)
@@ -137,6 +147,7 @@ class MarkdownRenderer(BaseRenderer):
             underline = "=" if level == 1 else "-"
             return text + "\n" + underline * 3 + "\n\n"
         marker = "#" * level
+        text = re.sub(r"(^|[ \t])(#+)$", r"\1\\\2", text)
         return marker + " " + text + "\n\n"
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -284,7 +295,9 @@ def _render_table_cell(renderer: MarkdownRenderer, token: Dict[str, Any], state:
         text = renderer.render_children(token, state)
     else:
         text = cast(str, token.get("raw", ""))
-    return text.replace("\n", " ").replace("|", "\\|").strip()
+    # Code spans can already contain escaped pipes; keep an odd escape count.
+    text = re.sub(r"\\.|[|]", lambda m: r"\|" if m[0] == "|" else m[0], text)
+    return text.replace("\n", " ").strip()
 
 
 def _table_cell_align(token: Dict[str, Any]) -> Any:

@@ -80,6 +80,16 @@ class MarkdownRenderer(BaseRenderer):
     def insert(self, token: Dict[str, Any], state: BlockState) -> str:
         return "^^" + self.render_children(token, state) + "^^"
 
+    # superscript and subscript cannot contain a bare space or their own
+    # marker, so both are escaped
+    def superscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        text = self.render_children(token, state)
+        return "^" + text.replace("^", "\\^").replace(" ", "\\ ") + "^"
+
+    def subscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        text = self.render_children(token, state)
+        return "~" + text.replace("~", "\\~").replace(" ", "\\ ") + "~"
+
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         label = cast(str, token.get("label"))
         text = self.render_children(token, state)

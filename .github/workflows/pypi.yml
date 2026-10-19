@@ -15,7 +15,7 @@ jobs:
 
     - uses: astral-sh/setup-uv@v10.3.0
       with:
-        python-version: "3.10"
+        python-version: "3.11"
 
     - name: build dist
       run: uv build

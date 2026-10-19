@@ -1,5 +1,4 @@
 import re
-import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -13,6 +12,7 @@ from typing import (
     MutableMapping,
     Optional,
     Pattern,
+    Self,
     Set,
     Type,
     TypeVar,
@@ -26,11 +26,6 @@ if TYPE_CHECKING:
     from ._inline.links import Bracket
 
 DEFAULT_MAX_NESTED_LEVEL = 20
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 
 class BlockState:

@@ -3,6 +3,13 @@ Changelog
 
 Here is the full history of mistune v3.
 
+Unreleased
+----------
+
+* Require Python 3.11 or later; remove Python 3.10 support.
+* Remove the ``typing-extensions`` runtime dependency and use ``typing.Self``
+  from the standard library.
+
 Version 3.4.0
 -------------
 

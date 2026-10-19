@@ -2,12 +2,10 @@
 name = "mistune"
 description = "A sane and fast Markdown parser with useful plugins and renderers"
 authors = [{name = "Hsiaoming Yang", email="me@lepture.com"}]
-dependencies = [
-    "typing-extensions; python_version<'3.11'",
-]
+dependencies = []
 license = {text = "BSD-3-Clause"}
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.rst"
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -19,7 +17,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -70,7 +67,7 @@ where = ["src"]
 mistune = ["py.typed"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]
@@ -84,7 +81,7 @@ split-on-trailing-comma=false
 
 [tool.mypy]
 strict = true
-python_version = "3.10"
+python_version = "3.11"
 files = ["src/mistune"]
 show_error_codes = true
 pretty = true

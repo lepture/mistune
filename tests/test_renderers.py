@@ -321,6 +321,26 @@ class TestMarkdownRendererPlugins(TestCase):
         result = md("| A | B |\n|---|---|\n| 1 | 2 |\n")
         self.assertEqual(result, "| A | B |\n| --- | --- |\n| 1 | 2 |\n")
 
+    def test_table_codespan_escaped_pipes_round_trip(self):
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=["table"])
+        to_html = create_markdown(plugins=["table"])
+        for cell in (r"`a\|b`", r"`a\\\|b`", r"`a\|b\|c`"):
+            for source in (
+                "| Header |\n| --- |\n| " + cell + " |\n",
+                "| " + cell + " |\n| --- |\n| Body |\n",
+            ):
+                with self.subTest(source=source):
+                    result = md(source)
+                    self.assertEqual(result, source)
+                    self.assertEqual(to_html(result), to_html(source))
+
+    def test_table_plain_escaped_pipe_round_trip(self):
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=["table"])
+        to_html = create_markdown(plugins=["table"])
+        source = "| Header |\n| --- |\n| a \\| b |\n"
+        self.assertEqual(md(source), source)
+        self.assertEqual(to_html(md(source)), to_html(source))
+
     def test_formatting_plugins_markdown(self):
         md = create_markdown(renderer=MarkdownRenderer(), plugins=["strikethrough", "mark", "insert"])
         self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")

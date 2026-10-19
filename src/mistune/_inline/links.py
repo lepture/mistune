@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from bisect import bisect_left
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Match, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Match, Optional, Set, Tuple
 
 from ..core import InlineState
 from ..helpers import parse_link as parse_link_destination
@@ -218,13 +218,19 @@ def get_link_range_index(state: InlineState) -> Tuple[List[int], List[int]]:
 
     pairs = get_closing_bracket_map(state)
     ranges: List[Tuple[int, int]] = []
+    reference_labels: Set[int] = set()
     for label_start, close_pos in pairs.items():
+        if label_start in reference_labels:
+            continue
+        link_end = find_link_range_end(state.src, label_start, close_pos, state)
+        if link_end is None:
+            continue
+        if state.src.startswith("[", close_pos + 1):
+            reference_labels.add(close_pos + 2)
         opener = label_start - 1
         if opener > 0 and state.src[opener - 1] == "!":
             continue
-        link_end = find_link_range_end(state.src, label_start, close_pos, state)
-        if link_end is not None:
-            ranges.append((opener, link_end))
+        ranges.append((opener, link_end))
 
     ranges.sort()
     starts = [start for start, _end in ranges]

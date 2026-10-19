@@ -3,7 +3,7 @@ import string
 from bisect import bisect_left
 from typing import List, Match, Optional, Pattern, Set, Tuple
 
-from .core import BlockState, Parser
+from .core import DEFAULT_MAX_NESTED_LEVEL, BlockState, Parser
 from .helpers import (
     BLOCK_TAGS,
     HTML_ATTRIBUTES,
@@ -16,8 +16,6 @@ from .helpers import (
 )
 from .list_parser import LIST_PATTERN, parse_list
 from .util import escape_url, expand_leading_tab, expand_tab, unikey
-
-DEFAULT_MAX_NESTED_LEVEL = 20
 
 _INDENT_CODE_TRIM = re.compile(r"^ {1,4}", flags=re.M)
 _ATX_HEADING_TRIM = re.compile(r"(\s+|^)#+\s*$")
@@ -101,6 +99,8 @@ class BlockParser(Parser[BlockState]):
         if list_rules is None:
             list_rules = list(self.DEFAULT_RULES)
 
+        if max_nested_level < 1:
+            raise ValueError("max_nested_level must be positive")
         self.block_quote_rules = block_quote_rules
         self.list_rules = list_rules
         self.max_nested_level = max_nested_level
@@ -250,7 +250,7 @@ class BlockParser(Parser[BlockState]):
         if not key:
             return None
 
-        href, href_pos = parse_link_href(state.src, m.end(), block=True)
+        href, href_pos = parse_link_href(state.src, m.end(), block=True, max_nested_level=self.max_nested_level)
         if href is None:
             return None
 

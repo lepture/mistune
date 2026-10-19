@@ -67,7 +67,7 @@ def process_text(
     parse_emphasis: bool = True,
 ) -> None:
     ref = state.env.get("ref_abbrs")
-    if not ref:
+    if not ref or state.depth >= inline.max_nested_level:
         return _append_text(inline, text, state, parse_emphasis)
 
     segments: List[TextSegment] = []

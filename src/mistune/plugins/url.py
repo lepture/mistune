@@ -15,7 +15,12 @@ URL_LINK_PATTERN = r"""https?:\/\/[^\s<]+[^<.,:;"')\]\s]"""
 def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)
     pos = m.end()
-    if state.in_link:
+    if state.brackets:
+        close = text.find("]")
+        if close >= 0:
+            text = text[:close]
+            pos = m.start() + close
+    if state.in_link or state.depth >= inline.max_nested_level:
         inline.process_text(text, state)
         return pos
     state.append_token(
@@ -23,6 +28,7 @@ def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") 
             "type": "link",
             "children": [{"type": "text", "raw": text}],
             "attrs": {"url": escape_url(text)},
+            "_autolink": text,
         }
     )
     return pos

@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+from ..core import token_depth
+
 _CHARREF_PREFIX = re.compile(r"(#[0-9]{1,7};|#[xX][0-9a-fA-F]+;|[^\t\n\f <&#;]{1,32};)")
 
 
@@ -11,7 +13,7 @@ def is_entity_boundary(left: str, right: str) -> bool:
     return left.endswith("&") and _CHARREF_PREFIX.match(right) is not None
 
 
-@dataclass
+@dataclass(slots=True)
 class _Delimiter:
     index: int
     marker: str
@@ -74,10 +76,10 @@ def finalize_emphasis_tokens(
     enabled: bool,
     max_depth: int,
 ) -> List[Dict[str, Any]]:
-    if not enabled:
-        return _clean_emphasis_tokens(tokens)
-    if not _contains_emphasis_marker(tokens):
-        return _clean_emphasis_tokens(tokens)
+    if len(tokens) > 1:
+        tokens = _coalesce_emphasis_text(tokens)
+    if not enabled or not _contains_emphasis_marker(tokens):
+        return [_clean_emphasis_token(token) for token in tokens]
 
     parts: List[Dict[str, Any]] = []
     delimiters: List[_Delimiter] = []
@@ -95,6 +97,33 @@ def finalize_emphasis_tokens(
 
     _process_emphasis_delimiters(parts, delimiters, max_depth)
     return _merge_text_tokens(parts)
+
+
+def _coalesce_emphasis_text(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    result: List[Dict[str, Any]] = []
+    chunks: List[str] = []
+    enabled = True
+
+    def flush() -> None:
+        if chunks:
+            token: Dict[str, Any] = {"type": "text", "raw": "".join(chunks)}
+            if not enabled:
+                token["_emphasis"] = False
+            result.append(token)
+            chunks.clear()
+
+    for token in tokens:
+        if token["type"] != "text":
+            flush()
+            result.append(token)
+        else:
+            mode = token.get("_emphasis", True)
+            if mode != enabled or (chunks and is_entity_boundary(chunks[-1], token["raw"])):
+                flush()
+            enabled = mode
+            chunks.append(token["raw"])
+    flush()
+    return result
 
 
 def _process_dense_emphasis(parts: List[Dict[str, Any]], delimiters: List[_Delimiter]) -> bool:
@@ -153,15 +182,12 @@ def _contains_emphasis_marker(tokens: List[Dict[str, Any]]) -> bool:
     return False
 
 
-def _clean_emphasis_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [_clean_emphasis_token(token) for token in tokens]
-
-
 def _clean_emphasis_token(token: Dict[str, Any]) -> Dict[str, Any]:
-    if "_emphasis" not in token:
+    if "_emphasis" not in token and "_autolink" not in token:
         return token
     token = token.copy()
     token.pop("_emphasis", None)
+    token.pop("_autolink", None)
     return token
 
 
@@ -321,7 +347,7 @@ def _get_emphasis_children(
         return None
 
     children = parts[opener_index + 1 : closer_index]
-    if max_depth > 0 and _emphasis_depth(children) >= max_depth:
+    if max_depth > 0 and token_depth(children) >= max_depth:
         return None
     return children
 
@@ -359,21 +385,6 @@ def _apply_emphasis_match(
     if closer.length == 0:
         closer.can_close = False
         index_map.deactivate(closer.order)
-
-
-def _emphasis_depth(tokens: List[Dict[str, Any]]) -> int:
-    max_depth = 0
-    stack = [(token, 0) for token in tokens]
-    while stack:
-        token, depth = stack.pop()
-        token_type = token["type"]
-        if token_type in ("emphasis", "strong"):
-            depth += 1
-            if depth > max_depth:
-                max_depth = depth
-        for child in token.get("children", ()):
-            stack.append((child, depth))
-    return max_depth
 
 
 def _has_strong_enabled(parts: List[Dict[str, Any]], opener_index: int, closer_index: int) -> bool:
@@ -435,12 +446,21 @@ def _is_punctuation(char: str) -> bool:
 
 def _merge_text_tokens(tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     result: List[Dict[str, Any]] = []
+    chunks: List[str] = []
     for token in tokens:
-        if token["type"] == "text" and token["raw"] == "":
-            continue
-        if token["type"] == "text" and result and result[-1]["type"] == "text":
-            if not is_entity_boundary(result[-1]["raw"], token["raw"]):
-                result[-1]["raw"] += token["raw"]
+        if token["type"] == "text":
+            raw = token["raw"]
+            if not raw:
                 continue
-        result.append(_clean_emphasis_token(token))
+            if chunks and is_entity_boundary(chunks[-1], raw):
+                result.append({"type": "text", "raw": "".join(chunks)})
+                chunks = []
+            chunks.append(raw)
+        else:
+            if chunks:
+                result.append({"type": "text", "raw": "".join(chunks)})
+                chunks = []
+            result.append(_clean_emphasis_token(token))
+    if chunks:
+        result.append({"type": "text", "raw": "".join(chunks)})
     return result

@@ -12,6 +12,7 @@ doubling the input takes roughly four times as long.
 from __future__ import annotations
 
 import argparse
+import math
 import statistics
 import time
 from collections.abc import Callable
@@ -98,6 +99,19 @@ EDGE_CASES = {
         "link-label-long-code-runs",
         "inline",
         lambda n: "[" + "`" * n + "text" + "`" * (n - 1) + "](/url)\n",
+        CORE,
+        (1000, 10000, 100000),
+    ),
+    "unclosed-link-destinations": EdgeCase(
+        "unclosed-link-destinations", "inline", lambda n: "[](" * n + " [ok](/ok)\n", CORE, (1000, 5000, 10000)
+    ),
+    "unclosed-inline-comments": EdgeCase(
+        "unclosed-inline-comments", "inline", lambda n: "text " + "<!-- text " * n + " [ok](/ok)\n", CORE, (1000, 5000, 10000)
+    ),
+    "unmatched-code-run-lengths": EdgeCase(
+        "unmatched-code-run-lengths",
+        "inline",
+        lambda n: " ".join("`" * length + "x" for length in range(1, math.isqrt(2 * n) + 1)) + " [ok](/ok)\n",
         CORE,
         (1000, 10000, 100000),
     ),

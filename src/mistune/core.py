@@ -1,6 +1,7 @@
 import re
 import sys
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -13,17 +14,24 @@ from typing import (
     Optional,
     Pattern,
     Set,
-    Tuple,
     Type,
     TypeVar,
     Union,
     cast,
 )
 
+from ._inline.delimiters import DelimiterScanner
+
+if TYPE_CHECKING:
+    from ._inline.links import Bracket
+
+DEFAULT_MAX_NESTED_LEVEL = 20
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
     from typing_extensions import Self
+
 
 class BlockState:
     """The state to save block parser's cursor and tokens."""
@@ -126,14 +134,11 @@ class InlineState:
         self.src = ""
         self.tokens: List[Dict[str, Any]] = []
         self.in_image = False
-        self.image_depth = 0
+        self.depth = 0
         self.in_link = False
-        self.no_close_bracket_before: int = 0  # high-water mark for DoS mitigation
-        self.no_link_before: int = 0  # high-water mark for failed balanced link candidates
-        self.no_image_before: int = 0  # high-water mark for failed image candidates
-        self.link_brackets: Dict[int, Tuple[str, Dict[int, int]]] = {}
-        self.link_ranges: Dict[int, Tuple[str, List[int], List[int]]] = {}
-        self.formatting_no_end: Dict[Tuple[int, str], Tuple[str, int]] = {}
+        self.brackets: List["Bracket"] = []
+        self.last_link: Optional["Bracket"] = None
+        self._delimiters: Optional[DelimiterScanner] = None
 
     def prepend_token(self, token: Dict[str, Any]) -> None:
         """Insert token before the last token."""
@@ -142,17 +147,37 @@ class InlineState:
     def append_token(self, token: Dict[str, Any]) -> None:
         """Add token to the end of token list."""
         self.tokens.append(token)
+        if self.brackets and "children" in token:
+            bracket = self.brackets[-1]
+            if "_autolink" not in token or bracket.image:
+                bracket.child_depth = max(bracket.child_depth, token_depth([token]))
 
     def copy(self) -> "InlineState":
         """Create a copy of current state."""
         state = self.__class__(self.env)
         state.in_image = self.in_image
-        state.image_depth = self.image_depth
+        state.depth = self.depth + 1
         state.in_link = self.in_link
-        state.link_brackets = self.link_brackets
-        state.link_ranges = self.link_ranges
-        state.formatting_no_end = self.formatting_no_end
         return state
+
+    @property
+    def delimiters(self) -> DelimiterScanner:
+        if self._delimiters is None or self._delimiters.src is not self.src:
+            self._delimiters = DelimiterScanner(self.src)
+        return self._delimiters
+
+
+def token_depth(tokens: List[Dict[str, Any]]) -> int:
+    """Count all inline containers, including mixed plugin and core syntax."""
+    maximum = 0
+    stack = [(token, 0) for token in tokens]
+    while stack:
+        token, depth = stack.pop()
+        if "children" in token:
+            depth += 1
+            maximum = max(maximum, depth)
+            stack.extend((child, depth) for child in token["children"])
+    return maximum
 
 
 ST = TypeVar("ST", InlineState, BlockState)

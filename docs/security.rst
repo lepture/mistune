@@ -39,6 +39,44 @@ context:
 Do not treat ``escape=False`` as permission to skip attribute encoding or URL
 filtering.
 
+Parser bounds and recovery
+--------------------------
+
+``BlockParser.max_nested_level`` and ``InlineParser.max_nested_level`` default
+to 20. Inline containers share one budget: alternating images, emphasis, links,
+and formatting plugins does not grant each syntax its own allowance. When
+``Markdown`` creates a missing block or inline parser, it uses the supplied
+parser's limit::
+
+    from mistune import BlockParser, HTMLRenderer, Markdown
+
+    markdown = Markdown(
+        renderer=HTMLRenderer(),
+        block=BlockParser(max_nested_level=12),
+    )
+    assert markdown.inline.max_nested_level == 12
+
+The older inline settings ``max_emphasis_depth`` and ``max_image_depth`` are
+aliases for the shared limit. Limits must be positive; they cannot disable
+nesting bounds.
+
+Link reference labels follow CommonMark's maximum of 999 source characters,
+including backslashes used for escapes. Bare link destinations must have
+balanced parentheses, bounded by the parser's nesting limit, and cannot
+contain ASCII control characters. Parenthesized titles cannot contain an
+unescaped opening parenthesis.
+
+A failed candidate becomes ordinary text. Parsing resumes after the failed
+marker, so later valid links, emphasis, and code spans remain recognizable.
+Reaching a nesting limit does not turn the remainder of the document into
+unparsed text.
+
+Links use an opening-bracket stack. Code spans and inline extensions use
+source-local indexes of closing delimiters; they do not retain parse-failure
+caches across nested sources or documents. Inline HTML terminators use the
+same scanner, so repeated unclosed comments do not repeatedly scan the
+remaining document.
+
 Extension performance
 ---------------------
 

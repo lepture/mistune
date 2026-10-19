@@ -2,12 +2,14 @@ import re
 import string
 from typing import Any, Dict, Tuple, Union
 
+from .core import DEFAULT_MAX_NESTED_LEVEL
 from .util import escape_url
 
 PREVENT_BACKSLASH = r"(?<!\\)(?:\\\\)*"
 PUNCTUATION = r"[" + re.escape(string.punctuation) + r"]"
 
-LINK_LABEL = r"(?:[^\\\[\]]|\\.){0,500}"
+MAX_LINK_LABEL_LENGTH = 999
+LINK_LABEL = r"(?=[\s\S]{0,999}\])(?:[^\\\[\]]|\\.){0,999}"
 
 ASCII_WHITESPACE = " \t\n\r\f"
 
@@ -87,6 +89,7 @@ PRE_TAGS = ("pre", "script", "style", "textarea")
 _INLINE_LINK_LABEL_RE = re.compile(LINK_LABEL + r"\]")
 _INLINE_SQUARE_BRACKET_RE = re.compile(PREVENT_BACKSLASH + r"[\[\]]")
 _ESCAPE_CHAR_RE = re.compile(r"\\(" + PUNCTUATION + r")")
+_BLANK_LINE_RE = re.compile(r"\n[ \t]*\n")
 
 
 def unescape_char(text: str) -> str:
@@ -121,15 +124,17 @@ def parse_link_text(src: str, pos: int) -> Union[Tuple[str, int], Tuple[None, in
 
 
 def parse_link_label(src: str, start_pos: int) -> Union[Tuple[str, int], Tuple[None, None]]:
-    m = _INLINE_LINK_LABEL_RE.match(src, start_pos)
+    m = _INLINE_LINK_LABEL_RE.match(src, start_pos, start_pos + MAX_LINK_LABEL_LENGTH + 1)
     if m:
         label = m.group(0)[:-1]
         return label, m.end()
     return None, None
 
 
-def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tuple[str, int], Tuple[None, None]]:
-    href, href_pos, _end_pos = _parse_link_href(src, start_pos, block=block)
+def parse_link_href(
+    src: str, start_pos: int, block: bool = False, *, max_nested_level: int = DEFAULT_MAX_NESTED_LEVEL
+) -> Union[Tuple[str, int], Tuple[None, None]]:
+    href, href_pos, _end_pos = _parse_link_href(src, start_pos, block=block, max_nested_level=max_nested_level)
     if href is None:
         return None, None
     assert href_pos is not None
@@ -137,7 +142,7 @@ def parse_link_href(src: str, start_pos: int, block: bool = False) -> Union[Tupl
 
 
 def _parse_link_href(
-    src: str, start_pos: int, block: bool = False
+    src: str, start_pos: int, block: bool = False, *, max_nested_level: int = DEFAULT_MAX_NESTED_LEVEL
 ) -> Tuple[Union[str, None], Union[int, None], int]:
     pos = _skip_link_start_whitespace(src, start_pos)
     if pos >= len(src):
@@ -158,21 +163,22 @@ def _parse_link_href(
         c = src[pos]
         if c in ASCII_WHITESPACE:
             break
-        if c == "\x00":
+        if ord(c) < 32 or c == "\x7f":
             return None, None, pos
         if c == "\\" and pos + 1 < len(src) and src[pos + 1] in string.punctuation:
             pos = min(pos + 2, len(src))
             continue
-        if not block:
-            if c == "(":
-                level += 1
-            elif c == ")":
-                if level == 0:
-                    break
-                level -= 1
+        if c == "(":
+            level += 1
+            if level > max_nested_level:
+                return None, None, pos
+        elif c == ")":
+            if level == 0:
+                break
+            level -= 1
         pos += 1
 
-    if not block and level != 0:
+    if level != 0:
         return None, None, pos
     return src[start:pos], pos, pos
 
@@ -195,14 +201,15 @@ def parse_link_title(src: str, start_pos: int, max_pos: int) -> Union[Tuple[str,
     title = []
     while pos < max_pos:
         c = src[pos]
-        if c == "\x00":
+        if c == "\x00" or (opener == "(" and c == "("):
+            return None, None
+        if c == "\n" and _BLANK_LINE_RE.match(src, pos, max_pos):
             return None, None
         if c == "\\":
-            if pos + 1 < max_pos:
+            if pos + 1 < max_pos and src[pos + 1] in string.punctuation:
                 title.append(src[pos : pos + 2])
                 pos += 2
                 continue
-            return None, None
         if c == closer:
             return unescape_char("".join(title)), pos + 1
         title.append(src[pos])
@@ -210,8 +217,10 @@ def parse_link_title(src: str, start_pos: int, max_pos: int) -> Union[Tuple[str,
     return None, None
 
 
-def parse_link(src: str, pos: int) -> Union[Tuple[Dict[str, Any], int], Tuple[None, None]]:
-    attrs, next_pos, _end_pos = parse_link_with_end(src, pos)
+def parse_link(
+    src: str, pos: int, *, max_nested_level: int = DEFAULT_MAX_NESTED_LEVEL
+) -> Union[Tuple[Dict[str, Any], int], Tuple[None, None]]:
+    attrs, next_pos, _end_pos = parse_link_with_end(src, pos, max_nested_level=max_nested_level)
     if attrs is None:
         return None, None
     assert next_pos is not None
@@ -219,9 +228,9 @@ def parse_link(src: str, pos: int) -> Union[Tuple[Dict[str, Any], int], Tuple[No
 
 
 def parse_link_with_end(
-    src: str, pos: int
+    src: str, pos: int, *, max_nested_level: int = DEFAULT_MAX_NESTED_LEVEL
 ) -> Tuple[Union[Dict[str, Any], None], Union[int, None], int]:
-    href, href_pos, scan_end = _parse_link_href(src, pos)
+    href, href_pos, scan_end = _parse_link_href(src, pos, max_nested_level=max_nested_level)
     if href is None:
         return None, None, scan_end
     assert href_pos is not None
@@ -266,8 +275,8 @@ def _parse_angle_link_href(src: str, pos: int) -> Union[Tuple[str, int], Tuple[N
         c = src[pos]
         if c == ">":
             return src[start:pos], pos + 1
-        if c == "\\":
-            pos = min(pos + 2, len(src))
+        if c == "\\" and pos + 1 < len(src) and src[pos + 1] in string.punctuation:
+            pos += 2
             continue
         if c in "<\n\r\x00":
             return None, None

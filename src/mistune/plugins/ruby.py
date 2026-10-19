@@ -48,6 +48,8 @@ def _parse_ruby_tokens(m: Match[str]) -> List[Dict[str, Any]]:
 def _parse_ruby_link(
     inline: "InlineParser", state: "InlineState", pos: int, tokens: List[Dict[str, Any]]
 ) -> Optional[int]:
+    if state.depth >= inline.max_nested_level:
+        return None
     c = state.src[pos]
     if c == "(":
         # standard link [text](<url> "title")

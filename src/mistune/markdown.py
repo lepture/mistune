@@ -29,10 +29,10 @@ class Markdown:
         plugins: Optional[Iterable[Plugin]] = None,
     ):
         if block is None:
-            block = BlockParser()
+            block = BlockParser() if inline is None else BlockParser(max_nested_level=inline.max_nested_level)
 
         if inline is None:
-            inline = InlineParser()
+            inline = InlineParser(max_nested_level=block.max_nested_level)
 
         self.renderer = renderer
         self.block: BlockParser = block

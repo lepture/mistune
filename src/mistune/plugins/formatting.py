@@ -37,7 +37,7 @@ def render_insert(renderer: "BaseRenderer", text: str) -> str:
     return "<ins>" + text + "</ins>"
 
 
-def parse_superscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
+def parse_superscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
     return _parse_script(inline, m, state, "superscript")
 
 
@@ -45,7 +45,7 @@ def render_superscript(renderer: "BaseRenderer", text: str) -> str:
     return "<sup>" + text + "</sup>"
 
 
-def parse_subscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
+def parse_subscript(inline: "InlineParser", m: Match[str], state: "InlineState") -> Optional[int]:
     return _parse_script(inline, m, state, "subscript")
 
 
@@ -60,17 +60,14 @@ def _parse_to_end(
     tok_type: str,
     marker: str,
 ) -> Optional[int]:
+    if state.depth >= inline.max_nested_level:
+        return None
     pos = m.end()
-    cache_key = (id(state.src), marker)
-    cache = state.formatting_no_end.get(cache_key)
-    if cache is not None and cache[0] is state.src and pos <= cache[1]:
+    close = state.delimiters.find(marker, pos, formatting=True)
+    if close is None:
         return None
-
-    end_pos = _find_end_marker(state.src, pos, marker)
-    if end_pos is None:
-        state.formatting_no_end[cache_key] = (state.src, len(state.src))
-        return None
-    text = state.src[pos : end_pos - 2]
+    end_pos = close + len(marker)
+    text = state.src[pos:close]
     new_state = state.copy()
     new_state.src = text
     children = inline.render(new_state)
@@ -78,38 +75,9 @@ def _parse_to_end(
     return end_pos
 
 
-def _find_end_marker(src: str, pos: int, marker: str) -> Optional[int]:
-    c = marker[0]
-    marker_len = len(marker)
-    end = src.find(marker, pos)
-    while end != -1:
-        marker_end = end + marker_len
-        if marker_end < len(src) and src[marker_end] == c and not src.startswith(marker, marker_end):
-            end = src.find(marker, end + 1)
-            continue
-
-        if end > pos:
-            prev = src[end - 1]
-            escaped_marker_before = (
-                prev == c and end >= pos + 2 and src[end - 2] == "\\" and not _has_odd_backslashes(src, end - 2)
-            )
-            if (not prev.isspace() and prev != c) or escaped_marker_before:
-                return marker_end
-
-        end = src.find(marker, end + 1)
-    return None
-
-
-def _has_odd_backslashes(src: str, pos: int) -> bool:
-    count = 0
-    pos -= 1
-    while pos >= 0 and src[pos] == "\\":
-        count += 1
-        pos -= 1
-    return count % 2 == 1
-
-
-def _parse_script(inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str) -> int:
+def _parse_script(inline: "InlineParser", m: Match[str], state: "InlineState", tok_type: str) -> Optional[int]:
+    if state.depth >= inline.max_nested_level:
+        return None
     text = m.group(0)
     new_state = state.copy()
     new_state.src = text[1:-1].replace("\\ ", " ")

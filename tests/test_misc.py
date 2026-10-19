@@ -42,6 +42,24 @@ class TestMiscCases(TestCase):
         result = md("foo\nbar")
         self.assertEqual(result.strip(), expected)
 
+    def test_ordered_marker_needs_a_digit(self):
+        self.assertEqual(
+            mistune.html("1. a\n. b\n"),
+            "<ol>\n<li>a\n. b</li>\n</ol>\n",
+        )
+        self.assertEqual(
+            mistune.html("1) a\n) b\n"),
+            "<ol>\n<li>a\n) b</li>\n</ol>\n",
+        )
+        self.assertEqual(
+            mistune.html("1. a\n2. b\n"),
+            "<ol>\n<li>a</li>\n<li>b</li>\n</ol>\n",
+        )
+        self.assertEqual(
+            mistune.html("1. a\n123456789. b\n"),
+            "<ol>\n<li>a</li>\n<li>b</li>\n</ol>\n",
+        )
+
     def test_speedup_plugin_is_compat_noop(self):
         base = mistune.create_markdown(escape=False)
         compat = mistune.create_markdown(escape=False, plugins=["speedup"])

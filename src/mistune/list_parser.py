@@ -281,9 +281,9 @@ def _match_list_item_break(
 
 def _get_list_bullet(c: str) -> str:
     if c == ".":
-        bullet = r"\d{0,9}\."
+        bullet = r"\d{1,9}\."
     elif c == ")":
-        bullet = r"\d{0,9}\)"
+        bullet = r"\d{1,9}\)"
     elif c == "*":
         bullet = r"\*"
     elif c == "+":

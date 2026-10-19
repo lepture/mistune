@@ -81,7 +81,7 @@ def process_text(
 
     abbrs_re = state.env.get("abbrs_re")
     if not abbrs_re:
-        abbrs_re = re.compile(r"|".join(re.escape(k) for k in ref.keys()))
+        abbrs_re = re.compile(r"|".join(re.escape(k) for k in sorted(ref, key=len, reverse=True)))
         state.env["abbrs_re"] = abbrs_re
 
     pos = 0

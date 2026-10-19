@@ -19,6 +19,17 @@ load_renderer(RSTRenderer())
 load_renderer(MarkdownRenderer())
 
 
+class TestRSTRendererLineBreaks(TestCase):
+    def test_tight_list_hard_breaks(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for text, expected in (
+            ("- first  \n  second\n", "- | first\n  | second\n"),
+            ("1. first\\\n   second\n", "1. | first\n   | second\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
+
+
 class TestMarkdownRendererRoundTrip(TestCase):
     """Reformatting valid Markdown must not change its meaning: rendering the
     reformatted source to HTML must match rendering the original source."""
@@ -207,6 +218,48 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.assert_round_trip(text)
 
 
+class TestRendererListLineEndings(TestCase):
+    non_line_breaks = ("\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029")
+
+    def test_markdown_list_content(self):
+        reformat = create_markdown(renderer=MarkdownRenderer())
+        to_html = create_markdown(escape=False)
+        for separator in self.non_line_breaks:
+            content = "before" + separator + "after"
+            for template in (
+                "- {}\n",
+                "1. {}\n",
+                "- parent\n  - {}\n",
+                "- first\n\n- {}\n",
+                "- `{}`\n",
+                "- item\n\n  ```\n  {}\n  ```\n",
+            ):
+                with self.subTest(separator=repr(separator), template=template):
+                    source = template.format(content)
+                    result = reformat(source)
+                    self.assertIn(content, result)
+                    self.assertEqual(to_html(result), to_html(source))
+
+    def test_rst_list_content(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for separator in self.non_line_breaks:
+            content = "before" + separator + "after"
+            for source, expected in (
+                ("- " + content + "\n", "- " + content + "\n"),
+                ("1. " + content + "\n", "1. " + content + "\n"),
+                ("- `" + content + "`\n", "- ``" + content + "``\n"),
+            ):
+                with self.subTest(separator=repr(separator), source=source):
+                    self.assertEqual(render(source), expected)
+
+    def test_markdown_list_line_endings(self):
+        reformat = create_markdown(renderer=MarkdownRenderer())
+        expected = "- first\n  continued\n- second\n"
+        for ending in ("\n", "\r", "\r\n"):
+            with self.subTest(ending=repr(ending)):
+                self.assertEqual(reformat(expected.replace("\n", ending)), expected)
+
+
 class TestRendererMethodRegistration(TestCase):
     def test_registered_renderer_method(self):
         renderer = HTMLRenderer(escape=False)
@@ -287,6 +340,11 @@ class TestMarkdownRendererPlugins(TestCase):
         source = "| Header |\n| --- |\n| a \\| b |\n"
         self.assertEqual(md(source), source)
         self.assertEqual(to_html(md(source)), to_html(source))
+
+    def test_formatting_plugins_markdown(self):
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=["strikethrough", "mark", "insert"])
+        self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")
+        self.assertEqual(md("~~a **b** c~~\n"), "~~a **b** c~~\n")
 
     def test_standalone_list_item(self):
         renderer = MarkdownRenderer()

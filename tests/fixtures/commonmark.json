@@ -4993,7 +4993,7 @@
   },
   {
     "markdown": "foo <!-- not a comment -- two hyphens -->\n",
-    "html": "<p>foo &lt;!-- not a comment -- two hyphens --&gt;</p>\n",
+    "html": "<p>foo <!-- not a comment -- two hyphens --></p>\n",
     "example": 625,
     "start_line": 9133,
     "end_line": 9137,
@@ -5001,7 +5001,7 @@
   },
   {
     "markdown": "foo <!--> foo -->\n\nfoo <!-- foo--->\n",
-    "html": "<p>foo &lt;!--&gt; foo --&gt;</p>\n<p>foo &lt;!-- foo---&gt;</p>\n",
+    "html": "<p>foo <!--> foo --&gt;</p>\n<p>foo <!-- foo---></p>\n",
     "example": 626,
     "start_line": 9142,
     "end_line": 9149,

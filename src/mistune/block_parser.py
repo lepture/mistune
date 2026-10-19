@@ -109,7 +109,10 @@ class BlockParser(Parser[BlockState]):
 
     def parse_blank_line(self, m: Match[str], state: BlockState) -> int:
         """Parse token for blank lines."""
-        state.append_token({"type": "blank_line"})
+        if state.cursor == 0:
+            state.append_token({"type": "blank_line", "newlines": m.group(0).count("\n")})
+        else:
+            state.append_token({"type": "blank_line"})
         return m.end()
 
     def parse_thematic_break(self, m: Match[str], state: BlockState) -> int:

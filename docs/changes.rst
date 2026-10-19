@@ -6,6 +6,7 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve reference definitions parsed inside definition lists.
 * Require Python 3.11 or later; remove Python 3.10 support.
 * Remove the ``typing-extensions`` runtime dependency and use ``typing.Self``
   from the standard library.

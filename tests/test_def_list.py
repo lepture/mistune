@@ -57,3 +57,47 @@ def test_indented_definition_ast(speedup):
             ],
         }
     ]
+
+
+@pytest.mark.parametrize("definition_at_end", [False, True])
+def test_definition_list_preserves_reference_definitions(md, definition_at_end):
+    source = "Term\n: [inside][ref]\n\n    [ref]: /target\n"
+    definition = '<p><a href="/target">inside</a></p>\n'
+    if not definition_at_end:
+        source += "\n    Final paragraph.\n"
+        definition += "<p>Final paragraph.</p>\n"
+    source += "\n[outside][ref]\n"
+
+    assert md(source) == (
+        "<dl>\n<dt>Term</dt>\n<dd>" + definition + '</dd>\n</dl>\n<p><a href="/target">outside</a></p>\n'
+    )
+    assert md("[outside][ref]\n") == "<p>[outside][ref]</p>\n"
+
+
+@pytest.mark.parametrize("outer_first", [False, True])
+def test_definition_list_reference_precedence(md, outer_first):
+    source = "Term\n: [inside][ref]\n\n    [ref]: /inner\n\n[outside][ref]\n"
+    outer = "[ref]: /outer\n\n"
+    source = outer + source if outer_first else source + "\n" + outer
+    expected = "/outer" if outer_first else "/inner"
+
+    assert md(source).count('href="' + expected + '"') == 2
+
+
+def test_reference_definition_shared_between_definition_items(md):
+    source = "First\n: [inside][ref]\n\nSecond\n: another definition\n\n    [ref]: /target\n\n[outside][ref]\n"
+    result = md(source)
+    assert '<a href="/target">inside</a>' in result
+    assert '<a href="/target">outside</a>' in result
+
+
+@pytest.mark.parametrize("speedup", [False, True])
+def test_definition_list_reference_ast(speedup):
+    plugins = ["def_list", "speedup"] if speedup else ["def_list"]
+    md = create_markdown(renderer=None, plugins=plugins)
+    tokens = md("Term\n: [inside][ref]\n\n    [ref]: /target\n\n[outside][ref]\n")
+    inside = tokens[0]["children"][1]["children"][0]["children"][0]
+    outside = tokens[-1]["children"][0]
+    for token in (inside, outside):
+        assert token["type"] == "link"
+        assert token["attrs"]["url"] == "/target"

@@ -28,7 +28,7 @@ def parse_def_list(block: "BlockParser", m: Match[str], state: "BlockState") -> 
     if not definitions:
         return None
 
-    children = list(_parse_def_item(block, head[0], definitions))
+    children = list(_parse_def_item(block, head[0], definitions, state))
     _replace_previous_paragraph(state, children)
     return end_pos
 
@@ -37,6 +37,7 @@ def _parse_def_item(
     block: "BlockParser",
     head: str,
     definitions: List[Tuple[str, bool]],
+    state: "BlockState",
 ) -> Iterable[Dict[str, Any]]:
     for line in head.splitlines():
         yield {
@@ -45,17 +46,16 @@ def _parse_def_item(
         }
 
     for text, loose in definitions:
-        children = _process_text(block, text, loose)
+        children = _process_text(block, text, loose, state)
         yield {
             "type": "def_list_item",
             "children": children,
         }
 
 
-def _process_text(block: "BlockParser", text: str, loose: bool) -> List[Any]:
+def _process_text(block: "BlockParser", text: str, loose: bool, parent: "BlockState") -> List[Any]:
     text = TRIM_RE.sub("", text)
-    state = block.state_cls()
-    state.process(strip_end(text))
+    state = parent.child_state(strip_end(text))
     # use default list rules
     block.parse(state, block.list_rules)
     tokens = state.tokens

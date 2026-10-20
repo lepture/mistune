@@ -3,6 +3,7 @@ from textwrap import indent
 from typing import Any, Dict, Iterable, cast
 
 from ..core import BaseRenderer, BlockState
+from ..inline_parser import InlineParser
 from ..util import strip_end
 from ._list import render_list, render_list_item
 
@@ -13,6 +14,8 @@ _literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z]
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
 _block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
+_autolink_re = re.compile(InlineParser.SPECIFICATION["auto_link"])
+_autoemail_re = re.compile(InlineParser.SPECIFICATION["auto_email"])
 
 
 class MarkdownRenderer(BaseRenderer):
@@ -90,10 +93,12 @@ class MarkdownRenderer(BaseRenderer):
         attrs = token["attrs"]
         url: str = attrs["url"]
         title = attrs.get("title")
-        if token["type"] == "link" and text == url and not title:
-            return "<" + text + ">"
-        elif token["type"] == "link" and "mailto:" + text == url and not title:
-            return "<" + text + ">"
+        if token["type"] == "link" and not title:
+            autolink = "<" + text + ">"
+            if text == url and _autolink_re.fullmatch(autolink):
+                return autolink
+            if "mailto:" + text == url and _autoemail_re.fullmatch(autolink):
+                return autolink
 
         out += "("
         if "(" in url or ")" in url:

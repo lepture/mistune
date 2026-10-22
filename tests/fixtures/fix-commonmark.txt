@@ -89,6 +89,46 @@ remainder of a partially consumed run can still match a later delimiter.
 ````````````````````````````````
 
 
+## Block quotes
+
+An ATX heading is not a paragraph continuation line, so it ends a
+block quote instead of being added to it lazily.
+
+```````````````````````````````` example
+> quote
+# Heading
+.
+<blockquote>
+<p>quote</p>
+</blockquote>
+<h1>Heading</h1>
+````````````````````````````````
+
+```````````````````````````````` example
+> > quote
+## Heading
+text
+.
+<blockquote>
+<blockquote>
+<p>quote</p>
+</blockquote>
+</blockquote>
+<h2>Heading</h2>
+<p>text</p>
+````````````````````````````````
+
+```````````````````````````````` example
+> quote
+#not a heading
+.
+<blockquote>
+<p>quote
+#not a heading</p>
+</blockquote>
+````````````````````````````````
+
+
 ## Max depth
 
 

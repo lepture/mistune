@@ -79,7 +79,8 @@ renderer adds syntax highlighting to fenced code blocks::
     class HighlightRenderer(mistune.HTMLRenderer):
         def block_code(self, code, info=None):
             if info:
-                lexer = get_lexer_by_name(info, stripall=True)
+                lang = info.split(None, 1)[0]
+                lexer = get_lexer_by_name(lang, stripall=True)
                 formatter = html.HtmlFormatter()
                 return highlight(code, lexer, formatter)
             return '<pre><code>' + mistune.escape(code) + '</code></pre>'
@@ -88,8 +89,10 @@ renderer adds syntax highlighting to fenced code blocks::
 
     print(markdown('```python\nassert 1 == 1\n```'))
 
-This renderer uses Pygments to highlight fenced code blocks. For more
-renderer details, see :ref:`renderers`.
+This renderer uses Pygments to highlight fenced code blocks. The first word
+of the info string selects the language, as in the built-in HTML renderer.
+Additional text, such as ``title=example.py`` after ``python``, is ignored
+by this example. For more renderer details, see :ref:`renderers`.
 
 Per-document renderer context
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

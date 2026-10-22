@@ -319,6 +319,7 @@ class BlockParser(Parser[BlockState]):
                     "blank_line",
                     "thematic_break",
                     "fenced_code",
+                    "atx_heading",
                     "list",
                     "block_html",
                 ]

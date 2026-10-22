@@ -48,20 +48,14 @@ def _parse_ruby_tokens(m: Match[str]) -> List[Dict[str, Any]]:
 def _parse_ruby_link(
     inline: "InlineParser", state: "InlineState", pos: int, tokens: List[Dict[str, Any]]
 ) -> Optional[int]:
-    if state.depth >= inline.max_nested_level:
+    if state.in_link or state.depth >= inline.max_nested_level:
         return None
     c = state.src[pos]
     if c == "(":
         # standard link [text](<url> "title")
         attrs, link_pos = parse_link(state.src, pos + 1)
         if link_pos:
-            state.append_token(
-                {
-                    "type": "link",
-                    "children": tokens,
-                    "attrs": attrs,
-                }
-            )
+            _append_ruby_link(state, tokens, attrs)
             return link_pos
 
     elif c == "[":
@@ -73,13 +67,7 @@ def _parse_ruby_link(
             env = ref_links.get(key)
             if env:
                 attrs = {"url": env["url"], "title": env.get("title")}
-                state.append_token(
-                    {
-                        "type": "link",
-                        "children": tokens,
-                        "attrs": attrs,
-                    }
-                )
+                _append_ruby_link(state, tokens, attrs)
             else:
                 for tok in tokens:
                     state.append_token(tok)
@@ -91,6 +79,16 @@ def _parse_ruby_link(
                 )
             return link_pos
     return None
+
+
+def _append_ruby_link(state: "InlineState", tokens: List[Dict[str, Any]], attrs: Optional[Dict[str, Any]]) -> None:
+    state.append_token({"type": "link", "children": tokens, "attrs": attrs})
+    # As with ordinary links, an inner link prevents outer link openers from
+    # wrapping it. Image openers remain eligible.
+    bracket = state.last_link
+    while bracket is not None and bracket.active:
+        bracket.active = False
+        bracket = bracket.previous_link
 
 
 def render_ruby(renderer: "BaseRenderer", text: str, rt: str) -> str:

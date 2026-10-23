@@ -37,7 +37,7 @@ class MarkdownRenderer(BaseRenderer):
         for key in ref_links:
             attrs = ref_links[key]
             # An empty destination must be explicit in a reference definition.
-            url = attrs["url"] or "<>"
+            url = _format_reference_destination(attrs["url"]) or "<>"
             text = "[" + attrs["label"] + "]: " + url
             title = attrs.get("title")
             if title:
@@ -234,6 +234,20 @@ class MarkdownRenderer(BaseRenderer):
 
     def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
         return _render_table_cell(self, token, state)
+
+
+def _format_reference_destination(url: str) -> str:
+    level = 0
+    for c in url:
+        if c == "(":
+            level += 1
+        elif c == ")":
+            if level == 0:
+                return "<" + url + ">"
+            level -= 1
+    if level:
+        return "<" + url + ">"
+    return url
 
 
 def _escape_title(title: str) -> str:

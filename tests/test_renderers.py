@@ -204,6 +204,39 @@ class TestMarkdownRendererRoundTrip(TestCase):
                 text = '[text][r]\n\n[r]: ' + destination + ' "title"\n'
                 self.assertEqual(self.reformat(text), text)
 
+    def test_reference_destinations_round_trip(self):
+        for destination, rendered in (
+            ("https://example.test/a(b", "<https://example.test/a(b>"),
+            ("https://example.test/a)b", "<https://example.test/a)b>"),
+            ("https://example.test/a(b)", "https://example.test/a(b)"),
+            ("", "<>"),
+            ("https://example.test/ab", "https://example.test/ab"),
+            ("https://example.test/a&lt;b&gt; c", "https://example.test/a%3Cb%3E%20c"),
+            ("https://example.test/a)(b", "<https://example.test/a)(b>"),
+            ("https://example.test/a((b))", "https://example.test/a((b))"),
+        ):
+            for marker in ("", "!"):
+                for title in ("", ' "t"'):
+                    with self.subTest(destination=destination, marker=marker, title=title):
+                        text = f"{marker}[x][r]\n\n[r]: <{destination}>{title}\n"
+                        self.assertIn("<img " if marker else "<a ", self.to_html(text))
+                        self.assert_round_trip(text)
+                        self.assertEqual(self.reformat(text), f"{marker}[x][r]\n\n[r]: {rendered}{title}\n")
+
+    def test_inline_link_destinations_keep_existing_format(self):
+        for destination, rendered in (
+            ("", ""),
+            ("/url", "/url"),
+            ("/path(a", "</path(a>"),
+            ("/path)a", "</path)a>"),
+            ("/path(a)", "</path(a)>"),
+        ):
+            for marker in ("", "!"):
+                for title in ("", ' "t"'):
+                    with self.subTest(destination=destination, marker=marker, title=title):
+                        text = f"{marker}[x](<{destination}>{title})\n"
+                        self.assertEqual(self.reformat(text), f"{marker}[x]({rendered}{title})\n")
+
     def test_block_quote_content_ending_in_gt(self):
         # a block quote whose content ends with ">" (an autolink, an inline
         # HTML tag, or a literal ">") must keep that character; it was being

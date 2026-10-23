@@ -156,6 +156,33 @@ class TestMarkdownRendererRoundTrip(TestCase):
             "<user@example.com>\n",
         )
 
+    def test_relative_links_keep_inline_link_syntax(self):
+        for text in (
+            "[README.md](README.md)",
+            "[docs](docs)",
+            "[../guide](../guide)",
+            "[#setup](#setup)",
+            "[?page=2](?page=2)",
+            "[x:y](x:y)",
+            "[]()",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+                self.assertEqual(self.reformat(text), text + "\n")
+
+    def test_mailto_links_without_an_autolink_address_keep_inline_syntax(self):
+        for address in ("root", "user@"):
+            text = f"[{address}](mailto:{address})"
+            with self.subTest(address=address):
+                self.assert_round_trip(text)
+                self.assertEqual(self.reformat(text), text + "\n")
+
+    def test_uri_autolink_schemes_are_preserved(self):
+        for uri in ("https://example.com", "git+ssh://example.com/repo", "urn:example:document"):
+            with self.subTest(uri=uri):
+                self.assertEqual(self.reformat(f"[{uri}]({uri})"), f"<{uri}>\n")
+                self.assert_round_trip(f"[{uri}]({uri})")
+
     def test_indented_code_containing_fences(self):
         parse = create_markdown(renderer="ast")
         for indentation in range(4):

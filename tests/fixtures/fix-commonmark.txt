@@ -89,6 +89,46 @@ remainder of a partially consumed run can still match a later delimiter.
 ````````````````````````````````
 
 
+## Lists
+
+An empty list item has no paragraph, so an unindented line after it
+is not a lazy continuation line.
+
+```````````````````````````````` example
+-
+foo
+.
+<ul>
+<li></li>
+</ul>
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+- a
+-
+b
+.
+<ul>
+<li>a</li>
+<li></li>
+</ul>
+<p>b</p>
+````````````````````````````````
+
+```````````````````````````````` example
+> 1.
+> foo
+.
+<blockquote>
+<ol>
+<li></li>
+</ol>
+<p>foo</p>
+</blockquote>
+````````````````````````````````
+
+
 ## Max depth
 
 

@@ -43,6 +43,12 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.to_html(text),
         )
 
+    def test_fenced_code_info_with_backslashes(self):
+        for marker in ("```", "~~~"):
+            for info in (r"lang\\*", r"lang\\\\", r"lang\\!", "python", "c++"):
+                with self.subTest(marker=marker, info=info):
+                    self.assert_round_trip(marker + info + "\ncode\n" + marker + "\n")
+
     def test_escaped_block_markers(self):
         # an escaped leading marker is literal text, not a new block
         for marker in (r"\*", r"\-", r"\+", r"\#", r"\##", r"\>", r"1\.", r"3\)"):

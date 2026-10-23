@@ -212,6 +212,11 @@ def _collect_list_item_lines(
             # not a continue line, and previous line is blank
             break
 
+        if not text and not src.strip():
+            # an empty list item has no paragraph to continue,
+            # so a line without enough indentation ends the list
+            break
+
         src += raw_line
         state.cursor = next_pos
 

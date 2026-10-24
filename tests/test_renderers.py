@@ -229,6 +229,18 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_multiline_setext_heading_literal_block_markers(self):
+        parse = create_markdown(renderer="ast")
+        for level, underline in ((1, "==="), (2, "---")):
+            for marker in (r"\#", r"\##", r"\-", r"\+", r"\>", r"1\.", r"2\)"):
+                for lines in (("Title", marker + " literal"), (marker + " literal", "Title")):
+                    text = "\n".join((*lines, underline, ""))
+                    with self.subTest(text=text):
+                        self.assert_round_trip(text)
+                        tokens = parse(self.reformat(text))
+                        self.assertEqual([token["type"] for token in tokens], ["heading"])
+                        self.assertEqual(tokens[0]["attrs"]["level"], level)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

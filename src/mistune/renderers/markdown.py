@@ -151,7 +151,7 @@ class MarkdownRenderer(BaseRenderer):
         # contains a line break.
         if "\n" in text and level in (1, 2):
             underline = "=" if level == 1 else "-"
-            return text + "\n" + underline * 3 + "\n\n"
+            return _escape_block_prefix(text) + "\n" + underline * 3 + "\n\n"
         marker = "#" * level
         text = re.sub(r"(^|[ \t])(#+)$", r"\1\\\2", text)
         return marker + " " + text + "\n\n"

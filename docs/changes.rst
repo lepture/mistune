@@ -6,6 +6,8 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
+* Preserve literal block markers in multi-line setext headings when rendering
+  Markdown.
 * Use the language name from the fence info string in the Pygments renderer
   example, allowing additional metadata after it.
 * Require Python 3.11 or later; remove Python 3.10 support.

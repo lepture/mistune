@@ -164,7 +164,7 @@ class MarkdownRenderer(BaseRenderer):
 
     def block_code(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token.get("attrs", {})
-        info = cast(str, attrs.get("info", ""))
+        info = cast(str, attrs.get("info", "")).replace("\\", "\\\\")
         code = cast(str, token["raw"])
         if code and code[-1] != "\n":
             code += "\n"

@@ -398,6 +398,13 @@ class TestMarkdownRendererPlugins(TestCase):
         self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")
         self.assertEqual(md("~~a **b** c~~\n"), "~~a **b** c~~\n")
 
+    def test_script_plugins_markdown(self):
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=["superscript", "subscript"])
+        self.assertEqual(md("2^10^ and H~2~O\n"), "2^10^ and H~2~O\n")
+        # spaces and the marker itself must stay escaped inside the span
+        self.assertEqual(md("x^a\\ b^ and x~a\\~b~\n"), "x^a\\ b^ and x~a\\~b~\n")
+        self.assertEqual(md("x^a\\^b^\n"), "x^a\\^b^\n")
+
     def test_standalone_list_item(self):
         renderer = MarkdownRenderer()
         token = {

@@ -398,6 +398,34 @@ class TestMarkdownRendererPlugins(TestCase):
         self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")
         self.assertEqual(md("~~a **b** c~~\n"), "~~a **b** c~~\n")
 
+    def test_formatting_plugins_literal_delimiters(self):
+        plugins = ["strikethrough", "mark", "insert"]
+        md = create_markdown(renderer=MarkdownRenderer(), plugins=plugins)
+        to_html = create_markdown(escape=False, plugins=plugins)
+        # an escaped delimiter is literal text and must not become markup
+        for text in (
+            r"\~\~not deleted\~\~" + "\n",
+            r"==mark me== ==mark with\=\=equal==" + "\n",
+            r"^^insert me^^ ^^insert\^\^me^^" + "\n",
+            "foo\n" + r"\=" + "\n",
+            # lone delimiters in neighbouring tokens must not join into a run
+            r"=\===\=" + "\n",
+            r"~\~~" + "\n",
+            r"2 * \==a== x" + "\n",
+            r"2 * \^^a^^ x" + "\n",
+            r"\~~~a *" + "\n",
+            r"\~~~ *" + "\n",
+            # a real pair after an unmatched run stays a pair
+            "~~a ~~b~~ ==a ==b== ^^a ^^b^^\n",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(to_html(md(text)), to_html(text))
+        # a run after whitespace cannot close and did not open a pair, so it
+        # gains no backslashes
+        for text in ("a ~~ b\n", "a ~~b c\n", "a ==> b\n", "a ^^ b\n", "x^2 and a ~ b and c = d\n"):
+            with self.subTest(text=text):
+                self.assertEqual(md(text), text)
+
     def test_standalone_list_item(self):
         renderer = MarkdownRenderer()
         token = {

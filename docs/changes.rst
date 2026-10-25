@@ -11,6 +11,9 @@ Unreleased
 * Require Python 3.11 or later; remove Python 3.10 support.
 * Remove the ``typing-extensions`` runtime dependency and use ``typing.Self``
   from the standard library.
+* Escape ``~~``, ``==`` and ``^^`` runs in text rendered by
+  ``MarkdownRenderer``, so literal delimiters do not turn into strikethrough,
+  mark or insert markup when the output is parsed again.
 
 Version 3.4.0
 -------------

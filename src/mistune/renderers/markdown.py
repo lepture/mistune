@@ -8,7 +8,14 @@ from ._list import render_list, render_list_item
 
 fenced_re = re.compile(r"^ {0,3}([`~]+)", re.M)
 _backtick_run_re = re.compile(r"`+")
-_literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&])")
+#: a run of "~", "=" or "^" can open or close strikethrough, mark or insert.
+#: One that follows whitespace cannot close, and one that reaches text() did
+#: not open a pair, so only that case stays bare.
+_literal_inline_markers_re = re.compile(
+    r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);"
+    r"|(?<=\s)(?:~~+|==+|\^\^+)"
+    r"|([\\`<!&]|~~+|==+|\^\^+)"
+)
 
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
@@ -50,19 +57,20 @@ class MarkdownRenderer(BaseRenderer):
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
         raw = cast(str, token["raw"])
-        # a text token that is made up entirely of "*"/"_" is a literal
-        # emphasis delimiter -- either an escaped marker from the source
+        # a text token that is made up entirely of "*"/"_"/"~"/"="/"^" is a
+        # literal delimiter -- either an escaped marker from the source
         # (``\*``) or an unmatched leftover -- so every character must stay
-        # escaped, or it would re-parse as emphasis on the round-trip. Prose
+        # escaped, or it would re-parse as markup on the round-trip. Prose
         # punctuation such as ``2 * 3`` or ``snake_case`` arrives mixed with
         # other characters and is left untouched.
-        if raw and all(c in "*_" for c in raw):
+        if raw and all(c in "*_~=^" for c in raw):
             return "".join("\\" + c for c in raw)
         # Keep literal escapes, code delimiters, image introducers, HTML
-        # delimiters and entity prefixes from becoming markup on re-parse.
+        # delimiters, entity prefixes and formatting delimiters from becoming
+        # markup on re-parse.
         # Complete entity references already in this token keep their meaning;
         # escaped ampersands arrive in a separate text token.
-        return _literal_inline_markers_re.sub(lambda m: "\\" + m[1] if m[1] else m[0], raw)
+        return _literal_inline_markers_re.sub(lambda m: "".join("\\" + c for c in m[1]) if m[1] else m[0], raw)
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"

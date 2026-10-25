@@ -11,8 +11,8 @@ _backtick_run_re = re.compile(r"`+")
 _literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&])")
 
 #: leading markers that would be parsed as a new block (list, heading, block
-#: quote) if they appear unescaped at the start of a line.
-_block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
+#: quote or thematic break) if they appear unescaped at the start of a line.
+_block_prefix_re = re.compile(r"^(\s*)(>|-+|[+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
 
 
 class MarkdownRenderer(BaseRenderer):

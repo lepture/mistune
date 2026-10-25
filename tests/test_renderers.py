@@ -51,6 +51,16 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_marker_on_continuation_line(self):
         self.assert_round_trip("paragraph\n\\* not a list\n")
 
+    def test_literal_hyphen_thematic_breaks(self):
+        for text in ("\\---\n", "\\----\n", "> \\---\n"):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
+    def test_literal_hyphen_setext_underlines(self):
+        for text in ("paragraph\n\\--\n", "paragraph\n\\---\n"):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_escaped_marker_inside_list_item(self):
         self.assert_round_trip("- item\n\n  \\# not a heading\n")
 

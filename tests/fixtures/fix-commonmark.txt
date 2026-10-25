@@ -89,6 +89,30 @@ remainder of a partially consumed run can still match a later delimiter.
 ````````````````````````````````
 
 
+## Block quote order
+
+A bullet item can interrupt a paragraph, so it is not a lazy continuation
+line and ends the block quote. The quote stays in front of the list that
+follows it.
+
+```````````````````````````````` example
+foo
+
+> q
+- a
+***
+.
+<p>foo</p>
+<blockquote>
+<p>q</p>
+</blockquote>
+<ul>
+<li>a</li>
+</ul>
+<hr />
+````````````````````````````````
+
+
 ## Lists
 
 An empty list item has no paragraph, so an unindented line after it

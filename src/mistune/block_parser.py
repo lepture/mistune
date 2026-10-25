@@ -364,6 +364,8 @@ class BlockParser(Parser[BlockState]):
             > a block quote starts
             > with right arrows
         """
+        # extracting may parse the blocks that follow the quote into state
+        token_index = len(state.tokens)
         text, end_pos, lazy_line_starts = self.extract_block_quote(m, state)
         # scan children state
         child = state.child_state(text, lazy_line_starts=lazy_line_starts)
@@ -378,7 +380,7 @@ class BlockParser(Parser[BlockState]):
         self.parse(child, rules)
         token = {"type": "block_quote", "children": child.tokens}
         if end_pos:
-            state.prepend_token(token)
+            state.tokens.insert(token_index, token)
             return end_pos
         state.append_token(token)
         return state.cursor

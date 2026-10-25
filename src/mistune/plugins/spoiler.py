@@ -16,6 +16,7 @@ INLINE_SPOILER_PATTERN = r">!"
 
 
 def parse_block_spoiler(block: "BlockParser", m: Match[str], state: "BlockState") -> int:
+    token_index = len(state.tokens)
     text, end_pos, lazy_line_starts = block.extract_block_quote(m, state)
     if not text.endswith("\n"):
         # ensure it endswith \n to make sure
@@ -40,7 +41,7 @@ def parse_block_spoiler(block: "BlockParser", m: Match[str], state: "BlockState"
     block.parse(child, rules)
     token = {"type": tok_type, "children": child.tokens}
     if end_pos:
-        state.prepend_token(token)
+        state.tokens.insert(token_index, token)
         return end_pos
     state.append_token(token)
     return state.cursor

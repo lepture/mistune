@@ -76,7 +76,9 @@ class RSTRenderer(BaseRenderer):
         return "``" + cast(str, token["raw"]) + "``"
 
     def linebreak(self, token: Dict[str, Any], state: BlockState) -> str:
-        return "<linebreak>"
+        # Inline text and code spans normalize source newlines; soft breaks
+        # render as spaces. A newline here therefore represents a hard break.
+        return "\n"
 
     def softbreak(self, token: Dict[str, Any], state: BlockState) -> str:
         return " "
@@ -98,7 +100,7 @@ class RSTRenderer(BaseRenderer):
             text += "\n\n" + indent(alt, "   ")
         else:
             text = self.render_tokens(children, state)
-            lines = text.split("<linebreak>")
+            lines = text.split("\n")
             if len(lines) > 1:
                 text = "\n".join("| " + line for line in lines)
         return text + "\n\n"
@@ -114,7 +116,7 @@ class RSTRenderer(BaseRenderer):
 
     def block_text(self, token: Dict[str, Any], state: BlockState) -> str:
         text = self.render_children(token, state)
-        lines = text.split("<linebreak>")
+        lines = text.split("\n")
         if len(lines) > 1:
             text = "\n".join("| " + line for line in lines)
         return text + "\n"

@@ -20,6 +20,34 @@ load_renderer(MarkdownRenderer())
 
 
 class TestRSTRendererLineBreaks(TestCase):
+    def test_literal_linebreak_text(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for text, expected in (
+            (r"before \<linebreak> after", "before <linebreak> after\n"),
+            (r"- before \<linebreak> after", "- before <linebreak> after\n"),
+            (r"1. before \<linebreak> after", "1. before <linebreak> after\n"),
+            ("`<linebreak>`", "``<linebreak>``\n"),
+            (r"*before \<linebreak> after*", "*before <linebreak> after*\n"),
+            (r"[label](https://example.com/<linebreak>)", "`label <https://example.com/%3Clinebreak%3E>`__\n"),
+            (r"before \<linebreak>" + "  \nafter", "| before <linebreak>\n| after\n"),
+            ("- `<linebreak>`  \n  after", "- | ``<linebreak>``\n  | after\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
+
+    def test_real_and_soft_break_controls(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for text, expected in (
+            ("before  \nafter", "| before\n| after\n"),
+            ("before\\\nafter", "| before\n| after\n"),
+            ("before\nafter", "before after\n"),
+            ("*before  \nafter*", "| *before\n| after*\n"),
+            ("`before\nafter`", "``before after``\n"),
+            ("before  \n  \nafter", "before\n\nafter\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
+
     def test_tight_list_hard_breaks(self):
         render = create_markdown(renderer=RSTRenderer())
         for text, expected in (

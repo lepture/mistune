@@ -27,6 +27,7 @@ def render_list_item(
     item: Dict[str, Any],
     state: "BlockState",
     marker: str = "",
+    compact: bool = False,
 ) -> str:
     parent = item.get("parent")
     if not parent:
@@ -42,7 +43,11 @@ def render_list_item(
             continue
         tok["prev"] = prev
         prev = tok
-        text += renderer.render_token(tok, state)
+        out = renderer.render_token(tok, state)
+        if compact and parent["tight"] and out:
+            # A blank line between the blocks of an item makes the list loose.
+            out = out.rstrip("\n") + "\n"
+        text += out
 
     # Markdown normalizes line endings to LF; other separators are content.
     lines = text.removesuffix("\n").split("\n")

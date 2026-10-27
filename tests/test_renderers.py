@@ -229,6 +229,30 @@ class TestMarkdownRendererRoundTrip(TestCase):
         ):
             self.assert_round_trip(text)
 
+    def test_tight_list_with_block_children(self):
+        # a blank line between the blocks of a list item makes the list loose,
+        # so blocks inside a tight list must not be followed by one
+        for text in (
+            "- a\n  ```\n  code\n  ```\n- b\n",
+            "- a\n  > quote\n- b\n",
+            "- a\n  # heading\n- b\n",
+            "1. a\n   ***\n2. b\n",
+            "- # heading\n  text\n- b\n",
+            "- a\n  ```\n  code\n  ```\n  > quote\n- b\n",
+            "- a\n  - b\n    ```\n    code\n    ```\n  - c\n- d\n",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.reformat(text), text)
+                self.assert_round_trip(text)
+
+    def test_loose_list_with_block_children(self):
+        for text in (
+            "- a\n\n  ```\n  code\n  ```\n\n- b\n",
+            "- a\n\n  > quote\n\n- b\n",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.reformat(text), text)
+
     def test_real_markers_preserved(self):
         for text in (
             "* bullet\n",

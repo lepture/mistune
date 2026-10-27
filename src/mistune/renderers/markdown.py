@@ -193,12 +193,12 @@ class MarkdownRenderer(BaseRenderer):
         return render_list(self, token, state)
 
     def list_item(self, token: Dict[str, Any], state: BlockState) -> str:
-        return render_list_item(self, token, state)
+        return render_list_item(self, token, state, compact=True)
 
     def task_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
         checked = token.get("attrs", {}).get("checked")
         marker = "[x] " if checked else "[ ] "
-        return render_list_item(self, token, state, marker)
+        return render_list_item(self, token, state, marker, compact=True)
 
     def table(self, token: Dict[str, Any], state: BlockState) -> str:
         children = token.get("children", [])

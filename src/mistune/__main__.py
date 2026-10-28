@@ -13,15 +13,28 @@ if TYPE_CHECKING:
 
 
 def _md(args: argparse.Namespace) -> "Markdown":
+    renderer = args.renderer
     if args.plugin:
         plugins = args.plugin
+    elif renderer == "rst":
+        # RSTRenderer does not provide render methods for any of the
+        # default plugins. Loading them anyway makes the documented
+        # `python -m mistune -f README.md -r rst` command crash with a
+        # raw AttributeError on any document containing a footnote or
+        # a table.
+        plugins = []
+    elif renderer == "markdown":
+        # MarkdownRenderer supports strikethrough and tables, but not
+        # footnotes: reformatting a document containing a footnote would
+        # crash the same way.
+        plugins = ["strikethrough", "table"]
     else:
         # default plugins
         plugins = ["strikethrough", "footnotes", "table"]
 
-    if args.renderer == "rst":
-        renderer: "BaseRenderer" = RSTRenderer()
-    elif args.renderer == "markdown":
+    if renderer == "rst":
+        renderer = RSTRenderer()
+    elif renderer == "markdown":
         renderer = MarkdownRenderer()
     else:
         renderer = args.renderer

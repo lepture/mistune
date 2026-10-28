@@ -54,6 +54,20 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_marker_inside_list_item(self):
         self.assert_round_trip("- item\n\n  \\# not a heading\n")
 
+    def test_leading_hard_break(self):
+        # a hard line break at the very start of an inline run cannot be
+        # re-emitted as two trailing spaces: they are the leading whitespace
+        # of the first line and would be stripped on a re-parse, losing the
+        # break (the backslash form survives)
+        for text in (
+            "\\\nnext line\n",
+            "- \\\n  next line\n",
+            "1. \\\n   next line\n",
+            "> \\\n> next line\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 

@@ -138,6 +138,7 @@ class MarkdownRenderer(BaseRenderer):
 
     def paragraph(self, token: Dict[str, Any], state: BlockState) -> str:
         text = self.render_children(token, state)
+        text = _fix_leading_hard_break(text)
         return _escape_block_prefix(text) + "\n\n"
 
     def heading(self, token: Dict[str, Any], state: BlockState) -> str:
@@ -160,7 +161,8 @@ class MarkdownRenderer(BaseRenderer):
         return "***\n\n"
 
     def block_text(self, token: Dict[str, Any], state: BlockState) -> str:
-        return _escape_block_prefix(self.render_children(token, state)) + "\n"
+        text = _fix_leading_hard_break(self.render_children(token, state))
+        return _escape_block_prefix(text) + "\n"
 
     def block_code(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token.get("attrs", {})
@@ -234,6 +236,19 @@ class MarkdownRenderer(BaseRenderer):
 
     def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
         return _render_table_cell(self, token, state)
+
+
+def _fix_leading_hard_break(text: str) -> str:
+    """Preserve a hard line break at the very start of an inline run.
+
+    The linebreak renderer emits two trailing spaces (``"  \n"``), but at
+    the start of a paragraph or list item those spaces are the leading
+    whitespace of the first line and are stripped on a re-parse, losing the
+    break. The backslash form survives that stripping.
+    """
+    if text.startswith("  \n"):
+        return "\\\n" + text[3:]
+    return text
 
 
 def _escape_title(title: str) -> str:

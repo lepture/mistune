@@ -106,10 +106,10 @@ def cli() -> None:
     args = parser.parse_args()
 
     message = args.message
-    if not message and not args.file:
+    if message is None and not args.file:
         message = read_stdin()
 
-    if message:
+    if message is not None:
         md = _md(args)
         text = md(message)
         assert isinstance(text, str)

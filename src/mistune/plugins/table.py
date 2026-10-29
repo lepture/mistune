@@ -158,6 +158,18 @@ def _strip_table_line(line: str) -> Optional[str]:
 
 
 def _split_table_cells(text: str) -> List[str]:
+    if type(text) is str and "\\" not in text:
+        return [cell.strip() for cell in text.split("|")]
+    if type(text) is str:
+        cells = []
+        start = 0
+        for match in re.finditer(r"\|", text):
+            pos = match.start()
+            if not _is_escaped_pipe(text, pos):
+                cells.append(text[start:pos].strip())
+                start = pos + 1
+        cells.append(text[start:].strip())
+        return cells
     cells = []
     start = 0
     pos = 0

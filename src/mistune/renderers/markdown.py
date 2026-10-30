@@ -8,7 +8,7 @@ from ._list import render_list, render_list_item
 
 fenced_re = re.compile(r"^ {0,3}([`~]+)", re.M)
 _backtick_run_re = re.compile(r"`+")
-_literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&])")
+_literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&\[\]])")
 
 #: leading markers that would be parsed as a new block (list, heading, block
 #: quote) if they appear unescaped at the start of a line.
@@ -58,7 +58,7 @@ class MarkdownRenderer(BaseRenderer):
         # other characters and is left untouched.
         if raw and all(c in "*_" for c in raw):
             return "".join("\\" + c for c in raw)
-        # Keep literal escapes, code delimiters, image introducers, HTML
+        # Keep literal escapes, link brackets, code delimiters, image introducers, HTML
         # delimiters and entity prefixes from becoming markup on re-parse.
         # Complete entity references already in this token keep their meaning;
         # escaped ampersands arrive in a separate text token.

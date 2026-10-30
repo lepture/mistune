@@ -57,6 +57,17 @@ class TestMarkdownRendererRoundTrip(TestCase):
     def test_escaped_backtick(self):
         self.assert_round_trip(r"\`not code\`" + "\n")
 
+    def test_literal_link_brackets(self):
+        for text in (
+            r"\[label](https://example.com)",
+            r"[label\](https://example.com)",
+            "\\[label]\n\n[label]: https://example.com\n",
+            r"[a\]b](/target)",
+            r"![a\]b](/image.png)",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_literal_inline_markers(self):
         for text in (
             r"\![label](https://example.com)" + "\n",

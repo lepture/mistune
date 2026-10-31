@@ -53,7 +53,13 @@ class RSTRenderer(BaseRenderer):
 
     def text(self, token: Dict[str, Any], state: BlockState) -> str:
         text = cast(str, token["raw"])
-        return text.replace("|", r"\|")
+        # Text tokens contain literal characters, including punctuation whose
+        # Markdown escapes have already been consumed by the inline parser.
+        # Escape the backslash first so these escapes are not doubled again.
+        text = text.replace("\\", "\\\\")
+        for marker in ("*", "`", "_", "|"):
+            text = text.replace(marker, "\\" + marker)
+        return text
 
     def emphasis(self, token: Dict[str, Any], state: BlockState) -> str:
         return "*" + self.render_children(token, state) + "*"

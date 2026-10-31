@@ -19,6 +19,28 @@ load_renderer(RSTRenderer())
 load_renderer(MarkdownRenderer())
 
 
+class TestRSTRendererLiteralText(TestCase):
+    def test_literal_inline_markup(self):
+        render = create_markdown(renderer=RSTRenderer())
+        for text, expected in (
+            (r"\*literal\*", r"\*literal\*"),
+            (r"\*\*literal\*\*", r"\*\*literal\*\*"),
+            (r"\`literal\`", r"\`literal\`"),
+            (r"reference\_", r"reference\_"),
+            (r"C:\\tmp\\file", r"C:\\tmp\\file"),
+            (r"\|literal\|", r"\|literal\|"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text + "\n"), expected + "\n")
+
+    def test_real_inline_markup(self):
+        render = create_markdown(renderer=RSTRenderer())
+        self.assertEqual(
+            render("*emphasis* and **strong** and `code`\n"),
+            "*emphasis* and **strong** and ``code``\n",
+        )
+
+
 class TestRSTRendererLineBreaks(TestCase):
     def test_tight_list_hard_breaks(self):
         render = create_markdown(renderer=RSTRenderer())

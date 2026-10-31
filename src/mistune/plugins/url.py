@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 __all__ = ["url"]
 
-URL_LINK_PATTERN = r"""https?:\/\/[^\s<]+[^<.,:;"')\]\s]"""
+URL_LINK_PATTERN = r"""https?:\/\/[^\s<]*[^<.,:;"')\]\s]"""
 
 
 def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:

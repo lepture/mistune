@@ -37,6 +37,18 @@ load_plugin("spoiler")
 
 
 class TestExtraPlugins(BaseTestCase):
+    def test_url_single_character_host(self):
+        for plugins in (["url"], ["url", "speedup"]):
+            render = create_markdown(plugins=plugins)
+            for url in ("http://a", "https://x", "http://1"):
+                with self.subTest(plugins=plugins, url=url):
+                    self.assertEqual(render(url), '<p><a href="' + url + '">' + url + "</a></p>\n")
+                    self.assertEqual(render(url + "."), '<p><a href="' + url + '">' + url + "</a>.</p>\n")
+
+    def test_url_requires_a_host(self):
+        render = create_markdown(plugins=["url"])
+        self.assertEqual(render("http:// https://"), "<p>http:// https://</p>\n")
+
     def test_table_in_list(self):
         text = """- Cell | Cell\n  ---- | ----\n   1  |  2\n"""
         md1 = create_markdown(escape=False)

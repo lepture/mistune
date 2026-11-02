@@ -517,3 +517,11 @@ class TestMiscCases(TestCase):
 
         pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
         self.assertIn('mistune = "mistune.__main__:cli"', pyproject)
+
+    def test_block_html_tag_without_attributes_interrupts_list_and_quote(self):
+        self.assertEqual(mistune.html("- item\n<div>x</div>\n"), "<ul>\n<li>item</li>\n</ul>\n<div>x</div>\n\n")
+        self.assertEqual(
+            mistune.html("> quote\n<div>x</div>\n"),
+            "<blockquote>\n<p>quote</p>\n</blockquote>\n<div>x</div>\n\n",
+        )
+        self.assertEqual(mistune.html("- item\n<hr/>\n"), "<ul>\n<li>item</li>\n</ul>\n<hr/>\n\n")

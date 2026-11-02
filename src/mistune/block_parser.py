@@ -45,7 +45,7 @@ class BlockParser(Parser[BlockState]):
 
     BLOCK_HTML = (
         r"^ {0,3}(?:"
-        r"(?:</?" + _BLOCK_TAGS_PATTERN + r"(?:[ \t]+|\n|$))"
+        r"(?:</?" + _BLOCK_TAGS_PATTERN + r"(?:[ \t]+|\n|$|(?=/?>)))"
         r"|<!--"  # comment
         r"|<\?"  # script
         r"|<![A-Z]"

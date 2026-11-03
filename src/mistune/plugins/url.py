@@ -15,6 +15,13 @@ URL_LINK_PATTERN = r"""https?:\/\/[^\s<]+[^<.,:;"')\]\s]"""
 def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") -> int:
     text = m.group(0)
     pos = m.end()
+    # The pattern never ends on ")", so a closing parenthesis that balances
+    # one inside the URL (e.g. a Wikipedia "Python_(language)" link) is left
+    # out. Take such parentheses back, but keep an unbalanced one outside.
+    src = m.string
+    while pos < len(src) and src[pos] == ")" and text.count("(") > text.count(")"):
+        text += ")"
+        pos += 1
     if state.brackets:
         close = text.find("]")
         if close >= 0:

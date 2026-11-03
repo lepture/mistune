@@ -20,3 +20,27 @@ visit <a href="/foo">https://lepture.com/</a>
 .
 <p>visit <a href="/foo">https://lepture.com/</a></p>
 ````````````````````````````````
+
+```````````````````````````````` example
+see https://en.wikipedia.org/wiki/Python_(programming_language) for more
+.
+<p>see <a href="https://en.wikipedia.org/wiki/Python_(programming_language)">https://en.wikipedia.org/wiki/Python_(programming_language)</a> for more</p>
+````````````````````````````````
+
+```````````````````````````````` example
+read https://example.com/a_(b_(c)).
+.
+<p>read <a href="https://example.com/a_(b_(c))">https://example.com/a_(b_(c))</a>.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+(see https://example.com/a_(b))
+.
+<p>(see <a href="https://example.com/a_(b)">https://example.com/a_(b)</a>)</p>
+````````````````````````````````
+
+```````````````````````````````` example
+(see https://example.com/)
+.
+<p>(see <a href="https://example.com/">https://example.com/</a>)</p>
+````````````````````````````````

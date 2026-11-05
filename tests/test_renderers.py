@@ -398,6 +398,17 @@ class TestMarkdownRendererPlugins(TestCase):
         self.assertEqual(md("~~gone~~, ==marked== and ^^inserted^^\n"), "~~gone~~, ==marked== and ^^inserted^^\n")
         self.assertEqual(md("~~a **b** c~~\n"), "~~a **b** c~~\n")
 
+    def test_leading_hard_line_break_in_paragraph(self):
+        # issue #528: a hard break at the start of a paragraph was lost
+        # because "  \n" is stripped as leading whitespace on re-parse
+        self.assert_round_trip("\\\nnext line\n")
+
+    def test_leading_hard_line_break_in_list_item(self):
+        self.assert_round_trip("- \\\n  next line\n")
+
+    def test_leading_hard_line_break_in_block_quote(self):
+        self.assert_round_trip("> \\\n> next line\n")
+
     def test_standalone_list_item(self):
         renderer = MarkdownRenderer()
         token = {

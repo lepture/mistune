@@ -56,7 +56,12 @@ def _formatting_closer(src: str, start: int, marker: str) -> bool:
         return False
     previous = src[start - 1]
     if previous != char:
-        return not previous.isspace()
+        backslashes = 0
+        pos = start - 1
+        while pos >= 0 and src[pos] == "\\":
+            backslashes += 1
+            pos -= 1
+        return not previous.isspace() and backslashes % 2 == 0
     # A literal escaped first character can precede a closing pair in a run.
     if start < 2 or src[start - 2] != "\\":
         return False

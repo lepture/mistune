@@ -13,18 +13,17 @@ if TYPE_CHECKING:
 
 
 def _md(args: argparse.Namespace) -> "Markdown":
-    if args.plugin:
-        plugins = args.plugin
-    else:
-        # default plugins
-        plugins = ["strikethrough", "footnotes", "table"]
-
     if args.renderer == "rst":
         renderer: "BaseRenderer" = RSTRenderer()
+        default_plugins: list[str] = []
     elif args.renderer == "markdown":
         renderer = MarkdownRenderer()
+        default_plugins = ["strikethrough", "table"]
     else:
         renderer = args.renderer
+        default_plugins = ["strikethrough", "footnotes", "table"]
+
+    plugins = args.plugin if args.plugin else default_plugins
     return create_markdown(
         escape=args.escape,
         hard_wrap=args.hardwrap,

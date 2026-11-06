@@ -158,8 +158,9 @@ class TestMarkdownRendererRoundTrip(TestCase):
 
     def test_indented_code_containing_fences(self):
         parse = create_markdown(renderer="ast")
+        cases = (("```",), ("~~~",), ("```", "~~~"), ("````", "~~~"), ("`code`", "~mask"))
         for indentation in range(4):
-            for markers in (("```",), ("~~~",), ("```", "~~~"), ("````", "~~~")):
+            for markers in cases:
                 with self.subTest(indentation=indentation, markers=markers):
                     lines = ["before"] + [" " * indentation + marker for marker in markers] + ["after"]
                     source = "".join("    " + line + "\n" for line in lines)

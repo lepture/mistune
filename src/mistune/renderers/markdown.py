@@ -6,7 +6,7 @@ from ..core import BaseRenderer, BlockState
 from ..util import strip_end
 from ._list import render_list, render_list_item
 
-fenced_re = re.compile(r"^ {0,3}([`~]+)", re.M)
+fenced_re = re.compile(r"^ {0,3}(`{3,}|~{3,})", re.M)
 _backtick_run_re = re.compile(r"`+")
 _literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);|([\\`<!&])")
 

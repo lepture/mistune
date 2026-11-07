@@ -44,3 +44,35 @@
 .
 <p><del><a href="/">hello</a></del></p>
 ````````````````````````````````
+
+## strikethrough code span
+
+```````````````````````````````` example
+~~before `x~~y` after~~
+.
+<p><del>before <code>x~~y</code> after</del></p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~before ``x~~`y`` after~~
+.
+<p><del>before <code>x~~`y</code> after</del></p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~before `x~~y` after
+.
+<p>~~before <code>x~~y</code> after</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~before \`x~~y`
+.
+<p><del>before `x</del>y`</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~before `x~~
+.
+<p><del>before `x</del></p>
+````````````````````````````````

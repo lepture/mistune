@@ -40,3 +40,20 @@ class TestFormattingSecurity(TestCase):
 
                 _small, html = assert_near_linear(self, render, 1000, 2000)
                 self.assertIn(unit.strip(), html)
+
+    def test_closers_inside_code_spans_are_near_linear(self):
+        cases = [
+            ("strikethrough", "~~a "),
+            ("mark", "==a "),
+            ("insert", "^^a "),
+        ]
+        for plugin, unit in cases:
+            with self.subTest(plugin=plugin):
+                md = create_markdown(plugins=[plugin])
+                marker = unit[:2]
+
+                def render(size):
+                    return md(unit * size + ("`x" + marker + "y` ") * size + "\n")
+
+                _small, html = assert_near_linear(self, render, 1000, 2000)
+                self.assertIn("<code>x" + marker + "y</code>", html)

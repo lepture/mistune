@@ -60,3 +60,11 @@ foo ^^insert me^^
 .
 <p><ins><a href="/">hello</a></ins></p>
 ````````````````````````````````
+
+## insert code span
+
+```````````````````````````````` example
+^^before `x^^y` after^^
+.
+<p><ins>before <code>x^^y</code> after</ins></p>
+````````````````````````````````

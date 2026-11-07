@@ -16,6 +16,8 @@ class DelimiterScanner:
         self.src = src
         self._code: Optional[Dict[int, List[int]]] = None
         self._ends: Dict[Tuple[str, bool], List[int]] = {}
+        self._openers: Optional[Tuple[List[int], List[int]]] = None
+        self._outside_code: Dict[str, Dict[int, Optional[int]]] = {}
 
     def code_end(self, marker: str, pos: int) -> Optional[int]:
         size = len(marker)
@@ -45,6 +47,63 @@ class DelimiterScanner:
             self._ends[key] = positions
         index = bisect_right(positions, pos) if formatting else bisect_left(positions, pos)
         return positions[index] if index < len(positions) else None
+
+    def find_outside_code(self, marker: str, pos: int) -> Optional[int]:
+        """Find a formatting closer after ``pos`` that is not inside a code span.
+
+        Code spans bind more tightly than formatting markers, so a closer such
+        as the ``~~`` in ``~~a `b~~c` d~~`` belongs to the code span.
+        """
+        close = self.find(marker, pos, formatting=True)
+        if close is None:
+            return None
+        starts, sizes = self._code_openers()
+        # Once a scan reaches a backtick run, the rest of the search depends
+        # only on that run, so every scan passing through it shares the result.
+        known = self._outside_code.setdefault(marker, {})
+        visited: List[int] = []
+        index = bisect_left(starts, pos)
+        result: Optional[int] = close
+        while index < len(starts):
+            start = starts[index]
+            if start >= close:
+                break
+            if start in known:
+                result = known[start]
+                break
+            visited.append(start)
+            size = sizes[index]
+            end = self.code_end("`" * size, start + size)
+            if end is None:
+                index += 1
+                continue
+            after = end + size
+            if after > close:
+                result = close = self.find(marker, after - 1, formatting=True)
+                if close is None:
+                    break
+            index = bisect_left(starts, after)
+        for start in visited:
+            known[start] = result
+        return result
+
+    def _code_openers(self) -> Tuple[List[int], List[int]]:
+        if self._openers is None:
+            starts: List[int] = []
+            sizes: List[int] = []
+            for match in _BACKTICKS.finditer(self.src):
+                start, end = match.span()
+                backslashes = 0
+                while start - backslashes > 0 and self.src[start - backslashes - 1] == "\\":
+                    backslashes += 1
+                # An escaped first backtick is literal; the rest of the run can still open.
+                if backslashes % 2:
+                    start += 1
+                if start < end:
+                    starts.append(start)
+                    sizes.append(end - start)
+            self._openers = (starts, sizes)
+        return self._openers
 
 
 def _formatting_closer(src: str, start: int, marker: str) -> bool:

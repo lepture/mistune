@@ -38,12 +38,16 @@ _KNOWN_RULE_START_CHARS = {
     "inline_spoiler": {">"},
 }
 
+# regex copied from commonmark.js
+AUTO_LINK = r"<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>"
 AUTO_EMAIL = (
     r"""<[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"""
     r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
     r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>"
 )
 
+_AUTO_LINK_RE = re.compile(AUTO_LINK)
+_AUTO_EMAIL_RE = re.compile(AUTO_EMAIL)
 _HTML_DECLARATION_START = re.compile(r"<![A-Z]+[ \t\n\r\f]")
 _INLINE_HTML_TAG = re.compile(r"<" + HTML_TAGNAME + HTML_ATTRIBUTES + r"\s*/?>|</" + HTML_TAGNAME + r"\s*>")
 
@@ -69,8 +73,8 @@ class InlineParser(Parser[InlineState]):
         # [link], ![img]
         "link": r"!?\[",
         "link_close": r"\]+",
-        # <https://example.com>. regex copied from commonmark.js
-        "auto_link": r"<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\x00-\x20]*>",
+        # <https://example.com>
+        "auto_link": AUTO_LINK,
         "auto_email": AUTO_EMAIL,
         "inline_html": r"<(?:/?[A-Za-z]|!|\?)",
         "linebreak": STD_LINEBREAK,

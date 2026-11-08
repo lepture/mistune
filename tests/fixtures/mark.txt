@@ -59,3 +59,23 @@ foo ==mark me==
 .
 <p><mark><a href="/">hello</a></mark></p>
 ````````````````````````````````
+
+## mark code span
+
+```````````````````````````````` example
+==before `x==y` after==
+.
+<p><mark>before <code>x==y</code> after</mark></p>
+````````````````````````````````
+
+```````````````````````````````` example
+==[label](a`b)== text ` after==
+.
+<p><mark><a href="a%60b">label</a></mark> text ` after==</p>
+````````````````````````````````
+
+```````````````````````````````` example
+==![img](a`b)== text ` after==
+.
+<p><mark><img src="a%60b" alt="img" /></mark> text ` after==</p>
+````````````````````````````````

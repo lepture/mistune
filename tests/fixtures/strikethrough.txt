@@ -76,3 +76,51 @@
 .
 <p><del>before `x</del></p>
 ````````````````````````````````
+
+```````````````````````````````` example
+~~[label](a`b)~~ text ` after~~
+.
+<p><del><a href="a%60b">label</a></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~![img](a`b)~~ text ` after~~
+.
+<p><del><img src="a%60b" alt="img" /></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~[label](<a`b>)~~ text ` after~~
+.
+<p><del><a href="a%60b">label</a></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~[label](u "t`t")~~ text ` after~~
+.
+<p><del><a href="u" title="t`t">label</a></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~<http://a.b/c`d>~~ text ` after~~
+.
+<p><del><a href="http://a.b/c%60d">http://a.b/c`d</a></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~<span title="a`b">x</span>~~ text ` after~~
+.
+<p><del><span title="a`b">x</span></del> text ` after~~</p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~[label`](u)~~ text ` after~~
+.
+<p><del>[label<code>](u)~~ text </code> after</del></p>
+````````````````````````````````
+
+```````````````````````````````` example
+~~a](b`c)~~ text ` after~~
+.
+<p><del>a](b<code>c)~~ text </code> after</del></p>
+````````````````````````````````

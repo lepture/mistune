@@ -57,3 +57,15 @@ class TestFormattingSecurity(TestCase):
 
                 _small, html = assert_near_linear(self, render, 1000, 2000)
                 self.assertIn("<code>x" + marker + "y</code>", html)
+
+    def test_backticks_in_link_destinations_are_near_linear(self):
+        units = ["[a](b`c) ", "](b`c", "[a](b`c", "[a](<b`c", '[a](b "`c', "<a b='`c"]
+        for unit in units:
+            with self.subTest(unit=unit):
+                md = create_markdown(plugins=["strikethrough"])
+
+                def render(size):
+                    return md("[" + "~~a " * size + unit * size + "~~\n")
+
+                _small, html = assert_near_linear(self, render, 1000, 2000)
+                self.assertIn("b", html)

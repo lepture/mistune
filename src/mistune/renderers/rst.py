@@ -160,3 +160,68 @@ class RSTRenderer(BaseRenderer):
         checked = token.get("attrs", {}).get("checked")
         marker = "[x] " if checked else "[ ] "
         return render_list_item(self, token, state, marker)
+
+    def strikethrough(self, token: Dict[str, Any], state: BlockState) -> str:
+        # reStructuredText has no native strikethrough; keep the text
+        # visible with its original markers instead of failing
+        return "~~" + self.render_children(token, state) + "~~"
+
+    def table(self, token: Dict[str, Any], state: BlockState) -> str:
+        children = token["children"]
+        head = children[0]
+        body_rows = children[1]["children"] if len(children) > 1 else []
+        lines = [".. list-table::"]
+        if head["children"]:
+            lines.append("   :header-rows: 1")
+        lines.append("")
+        head_first = True
+        for cell in head["children"]:
+            lines.append(self._list_table_cell(cell, state, head_first))
+            head_first = False
+        for row in body_rows:
+            first = True
+            for cell in row["children"]:
+                lines.append(self._list_table_cell(cell, state, first))
+                first = False
+        return "\n".join(lines) + "\n\n"
+
+    def _list_table_cell(self, token: Dict[str, Any], state: BlockState, first: bool) -> str:
+        text = self.render_children(token, state).replace("<linebreak>", " ").strip()
+        return ("   * - " if first else "     - ") + text
+
+    def table_head(self, token: Dict[str, Any], state: BlockState) -> str:
+        return ""
+
+    def table_body(self, token: Dict[str, Any], state: BlockState) -> str:
+        return ""
+
+    def table_row(self, token: Dict[str, Any], state: BlockState) -> str:
+        return ""
+
+    def table_cell(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state)
+
+    def footnote_ref(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "[#" + cast(str, token["raw"]) + "]_"
+
+    def footnotes(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "\n" + self.render_children(token, state)
+
+    def footnote_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        key = cast(str, token["attrs"]["key"])
+        text = self.render_children(token, state).rstrip("\n")
+        first, *rest = text.splitlines()
+        item = ".. [#" + key + "] " + first
+        if rest:
+            item += "\n" + "\n".join("   " + line for line in rest)
+        return item + "\n"
+
+    def def_list(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state) + "\n\n"
+
+    def def_list_head(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state) + "\n"
+
+    def def_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        text = self.render_children(token, state).rstrip("\n")
+        return indent(text, "    ") + "\n"

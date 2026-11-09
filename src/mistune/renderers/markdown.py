@@ -133,6 +133,54 @@ class MarkdownRenderer(BaseRenderer):
     def blank_line(self, token: Dict[str, Any], state: BlockState) -> str:
         return ""
 
+    def footnote_ref(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "[^" + cast(str, token["raw"]) + "]"
+
+    def footnotes(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state) + "\n"
+
+    def footnote_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        key = cast(str, token["attrs"]["key"])
+        text = self.render_children(token, state)
+        # continuation lines are indented so they stay inside the definition
+        first, *rest = text.rstrip("\n").splitlines()
+        item = "[^" + key + "]: " + first
+        if rest:
+            item += "\n" + "\n".join("    " + line for line in rest)
+        return item + "\n"
+
+    def superscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "^" + self.render_children(token, state) + "^"
+
+    def subscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "~" + self.render_children(token, state) + "~"
+
+    def def_list(self, token: Dict[str, Any], state: BlockState) -> str:
+        out = ""
+        prev_type = None
+        for child in token["children"]:
+            # a new term after a definition starts a new group; separate
+            # them with a blank line so the definition does not absorb
+            # the term as a lazy continuation line on re-parse
+            if prev_type == "def_list_item" and child["type"] == "def_list_head":
+                out += "\n"
+            if child["type"] != "blank_line":
+                out += self.render_token(child, state)
+            prev_type = child["type"]
+        return out + "\n\n"
+
+    def def_list_head(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state) + "\n"
+
+    def def_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        text = self.render_children(token, state)
+        # continuation lines are indented so they stay inside the definition
+        first, *rest = text.rstrip("\n").splitlines()
+        item = ": " + first
+        if rest:
+            item += "\n" + "\n".join("  " + line for line in rest)
+        return item + "\n"
+
     def inline_html(self, token: Dict[str, Any], state: BlockState) -> str:
         return cast(str, token["raw"])
 

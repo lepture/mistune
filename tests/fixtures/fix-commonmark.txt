@@ -129,6 +129,42 @@ b
 ````````````````````````````````
 
 
+## Indented code
+
+A line of only spaces and tabs is a blank line, even when it is indented
+four or more columns, so it does not start an indented code block.
+
+```````````````````````````````` example
+→→
+foo
+.
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+    →
+foo
+.
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+→→
+    code
+.
+<pre><code>code
+</code></pre>
+````````````````````````````````
+
+```````````````````````````````` example
+>→→
+foo
+.
+<blockquote>
+</blockquote>
+<p>foo</p>
+````````````````````````````````
+
 ## Max depth
 
 

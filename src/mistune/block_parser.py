@@ -61,7 +61,7 @@ class BlockParser(Parser[BlockState]):
             r"[ \t]*(?P<fenced_3>.*?)$"
         ),
         "indent_code": (
-            r"^(?: {4}| *\t)[^\n]+(?:\n+|$)"
+            r"^(?: {4}| *\t)[ \t]*\S[^\n]*(?:\n+|$)"
             r"((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*"
         ),
         "thematic_break": r"^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$",
@@ -585,6 +585,10 @@ def _trim_partial_next_line_indent(text: str, end_pos: int) -> int:
 def _is_indent_code_line(line: str) -> bool:
     if line.endswith("\n"):
         line = line[:-1]
+
+    if not line.strip():
+        # a line of only spaces and tabs is a blank line
+        return False
 
     if len(line) > 4 and line.startswith("    "):
         return True

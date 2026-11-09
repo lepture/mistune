@@ -439,3 +439,11 @@ class TestMarkdownRendererPluginTokens(TestCase):
         out = render("Apple\n: red\n\nOrange\n: orange\n")
         self.assertEqual(out, "Apple\n: red\n\nOrange\n: orange\n")
         self.assertEqual(render(out), out)
+
+    def test_superscript_subscript_round_trip(self):
+        render = create_markdown(
+            renderer=MarkdownRenderer(), plugins=["superscript", "subscript"]
+        )
+        out = render("x^2^ and H~2~O\n")
+        self.assertEqual(out, "x^2^ and H~2~O\n")
+        self.assertEqual(render(out), out)

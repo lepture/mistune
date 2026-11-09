@@ -149,6 +149,12 @@ class MarkdownRenderer(BaseRenderer):
             item += "\n" + "\n".join("    " + line for line in rest)
         return item + "\n"
 
+    def superscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "^" + self.render_children(token, state) + "^"
+
+    def subscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "~" + self.render_children(token, state) + "~"
+
     def def_list(self, token: Dict[str, Any], state: BlockState) -> str:
         out = ""
         prev_type = None

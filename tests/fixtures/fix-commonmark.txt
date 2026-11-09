@@ -129,6 +129,70 @@ b
 ````````````````````````````````
 
 
+A heading or a thematic break is not a paragraph, so an unindented line
+after it is not a lazy continuation line and ends the list or the quote.
+
+```````````````````````````````` example
+- # a
+foo
+.
+<ul>
+<li>
+<h1>a</h1>
+</li>
+</ul>
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+- a
+
+  ***
+foo
+.
+<ul>
+<li>
+<p>a</p>
+<hr />
+</li>
+</ul>
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+> # a
+foo
+.
+<blockquote>
+<h1>a</h1>
+</blockquote>
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+> > ***
+foo
+.
+<blockquote>
+<blockquote>
+<hr />
+</blockquote>
+</blockquote>
+<p>foo</p>
+````````````````````````````````
+
+```````````````````````````````` example
+> # a
+> b
+foo
+.
+<blockquote>
+<h1>a</h1>
+<p>b
+foo</p>
+</blockquote>
+````````````````````````````````
+
 ## Max depth
 
 

@@ -323,6 +323,7 @@ class BlockParser(Parser[BlockState]):
                     "block_html",
                 ]
             )
+            last_line = text
             while state.cursor < state.cursor_max:
                 quote = _parse_block_quote_line(state.get_line(state.cursor))
                 if quote is not None:
@@ -332,12 +333,18 @@ class BlockParser(Parser[BlockState]):
                         prev_blank_line = True
                     else:
                         prev_blank_line = False
+                        last_line = quote
                     continue
 
                 if prev_blank_line:
                     # CommonMark Example 249
                     # because of laziness, a blank line is needed between
                     # a block quote and a following paragraph
+                    break
+
+                if self._is_closed_line(last_line):
+                    # a heading or a thematic break leaves no paragraph
+                    # for a lazy continuation line to continue
                     break
 
                 m4 = break_sc.match(state.src, state.cursor)
@@ -481,6 +488,16 @@ class BlockParser(Parser[BlockState]):
             text = state.src[state.cursor :]
             state.add_paragraph(text)
             state.cursor = state.cursor_max
+
+    def _is_closed_line(self, line: str) -> bool:
+        """Check if a line is a heading or a thematic break, possibly inside
+        nested block quotes. Such a line is never a part of a paragraph."""
+        quote = _parse_block_quote_line(line)
+        while quote is not None:
+            line = quote
+            quote = _parse_block_quote_line(line)
+        sc = self.compile_sc(["atx_heading", "thematic_break"])
+        return bool(sc.match(line))
 
     def _parse_indent_code_fast(self, state: BlockState) -> Optional[int]:
         line_end = state.find_line_end()

@@ -170,6 +170,7 @@ def _collect_list_item_lines(
     src = ""
     next_item = None
     prev_blank_line = False
+    last_line = None
     while state.cursor < state.cursor_max:
         raw_line = state.get_line(state.cursor)
         next_pos = state.cursor + len(raw_line)
@@ -188,6 +189,7 @@ def _collect_list_item_lines(
 
             src += raw_line
             prev_blank_line = False
+            last_line = raw_line
             state.cursor = next_pos
             continue
 
@@ -215,6 +217,15 @@ def _collect_list_item_lines(
         if not text and not src.strip():
             # an empty list item has no paragraph to continue,
             # so a line without enough indentation ends the list
+            break
+
+        if last_line is None:
+            closed = block._is_closed_line(text)
+        else:
+            closed = block._is_closed_line(_strip_continuation_indent(last_line, continue_width))
+        if closed:
+            # a heading or a thematic break leaves no paragraph
+            # for a lazy continuation line to continue
             break
 
         src += raw_line

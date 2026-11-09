@@ -410,3 +410,38 @@ class TestMarkdownRendererPlugins(TestCase):
             ],
         }
         self.assertEqual(renderer.render_token(token, BlockState()), "- x\n\n")
+
+
+class TestRSTRendererPlugins(TestCase):
+    """The plugin tokens that used to crash RSTRenderer render as RST."""
+
+    def render(self, text):
+        return create_markdown(
+            renderer=RSTRenderer(),
+            plugins=["strikethrough", "table", "footnotes", "def_list"],
+        )(text)
+
+    def test_strikethrough_passes_through(self):
+        out = self.render("~~gone~~ kept\n")
+        self.assertEqual(out, "~~gone~~ kept\n")
+
+    def test_table_becomes_list_table(self):
+        out = self.render("| a | b |\n|---|---|\n| 1 | 2 |\n")
+        self.assertEqual(
+            out,
+            ".. list-table::\n"
+            "   :header-rows: 1\n"
+            "\n"
+            "   * - a\n"
+            "     - b\n"
+            "   * - 1\n"
+            "     - 2\n",
+        )
+
+    def test_footnotes_become_rst_footnotes(self):
+        out = self.render("A[^1] note.\n\n[^1]: One.\n")
+        self.assertEqual(out, "A[#1]_ note.\n\n.. [#1] One.\n")
+
+    def test_def_list_becomes_rst_definition_list(self):
+        out = self.render("term\n: definition\n")
+        self.assertEqual(out, "term\n    definition\n")

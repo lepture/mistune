@@ -500,9 +500,9 @@ class BlockParser(Parser[BlockState]):
         return end_pos
 
     def _parse_plain_paragraph(self, state: BlockState, sc: Pattern[str]) -> bool:
-        if not _is_plain_paragraph_start(state.src, state.cursor):
-            return False
-
+        # Block rules are anchored to the start of a line, so trying each line
+        # start finds the same paragraph end as ``sc.search``, without
+        # retrying every rule at every character of the paragraph.
         pos = state.cursor
         while pos < state.cursor_max:
             if pos > state.cursor and sc.match(state.src, pos):
@@ -606,10 +606,3 @@ def _find_indent_code_end(src: str, start: int, end: int) -> int:
             continue
         break
     return pos
-
-
-def _is_plain_paragraph_start(src: str, pos: int) -> bool:
-    if pos >= len(src):
-        return False
-    c = src[pos]
-    return not c.isspace() and not c.isdigit() and c not in string.punctuation

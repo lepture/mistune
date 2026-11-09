@@ -95,6 +95,23 @@ class TestMiscCases(TestCase):
         for md, text, html in cases:
             self.assertEqual(md(text).strip(), html)
 
+    def test_block_paragraph_starting_with_punctuation_interrupts(self):
+        md = mistune.create_markdown(escape=False)
+        cases = {
+            "[link](/a) text\n# Heading\n": '<p><a href="/a">link</a> text</p>\n<h1>Heading</h1>',
+            "`code` text\n```\nx\n```\n": "<p><code>code</code> text</p>\n<pre><code>x\n</code></pre>",
+            "*em* text\n> quote\n": "<p><em>em</em> text</p>\n<blockquote>\n<p>quote</p>\n</blockquote>",
+            "2024 was\n- item\n": "<p>2024 was</p>\n<ul>\n<li>item</li>\n</ul>",
+            "  indented\n---\n": "<h2>indented</h2>",
+            "(paren) text\nmore\n***\n": "<p>(paren) text\nmore</p>\n<hr />",
+            '"quoted" text\n<div>\nhtml\n</div>\n': "<p>&quot;quoted&quot; text</p>\n<div>\nhtml\n</div>",
+            "- [a](/a) one\n- **b** two\n": (
+                '<ul>\n<li><a href="/a">a</a> one</li>\n<li><strong>b</strong> two</li>\n</ul>'
+            ),
+        }
+        for text, html in cases.items():
+            self.assertEqual(md(text).strip(), html)
+
     def test_block_quote_line_based_boundaries(self):
         cases = {
             "> foo\nbar\n": "<blockquote>\n<p>foo\nbar</p>\n</blockquote>",

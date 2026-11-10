@@ -1,6 +1,15 @@
 import re
+import sys
 
-class Scanner(re.Scanner):
+if sys.version_info < (3, 13):
+    _ScannerBase = re.Scanner
+else:
+    # re.Scanner does not work with capturing groups in
+    # python >= 3.15, ==3.14.1, ==3.13.10
+    from ._compat import Scanner as _ScannerBase
+
+
+class Scanner(_ScannerBase):
     def iter(self, string, state, parse_text):
         sc = self.scanner.scanner(string)
 

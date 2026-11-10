@@ -1,12 +1,74 @@
 import re
 
 class Scanner(re.Scanner):
+    def __init__(self, lexicon, flags=0):
+        self._patterns = None
+        try:
+            re.Scanner.__init__(self, lexicon, flags)
+        except ValueError as exc:
+            if str(exc) != 'Cannot use capturing groups in re.Scanner':
+                raise
+            # New Python versions reject captures in re.Scanner. Compile
+            # rules independently so local groups and backreferences survive.
+            self.lexicon = lexicon
+            # re.Scanner does not enable Unicode character classes by default.
+            if not flags & re.UNICODE:
+                flags |= re.ASCII
+            self._patterns = [re.compile(phrase, flags) for phrase, _ in lexicon]
+
+    def _iter_patterns(self, string):
+        scanners = [pattern.scanner(string) for pattern in self._patterns]
+        matches = [scanner.search() for scanner in scanners]
+        pos = 0
+        empty_at = None
+        while True:
+            for index, match in enumerate(matches):
+                if match is not None and match.start() < pos:
+                    # A consumed token can overlap a candidate. Restart at
+                    # its end rather than dropping a later overlapping match.
+                    scanners[index] = self._patterns[index].scanner(string, pos)
+                    match = scanners[index].search()
+                while match is not None and match.start() == match.end() == empty_at:
+                    match = scanners[index].search()
+                matches[index] = match
+            candidates = [(match.start(), index) for index, match in enumerate(matches)
+                          if match is not None]
+            if not candidates:
+                return
+            _, index = min(candidates)
+            match = matches[index]
+            yield index, match
+            pos = match.end()
+            empty_at = pos if match.start() == pos else None
+            matches[index] = scanners[index].search()
+
+    def scan(self, string):
+        if self._patterns is None:
+            return re.Scanner.scan(self, string)
+        result = []
+        pos = 0
+        for index, match in self._iter_patterns(string):
+            if match.start() != pos or match.end() == pos:
+                break
+            action = self.lexicon[index][1]
+            if callable(action):
+                self.match = match
+                action = action(self, match.group())
+            if action is not None:
+                result.append(action)
+            pos = match.end()
+        return result, string[pos:]
+
     def iter(self, string, state, parse_text):
-        sc = self.scanner.scanner(string)
+        if self._patterns is None:
+            sc = self.scanner.scanner(string)
+            matches = ((match.lastindex - 1, match) for match in iter(sc.search, None))
+        else:
+            matches = self._iter_patterns(string)
 
         pos = 0
-        for match in iter(sc.search, None):
-            name, method = self.lexicon[match.lastindex - 1][1]
+        for index, match in matches:
+            name, method = self.lexicon[index][1]
             hole = string[pos:match.start()]
             if hole:
                 yield parse_text(hole, state)

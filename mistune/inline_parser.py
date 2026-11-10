@@ -143,9 +143,12 @@ class InlineParser(ScannerParser):
         return self.tokenize_link(line, link, text, title, state)
 
     def parse_ref_link(self, m, state):
+        return self._parse_ref_link(m, state, m.group(2))
+
+    def _parse_ref_link(self, m, state, key):
         line = m.group(0)
         text = m.group(1)
-        key = unikey(m.group(2) or text)
+        key = unikey(key or text)
         def_links = state.get('def_links')
         if not def_links or key not in def_links:
             return list(self._scan(line, state, self.ref_link_rules))
@@ -161,7 +164,7 @@ class InlineParser(ScannerParser):
         return self.tokenize_link(line, link, text, title, state)
 
     def parse_ref_link2(self, m, state):
-        return self.parse_ref_link(m, state)
+        return self._parse_ref_link(m, state, None)
 
     def tokenize_link(self, line, link, text, title, state):
         if state.get('_in_link'):

@@ -170,6 +170,27 @@ paragraph
 </table>
 ````````````````````````````````
 
+```````````````````````````````` example
+| `a \| b` | B |
+| -------- | - |
+| `float \| None` | **\|** |
+.
+<table>
+<thead>
+<tr>
+  <th><code>a | b</code></th>
+  <th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>float | None</code></td>
+  <td><strong>|</strong></td>
+</tr>
+</tbody>
+</table>
+````````````````````````````````
+
 
 ## table
 

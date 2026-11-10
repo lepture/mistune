@@ -112,7 +112,7 @@ def _process_thead(header: str, align: str) -> Union[Tuple[None, None], Tuple[Di
             return None, None
 
     children: List[Dict[str, Any]] = [
-        {"type": "table_cell", "text": text.strip(), "attrs": {"align": aligns[i], "head": True}}
+        {"type": "table_cell", "text": _cell_text(text), "attrs": {"align": aligns[i], "head": True}}
         for i, text in enumerate(headers)
     ]
     thead: Dict[str, Any] = {"type": "table_head", "children": children}
@@ -125,10 +125,17 @@ def _process_row(text: str, aligns: List[Optional[str]]) -> Optional[Dict[str, A
         return None
 
     children: List[Dict[str, Any]] = [
-        {"type": "table_cell", "text": text.strip(), "attrs": {"align": aligns[i], "head": False}}
+        {"type": "table_cell", "text": _cell_text(text), "attrs": {"align": aligns[i], "head": False}}
         for i, text in enumerate(cells)
     ]
     return {"type": "table_row", "children": children}
+
+
+def _cell_text(text: str) -> str:
+    # A pipe left in a cell is escaped, otherwise it would have split the row.
+    # Remove the escape before inline parsing, so that a code span inside the
+    # cell shows a plain pipe, as in GFM.
+    return text.strip().replace("\\|", "|")
 
 
 def _strip_pipe_table_row(line: str) -> Optional[str]:

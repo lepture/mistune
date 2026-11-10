@@ -21,10 +21,12 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "pypy3.11"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "pypy3.11"]
         include:
           - {python: "2.7", image: "python:2.7"}
           - {python: "3.7", image: "python:3.7"}
+          - {python: "3.8", image: "python:3.8"}
+          - {python: "3.9", image: "python:3.9"}
 
     steps:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3

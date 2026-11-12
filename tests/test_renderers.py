@@ -43,6 +43,17 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.to_html(text),
         )
 
+    def test_empty_block_quote_preserved(self):
+        # an empty block quote is a visible empty <blockquote>; the reformat
+        # must keep a bare ">" line instead of dropping the quote entirely
+        for text in (
+            "> >\n",
+            "> >\n\nfoo\n",
+            "> quote\n\n> >\n\nafter\n",
+        ):
+            with self.subTest(text=text):
+                self.assert_round_trip(text)
+
     def test_escaped_block_markers(self):
         # an escaped leading marker is literal text, not a new block
         for marker in (r"\*", r"\-", r"\+", r"\#", r"\##", r"\>", r"1\.", r"3\)"):

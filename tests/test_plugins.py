@@ -1,3 +1,5 @@
+import pytest
+
 from mistune import create_markdown
 from mistune.plugins.math import math_in_list, math_in_quote
 from mistune.plugins.table import table_in_list, table_in_quote
@@ -68,10 +70,7 @@ class TestExtraPlugins(BaseTestCase):
 
 class TestFootnoteReferenceDefinitions(BaseTestCase):
     def test_definition_before_another_paragraph(self):
-        text = (
-            "Text[^one].\n\n[^one]: See [link][ref].\n\n"
-            "    [ref]: /url\n\n    Final paragraph.\n"
-        )
+        text = "Text[^one].\n\n[^one]: See [link][ref].\n\n    [ref]: /url\n\n    Final paragraph.\n"
         result = create_markdown(plugins=["footnotes"])(text)
         self.assertIn('<a href="/url">link</a>', result)
         self.assertIn("Final paragraph.", result)
@@ -84,10 +83,7 @@ class TestFootnoteReferenceDefinitions(BaseTestCase):
         self.assertNotIn("[ref]", result)
 
     def test_existing_document_definition_takes_precedence(self):
-        text = (
-            "Text[^one].\n\n[ref]: /original\n\n"
-            "[^one]: See [link][ref].\n\n    [ref]: /replacement\n"
-        )
+        text = "Text[^one].\n\n[ref]: /original\n\n[^one]: See [link][ref].\n\n    [ref]: /replacement\n"
         result = create_markdown(plugins=["footnotes"])(text)
         self.assertIn('<a href="/original">link</a>', result)
         self.assertNotIn("replacement", result)
@@ -96,3 +92,42 @@ class TestFootnoteReferenceDefinitions(BaseTestCase):
         text = "Text[^one].\n\n[^one]: See [link][missing].\n\n    Another paragraph.\n"
         result = create_markdown(plugins=["footnotes"])(text)
         self.assertIn("[link][missing]", result)
+
+
+@pytest.mark.parametrize("renderer", [None, "html"])
+@pytest.mark.parametrize(
+    ("definitions", "keys"),
+    [
+        ("[^one]: First[^two].\n\n[^two]: Second.\n", ["ONE", "TWO"]),
+        ("[^one]: First[^two].\n\n[^two]: Second[^three].\n\n[^three]: Third.\n", ["ONE", "TWO", "THREE"]),
+        ("[^one]: First[^two][^two].\n\n[^two]: Second[^one].\n", ["ONE", "TWO"]),
+    ],
+)
+def test_nested_footnote_references(renderer, definitions, keys):
+    md = create_markdown(renderer=renderer, plugins=["footnotes"])
+    result, state = md.parse("Body[^one].\n\n" + definitions + "\n[^unused]: Unused.\n")
+
+    assert state.env["footnotes"] == keys
+    if renderer is None:
+        items = result[-1]["children"]
+        assert isinstance(items, list)
+        assert [item["attrs"]["key"] for item in items] == keys
+        assert [item["attrs"]["index"] for item in items] == list(range(1, len(keys) + 1))
+    else:
+        assert result.count('<li id="fn-') == len(keys)
+        for index in range(1, len(keys) + 1):
+            assert f'<li id="fn-{index}">' in result
+        assert "Second" in result
+        assert "Unused" not in result
+
+
+def test_nested_footnotes_preserve_initial_reference_definitions():
+    text = (
+        "Body[^one][^two].\n\n"
+        "[^one]: [link][ref] and [^three].\n\n"
+        "[^two]: Second.\n\n    [ref]: /target\n\n"
+        "[^three]: Third.\n"
+    )
+    result = create_markdown(plugins=["footnotes"])(text)
+    assert '<a href="/target">link</a>' in result
+    assert '<li id="fn-3"><p>Third.' in result

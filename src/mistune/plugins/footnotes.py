@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING, Any, Dict, List, Match, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Match, Union
 
 from ..core import BlockState
 from ..util import unikey
@@ -94,9 +94,18 @@ def md_footnotes_hook(
         return result
 
     children = [parse_footnote_item(md.block, k, i + 1, state) for i, k in enumerate(notes)]
-    state = BlockState(parent=state)
-    state.tokens = [{"type": "footnotes", "children": children}]
-    output = md.render_state(state)
+
+    def iter_footnote_items() -> Iterable[Dict[str, Any]]:
+        # Inline rendering can discover references to more footnotes.
+        for i, key in enumerate(notes):
+            if i < len(children):
+                yield children[i]
+            else:
+                yield parse_footnote_item(md.block, key, i + 1, state)
+
+    footer_state = BlockState(parent=state)
+    footer_state.tokens = [{"type": "footnotes", "children": iter_footnote_items()}]
+    output = md.render_state(footer_state)
     return result + output  # type: ignore[operator]
 
 

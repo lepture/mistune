@@ -43,6 +43,34 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.to_html(text),
         )
 
+    def test_math_tokens_round_trip(self):
+        # the math plugin tokens had no renderers in the MarkdownRenderer
+        # and crashed with AttributeError
+        reformat = create_markdown(renderer=MarkdownRenderer(), plugins=["math"])
+        to_html = create_markdown(plugins=["math"])
+        for text in (
+            "$x^2$ alone\n",
+            "a $E=mc^2$ b\n\n$$block math$$\n",
+            "$\nmulti\nline math\n$$\n",
+            "$a$b$ c\n",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(to_html(reformat(text)), to_html(text))
+                self.assertEqual(reformat(reformat(text)), reformat(text))
+
+    def test_rst_plugin_tokens_render(self):
+        # the math/mark/insert plugin tokens had no renderers in the RST
+        # renderer and crashed with AttributeError
+        render = create_markdown(renderer=RSTRenderer(), plugins=["math", "mark", "insert"])
+        for text, expected in (
+            ("a $x^2$ b\n", "a :math:`x^2` b\n"),
+            ("$$\nblock math\n$$\n", ".. math::\n\n   block math\n"),
+            ("==marked==\n", "==marked==\n"),
+            ("^^inserted^^\n", "^^inserted^^\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
+
     def test_escaped_block_markers(self):
         # an escaped leading marker is literal text, not a new block
         for marker in (r"\*", r"\-", r"\+", r"\#", r"\##", r"\>", r"1\.", r"3\)"):

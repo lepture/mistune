@@ -75,6 +75,27 @@ class RSTRenderer(BaseRenderer):
     def codespan(self, token: Dict[str, Any], state: BlockState) -> str:
         return "``" + cast(str, token["raw"]) + "``"
 
+    def inline_math(self, token: Dict[str, Any], state: BlockState) -> str:
+        # docutils math role; a backtick inside the content would close the
+        # role early, escape it
+        raw = cast(str, token["raw"]).replace("`", "\\`")
+        return ":math:`" + raw + "`"
+
+    def block_math(self, token: Dict[str, Any], state: BlockState) -> str:
+        lines = [".. math::", ""]
+        lines.extend("   " + line for line in cast(str, token["raw"]).splitlines())
+        return "\n".join(lines) + "\n\n"
+
+    def mark(self, token: Dict[str, Any], state: BlockState) -> str:
+        # reStructuredText has no native highlight; keep the text visible
+        # with its original markers instead of failing
+        return "==" + self.render_children(token, state) + "=="
+
+    def insert(self, token: Dict[str, Any], state: BlockState) -> str:
+        # reStructuredText has no native insertion/underline; keep the text
+        # visible with its original markers instead of failing
+        return "^^" + self.render_children(token, state) + "^^"
+
     def linebreak(self, token: Dict[str, Any], state: BlockState) -> str:
         return "<linebreak>"
 

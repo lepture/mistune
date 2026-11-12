@@ -80,6 +80,25 @@ class MarkdownRenderer(BaseRenderer):
     def insert(self, token: Dict[str, Any], state: BlockState) -> str:
         return "^^" + self.render_children(token, state) + "^^"
 
+    def inline_math(self, token: Dict[str, Any], state: BlockState) -> str:
+        raw = cast(str, token["raw"])
+        if "$" in raw or "\n" in raw or raw.startswith("`") or raw.endswith("`"):
+            # an inner "$", a newline or an edge backtick would end (or let
+            # the backtick-marker form swallow) the plain "$...$" span on the
+            # re-parse; use the backtick-marker form with a run longer than
+            # any backtick run inside the content
+            longest = max((len(run) for run in _backtick_run_re.findall(raw)), default=0)
+            marker = "`" * (longest + 1)
+            return "$" + marker + raw + marker + "$"
+        return "$" + raw + "$"
+
+    def block_math(self, token: Dict[str, Any], state: BlockState) -> str:
+        raw = cast(str, token["raw"])
+        if "\n" in raw:
+            raw = raw.rstrip("\n") + "\n"
+            return "$$\n" + raw + "$$\n\n"
+        return "$$" + raw + "$$\n\n"
+
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         label = cast(str, token.get("label"))
         text = self.render_children(token, state)

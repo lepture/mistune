@@ -180,7 +180,13 @@ class MarkdownRenderer(BaseRenderer):
         # not added to a dangling empty line; stripping it back off afterwards
         # would also eat a ">" that ends the content (an autolink or HTML tag).
         text = self.render_children(token, state).rstrip("\n")
-        text = indent(text, "> ", lambda _: True)
+        if text:
+            text = indent(text, "> ", lambda _: True)
+        else:
+            # an empty block quote (``> >``) renders as a visible empty
+            # <blockquote>; emitting nothing would drop it from the
+            # reformatted source entirely
+            text = ">"
         return text + "\n\n"
 
     def block_html(self, token: Dict[str, Any], state: BlockState) -> str:

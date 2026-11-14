@@ -30,6 +30,76 @@ class TestRSTRendererLineBreaks(TestCase):
                 self.assertEqual(render(text), expected)
 
 
+class TestRSTRendererMathBoundaries(TestCase):
+    # docutils only recognizes inline roles delimited by whitespace (or a
+    # short allowed set of punctuation); a role glued to ordinary text is
+    # swallowed into the text or not recognized at all. When the math role
+    # would touch a neighbor without a separating character, mark the
+    # boundary with an escaped space ("\ "), which docutils drops from
+    # the rendered output.
+    # https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#character-level-inline-markup
+    #
+    # Reported against docutils 0.23: "a $x$ b" renders to a single clean
+    # math node, but "a$x$b" produced a:math:`x`b (no math node) and
+    # "$x$+$y$" produced :math:`x`+:math:`y` (one node holding
+    # "x`+:math:`y"). The escaped-space forms asserted below are the ones
+    # docutils turns into separate math nodes displaying "axb" and "x+y".
+    # docutils is not installable in this environment, so these assertions
+    # compare the RST strings only.
+    render = create_markdown(renderer=RSTRenderer(), plugins=["math"])
+
+    def assert_rst(self, source, expected):
+        with self.subTest(source=source):
+            self.assertEqual(self.render(source), expected)
+
+    def test_reported_boundary_cases(self):
+        # real spaces around the role need no boundary: the spaced control
+        # keeps emitting the plain form
+        self.assert_rst("a $x$ b\n", "a :math:`x` b\n")
+        # role glued to plain text on both sides displays "axb"
+        self.assert_rst("a$x$b\n", "a\\ :math:`x`\\ b\n")
+        # role glued to punctuation between two roles displays "x+y"
+        self.assert_rst("$x$+$y$\n", ":math:`x`\\ +\\ :math:`y`\n")
+
+    def test_role_at_line_edges(self):
+        self.assert_rst("$x$ a\n", ":math:`x` a\n")
+        self.assert_rst("a $x$\n", "a :math:`x`\n")
+
+    def test_role_adjacent_to_other_markup(self):
+        # two roles with no separating character between them
+        self.assert_rst("$x$$y$\n", ":math:`x`\\ \\ :math:`y`\n")
+        # role glued to an emphasis start
+        self.assert_rst("$x$*em*\n", ":math:`x`\\ *em*\n")
+
+    def test_softbreak_is_already_a_boundary(self):
+        # a single newline renders as a space, no escaped space needed
+        self.assert_rst("a\n$x$ b\n", "a :math:`x` b\n")
+
+    def test_boundary_inside_list_item(self):
+        self.assert_rst("- a$x$b\n", "- a\\ :math:`x`\\ b\n")
+
+    def test_boundary_past_vanishing_inline_html(self):
+        # inline_html renders as nothing in rst, so the role touches the
+        # text beyond it; the boundary must key off that effective
+        # neighbor, not the immediate inline_html token. Reported against
+        # docutils 0.23: these two used to emit "a:math:`x`\\ b" and
+        # "a\\ :math:`x`b", neither of which docutils parses as a math
+        # node. With the boundary placed around the role, docutils drops
+        # the escaped spaces and displays "axb".
+        self.assert_rst("a<span></span>$x$b\n", "a\\ :math:`x`\\ b\n")
+        self.assert_rst("a$x$<span></span>b\n", "a\\ :math:`x`\\ b\n")
+
+    def test_boundary_past_nonempty_inline_html(self):
+        # any inline html tag is discarded by the rst renderer, so the
+        # boundary keys off the actual text neighbors beyond the tags
+        self.assert_rst("a<b>bold</b>$x$b\n", "abold\\ :math:`x`\\ b\n")
+
+    def test_vanishing_html_before_linebreak(self):
+        # the walk stops at a linebreak: the role ends the line and the
+        # line split itself separates it from the next line
+        self.assert_rst("a$x$<span></span>  \nb\n", "| a\\ :math:`x`\n| b\n")
+
+
 class TestMarkdownRendererRoundTrip(TestCase):
     """Reformatting valid Markdown must not change its meaning: rendering the
     reformatted source to HTML must match rendering the original source."""
@@ -42,6 +112,57 @@ class TestMarkdownRendererRoundTrip(TestCase):
             self.to_html(self.reformat(text)),
             self.to_html(text),
         )
+
+    def test_math_tokens_round_trip(self):
+        # the math plugin tokens had no renderers in the MarkdownRenderer
+        # and crashed with AttributeError
+        reformat = create_markdown(renderer=MarkdownRenderer(), plugins=["math"])
+        to_html = create_markdown(plugins=["math"])
+        for text in (
+            "$x^2$ alone\n",
+            "a $E=mc^2$ b\n\n$$block math$$\n",
+            "$\nmulti\nline math\n$$\n",
+            "$a$b$ c\n",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(to_html(reformat(text)), to_html(text))
+                self.assertEqual(reformat(reformat(text)), reformat(text))
+
+    def _assert_math_round_trip(self, reformat, text):
+        to_html = create_markdown(plugins=["math"])
+        self.assertEqual(to_html(reformat(text)), to_html(text))
+        self.assertEqual(reformat(reformat(text)), reformat(text))
+
+    def test_inline_math_leading_space_round_trip(self):
+        # "$` x `$" parses as inline_math(raw=" x "); the plain "$ x $"
+        # form is not math on re-parse because the plugin rejects a leading
+        # whitespace character after the opening "$", so the backtick-marker
+        # form must be used to keep the token
+        reformat = create_markdown(renderer=MarkdownRenderer(), plugins=["math"])
+        text = "$` x `$\n"
+        self.assertEqual(reformat(text), "$` x `$\n")
+        self._assert_math_round_trip(reformat, text)
+
+    def test_inline_math_trailing_space_stays_plain(self):
+        # trailing whitespace is accepted by the plain "$...$" form, so it
+        # must not switch to the backtick-marker form
+        reformat = create_markdown(renderer=MarkdownRenderer(), plugins=["math"])
+        text = "$x $\n"
+        self.assertEqual(reformat(text), "$x $\n")
+        self._assert_math_round_trip(reformat, text)
+
+    def test_rst_plugin_tokens_render(self):
+        # the math/mark/insert plugin tokens had no renderers in the RST
+        # renderer and crashed with AttributeError
+        render = create_markdown(renderer=RSTRenderer(), plugins=["math", "mark", "insert"])
+        for text, expected in (
+            ("a $x^2$ b\n", "a :math:`x^2` b\n"),
+            ("$$\nblock math\n$$\n", ".. math::\n\n   block math\n"),
+            ("==marked==\n", "==marked==\n"),
+            ("^^inserted^^\n", "^^inserted^^\n"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(render(text), expected)
 
     def test_escaped_block_markers(self):
         # an escaped leading marker is literal text, not a new block

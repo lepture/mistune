@@ -22,20 +22,25 @@ class RSTRenderer(BaseRenderer):
     }
     INLINE_IMAGE_PREFIX = "img-"
 
-    #: inline token types whose rendered output never glues to an adjacent
-    #: inline role: softbreak renders as a space, inline_html renders as
-    #: nothing, and the <linebreak> marker is consumed by the paragraph
-    #: line-break split before docutils parses the output
-    ROLE_SAFE_NEIGHBORS = frozenset({"softbreak", "linebreak", "inline_html"})
+    #: inline token types whose rendered output itself separates an
+    #: adjacent inline role from anything beyond it: softbreak renders as
+    #: a space, and the <linebreak> marker becomes a real line split
+    #: before docutils parses the output. (inline_html also renders as
+    #: nothing, but for the boundary check that means a role next to it
+    #: touches the token beyond it, so needs_role_boundary walks past
+    #: zero-output tokens like it instead.)
+    ROLE_SAFE_NEIGHBORS = frozenset({"softbreak", "linebreak"})
 
     def iter_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> Iterable[str]:
-        prev = None
         # ignore blank line
         tokens = [tok for tok in tokens if tok["type"] != "blank_line"]
+        # link up the whole sibling list before rendering anything, so a
+        # renderer can also walk past the current token (needs_role_boundary
+        # looks beyond neighbors that emit no output, e.g. inline_html)
         for index, tok in enumerate(tokens):
-            tok["prev"] = prev
+            tok["prev"] = tokens[index - 1] if index else None
             tok["next"] = tokens[index + 1] if index + 1 < len(tokens) else None
-            prev = tok
+        for tok in tokens:
             yield self.render_token(tok, state)
 
     def __call__(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
@@ -82,6 +87,23 @@ class RSTRenderer(BaseRenderer):
         return "``" + cast(str, token["raw"]) + "``"
 
     @classmethod
+    def token_emits_output(cls, token: Dict[str, Any]) -> bool:
+        """Tell whether an inline token contributes text to the RST output.
+
+        Only checked by the role-boundary logic: an ``inline_html`` token
+        renders as nothing (rst has no inline html), so a role next to it
+        actually touches whatever lies beyond it. A text token with empty
+        raw also renders as nothing. Every other inline token emits
+        non-empty output.
+        """
+        tok_type = token["type"]
+        if tok_type == "inline_html":
+            return False
+        if tok_type == "text":
+            return bool(cast(str, token["raw"]))
+        return True
+
+    @classmethod
     def needs_role_boundary(
         cls, token: Optional[Dict[str, Any]], edge: str
     ) -> bool:
@@ -91,6 +113,10 @@ class RSTRenderer(BaseRenderer):
         ``edge`` is the side of the neighbor facing the role: ``"tail"``
         for the preceding token, ``"head"`` for the following one.
         """
+        while token is not None and not cls.token_emits_output(token):
+            # a neighbor that emits no output vanishes from the RST, so
+            # the role really touches the next token beyond it
+            token = token.get("prev") if edge == "tail" else token.get("next")
         if token is None:
             return False
         tok_type = token["type"]

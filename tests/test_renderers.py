@@ -78,6 +78,27 @@ class TestRSTRendererMathBoundaries(TestCase):
     def test_boundary_inside_list_item(self):
         self.assert_rst("- a$x$b\n", "- a\\ :math:`x`\\ b\n")
 
+    def test_boundary_past_vanishing_inline_html(self):
+        # inline_html renders as nothing in rst, so the role touches the
+        # text beyond it; the boundary must key off that effective
+        # neighbor, not the immediate inline_html token. Reported against
+        # docutils 0.23: these two used to emit "a:math:`x`\\ b" and
+        # "a\\ :math:`x`b", neither of which docutils parses as a math
+        # node. With the boundary placed around the role, docutils drops
+        # the escaped spaces and displays "axb".
+        self.assert_rst("a<span></span>$x$b\n", "a\\ :math:`x`\\ b\n")
+        self.assert_rst("a$x$<span></span>b\n", "a\\ :math:`x`\\ b\n")
+
+    def test_boundary_past_nonempty_inline_html(self):
+        # any inline html tag is discarded by the rst renderer, so the
+        # boundary keys off the actual text neighbors beyond the tags
+        self.assert_rst("a<b>bold</b>$x$b\n", "abold\\ :math:`x`\\ b\n")
+
+    def test_vanishing_html_before_linebreak(self):
+        # the walk stops at a linebreak: the role ends the line and the
+        # line split itself separates it from the next line
+        self.assert_rst("a$x$<span></span>  \nb\n", "| a\\ :math:`x`\n| b\n")
+
 
 class TestMarkdownRendererRoundTrip(TestCase):
     """Reformatting valid Markdown must not change its meaning: rendering the

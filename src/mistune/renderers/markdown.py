@@ -82,11 +82,11 @@ class MarkdownRenderer(BaseRenderer):
 
     def inline_math(self, token: Dict[str, Any], state: BlockState) -> str:
         raw = cast(str, token["raw"])
-        if "$" in raw or "\n" in raw or raw.startswith("`") or raw.endswith("`"):
-            # an inner "$", a newline or an edge backtick would end (or let
-            # the backtick-marker form swallow) the plain "$...$" span on the
-            # re-parse; use the backtick-marker form with a run longer than
-            # any backtick run inside the content
+        if "$" in raw or "\n" in raw or raw[:1].isspace() or raw.startswith("`") or raw.endswith("`"):
+            # an inner "$", a newline, leading whitespace or an edge backtick
+            # would end (or let the backtick-marker form swallow) the plain
+            # "$...$" span on the re-parse; use the backtick-marker form with
+            # a run longer than any backtick run inside the content
             longest = max((len(run) for run in _backtick_run_re.findall(raw)), default=0)
             marker = "`" * (longest + 1)
             return "$" + marker + raw + marker + "$"

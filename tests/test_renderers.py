@@ -30,6 +30,55 @@ class TestRSTRendererLineBreaks(TestCase):
                 self.assertEqual(render(text), expected)
 
 
+class TestRSTRendererMathBoundaries(TestCase):
+    # docutils only recognizes inline roles delimited by whitespace (or a
+    # short allowed set of punctuation); a role glued to ordinary text is
+    # swallowed into the text or not recognized at all. When the math role
+    # would touch a neighbor without a separating character, mark the
+    # boundary with an escaped space ("\ "), which docutils drops from
+    # the rendered output.
+    # https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#character-level-inline-markup
+    #
+    # Reported against docutils 0.23: "a $x$ b" renders to a single clean
+    # math node, but "a$x$b" produced a:math:`x`b (no math node) and
+    # "$x$+$y$" produced :math:`x`+:math:`y` (one node holding
+    # "x`+:math:`y"). The escaped-space forms asserted below are the ones
+    # docutils turns into separate math nodes displaying "axb" and "x+y".
+    # docutils is not installable in this environment, so these assertions
+    # compare the RST strings only.
+    render = create_markdown(renderer=RSTRenderer(), plugins=["math"])
+
+    def assert_rst(self, source, expected):
+        with self.subTest(source=source):
+            self.assertEqual(self.render(source), expected)
+
+    def test_reported_boundary_cases(self):
+        # real spaces around the role need no boundary: the spaced control
+        # keeps emitting the plain form
+        self.assert_rst("a $x$ b\n", "a :math:`x` b\n")
+        # role glued to plain text on both sides displays "axb"
+        self.assert_rst("a$x$b\n", "a\\ :math:`x`\\ b\n")
+        # role glued to punctuation between two roles displays "x+y"
+        self.assert_rst("$x$+$y$\n", ":math:`x`\\ +\\ :math:`y`\n")
+
+    def test_role_at_line_edges(self):
+        self.assert_rst("$x$ a\n", ":math:`x` a\n")
+        self.assert_rst("a $x$\n", "a :math:`x`\n")
+
+    def test_role_adjacent_to_other_markup(self):
+        # two roles with no separating character between them
+        self.assert_rst("$x$$y$\n", ":math:`x`\\ \\ :math:`y`\n")
+        # role glued to an emphasis start
+        self.assert_rst("$x$*em*\n", ":math:`x`\\ *em*\n")
+
+    def test_softbreak_is_already_a_boundary(self):
+        # a single newline renders as a space, no escaped space needed
+        self.assert_rst("a\n$x$ b\n", "a :math:`x` b\n")
+
+    def test_boundary_inside_list_item(self):
+        self.assert_rst("- a$x$b\n", "- a\\ :math:`x`\\ b\n")
+
+
 class TestMarkdownRendererRoundTrip(TestCase):
     """Reformatting valid Markdown must not change its meaning: rendering the
     reformatted source to HTML must match rendering the original source."""

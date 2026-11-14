@@ -1,5 +1,5 @@
 from textwrap import indent
-from typing import Any, Dict, Iterable, List, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
 
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
@@ -22,13 +22,19 @@ class RSTRenderer(BaseRenderer):
     }
     INLINE_IMAGE_PREFIX = "img-"
 
+    #: inline token types whose rendered output never glues to an adjacent
+    #: inline role: softbreak renders as a space, inline_html renders as
+    #: nothing, and the <linebreak> marker is consumed by the paragraph
+    #: line-break split before docutils parses the output
+    ROLE_SAFE_NEIGHBORS = frozenset({"softbreak", "linebreak", "inline_html"})
+
     def iter_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> Iterable[str]:
         prev = None
-        for tok in tokens:
-            # ignore blank line
-            if tok["type"] == "blank_line":
-                continue
+        # ignore blank line
+        tokens = [tok for tok in tokens if tok["type"] != "blank_line"]
+        for index, tok in enumerate(tokens):
             tok["prev"] = prev
+            tok["next"] = tokens[index + 1] if index + 1 < len(tokens) else None
             prev = tok
             yield self.render_token(tok, state)
 
@@ -75,11 +81,46 @@ class RSTRenderer(BaseRenderer):
     def codespan(self, token: Dict[str, Any], state: BlockState) -> str:
         return "``" + cast(str, token["raw"]) + "``"
 
+    @classmethod
+    def needs_role_boundary(
+        cls, token: Optional[Dict[str, Any]], edge: str
+    ) -> bool:
+        """Tell whether an inline role touching this neighbor needs an
+        escaped-space boundary to stay recognizable by docutils.
+
+        ``edge`` is the side of the neighbor facing the role: ``"tail"``
+        for the preceding token, ``"head"`` for the following one.
+        """
+        if token is None:
+            return False
+        tok_type = token["type"]
+        if tok_type in cls.ROLE_SAFE_NEIGHBORS:
+            return False
+        if tok_type == "text":
+            raw = cast(str, token["raw"])
+            if not raw:
+                return False
+            char = raw[-1] if edge == "tail" else raw[0]
+            return not char.isspace()
+        # every other inline token (emphasis, strong, codespan, link,
+        # image, inline_math, mark, insert) emits non-whitespace markup
+        # that would glue to the role
+        return True
+
     def inline_math(self, token: Dict[str, Any], state: BlockState) -> str:
         # docutils math role; a backtick inside the content would close the
         # role early, escape it
         raw = cast(str, token["raw"]).replace("`", "\\`")
-        return ":math:`" + raw + "`"
+        role = ":math:`" + raw + "`"
+        # docutils only recognizes inline markup delimited by whitespace or
+        # punctuation from a short allowed set; a role glued to neighboring
+        # text is swallowed into it or not recognized at all. Mark the
+        # boundary with an escaped space, which docutils drops from the
+        # output, so "a$x$b" renders as a\ :math:`x`\ b and displays "axb".
+        # https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#character-level-inline-markup
+        prefix = "\\ " if self.needs_role_boundary(token.get("prev"), "tail") else ""
+        suffix = "\\ " if self.needs_role_boundary(token.get("next"), "head") else ""
+        return prefix + role + suffix
 
     def block_math(self, token: Dict[str, Any], state: BlockState) -> str:
         lines = [".. math::", ""]

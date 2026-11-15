@@ -440,6 +440,24 @@ class TestMarkdownRendererPluginTokens(TestCase):
         self.assertEqual(out, "Apple\n: red\n\nOrange\n: orange\n")
         self.assertEqual(render(out), out)
 
+    def test_empty_footnote_body_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1]\n\n[^1]:\n")
+        self.assertEqual(out, "A[^1]\n[^1]:\n")
+        self.assertEqual(render(out), out)
+
+    def test_whitespace_footnote_body_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1]\n\n[^1]:   \n")
+        self.assertEqual(out, "A[^1]\n[^1]:\n")
+        self.assertEqual(render(out), out)
+
+    def test_empty_def_list_item_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["def_list"])
+        out = render("term\n: \n")
+        self.assertEqual(out, "term\n: \n")
+        self.assertEqual(render(out), out)
+
     def test_superscript_subscript_round_trip(self):
         render = create_markdown(
             renderer=MarkdownRenderer(), plugins=["superscript", "subscript"]

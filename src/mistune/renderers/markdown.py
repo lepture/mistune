@@ -143,7 +143,12 @@ class MarkdownRenderer(BaseRenderer):
         key = cast(str, token["attrs"]["key"])
         text = self.render_children(token, state)
         # continuation lines are indented so they stay inside the definition
-        first, *rest = text.rstrip("\n").splitlines()
+        lines = text.rstrip("\n").splitlines()
+        if not lines:
+            # an empty body is emitted as the bare definition marker, which
+            # re-parses to the same empty footnote body
+            return "[^" + key + "]:\n"
+        first, *rest = lines
         item = "[^" + key + "]: " + first
         if rest:
             item += "\n" + "\n".join("    " + line for line in rest)
@@ -175,7 +180,12 @@ class MarkdownRenderer(BaseRenderer):
     def def_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
         text = self.render_children(token, state)
         # continuation lines are indented so they stay inside the definition
-        first, *rest = text.rstrip("\n").splitlines()
+        lines = text.rstrip("\n").splitlines()
+        if not lines:
+            # an empty body keeps the ": " marker: without the trailing
+            # space the definition would re-parse as a plain paragraph
+            return ": \n"
+        first, *rest = lines
         item = ": " + first
         if rest:
             item += "\n" + "\n".join("  " + line for line in rest)

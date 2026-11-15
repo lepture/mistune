@@ -14,6 +14,9 @@ _literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z]
 #: quote) if they appear unescaped at the start of a line.
 _block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
 
+#: a footnote definition emitted with an empty body, e.g. ``[^1]:\n``
+_bare_footnote_marker_re = re.compile(r"^\[\^[^\]\n]+\]:\n$")
+
 
 class MarkdownRenderer(BaseRenderer):
     """A renderer to re-format Markdown text."""
@@ -132,6 +135,76 @@ class MarkdownRenderer(BaseRenderer):
 
     def blank_line(self, token: Dict[str, Any], state: BlockState) -> str:
         return ""
+
+    def footnote_ref(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "[^" + cast(str, token["raw"]) + "]"
+
+    def footnotes(self, token: Dict[str, Any], state: BlockState) -> str:
+        out = ""
+        prev = ""
+        for child in token["children"]:
+            text = self.render_token(child, state)
+            if text:
+                if _bare_footnote_marker_re.match(prev):
+                    # a bare marker directly followed by another footnote
+                    # definition would absorb it as its body on re-parse;
+                    # keep the two definitions separated with a blank line
+                    out += "\n"
+                prev = text
+            out += text
+        return out + "\n"
+
+    def footnote_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        key = cast(str, token["attrs"]["key"])
+        text = self.render_children(token, state)
+        # continuation lines are indented so they stay inside the definition
+        lines = text.rstrip("\n").splitlines()
+        if not lines:
+            # an empty body is emitted as the bare definition marker, which
+            # re-parses to the same empty footnote body
+            return "[^" + key + "]:\n"
+        first, *rest = lines
+        item = "[^" + key + "]: " + first
+        if rest:
+            item += "\n" + "\n".join("    " + line for line in rest)
+        return item + "\n"
+
+    def superscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "^" + self.render_children(token, state) + "^"
+
+    def subscript(self, token: Dict[str, Any], state: BlockState) -> str:
+        return "~" + self.render_children(token, state) + "~"
+
+    def def_list(self, token: Dict[str, Any], state: BlockState) -> str:
+        out = ""
+        prev_type = None
+        for child in token["children"]:
+            # a new term after a definition starts a new group; separate
+            # them with a blank line so the definition does not absorb
+            # the term as a lazy continuation line on re-parse
+            if prev_type == "def_list_item" and child["type"] == "def_list_head":
+                out += "\n"
+            if child["type"] != "blank_line":
+                out += self.render_token(child, state)
+            prev_type = child["type"]
+        return out + "\n\n"
+
+    def def_list_head(self, token: Dict[str, Any], state: BlockState) -> str:
+        return self.render_children(token, state) + "\n"
+
+    def def_list_item(self, token: Dict[str, Any], state: BlockState) -> str:
+        text = self.render_children(token, state)
+        # continuation lines are indented so they stay inside the definition
+        lines = text.rstrip("\n").splitlines()
+        if not lines:
+            # an empty body keeps the ": " marker: without the trailing
+            # space the definition would re-parse as a plain paragraph
+            return ": \n"
+        first, *rest = lines
+        item = ": " + first
+        if rest:
+            item += "\n" + "\n".join("  " + line for line in rest)
+        return item + "\n"
 
     def inline_html(self, token: Dict[str, Any], state: BlockState) -> str:
         return cast(str, token["raw"])

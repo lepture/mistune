@@ -410,3 +410,78 @@ class TestMarkdownRendererPlugins(TestCase):
             ],
         }
         self.assertEqual(renderer.render_token(token, BlockState()), "- x\n\n")
+
+
+class TestMarkdownRendererPluginTokens(TestCase):
+    """The footnotes and def_list plugins parse tokens for every renderer;
+    the round-trip renderer must render them back as Markdown."""
+
+    def test_footnotes_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1] note.\n\n[^1]: The *note*.\n")
+        self.assertEqual(out, "A[^1] note.\n[^1]: The *note*.\n")
+        self.assertEqual(render(out), out)
+
+    def test_multiple_footnotes_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1] and[^b].\n\n[^1]: One.\n\n[^b]: Two.\n")
+        self.assertEqual(out, "A[^1] and[^B].\n[^1]: One.\n[^B]: Two.\n")
+        self.assertEqual(render(out), out)
+
+    def test_def_list_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["def_list"])
+        out = render("term\n: definition\n")
+        self.assertEqual(out, "term\n: definition\n")
+        self.assertEqual(render(out), out)
+
+    def test_def_list_groups_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["def_list"])
+        out = render("Apple\n: red\n\nOrange\n: orange\n")
+        self.assertEqual(out, "Apple\n: red\n\nOrange\n: orange\n")
+        self.assertEqual(render(out), out)
+
+    def test_empty_footnote_body_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1]\n\n[^1]:\n")
+        self.assertEqual(out, "A[^1]\n[^1]:\n")
+        self.assertEqual(render(out), out)
+
+    def test_whitespace_footnote_body_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        out = render("A[^1]\n\n[^1]:   \n")
+        self.assertEqual(out, "A[^1]\n[^1]:\n")
+        self.assertEqual(render(out), out)
+
+    def test_empty_footnote_then_non_empty_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        html = create_markdown(plugins=["footnotes"])
+        source = "A[^a] B[^b]\n\n[^a]:\n\n[^b]: text\n"
+        out = render(source)
+        # the empty definition must be separated from the following one,
+        # otherwise the latter is absorbed as its body on re-parse
+        self.assertEqual(out, "A[^A] B[^B]\n[^A]:\n\n[^B]: text\n")
+        self.assertEqual(render(out), out)
+        self.assertEqual(html(out), html(source))
+
+    def test_two_empty_footnotes_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        html = create_markdown(plugins=["footnotes"])
+        source = "A[^a] B[^b]\n\n[^a]:\n\n[^b]:\n"
+        out = render(source)
+        self.assertEqual(out, "A[^A] B[^B]\n[^A]:\n\n[^B]:\n")
+        self.assertEqual(render(out), out)
+        self.assertEqual(html(out), html(source))
+
+    def test_empty_def_list_item_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["def_list"])
+        out = render("term\n: \n")
+        self.assertEqual(out, "term\n: \n")
+        self.assertEqual(render(out), out)
+
+    def test_superscript_subscript_round_trip(self):
+        render = create_markdown(
+            renderer=MarkdownRenderer(), plugins=["superscript", "subscript"]
+        )
+        out = render("x^2^ and H~2~O\n")
+        self.assertEqual(out, "x^2^ and H~2~O\n")
+        self.assertEqual(render(out), out)

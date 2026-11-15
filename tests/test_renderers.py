@@ -452,6 +452,26 @@ class TestMarkdownRendererPluginTokens(TestCase):
         self.assertEqual(out, "A[^1]\n[^1]:\n")
         self.assertEqual(render(out), out)
 
+    def test_empty_footnote_then_non_empty_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        html = create_markdown(plugins=["footnotes"])
+        source = "A[^a] B[^b]\n\n[^a]:\n\n[^b]: text\n"
+        out = render(source)
+        # the empty definition must be separated from the following one,
+        # otherwise the latter is absorbed as its body on re-parse
+        self.assertEqual(out, "A[^A] B[^B]\n[^A]:\n\n[^B]: text\n")
+        self.assertEqual(render(out), out)
+        self.assertEqual(html(out), html(source))
+
+    def test_two_empty_footnotes_round_trip(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["footnotes"])
+        html = create_markdown(plugins=["footnotes"])
+        source = "A[^a] B[^b]\n\n[^a]:\n\n[^b]:\n"
+        out = render(source)
+        self.assertEqual(out, "A[^A] B[^B]\n[^A]:\n\n[^B]:\n")
+        self.assertEqual(render(out), out)
+        self.assertEqual(html(out), html(source))
+
     def test_empty_def_list_item_round_trip(self):
         render = create_markdown(renderer=MarkdownRenderer(), plugins=["def_list"])
         out = render("term\n: \n")

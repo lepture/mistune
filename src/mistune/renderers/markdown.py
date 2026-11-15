@@ -14,6 +14,9 @@ _literal_inline_markers_re = re.compile(r"&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z]
 #: quote) if they appear unescaped at the start of a line.
 _block_prefix_re = re.compile(r"^(\s*)(>|[-+*]|#{1,6}|\d{1,9}[.)])(\s|$)")
 
+#: a footnote definition emitted with an empty body, e.g. ``[^1]:\n``
+_bare_footnote_marker_re = re.compile(r"^\[\^[^\]\n]+\]:\n$")
+
 
 class MarkdownRenderer(BaseRenderer):
     """A renderer to re-format Markdown text."""
@@ -137,7 +140,19 @@ class MarkdownRenderer(BaseRenderer):
         return "[^" + cast(str, token["raw"]) + "]"
 
     def footnotes(self, token: Dict[str, Any], state: BlockState) -> str:
-        return self.render_children(token, state) + "\n"
+        out = ""
+        prev = ""
+        for child in token["children"]:
+            text = self.render_token(child, state)
+            if text:
+                if _bare_footnote_marker_re.match(prev):
+                    # a bare marker directly followed by another footnote
+                    # definition would absorb it as its body on re-parse;
+                    # keep the two definitions separated with a blank line
+                    out += "\n"
+                prev = text
+            out += text
+        return out + "\n"
 
     def footnote_item(self, token: Dict[str, Any], state: BlockState) -> str:
         key = cast(str, token["attrs"]["key"])

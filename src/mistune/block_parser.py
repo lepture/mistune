@@ -395,11 +395,14 @@ class BlockParser(Parser[BlockState]):
 
         # rule 2
         if marker == "<!--":
-            return _parse_html_to_end(state, "-->", m.end())
+            # the end condition applies to the whole line, so "-->" may
+            # overlap the opener, as in "<!-->" and "<!--->"
+            return _parse_html_to_end(state, "-->", m.end() - 2)
 
         # rule 3
         if marker == "<?":
-            return _parse_html_to_end(state, "?>", m.end())
+            # likewise, "<?>" ends on the same line
+            return _parse_html_to_end(state, "?>", m.end() - 1)
 
         # rule 5
         if marker == "<![CDATA[":

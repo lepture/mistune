@@ -439,8 +439,23 @@ class TestRSTRendererPlugins(TestCase):
         )
 
     def test_footnotes_become_rst_footnotes(self):
-        out = self.render("A[^1] note.\n\n[^1]: One.\n")
-        self.assertEqual(out, "A[#1]_ note.\n\n.. [#1] One.\n")
+        out = self.render("A [^1] note.\n\n[^1]: One.\n")
+        self.assertEqual(out, "A [#1]_ note.\n\n.. [#1] One.\n")
+
+    def test_footnote_ref_boundary_before_word(self):
+        # a reference glued to a word, A[#ONE]_, is literal text for
+        # docutils; an escaped-space boundary keeps it recognizable while
+        # displaying the same "A1 note."
+        out = self.render("A[^one] note.\n\n[^one]: One.\n")
+        self.assertEqual(out, "A\\ [#ONE]_ note.\n\n.. [#ONE] One.\n")
+
+    def test_footnote_ref_boundary_after_word(self):
+        out = self.render("A[^one]B.\n\n[^one]: One.\n")
+        self.assertEqual(out, "A\\ [#ONE]_\\ B.\n\n.. [#ONE] One.\n")
+
+    def test_footnote_ref_line_start_unchanged(self):
+        out = self.render("[^one] note.\n\n[^one]: One.\n")
+        self.assertEqual(out, "[#ONE]_ note.\n\n.. [#ONE] One.\n")
 
     def test_def_list_becomes_rst_definition_list(self):
         out = self.render("term\n: definition\n")

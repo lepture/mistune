@@ -90,6 +90,7 @@ _INLINE_LINK_LABEL_RE = re.compile(LINK_LABEL + r"\]")
 _INLINE_SQUARE_BRACKET_RE = re.compile(PREVENT_BACKSLASH + r"[\[\]]")
 _ESCAPE_CHAR_RE = re.compile(r"\\(" + PUNCTUATION + r")")
 _BLANK_LINE_RE = re.compile(r"\n[ \t]*\n")
+_LINK_HREF_SPECIAL_RE = re.compile(r"[\x00-\x20\x7f\\()]")
 
 
 def unescape_char(text: str) -> str:
@@ -160,6 +161,12 @@ def _parse_link_href(
     start = pos
     level = 0
     while pos < len(src):
+        m = _LINK_HREF_SPECIAL_RE.search(src, pos)
+        if not m:
+            pos = len(src)
+            break
+
+        pos = m.start()
         c = src[pos]
         if c in ASCII_WHITESPACE:
             break

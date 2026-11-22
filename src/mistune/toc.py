@@ -1,13 +1,60 @@
 import re
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+from html import unescape
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 from .core import BlockState
+from .helpers import HTML_TAGNAME
 from .util import escape, striptags
 
 if TYPE_CHECKING:
     from .markdown import Markdown
 
 _HTML_ID_RE = re.compile(r"""\bid\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
+_HTML_TAG_START_RE = re.compile("<" + HTML_TAGNAME)
+_HTML_ATTRIBUTE_RE = re.compile(
+    r"[ \t\r\n\f]+([A-Za-z_:][A-Za-z0-9_.:-]*)"
+    r"""(?:[ \t\r\n\f]*=[ \t\r\n\f]*(?:"[^"]*"|'[^']*'|([^ \t\r\n\f"'=<>`]+)))?"""
+)
+
+
+def _iter_html_tags(source: str) -> Iterator[str]:
+    pos = 0
+    while pos < len(source):
+        start = source.find("<", pos)
+        if start < 0:
+            return
+        pos = start + 1
+        if pos == len(source) or not ("A" <= source[pos] <= "Z" or "a" <= source[pos] <= "z"):
+            continue
+        quote = ""
+        while pos < len(source):
+            char = source[pos]
+            pos += 1
+            if quote:
+                if char == quote:
+                    quote = ""
+            elif char in "\"'":
+                quote = char
+            elif char == ">":
+                yield source[start:pos]
+                break
+            elif char == "<":
+                pos -= 1
+                break
+
+
+def _iter_unquoted_html_ids(source: str) -> Iterator[str]:
+    for tag in _iter_html_tags(source):
+        start = _HTML_TAG_START_RE.match(tag)
+        assert start is not None
+        pos = start.end()
+        while True:
+            attr = _HTML_ATTRIBUTE_RE.match(tag, pos)
+            if attr is None:
+                break
+            pos = attr.end()
+            if attr.group(1).lower() == "id" and attr.group(2) is not None:
+                yield unescape(attr.group(2))
 
 
 def add_toc_hook(
@@ -28,6 +75,10 @@ def add_toc_hook(
         html, state = md.parse(text)
         toc_items = state.env['toc_items']
         toc_html = render_toc_ul(toc_items)
+
+    By default, generated heading IDs avoid collisions with IDs in raw HTML,
+    including unquoted attribute values. IDs are conservatively reserved from
+    the Markdown source, so literal HTML examples may also reserve an ID.
 
     :param md: Markdown instance
     :param min_level: min heading level
@@ -69,6 +120,7 @@ def add_toc_hook(
 class _HeadingIdAllocator:
     def __init__(self, state: "BlockState", headings: Iterable[Dict[str, Any]]) -> None:
         self.used_ids: Set[str] = {m.group(1) or m.group(2) for m in _HTML_ID_RE.finditer(state.src)}
+        self.used_ids.update(_iter_unquoted_html_ids(state.src))
         for token in headings:
             value = token.get("attrs", {}).get("id")
             if value:

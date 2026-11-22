@@ -20,6 +20,12 @@ def parse_url_link(inline: "InlineParser", m: Match[str], state: "InlineState") 
         if close >= 0:
             text = text[:close]
             pos = m.start() + close
+    src = state.src
+    while pos < len(src) and src[pos] == ")":
+        if text.count("(") <= text.count(")"):
+            break
+        text += ")"
+        pos += 1
     if state.in_link or state.depth >= inline.max_nested_level:
         inline.process_text(text, state)
         return pos

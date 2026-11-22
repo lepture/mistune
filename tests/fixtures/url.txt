@@ -20,3 +20,90 @@ visit <a href="/foo">https://lepture.com/</a>
 .
 <p>visit <a href="/foo">https://lepture.com/</a></p>
 ````````````````````````````````
+
+
+## balanced parentheses
+
+
+```````````````````````````````` example
+See https://en.wikipedia.org/wiki/Markdown_(software) for details.
+.
+<p>See <a href="https://en.wikipedia.org/wiki/Markdown_(software)">https://en.wikipedia.org/wiki/Markdown_(software)</a> for details.</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://en.wikipedia.org/wiki/Markdown_(software)
+.
+<p><a href="https://en.wikipedia.org/wiki/Markdown_(software)">https://en.wikipedia.org/wiki/Markdown_(software)</a></p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+See https://en.wikipedia.org/wiki/Markdown_(software).
+.
+<p>See <a href="https://en.wikipedia.org/wiki/Markdown_(software)">https://en.wikipedia.org/wiki/Markdown_(software)</a>.</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+See https://en.wikipedia.org/wiki/Markdown_(software),
+.
+<p>See <a href="https://en.wikipedia.org/wiki/Markdown_(software)">https://en.wikipedia.org/wiki/Markdown_(software)</a>,</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+(see https://example.com/foo)
+.
+<p>(see <a href="https://example.com/foo">https://example.com/foo</a>)</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+(https://en.wikipedia.org/wiki/Markdown_(software))
+.
+<p>(<a href="https://en.wikipedia.org/wiki/Markdown_(software)">https://en.wikipedia.org/wiki/Markdown_(software)</a>)</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://x.com/a_(b)_(c)
+.
+<p><a href="https://x.com/a_(b)_(c)">https://x.com/a_(b)_(c)</a></p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://x.com/a((b))
+.
+<p><a href="https://x.com/a((b))">https://x.com/a((b))</a></p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://x.com/a)
+.
+<p><a href="https://x.com/a">https://x.com/a</a>)</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+[text https://x.com/a_(b)]
+.
+<p>[text <a href="https://x.com/a_(b)">https://x.com/a_(b)</a>]</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://example.com/foo.
+.
+<p><a href="https://example.com/foo">https://example.com/foo</a>.</p>
+````````````````````````````````
+
+
+```````````````````````````````` example
+https://example.com/foo;
+.
+<p><a href="https://example.com/foo">https://example.com/foo</a>;</p>
+````````````````````````````````

@@ -42,7 +42,25 @@ def parse_inline_footnote(inline: "InlineParser", m: Match[str], state: "InlineS
             notes.append(key)
             indexes[key] = len(notes) - 1
             state.env["footnotes"] = notes
-        state.append_token({"type": "footnote_ref", "raw": key, "attrs": {"index": indexes[key] + 1}})
+        ref_counts = state.env.get("footnote_ref_counts")
+        if not ref_counts:
+            ref_counts = {}
+            state.env["footnote_ref_counts"] = ref_counts
+        occurrence = ref_counts.get(key, 0) + 1
+        ref_counts[key] = occurrence
+        note_index = indexes[key] + 1
+        ref_id = "fnref-" + str(note_index)
+        if occurrence > 1:
+            ref_id = ref_id + "-" + str(occurrence)
+        backrefs = state.env.get("footnote_backrefs")
+        if not backrefs:
+            backrefs = {}
+            state.env["footnote_backrefs"] = backrefs
+        backrefs.setdefault(key, []).append(ref_id)
+        attrs: Dict[str, Any] = {"index": note_index}
+        if occurrence > 1:
+            attrs["occurrence"] = occurrence
+        state.append_token({"type": "footnote_ref", "raw": key, "attrs": attrs})
     else:
         state.append_token({"type": "text", "raw": m.group(0)})
     return m.end()
@@ -94,15 +112,20 @@ def md_footnotes_hook(
         return result
 
     children = [parse_footnote_item(md.block, k, i + 1, state) for i, k in enumerate(notes)]
+    if md.renderer and md.renderer.NAME == "html":
+        backrefs = state.env.get("footnote_backrefs") or {}
+        for item in children:
+            item["attrs"]["ref_ids"] = backrefs.get(item["attrs"]["key"])
     state = BlockState(parent=state)
     state.tokens = [{"type": "footnotes", "children": children}]
     output = md.render_state(state)
     return result + output  # type: ignore[operator]
 
 
-def render_footnote_ref(renderer: "BaseRenderer", key: str, index: int) -> str:
+def render_footnote_ref(renderer: "BaseRenderer", key: str, index: int, occurrence: int = 1) -> str:
     i = str(index)
-    html = '<sup class="footnote-ref" id="fnref-' + i + '">'
+    ref_id = "fnref-" + i if occurrence <= 1 else "fnref-" + i + "-" + str(occurrence)
+    html = '<sup class="footnote-ref" id="' + ref_id + '">'
     return html + '<a href="#fn-' + i + '">' + i + "</a></sup>"
 
 
@@ -110,9 +133,13 @@ def render_footnotes(renderer: "BaseRenderer", text: str) -> str:
     return '<section class="footnotes">\n<ol>\n' + text + "</ol>\n</section>\n"
 
 
-def render_footnote_item(renderer: "BaseRenderer", text: str, key: str, index: int) -> str:
+def render_footnote_item(renderer: "BaseRenderer", text: str, key: str, index: int, ref_ids: Any = None) -> str:
     i = str(index)
-    back = '<a href="#fnref-' + i + '" class="footnote">&#8617;</a>'
+    if ref_ids:
+        backlinks = ['<a href="#' + ref_id + '" class="footnote">&#8617;</a>' for ref_id in ref_ids]
+    else:
+        backlinks = ['<a href="#fnref-' + i + '" class="footnote">&#8617;</a>']
+    back = "".join(backlinks)
     text = text.rstrip()
     if text.endswith("</p>"):
         text = text[:-4] + back + "</p>"

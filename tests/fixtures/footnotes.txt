@@ -111,8 +111,8 @@ This is a bar [^bar].
 <p>This is a bar <sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup>.</p>
 <section class="footnotes">
 <ol>
-<li id="fn-1"><p>A foo is beautiful. This is in contrast to a bar <sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup>.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
-<li id="fn-2"><p>A bar is very common.<a href="#fnref-2" class="footnote">&#8617;</a></p></li>
+<li id="fn-1"><p>A foo is beautiful. This is in contrast to a bar <sup class="footnote-ref" id="fnref-2-2"><a href="#fn-2">2</a></sup>.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+<li id="fn-2"><p>A bar is very common.<a href="#fnref-2" class="footnote">&#8617;</a><a href="#fnref-2-2" class="footnote">&#8617;</a></p></li>
 </ol>
 </section>
 ````````````````````````````````
@@ -149,6 +149,132 @@ paragraph [^fn]
 <p>aaa</p>
 </blockquote>
 <a href="#fnref-1" class="footnote">&#8617;</a></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+First[^a] and second[^a].
+
+[^a]: Note.
+.
+<p>First<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup> and second<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Note.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+One[^x], two[^x], three[^x].
+
+[^x]: Shared.
+.
+<p>One<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup>, two<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup>, three<sup class="footnote-ref" id="fnref-1-3"><a href="#fn-1">1</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Shared.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a><a href="#fnref-1-3" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+A[^a] B[^b] C[^a] D[^b].
+
+[^a]: A note.
+
+[^b]: B note.
+.
+<p>A<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup> B<sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup> C<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup> D<sup class="footnote-ref" id="fnref-2-2"><a href="#fn-2">2</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>A note.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
+<li id="fn-2"><p>B note.<a href="#fnref-2" class="footnote">&#8617;</a><a href="#fnref-2-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+- item[^a]
+- again[^a]
+
+[^a]: Listed.
+.
+<ul>
+<li>item<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></li>
+<li>again<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup></li>
+</ul>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Listed.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+# Title[^a]
+
+More[^a].
+
+[^a]: Head note.
+.
+<h1>Title<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup></h1>
+<p>More<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Head note.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+See[^z] and again[^z].
+
+[^z]: Defined once.
+.
+<p>See<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup> and again<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>Defined once.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+none [^missing] and [^missing] again.
+.
+<p>none [^missing] and [^missing] again.</p>
+````````````````````````````````
+
+```````````````````````````````` example
+Use[^b] then[^a].
+
+[^a]: Second defined.
+
+[^b]: First defined.
+.
+<p>Use<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup> then<sup class="footnote-ref" id="fnref-2"><a href="#fn-2">2</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>First defined.<a href="#fnref-1" class="footnote">&#8617;</a></p></li>
+<li id="fn-2"><p>Second defined.<a href="#fnref-2" class="footnote">&#8617;</a></p></li>
+</ol>
+</section>
+````````````````````````````````
+
+```````````````````````````````` example
+Text[^a]. More[^a].
+
+[^a]: First para.
+
+    Second para.
+.
+<p>Text<sup class="footnote-ref" id="fnref-1"><a href="#fn-1">1</a></sup>. More<sup class="footnote-ref" id="fnref-1-2"><a href="#fn-1">1</a></sup>.</p>
+<section class="footnotes">
+<ol>
+<li id="fn-1"><p>First para.</p>
+<p>Second para.<a href="#fnref-1" class="footnote">&#8617;</a><a href="#fnref-1-2" class="footnote">&#8617;</a></p></li>
 </ol>
 </section>
 ````````````````````````````````

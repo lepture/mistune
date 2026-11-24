@@ -6,6 +6,36 @@ from mistune.toc import add_toc_hook, render_toc_ul
 
 
 class TestTocHtmlIds(TestCase):
+    def test_hook_scans_full_html_attribute_names_before_id(self):
+        for attribute in (
+            "data-é=x",
+            "数据=x",
+            "δ=x",
+            "data-😺=x",
+            "0data=x",
+            "@click=x",
+            "data`key=x",
+            'data-é="x>y"',
+            "data-é",
+            "data\u00a0id=x",
+        ):
+            with self.subTest(attribute=attribute):
+                md = create_markdown(escape=False)
+                add_toc_hook(md)
+                html, state = md.parse("<div " + attribute + " id=toc_1>Intro</div>\n\n# Heading")
+                self.assertIn('<h1 id="toc_1_1">Heading</h1>', html)
+                self.assertEqual(state.env["toc_items"], [(1, "toc_1_1", "Heading")])
+                self.assertIn('href="#toc_1_1"', render_toc_ul(state.env["toc_items"]))
+
+    def test_non_ascii_attribute_names_do_not_match_id_suffixes(self):
+        for name in ("data-é", "é-id", "data\u00a0id", "id\u00a0", "іd"):
+            with self.subTest(name=name):
+                md = create_markdown(escape=False)
+                add_toc_hook(md)
+                html, state = md.parse("<div " + name + "=toc_1>Intro</div>\n\n# Heading")
+                self.assertIn('<h1 id="toc_1">Heading</h1>', html)
+                self.assertEqual(state.env["toc_items"], [(1, "toc_1", "Heading")])
+
     def test_hook_reserves_unquoted_html_ids(self):
         for element in (
             "<div id=toc_1>intro</div>",
@@ -35,7 +65,7 @@ class TestTocHtmlIds(TestCase):
         ):
             with self.subTest(directive=directive):
                 md = create_markdown(escape=False, plugins=[directive([TableOfContents()])])
-                source = '<div id=toc_1></div>\n<div id="toc_1_1"></div>\n\n' + marker + "\n\n# Heading\n"
+                source = '<div data-é=x id=toc_1></div>\n<div id="toc_1_1"></div>\n\n' + marker + "\n\n# Heading\n"
                 html = md(source)
                 self.assertIn('<h1 id="toc_1_2">Heading</h1>', html)
                 self.assertIn('href="#toc_1_2"', html)

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 _HTML_ID_RE = re.compile(r"""\bid\s*=\s*(?:"([^"]*)"|'([^']*)')""", re.I)
 _HTML_TAG_START_RE = re.compile("<" + HTML_TAGNAME)
 _HTML_ATTRIBUTE_RE = re.compile(
-    r"[ \t\r\n\f]+([A-Za-z_:][A-Za-z0-9_.:-]*)"
+    r"""[ \t\r\n\f]+([^ \t\r\n\f"'/=<>]+)"""
     r"""(?:[ \t\r\n\f]*=[ \t\r\n\f]*(?:"[^"]*"|'[^']*'|([^ \t\r\n\f"'=<>`]+)))?"""
 )
 

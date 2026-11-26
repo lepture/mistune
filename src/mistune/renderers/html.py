@@ -87,6 +87,10 @@ class HTMLRenderer(BaseRenderer):
             return url
         return "#harmful-link"
 
+    def render_tokens(self, tokens: Iterable[Dict[str, Any]], state: BlockState) -> str:
+        render_token = self.render_token
+        return "".join([render_token(tok, state) for tok in tokens])
+
     def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
         # backward compitable with v2
         func = self._get_method(token["type"])

@@ -217,17 +217,26 @@ def _split_text_token(
     delimiters: List[_Delimiter],
 ) -> None:
     text = token["raw"]
+    text_len = len(text)
     pos = 0
-    while pos < len(text):
-        if text[pos] not in "*_":
-            end = _next_delimiter_run(text, pos)
+    while pos < text_len:
+        ch = text[pos]
+        if ch != "*" and ch != "_":
+            star = text.find("*", pos)
+            under = text.find("_", pos)
+            if star == -1:
+                end = text_len if under == -1 else under
+            elif under == -1 or star < under:
+                end = star
+            else:
+                end = under
             parts.append({"type": "text", "raw": text[pos:end]})
             pos = end
             continue
 
-        marker = text[pos]
-        end = pos
-        while end < len(text) and text[end] == marker:
+        marker = ch
+        end = pos + 1
+        while end < text_len and text[end] == marker:
             end += 1
         length = end - pos
         absolute = source_start + pos
@@ -238,12 +247,6 @@ def _split_text_token(
         if can_open or can_close:
             delimiters.append(_Delimiter(index, marker, length, can_open, can_close, length, len(delimiters)))
         pos = end
-
-
-def _next_delimiter_run(text: str, pos: int) -> int:
-    while pos < len(text) and text[pos] not in "*_":
-        pos += 1
-    return pos
 
 
 def _process_emphasis_delimiters(

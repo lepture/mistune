@@ -61,6 +61,10 @@ class RSTRenderer(BaseRenderer):
     def strong(self, token: Dict[str, Any], state: BlockState) -> str:
         return "**" + self.render_children(token, state) + "**"
 
+    def abbr(self, token: Dict[str, Any], state: BlockState) -> str:
+        # reST has no abbreviation expansion syntax, so keep the visible text.
+        return self.render_children(token, state)
+
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         attrs = token["attrs"]
         text = self.render_children(token, state)

@@ -43,6 +43,8 @@ class MarkdownRenderer(BaseRenderer):
             if title:
                 text += ' "' + _escape_title(title) + '"'
             yield text
+        for key, definition in state.env.get("ref_abbrs", {}).items():
+            yield "*[" + key + "]: " + definition
 
     def render_children(self, token: Dict[str, Any], state: BlockState) -> str:
         children = token["children"]
@@ -79,6 +81,10 @@ class MarkdownRenderer(BaseRenderer):
 
     def insert(self, token: Dict[str, Any], state: BlockState) -> str:
         return "^^" + self.render_children(token, state) + "^^"
+
+    def abbr(self, token: Dict[str, Any], state: BlockState) -> str:
+        # The expansion is written back as a `*[label]: title` definition.
+        return self.render_children(token, state)
 
     def link(self, token: Dict[str, Any], state: BlockState) -> str:
         label = cast(str, token.get("label"))

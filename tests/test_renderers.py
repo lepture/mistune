@@ -410,3 +410,23 @@ class TestMarkdownRendererPlugins(TestCase):
             ],
         }
         self.assertEqual(renderer.render_token(token, BlockState()), "- x\n\n")
+
+
+class TestAbbrRenderers(TestCase):
+    source = "The HTML spec.\n\n*[HTML]: Hyper Text Markup Language\n"
+
+    def test_markdown_renderer_keeps_definition(self):
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["abbr"])
+        self.assertEqual(
+            render(self.source),
+            "The HTML spec.\n\n*[HTML]: Hyper Text Markup Language\n",
+        )
+
+    def test_markdown_round_trip(self):
+        to_html = create_markdown(plugins=["abbr"])
+        render = create_markdown(renderer=MarkdownRenderer(), plugins=["abbr"])
+        self.assertEqual(to_html(render(self.source)), to_html(self.source))
+
+    def test_rst_renderer_uses_label(self):
+        render = create_markdown(renderer=RSTRenderer(), plugins=["abbr"])
+        self.assertEqual(render(self.source), "The HTML spec.\n")

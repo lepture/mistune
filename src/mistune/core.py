@@ -259,6 +259,7 @@ class BaseRenderer(object):
 
     def __init__(self) -> None:
         self.__methods: Dict[str, Callable[..., str]] = {}
+        self._method_cache: Dict[str, Callable[..., str]] = {}
 
     def register(self, name: str, method: Callable[..., str]) -> None:
         """Register a render method for the named token. For example::
@@ -270,15 +271,21 @@ class BaseRenderer(object):
         """
         # bind self into renderer method
         self.__methods[name] = lambda *arg, **kwargs: method(self, *arg, **kwargs)
+        self._method_cache.pop(name, None)
 
     def _get_method(self, name: str) -> Callable[..., str]:
+        cached = self._method_cache.get(name)
+        if cached is not None:
+            return cached
         try:
-            return cast("Callable[..., str]", object.__getattribute__(self, name))
+            method = cast("Callable[..., str]", object.__getattribute__(self, name))
         except AttributeError:
-            method = self.__methods.get(name)
-            if not method:
+            registered = self.__methods.get(name)
+            if not registered:
                 raise AttributeError('No renderer "{!r}"'.format(name))
-            return method
+            method = registered
+        self._method_cache[name] = method
+        return method
 
     def render_token(self, token: Dict[str, Any], state: BlockState) -> str:
         func = self._get_method(token["type"])

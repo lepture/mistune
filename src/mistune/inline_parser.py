@@ -279,45 +279,57 @@ class InlineParser(Parser[InlineState]):
 
     def parse(self, state: InlineState) -> List[Dict[str, Any]]:
         pos = 0
+        text_start = 0
+        src = state.src
+        src_len = len(src)
         sc = self.compile_sc()
-        while pos < len(state.src):
-            fast_end = self._find_fast_text_end(state.src, pos)
-            if fast_end is None:
-                m = sc.search(state.src, pos)
+        chars = self._get_fast_trigger_chars()
+        trigger_search = self._get_fast_trigger_re(chars).search if chars is not None else None
+        sc_match = sc.match
+        sc_search = sc.search
+        while pos < src_len:
+            if trigger_search is None:
+                fast_end: Optional[int] = None
+                m = sc_search(src, pos)
             else:
+                tm = trigger_search(src, pos)
+                if tm is None:
+                    fast_end = src_len
+                elif tm.group(0) == "\n":
+                    fast_end = self._find_linebreak_start(src, pos, tm.start())
+                else:
+                    fast_end = tm.start()
                 if fast_end > pos:
-                    self.process_text(state.src[pos:fast_end], state)
                     pos = fast_end
-                if pos >= len(state.src):
+                if pos >= src_len:
                     break
-                m = sc.match(state.src, pos)
+                m = sc_match(src, pos)
 
             if not m:
                 if fast_end is not None:
-                    self.process_text(state.src[pos : pos + 1], state)
                     pos += 1
                     continue
                 break
 
             end_pos = m.start()
-            if end_pos > pos:
-                hole = state.src[pos:end_pos]
-                self.process_text(hole, state)
+            if end_pos > text_start:
+                self.process_text(src[text_start:end_pos], state)
 
             new_pos = self.parse_method(m, state)
             if not new_pos:
                 # move cursor 1 character forward
                 pos = end_pos + 1
-                hole = state.src[end_pos:pos]
-                self.process_text(hole, state)
+                self.process_text(src[end_pos:pos], state)
+                text_start = pos
             else:
                 pos = new_pos
+                text_start = new_pos
 
-        if pos == 0:
+        if text_start == 0:
             # special case, just pure text
-            self.process_text(state.src, state)
-        elif pos < len(state.src):
-            self.process_text(state.src[pos:], state)
+            self.process_text(src, state)
+        elif text_start < src_len:
+            self.process_text(src[text_start:], state)
         state.tokens = self.finalize_tokens(state.tokens, state.depth)
         return state.tokens
 

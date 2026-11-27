@@ -117,6 +117,18 @@ class TestMiscCases(TestCase):
         self.assertTrue(result.startswith("<ul>"))
         self.assertLess(perf_counter() - start, 2.0)
 
+    def test_ref_link_destination_on_html_block_line(self):
+        # An HTML block that can interrupt a paragraph is not a destination
+        markdown = mistune.create_markdown(escape=False)
+        for line in ("<div>", "</p>", "<script>", "<pre>", "<!-- c -->", "<?php", "<h1>"):
+            with self.subTest(line=line):
+                html = markdown("[foo]:\n" + line + "\n")
+                self.assertTrue(html.startswith("<p>[foo]:</p>\n" + line), html)
+        # and one that cannot is
+        for line in ("<a>", "<span>", "<bar>"):
+            with self.subTest(line=line):
+                self.assertIn('<a href="', markdown("[foo]:\n" + line + "\n\n[foo]\n"))
+
     def test_escape_html(self):
         md = mistune.create_markdown(escape=True)
         result = md("<div>1</div>")

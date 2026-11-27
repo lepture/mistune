@@ -72,6 +72,18 @@ class BlockParser(Parser[BlockState]):
         "raw_html": RAW_HTML,
     }
 
+    # A line that starts one of these blocks ends a paragraph, so it cannot be the
+    # destination of a link reference definition that starts on the line before it.
+    _PARAGRAPH_BREAK = re.compile(
+        "(?:" + SPECIFICATION["fenced_code"] + ")"
+        "|(?:" + SPECIFICATION["atx_heading"] + ")"
+        "|(?:" + SPECIFICATION["thematic_break"] + ")"
+        "|(?:" + SPECIFICATION["block_quote"] + ")"
+        # An HTML block of the types that can interrupt a paragraph
+        "|(?:^ {0,3}(?:</?" + _BLOCK_TAGS_PATTERN + r"(?=[ \t>]|/>|$)|<!--|<\?|<![A-Z]|<!\[CDATA\[))",
+        re.M,
+    )
+
     DEFAULT_RULES = (
         "fenced_code",
         "indent_code",
@@ -250,6 +262,9 @@ class BlockParser(Parser[BlockState]):
         if not key:
             return None
 
+        if self._destination_starts_a_block(state, m.end()):
+            return None
+
         href, href_pos = parse_link_href(state.src, m.end(), block=True, max_nested_level=self.max_nested_level)
         if href is None:
             return None
@@ -291,6 +306,15 @@ class BlockParser(Parser[BlockState]):
                 data["title"] = title
             state.env["ref_links"][key] = data
         return end_pos
+
+    def _destination_starts_a_block(self, state: BlockState, pos: int) -> bool:
+        """Tell whether the destination of a reference is on a line that starts a block."""
+        src = state.src
+        end = pos
+        while end < state.cursor_max and src[end] in " \t\n":
+            end += 1
+        newline = src.rfind("\n", pos, end)
+        return newline >= 0 and self._PARAGRAPH_BREAK.match(src, newline + 1) is not None
 
     def extract_block_quote(self, m: Match[str], state: BlockState) -> Tuple[str, Optional[int], Set[int]]:
         """Extract text and cursor end position of a block quote."""

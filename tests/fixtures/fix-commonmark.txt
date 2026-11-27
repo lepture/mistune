@@ -129,6 +129,89 @@ b
 ````````````````````````````````
 
 
+## Link reference definitions
+
+The destination of a definition can be on the next line, but not on a line that
+starts a block that ends a paragraph: the label stays in the paragraph.
+
+```````````````````````````````` example
+[foo]:
+***
+.
+<p>[foo]:</p>
+<hr />
+````````````````````````````````
+
+```````````````````````````````` example
+[foo]:
+```
+code
+```
+.
+<p>[foo]:</p>
+<pre><code>code
+</code></pre>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo]:
+~~~
+.
+<p>[foo]:</p>
+<pre><code></code></pre>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo]:
+# bar
+.
+<p>[foo]:</p>
+<h1>bar</h1>
+````````````````````````````````
+
+```````````````````````````````` example
+> [foo]:
+> ***
+.
+<blockquote>
+<p>[foo]:</p>
+<hr />
+</blockquote>
+````````````````````````````````
+
+```````````````````````````````` example
+- [foo]:
+  ***
+.
+<ul>
+<li>[foo]:
+<hr />
+</li>
+</ul>
+````````````````````````````````
+
+A destination on the next line that does not start a block is still the destination.
+
+```````````````````````````````` example
+[foo]:
+/url
+"title"
+
+[foo]
+.
+<p><a href="/url" title="title">foo</a></p>
+````````````````````````````````
+
+```````````````````````````````` example
+[foo]:
+<bar>
+
+[foo]
+.
+<p><a href="bar">foo</a></p>
+````````````````````````````````
+
+
 ## Max depth
 
 

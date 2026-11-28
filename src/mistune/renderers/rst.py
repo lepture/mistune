@@ -108,7 +108,8 @@ class RSTRenderer(BaseRenderer):
         attrs = token["attrs"]
         text = self.render_children(token, state)
         marker = self.HEADING_MARKERS[attrs["level"]]
-        width = sum(2 if east_asian_width(char) in ("W", "F") else 1 for char in text)
+        # Docutils expands tabs at eight-character stops before measuring display width.
+        width = sum(2 if east_asian_width(char) in ("W", "F") else 1 for char in text.expandtabs())
         return text + "\n" + marker * width + "\n\n"
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:

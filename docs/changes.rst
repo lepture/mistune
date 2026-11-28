@@ -6,8 +6,8 @@ Here is the full history of mistune v3.
 Unreleased
 ----------
 
-* Size reStructuredText heading underlines for wide Unicode characters, avoiding
-  short-underline warnings for mixed CJK and Latin titles.
+* Size reStructuredText heading underlines for wide Unicode characters and default
+  tab stops, avoiding short-underline warnings for mixed CJK and Latin titles.
 * Use the language name from the fence info string in the Pygments renderer
   example, allowing additional metadata after it.
 * Require Python 3.11 or later; remove Python 3.10 support.

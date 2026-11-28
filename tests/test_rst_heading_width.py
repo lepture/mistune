@@ -16,6 +16,12 @@ from mistune.renderers.rst import RSTRenderer
         ("Plain title", 11),
         ("Café title", 10),
         ("e\u0301 title", 8),
+        ("Intro\t简介", 12),
+        ("A\tB", 9),
+        ("简介\tGuide", 15),
+        ("é\tB", 9),
+        ("Intro\t\t简介", 20),
+        ("A\tB\tC", 17),
     ],
 )
 def test_rst_heading_display_width(level, marker, text, width):

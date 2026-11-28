@@ -61,8 +61,8 @@ class BlockParser(Parser[BlockState]):
             r"[ \t]*(?P<fenced_3>.*?)$"
         ),
         "indent_code": (
-            r"^(?: {4}| *\t)[^\n]+(?:\n+|$)"
-            r"((?:(?: {4}| *\t)[^\n]+(?:\n+|$))|\s)*"
+            r"^(?: {4}| {0,3}\t)[ \t]*[^ \t\r\n][^\n]*(?:\n|\Z)"
+            r"(?:(?:[ \t]*\r?\n)*(?: {4}| {0,3}\t)[ \t]*[^ \t\r\n][^\n]*(?:\n|\Z))*"
         ),
         "thematic_break": r"^ {0,3}((?:-[ \t]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})$",
         "ref_link": r"^ {0,3}\[(?P<reflink_1>" + LINK_LABEL + r")\]:",
@@ -582,9 +582,19 @@ def _trim_partial_next_line_indent(text: str, end_pos: int) -> int:
     return end_pos
 
 
+def _is_blank_line(line: str) -> bool:
+    return not line.strip(" \t\r\n")
+
+
 def _is_indent_code_line(line: str) -> bool:
     if line.endswith("\n"):
         line = line[:-1]
+    if line.endswith("\r"):
+        line = line[:-1]
+
+    if not line.strip(" \t"):
+        # a line of only ASCII spaces and tabs is a blank line
+        return False
 
     if len(line) > 4 and line.startswith("    "):
         return True
@@ -597,15 +607,20 @@ def _is_indent_code_line(line: str) -> bool:
 
 def _find_indent_code_end(src: str, start: int, end: int) -> int:
     pos = start
+    code_end = start
     while pos < end:
         newline = src.find("\n", pos, end)
         line_end = end if newline < 0 else newline + 1
         line = src[pos:line_end]
-        if _is_indent_code_line(line) or not line.strip():
+        if _is_indent_code_line(line):
+            pos = line_end
+            code_end = line_end
+            continue
+        if _is_blank_line(line):
             pos = line_end
             continue
         break
-    return pos
+    return code_end
 
 
 def _is_plain_paragraph_start(src: str, pos: int) -> bool:

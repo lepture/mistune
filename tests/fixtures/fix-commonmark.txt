@@ -165,6 +165,16 @@ foo
 <p>foo</p>
 ````````````````````````````````
 
+A line containing non-ASCII whitespace such as U+00A0 is not a CommonMark
+blank line, so an indented NBSP starts an indented code block.
+
+```````````````````````````````` example
+     
+.
+<pre><code> 
+</code></pre>
+````````````````````````````````
+
 ## Max depth
 
 

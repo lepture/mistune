@@ -442,6 +442,45 @@ class TestMiscCases(TestCase):
         expected = "<h1>\u3000\u3000abc</h1>\n"
         self.assertEqual(result, expected)
 
+    def test_indent_code_unicode_whitespace(self):
+        cases = [
+            ("    \u00a0\n", "<pre><code>\u00a0</code></pre>\n"),
+            ("\t\u00a0\n", "<pre><code>\u00a0</code></pre>\n"),
+            ("    \u2003\n", "<pre><code>\u2003</code></pre>\n"),
+            ("    \u3000\n", "<pre><code>\u3000</code></pre>\n"),
+            ("    \t\n    \u00a0\n", "<pre><code>\u00a0</code></pre>\n"),
+            ("    \u00a0\n    \t\n    \u2003\n", "<pre><code>\u00a0\n\t\n\u2003</code></pre>\n"),
+            ("    foo\n    \u00a0\n", "<pre><code>foo\n\u00a0</code></pre>\n"),
+            ("    foo\n    \u00a0\n        \n", "<pre><code>foo\n\u00a0</code></pre>\n"),
+            ("    foo\n\t\t\n", "<pre><code>foo</code></pre>\n"),
+            ("    foo\n\u00a0\n    bar\n", "<pre><code>foo</code></pre>\n<p>\u00a0\nbar</p>\n"),
+            ("    foo\n  \u00a0\n    bar\n", "<pre><code>foo</code></pre>\n<p>\u00a0\nbar</p>\n"),
+            (">     \u00a0\nfoo\n", "<blockquote>\n<pre><code>\u00a0</code></pre>\n</blockquote>\n<p>foo</p>\n"),
+            (">\t\t\u00a0\nfoo\n", "<blockquote>\n<pre><code>  \u00a0</code></pre>\n</blockquote>\n<p>foo</p>\n"),
+        ]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(mistune.html(text), expected)
+
+        sc = mistune.BlockParser().compile_sc(["indent_code"])
+        for text in ("    \u00a0\n", "\t\u00a0\n", "    \u2003\n", "    \u3000\n"):
+            with self.subTest(regex_match=text):
+                m = sc.match(text)
+                self.assertIsNotNone(m)
+                self.assertEqual(m.group(0), text)
+
+        for text in ("    \t\n", "\t\t\n", "    \n"):
+            with self.subTest(regex_no_match=text):
+                self.assertIsNone(sc.match(text))
+
+        m = sc.match("    foo\n\u00a0\n    bar\n")
+        self.assertIsNotNone(m)
+        self.assertEqual(m.group(0), "    foo\n")
+
+        m = sc.match("    foo\n    \u00a0\n        \n")
+        self.assertIsNotNone(m)
+        self.assertEqual(m.group(0), "    foo\n    \u00a0\n")
+
     def test_image_alt_no_double_encoding(self):
         result = mistune.html("![dogs & cats](dogs.png)")
         expected = '<p><img src="dogs.png" alt="dogs &amp; cats" /></p>'

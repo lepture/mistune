@@ -1,5 +1,6 @@
 from textwrap import indent
 from typing import Any, Dict, Iterable, List, cast
+from unicodedata import east_asian_width
 
 from ..core import BaseRenderer, BlockState
 from ..util import strip_end
@@ -107,7 +108,9 @@ class RSTRenderer(BaseRenderer):
         attrs = token["attrs"]
         text = self.render_children(token, state)
         marker = self.HEADING_MARKERS[attrs["level"]]
-        return text + "\n" + marker * len(text) + "\n\n"
+        # Docutils expands tabs at eight-character stops before measuring display width.
+        width = sum(2 if east_asian_width(char) in ("W", "F") else 1 for char in text.expandtabs())
+        return text + "\n" + marker * width + "\n\n"
 
     def thematic_break(self, token: Dict[str, Any], state: BlockState) -> str:
         return "--------------\n\n"
